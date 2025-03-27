@@ -10,8 +10,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 st.set_page_config(page_title="VideoLingo", page_icon="docs/logo.svg")
 
-SUB_VIDEO = "output/output_sub.mp4"
-DUB_VIDEO = "output/output_dub.mp4"
+SUB_VIDEO = "output/AI字幕.mp4"
+DUB_VIDEO = "output/AI配音.mp4"
 
 def text_processing_section():
     st.header(t("b. Translate and Generate Subtitles"))

@@ -14,7 +14,7 @@ from core.config_utils import load_key
 from core.step1_ytdlp import find_video_files
 from pydub import AudioSegment
 
-DUB_VIDEO = "output/output_dub.mp4"
+DUB_VIDEO = "output/AI配音.mp4"
 DUB_SUB_FILE = 'output/dub.srt'
 DUB_AUDIO = 'output/dub.mp3'
 

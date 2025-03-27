@@ -31,7 +31,7 @@ TRANS_OUTLINE_WIDTH = 1
 TRANS_BACK_COLOR = '&H33000000'
 
 OUTPUT_DIR = "output"
-OUTPUT_VIDEO = f"{OUTPUT_DIR}/output_sub.mp4"
+OUTPUT_VIDEO = f"{OUTPUT_DIR}/AI字幕.mp4"
 SRC_SRT = f"{OUTPUT_DIR}/src.srt"
 TRANS_SRT = f"{OUTPUT_DIR}/trans.srt"
     

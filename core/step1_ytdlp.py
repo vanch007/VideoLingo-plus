@@ -80,10 +80,16 @@ def download_video_ytdlp(url, save_path='output', resolution='1080', cutoff_time
 
 def find_video_files(save_path='output'):
     video_files = [file for file in glob.glob(save_path + "/*") if os.path.splitext(file)[1][1:].lower() in load_key("allowed_video_formats")]
-    # change \\ to /, this happen on windows
+    # change \ to /, this happen on windows
     if sys.platform.startswith('win'):
         video_files = [file.replace("\\", "/") for file in video_files]
     video_files = [file for file in video_files if not file.startswith("output/output")]
+    # Sort video files by creation time
+    video_files.sort(key=lambda x: os.path.getctime(x))
+    # if num == 0, raise ValueError
+    if len(video_files) == 0:
+        raise ValueError(f"No video files found in {save_path}")
+    return video_files[0]  # Return the earliest video file
     # if num != 1, raise ValueError
     if len(video_files) != 1:
         raise ValueError(f"Number of videos found is not unique. Please check. Number of videos found: {len(video_files)}")

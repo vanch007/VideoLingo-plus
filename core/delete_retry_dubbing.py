@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def delete_dubbing_files():
     files_to_delete = [
         os.path.join("output", "dub.wav"),
-        os.path.join("output", "output_dub.mp4")
+        os.path.join("output", "AI配音.mp4")
     ]
     
     for file_path in files_to_delete:
