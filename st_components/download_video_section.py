@@ -43,6 +43,16 @@ def download_video_section():
                     with st.spinner("Downloading video..."):
                         download_video_ytdlp(url, resolution=res)
                     st.rerun()
+            
+            if st.button(t("Download and Dub"), key="download_and_dub_button", use_container_width=True):
+                if url:
+                    with st.spinner("Downloading video..."):
+                        download_video_ytdlp(url, resolution=res)
+                    with st.spinner("Processing..."):
+                        from st import process_text, process_audio
+                        process_text()
+                        process_audio()
+                    st.rerun()
 
             uploaded_file = st.file_uploader(t("Or upload video"), type=load_key("allowed_video_formats") + load_key("allowed_audio_formats"))
             if uploaded_file:
@@ -59,6 +69,11 @@ def download_video_section():
 
                 if ext.lower() in load_key("allowed_audio_formats"):
                     convert_audio_to_video(os.path.join(OUTPUT_DIR, clean_name))
+                
+                with st.spinner("Processing..."):
+                    from st import process_text, process_audio
+                    process_text()
+                    process_audio()
                 st.rerun()
             else:
                 return False
