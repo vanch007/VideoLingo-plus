@@ -84,8 +84,11 @@ def merge_video_audio():
     ]
 
     if check_gpu_available():
-        rprint("[bold green]Using GPU acceleration...[/bold green]")
+        rprint("[bold green]Using NVIDIA GPU acceleration...[/bold green]")
         cmd.extend(['-map', '[v]', '-map', '[a]', '-c:v', 'h264_nvenc'])
+    elif platform.system() == 'Darwin':
+        rprint("[bold green]Using Apple Silicon VideoToolbox acceleration...[/bold green]")
+        cmd.extend(['-map', '[v]', '-map', '[a]', '-c:v', 'h264_videotoolbox'])
     else:
         cmd.extend(['-map', '[v]', '-map', '[a]'])
     

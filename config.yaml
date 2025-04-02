@@ -8,7 +8,7 @@ display_language: "zh-CN"
 api:
   key: 'b6226e75-febb-4bac-89fb-b057fb2cd1c4'
   base_url: 'https://ark.cn-beijing.volces.com/api'
-  model: 'deepseek-v3-241226'
+  model: 'ep-20250328122646-96xz4'
 
 # Language settings, written into the prompt, can be described in natural language
 target_language: '简体中文'

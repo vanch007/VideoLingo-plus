@@ -29,6 +29,10 @@ def extract_audio(audio_data, sr, start_time, end_time, out_file):
 
 def extract_refer_audio_main():
     demucs_main() #!!! in case demucs is not run
+    
+    # Check for Apple Silicon acceleration
+    if platform.system() == 'Darwin':
+        rprint("[bold green]Apple Silicon detected, will use VideoToolbox acceleration.[/bold green]")
     if os.path.exists(os.path.join(SEG_DIR, '1.wav')):
         rprint(Panel("Audio segments already exist, skipping extraction", title="Info", border_style="blue"))
         return
