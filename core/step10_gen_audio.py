@@ -91,25 +91,18 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
                 file_size = os.path.getsize(temp_file)
                 duration = get_audio_duration(temp_file)
                 
-                # 检查音频文件是否异常(小于30k或大于10秒)
-                if file_size < 30000 or duration > 10 or duration < 0.5:
+                # 检查音频文件是否异常(小于20k或大于10秒)
+                if file_size < 20000 or duration > 10 or duration < 0.5:
                     os.remove(temp_file)
                     if attempt < max_retries - 1:
                         rprint(f"[yellow]⚠️ 音频文件异常(大小:{file_size}字节,时长:{duration:.2f}秒), 重试中({attempt + 1}/{max_retries})[/yellow]")
                         continue
                     else:
-                        # 尝试使用参考音频作为后备方案
-                        ref_file = os.path.join('output/audio/refers', f"{number}.wav")
-                        if os.path.exists(ref_file):
-                            shutil.copy(ref_file, temp_file)
-                            rprint(f"[yellow]⚠️ 使用参考音频替代异常文件: {ref_file}[/yellow]")
-                            duration = get_audio_duration(temp_file)
-                        else:
-                            # 生成静音音频作为最终后备方案
-                            silence = AudioSegment.silent(duration=1000)  # 1秒静音
-                            silence.export(temp_file, format="wav")
-                            rprint(f"[red]⚠️ 音频文件异常且无参考音频，已生成静音音频替代: {temp_file}[/red]")
-                            duration = 1.0
+                        # 生成静音音频作为后备方案
+                        silence = AudioSegment.silent(duration=1000)  # 1秒静音
+                        silence.export(temp_file, format="wav")
+                        rprint(f"[red]⚠️ 音频文件异常且重试次数已达上限，已生成静音音频替代: {temp_file}[/red]")
+                        duration = 1.0
                         break
                 
                 # 检测并剪切静音片段
