@@ -3,7 +3,10 @@ import os, sys
 from st_components.imports_and_utils import *
 from core.config_utils import load_key
 
-st.set_page_config(page_title="VideoLingo", page_icon="docs/logo.svg")
+# 确保set_page_config()只在主脚本中调用一次
+if not hasattr(st, '_page_config_set'):
+    st.set_page_config(page_title="VideoLingo", page_icon="docs/logo.svg")
+    st._page_config_set = True
 
 # SET PATH
 current_dir = os.path.dirname(os.path.abspath(__file__))
