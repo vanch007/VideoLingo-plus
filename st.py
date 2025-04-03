@@ -3,12 +3,12 @@ import os, sys
 from st_components.imports_and_utils import *
 from core.config_utils import load_key
 
+st.set_page_config(page_title="VideoLingo", page_icon="docs/logo.svg")
+
 # SET PATH
 current_dir = os.path.dirname(os.path.abspath(__file__))
 os.environ['PATH'] += os.pathsep + current_dir
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-st.set_page_config(page_title="VideoLingo", page_icon="docs/logo.svg")
 
 SUB_VIDEO = "output/AI字幕.mp4"
 DUB_VIDEO = "output/AI配音.mp4"
@@ -16,6 +16,13 @@ DUB_VIDEO = "output/AI配音.mp4"
 def text_processing_section():
     st.header(t("b. Translate and Generate Subtitles"))
     with st.container(border=True):
+        if not os.path.exists(SUB_VIDEO) and not os.path.exists(DUB_VIDEO):
+            if st.button(t("Translate and Dub"), key="translate_and_dub_button"):
+                with st.spinner(t("Processing translation and dubbing...")):
+                    process_text()
+                    process_audio()
+                st.rerun()
+                
         st.markdown(f"""
         <p style='font-size: 20px;'>
         {t("This stage includes the following steps:")}

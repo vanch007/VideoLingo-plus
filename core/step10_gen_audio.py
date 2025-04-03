@@ -68,15 +68,46 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
                 rprint(f"[red]❌ Audio speed adjustment failed, max retries reached ({max_retries})[/red]")
                 raise e
 
+def detect_silence(audio_file: str, silence_threshold: float = -40.0, min_silence_duration: float = 0.5) -> None:
+    """Detect and trim silence from audio file"""
+    audio = AudioSegment.from_wav(audio_file)
+    trimmed_audio = audio.strip_silence(
+        silence_thresh=silence_threshold,
+        silence_len=int(min_silence_duration * 1000)  # Convert to integer explicitly
+    )
+    trimmed_audio.export(audio_file, format="wav")
+
 def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     """Helper function for processing single row data"""
     number = row['number']
     lines = eval(row['lines']) if isinstance(row['lines'], str) else row['lines']
     real_dur = 0
+    max_retries = 3
     for line_index, line in enumerate(lines):
         temp_file = TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}")
-        tts_main(line, temp_file, number, tasks_df)
-        real_dur += get_audio_duration(temp_file)
+        for attempt in range(max_retries):
+            try:
+                tts_main(line, temp_file, number, tasks_df)
+                file_size = os.path.getsize(temp_file)
+                duration = get_audio_duration(temp_file)
+                
+                # 检查音频文件是否异常(小于30k或大于10秒)
+                if file_size < 30000 or duration > 10:
+                    os.remove(temp_file)
+                    if attempt < max_retries - 1:
+                        rprint(f"[yellow]⚠️ 音频文件异常(大小:{file_size}字节,时长:{duration:.2f}秒), 重试中({attempt + 1}/{max_retries})[/yellow]")
+                        continue
+                    else:
+                        raise Exception(f"音频文件异常且重试次数已达上限: 大小={file_size}字节, 时长={duration:.2f}秒")
+                
+                # 检测并剪切静音片段
+                detect_silence(temp_file)
+                duration = get_audio_duration(temp_file)  # 重新计算剪切后的时长
+                real_dur += duration
+                break
+            except Exception as e:
+                if attempt == max_retries - 1:
+                    raise e
     return number, real_dur
 
 def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:

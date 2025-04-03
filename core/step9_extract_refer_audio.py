@@ -1,4 +1,5 @@
 import os, sys
+import platform
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from rich import print as rprint
 from rich.panel import Panel
