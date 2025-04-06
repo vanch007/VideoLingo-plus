@@ -16,7 +16,7 @@ from pydub import AudioSegment
 
 DUB_VIDEO = "output/AI配音.mp4"
 DUB_SUB_FILE = 'output/dub.srt'
-SRC_SRT = 'output/src.srt'  # 新增原语言字幕路径
+SRC_SRT = 'output/dub_orig.srt'  # 使用新生成的原语言字幕路径
 DUB_AUDIO = 'output/dub.mp3'
 
 SRC_FONT_SIZE = 15  # 原语言字幕字号

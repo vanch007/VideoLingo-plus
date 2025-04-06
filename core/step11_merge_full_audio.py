@@ -18,12 +18,13 @@ OUTPUT_FILE_TEMPLATE = f"{SEGS_DIR}/{{}}.wav"
 def load_and_flatten_data(excel_file):
     """Load Excel data without flattening"""
     df = pd.read_excel(excel_file)
-    # Use text column directly instead of lines
+    # Use text and origin columns directly
     texts = df['text'].tolist()
+    origins = df['origin'].tolist() # Load origin text
     # Get first time range for each segment
     times = [eval(times)[0] if isinstance(times, str) else times[0] 
              for times in df['new_sub_times'].tolist()]
-    return df, texts, times
+    return df, texts, origins, times # Return origins as well
 
 def get_audio_files(df):
     """Generate a list of audio file paths"""
@@ -92,7 +93,8 @@ def merge_audio_segments(audios, new_sub_times, sample_rate):
     return merged_audio
 
 def create_srt_subtitle():
-    df, lines, new_sub_times = load_and_flatten_data(INPUT_EXCEL)
+    # Correctly unpack all four returned values, even if origins isn't used here
+    df, lines, _, new_sub_times = load_and_flatten_data(INPUT_EXCEL) 
     
     with open(DUB_SUB_FILE, 'w', encoding='utf-8') as f:
         for i, ((start_time, end_time), line) in enumerate(zip(new_sub_times, lines), 1):
@@ -103,22 +105,40 @@ def create_srt_subtitle():
             f.write(f"{start_str} --> {end_str}\n")
             f.write(f"{line}\n\n")
     
-    rprint(f"[bold green]✅ Subtitle file created: {DUB_SUB_FILE}[/bold green]")
+    rprint(f"[bold green]✅ Dub subtitle file created: {DUB_SUB_FILE}[/bold green]")
+
+def create_orig_srt_subtitle():
+    """Create SRT subtitle file using original text"""
+    DUB_ORIG_SRT_FILE = 'output/dub_orig.srt'
+    df, _, origins, new_sub_times = load_and_flatten_data(INPUT_EXCEL) # Get origins text
+    
+    with open(DUB_ORIG_SRT_FILE, 'w', encoding='utf-8') as f:
+        for i, ((start_time, end_time), line) in enumerate(zip(new_sub_times, origins), 1): # Use origins text
+            start_str = f"{int(start_time//3600):02d}:{int((start_time%3600)//60):02d}:{int(start_time%60):02d},{int((start_time*1000)%1000):03d}"
+            end_str = f"{int(end_time//3600):02d}:{int((end_time%3600)//60):02d}:{int(end_time%60):02d},{int((end_time*1000)%1000):03d}"
+            
+            f.write(f"{i}\n")
+            f.write(f"{start_str} --> {end_str}\n")
+            f.write(f"{line}\n\n") # Write origin line
+    
+    rprint(f"[bold green]✅ Original subtitle file created: {DUB_ORIG_SRT_FILE}[/bold green]")
+
 
 def merge_full_audio():
     """Main function: Process the complete audio merging process"""
     console.print("\n[bold cyan]🎬 Starting audio merging process...[/bold cyan]")
     
     with console.status("[bold cyan]📊 Loading data from Excel...[/bold cyan]"):
-        df, lines, new_sub_times = load_and_flatten_data(INPUT_EXCEL)
+        df, lines, origins, new_sub_times = load_and_flatten_data(INPUT_EXCEL) # Load origins too
     console.print("[bold green]✅ Data loaded successfully[/bold green]")
     
     with console.status("[bold cyan]🔍 Getting audio file list...[/bold cyan]"):
         audios = get_audio_files(df)
     console.print(f"[bold green]✅ Found {len(audios)} audio segments[/bold green]")
     
-    with console.status("[bold cyan]📝 Generating subtitle file...[/bold cyan]"):
+    with console.status("[bold cyan]📝 Generating subtitle files...[/bold cyan]"):
         create_srt_subtitle()
+        create_orig_srt_subtitle() # Generate original subtitle file
     
     if not os.path.exists(audios[0]):
         console.print(f"[bold red]❌ Error: First audio file {audios[0]} does not exist![/bold red]")
