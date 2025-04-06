@@ -18,21 +18,32 @@ def cosyvoice_tts_for_videolingo(text, save_as, number, task_df):
     """
     prompt_text = task_df.loc[task_df['number'] == number, 'origin'].values[0]
     API_KEY = load_key("sf_cosyvoice2.api_key")
-    # 设置参考音频路径
+    # 设置参考音频路径 (先尝试带line_index后缀的格式)
     current_dir = Path.cwd()
-    ref_audio_path = current_dir / f"output/audio/refers/{number}.wav"
+    ref_audio_path_new = current_dir / f"output/audio/refers/{number}_0.wav"  # 假设line_index=0
+    ref_audio_path_old = current_dir / f"output/audio/refers/{number}.wav"
     
-    # 如果参考音频不存在，使用第一个音频作为备选
-    if not ref_audio_path.exists():
-        ref_audio_path = current_dir / "output/audio/refers/1.wav"
-        if not ref_audio_path.exists():
-            try:
-                from core.step9_extract_refer_audio import extract_refer_audio_main
-                print(f"参考音频文件不存在，尝试提取: {ref_audio_path}")
-                extract_refer_audio_main()
-            except Exception as e:
-                print(f"提取参考音频失败: {str(e)}")
-                raise
+    # 优先使用新格式，其次旧格式
+    if ref_audio_path_new.exists():
+        ref_audio_path = ref_audio_path_new
+    elif ref_audio_path_old.exists():
+        ref_audio_path = ref_audio_path_old
+    else:
+        # 如果都不存在，尝试提取参考音频
+        try:
+            from core.step9_extract_refer_audio import extract_refer_audio_main
+            print(f"参考音频文件不存在，尝试提取: {ref_audio_path_new}")
+            extract_refer_audio_main()
+            # 再次检查新格式是否存在
+            if ref_audio_path_new.exists():
+                ref_audio_path = ref_audio_path_new
+            elif ref_audio_path_old.exists():
+                ref_audio_path = ref_audio_path_old
+            else:
+                raise Exception("无法获取参考音频")
+        except Exception as e:
+            print(f"提取参考音频失败: {str(e)}")
+            raise
 
     # 转换参考音频为 base64
     reference_base64 = wav_to_base64(ref_audio_path)

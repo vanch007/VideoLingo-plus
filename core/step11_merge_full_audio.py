@@ -46,9 +46,14 @@ def process_audio_segment(audio_file):
         '-ar', '16000',  # 固定采样率为16kHz
         '-ac', '1',      # 单声道
         '-b:a', '64k',   # 比特率64kbps
+        '-f', 'mp3',
         temp_file
     ]
-    subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    except subprocess.CalledProcessError as e:
+        console.print(f"[bold red]❌ FFmpeg处理失败: {e.stderr.decode('utf-8') if e.stderr else str(e)}[/bold red]")
+        raise
     audio_segment = AudioSegment.from_mp3(temp_file)
     os.remove(temp_file)
     return audio_segment

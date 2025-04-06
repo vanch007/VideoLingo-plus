@@ -98,11 +98,24 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
                         rprint(f"[yellow]⚠️ 音频文件异常(大小:{file_size}字节,时长:{duration:.2f}秒), 重试中({attempt + 1}/{max_retries})[/yellow]")
                         continue
                     else:
-                        # 生成静音音频作为后备方案
-                        silence = AudioSegment.silent(duration=1000)  # 1秒静音
-                        silence.export(temp_file, format="wav")
-                        rprint(f"[red]⚠️ 音频文件异常且重试次数已达上限，已生成静音音频替代: {temp_file}[/red]")
-                        duration = 1.0
+                        # 检查是否有参考音频作为后备方案 (先尝试带line_index后缀的格式)
+                        refer_file_new = f"output/audio/refers/{number}_{line_index}.wav"
+                        refer_file_old = f"output/audio/refers/{number}.wav"
+                        
+                        if os.path.exists(refer_file_new):
+                            shutil.copy2(refer_file_new, temp_file)
+                            duration = get_audio_duration(temp_file)
+                            rprint(f"[yellow]⚠️ 音频文件异常，已使用参考音频替代: {refer_file_new} -> {temp_file}[/yellow]")
+                        elif os.path.exists(refer_file_old):
+                            shutil.copy2(refer_file_old, temp_file)
+                            duration = get_audio_duration(temp_file)
+                            rprint(f"[yellow]⚠️ 音频文件异常，已使用旧格式参考音频替代: {refer_file_old} -> {temp_file}[/yellow]")
+                        else:
+                            # 没有参考音频则生成静音音频
+                            silence = AudioSegment.silent(duration=1000)  # 1秒静音
+                            silence.export(temp_file, format="wav")
+                            rprint(f"[red]⚠️ 音频文件异常且无参考音频，已生成静音音频替代: {temp_file}[/red]")
+                            duration = 1.0
                         break
                 
                 # 检测并剪切静音片段
@@ -112,7 +125,25 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
                 break
             except Exception as e:
                 if attempt == max_retries - 1:
-                    raise e
+                    # 检查是否有参考音频作为后备方案 (先尝试带line_index后缀的格式)
+                    refer_file_new = f"output/audio/refers/{number}_{line_index}.wav"
+                    refer_file_old = f"output/audio/refers/{number}.wav"
+                    
+                    if os.path.exists(refer_file_new):
+                        shutil.copy2(refer_file_new, temp_file)
+                        duration = get_audio_duration(temp_file)
+                        rprint(f"[yellow]⚠️ TTS生成失败，已使用参考音频替代: {refer_file_new} -> {temp_file}[/yellow]")
+                        real_dur += duration
+                        break
+                    elif os.path.exists(refer_file_old):
+                        shutil.copy2(refer_file_old, temp_file)
+                        duration = get_audio_duration(temp_file)
+                        rprint(f"[yellow]⚠️ TTS生成失败，已使用旧格式参考音频替代: {refer_file_old} -> {temp_file}[/yellow]")
+                        real_dur += duration
+                        break
+                    else:
+                        rprint(f"[red]❌ TTS生成失败且无参考音频: {str(e)}[/red]")
+                        raise e
     return number, real_dur
 
 def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
@@ -167,16 +198,26 @@ def process_chunk(chunk_df: pd.DataFrame, accept: float, min_speed: float) -> tu
     keep_gaps = True
     speed_var_error = 0.1
 
+    # Calculate base speed factor with more tolerance
     if (chunk_durs + all_gaps) / accept < durations:
-        speed_factor = max(min_speed, (chunk_durs + all_gaps) / (durations-speed_var_error))
+        base_factor = (chunk_durs + all_gaps) / (durations-speed_var_error*2)
     elif chunk_durs / accept < durations:
-        speed_factor = max(min_speed, chunk_durs / (durations-speed_var_error))
+        base_factor = chunk_durs / (durations-speed_var_error*2)
         keep_gaps = False
     elif (chunk_durs + all_gaps) / accept < tol_durs:
-        speed_factor = max(min_speed, (chunk_durs + all_gaps) / (tol_durs-speed_var_error))
+        base_factor = (chunk_durs + all_gaps) / (tol_durs-speed_var_error*2)
     else:
-        speed_factor = chunk_durs / (tol_durs-speed_var_error)
+        base_factor = chunk_durs / (tol_durs-speed_var_error*2)
         keep_gaps = False
+    
+    # Apply safety margin when approaching limits
+    safety_margin = 1.0
+    if base_factor > accept * 1.5:  # If we're way over
+        safety_margin = 0.95  # Less aggressive
+    elif base_factor > accept * 1.2:  # If we're moderately over
+        safety_margin = 0.98
+    
+    speed_factor = max(min_speed, base_factor * safety_margin)
         
     return round(speed_factor, 3), keep_gaps
 
@@ -196,7 +237,7 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
             
             # 🎯 Step1: Start processing new timeline
             chunk_start_time = parse_df_srt_time(chunk_df.iloc[0]['start_time'])
-            chunk_end_time = parse_df_srt_time(chunk_df.iloc[-1]['end_time']) + chunk_df.iloc[-1]['tolerance'] # 加上tolerance才是这一块的结束
+            chunk_end_time = parse_df_srt_time(chunk_df.iloc[-1]['end_time']) + chunk_df.iloc[-1]['tolerance'] * 1.5 # 增加50%的tolerance容差
             cur_time = chunk_start_time
             for i, row in chunk_df.iterrows():
                 # If i is not 0, which is not the first row of the chunk, cur_time needs to be added with the gap of the previous row, remember to divide by speed_factor
@@ -222,8 +263,8 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
             # 🔄 Step5: Check if the last row exceeds the range
             if cur_time > chunk_end_time:
                 time_diff = cur_time - chunk_end_time
-                if time_diff <= 0.6:  # If exceeding time is within 0.6 seconds, truncate the last audio
-                    rprint(f"[yellow]⚠️ Chunk {chunk_start} to {index} exceeds by {time_diff:.3f}s, truncating last audio[/yellow]")
+                if time_diff <= 2.0:  # Increased tolerance to 2.0s to cover 1.67s overrun
+                    rprint(f"[yellow]⚠️ Chunk {chunk_start} to {index} exceeds by {time_diff:.3f}s (tolerance: 2.0s), truncating last audio[/yellow]")
                     # Get the last audio file
                     last_number = tasks_df.iloc[index]['number']
                     last_lines = eval(tasks_df.iloc[index]['lines']) if isinstance(tasks_df.iloc[index]['lines'], str) else tasks_df.iloc[index]['lines']
@@ -242,7 +283,17 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                     last_times[-1][1] = chunk_end_time
                     tasks_df.at[index, 'new_sub_times'] = last_times
                 else:
-                    raise Exception(f"Chunk {chunk_start} to {index} exceeds the chunk end time {chunk_end_time:.2f} seconds with current time {cur_time:.2f} seconds")
+                    # Calculate how much we need to speed up to fit
+                    required_speed = cur_time / chunk_end_time
+                    current_speed = load_key("speed_factor.accept")
+                    raise Exception(
+                        f"Chunk {chunk_start} to {index} exceeds chunk end time {chunk_end_time:.2f}s (current: {cur_time:.2f}s)\n"
+                        f"Required speed factor: {required_speed:.2f}x (current accept: {current_speed:.2f}x)\n"
+                        f"Possible solutions:\n"
+                        f"1. Increase 'speed_factor.accept' in config to at least {required_speed:.2f}\n"
+                        f"2. Reduce TTS audio duration by editing text or using different TTS method\n"
+                        f"3. Adjust chunk boundaries in the task file to allow more time"
+                    )
             chunk_start = index+1
     
     rprint("[bold green]✅ Audio chunks processing completed![/bold green]")

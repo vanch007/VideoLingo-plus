@@ -54,9 +54,11 @@ def extract_refer_audio_main():
         task = progress.add_task("Extracting audio segments...", total=len(df))
         
         for _, row in df.iterrows():
-            out_file = os.path.join(REF_DIR, f"{row['number']}.wav")
-            extract_audio(data, sr, row['start_time'], row['end_time'], out_file)
-            progress.update(task, advance=1)
+            lines = eval(row['lines']) if isinstance(row['lines'], str) else row['lines']
+            for line_index, _ in enumerate(lines):
+                out_file = os.path.join(REF_DIR, f"{row['number']}_{line_index}.wav")
+                extract_audio(data, sr, row['start_time'], row['end_time'], out_file)
+                progress.update(task, advance=1)
             
     rprint(Panel(f"Audio segments saved to {REF_DIR}", title="Success", border_style="green"))
 

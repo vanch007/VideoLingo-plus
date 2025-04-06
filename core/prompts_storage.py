@@ -156,6 +156,8 @@ We have a segment of original {src_language} subtitles that need to be directly 
 1. Faithful to the original: Accurately convey the content and meaning of the original text, without arbitrarily changing, adding, or omitting content.
 2. Accurate terminology: Use professional terms correctly and maintain consistency in terminology.
 3. Understand the context: Fully comprehend and reflect the background and contextual relationships of the text.
+4. Special handling for interjections: Translate short interjections (e.g. "好", "绝了", "对") into more colloquial expressions (e.g. "好家伙", "YYDS", "就是这样") to better suit TTS audio generation.
+5. Minimum length requirement: Ensure each translation contains at least 3 Chinese characters, except for proper nouns and abbreviations that cannot be expanded. Expand translations when necessary while maintaining original meaning.
 
 ### Subtitle Data
 <subtitles>
@@ -208,6 +210,7 @@ Please use a two-step thinking process to handle the text line by line:
    - Aim for contextual smoothness and naturalness, conforming to {TARGET_LANGUAGE} expression habits
    - Ensure it's easy for {TARGET_LANGUAGE} audience to understand and accept
    - Adapt the language style to match the video's theme (e.g., use casual language for tutorials, professional terminology for technical content, formal language for documentaries)
+   - Convert short interjections into more colloquial expressions suitable for audio generation
 
 ### Subtitle Data
 <subtitles>

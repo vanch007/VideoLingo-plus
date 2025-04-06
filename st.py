@@ -92,10 +92,10 @@ def audio_processing_section():
             st.success(t("Audio processing is complete! You can check the audio files in the `output` folder."))
             if load_key("burn_subtitles"):
                 st.video(DUB_VIDEO) 
-            if st.button(t("Delete dubbing files"), key="delete_dubbing_files"):
+            if st.button(t("删除配音文件"), key="delete_dubbing_files"):
                 delete_dubbing_files()
                 st.rerun()
-            if st.button(t("Archive to 'history'"), key="cleanup_in_audio_processing"):
+            if st.button(t("归档到'history'文件夹"), key="cleanup_in_audio_processing"):
                 cleanup()
                 st.rerun()
 
