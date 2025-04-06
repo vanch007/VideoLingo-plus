@@ -1,5 +1,4 @@
 import os, sys
-import platform
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from rich import print as rprint
 from rich.panel import Panel
@@ -30,10 +29,6 @@ def extract_audio(audio_data, sr, start_time, end_time, out_file):
 
 def extract_refer_audio_main():
     demucs_main() #!!! in case demucs is not run
-    
-    # Check for Apple Silicon acceleration
-    if platform.system() == 'Darwin':
-        rprint("[bold green]Apple Silicon detected, will use VideoToolbox acceleration.[/bold green]")
     if os.path.exists(os.path.join(SEG_DIR, '1.wav')):
         rprint(Panel("Audio segments already exist, skipping extraction", title="Info", border_style="blue"))
         return
@@ -54,11 +49,9 @@ def extract_refer_audio_main():
         task = progress.add_task("Extracting audio segments...", total=len(df))
         
         for _, row in df.iterrows():
-            lines = eval(row['lines']) if isinstance(row['lines'], str) else row['lines']
-            for line_index, _ in enumerate(lines):
-                out_file = os.path.join(REF_DIR, f"{row['number']}_{line_index}.wav")
-                extract_audio(data, sr, row['start_time'], row['end_time'], out_file)
-                progress.update(task, advance=1)
+            out_file = os.path.join(REF_DIR, f"{row['number']}.wav")
+            extract_audio(data, sr, row['start_time'], row['end_time'], out_file)
+            progress.update(task, advance=1)
             
     rprint(Panel(f"Audio segments saved to {REF_DIR}", title="Success", border_style="green"))
 

@@ -20,11 +20,30 @@ def text_processing_section():
     st.header(t("b. Translate and Generate Subtitles"))
     with st.container(border=True):
         if not os.path.exists(SUB_VIDEO) and not os.path.exists(DUB_VIDEO):
-            if st.button(t("Translate and Dub"), key="translate_and_dub_button"):
-                with st.spinner(t("Processing translation and dubbing...")):
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button(t("Translate and Dub"), key="translate_and_dub_button"):
+                    with st.spinner(t("Processing translation and dubbing...")):
+                        # 不执行step7的字幕处理流程
+                        with st.spinner(t("Using Whisper for transcription...")):
+                            step2_whisperX.transcribe()
+                        with st.spinner(t("Splitting long sentences...")):  
+                            step3_1_spacy_split.split_by_spacy()
+                            step3_2_splitbymeaning.split_sentences_by_meaning()
+                        with st.spinner(t("Summarizing and translating...")):
+                            step4_1_summarize.get_summary()
+                            if load_key("pause_before_translate"):
+                                input(t("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue..."))
+                            step4_2_translate_all.translate_all()
+                        with st.spinner(t("Processing and aligning subtitles...")): 
+                            step5_splitforsub.split_for_sub_main()
+                            step6_generate_final_timeline.align_timestamp_main()
+                        process_audio()
+                    st.rerun()
+            with col2:
+                if st.button(t("Start Processing Subtitles"), key="text_processing_button"):
                     process_text()
-                    process_audio()
-                st.rerun()
+                    st.rerun()
                 
         st.markdown(f"""
         <p style='font-size: 20px;'>
@@ -38,11 +57,7 @@ def text_processing_section():
             6. {t("Merging subtitles into the video")}
         """, unsafe_allow_html=True)
 
-        if not os.path.exists(SUB_VIDEO):
-            if st.button(t("Start Processing Subtitles"), key="text_processing_button"):
-                process_text()
-                st.rerun()
-        else:
+        if os.path.exists(SUB_VIDEO):
             if load_key("burn_subtitles"):
                 st.video(SUB_VIDEO)
             download_subtitle_zip_button(text=t("Download All Srt Files"))

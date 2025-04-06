@@ -80,70 +80,66 @@ def detect_silence(audio_file: str, silence_threshold: float = -40.0, min_silenc
 def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     """Helper function for processing single row data"""
     number = row['number']
-    lines = eval(row['lines']) if isinstance(row['lines'], str) else row['lines']
+    text = row['text']
+    temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
     real_dur = 0
     max_retries = 3
-    for line_index, line in enumerate(lines):
-        temp_file = TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}")
-        for attempt in range(max_retries):
-            try:
-                tts_main(line, temp_file, number, tasks_df)
-                file_size = os.path.getsize(temp_file)
-                duration = get_audio_duration(temp_file)
-                
-                # 检查音频文件是否异常(小于20k或大于10秒)
-                if file_size < 20000 or duration > 10 or duration < 0.5:
-                    os.remove(temp_file)
-                    if attempt < max_retries - 1:
-                        rprint(f"[yellow]⚠️ 音频文件异常(大小:{file_size}字节,时长:{duration:.2f}秒), 重试中({attempt + 1}/{max_retries})[/yellow]")
-                        continue
-                    else:
-                        # 检查是否有参考音频作为后备方案 (先尝试带line_index后缀的格式)
-                        refer_file_new = f"output/audio/refers/{number}_{line_index}.wav"
-                        refer_file_old = f"output/audio/refers/{number}.wav"
-                        
-                        if os.path.exists(refer_file_new):
-                            shutil.copy2(refer_file_new, temp_file)
-                            duration = get_audio_duration(temp_file)
-                            rprint(f"[yellow]⚠️ 音频文件异常，已使用参考音频替代: {refer_file_new} -> {temp_file}[/yellow]")
-                        elif os.path.exists(refer_file_old):
-                            shutil.copy2(refer_file_old, temp_file)
-                            duration = get_audio_duration(temp_file)
-                            rprint(f"[yellow]⚠️ 音频文件异常，已使用旧格式参考音频替代: {refer_file_old} -> {temp_file}[/yellow]")
-                        else:
-                            # 没有参考音频则生成静音音频
-                            silence = AudioSegment.silent(duration=1000)  # 1秒静音
-                            silence.export(temp_file, format="wav")
-                            rprint(f"[red]⚠️ 音频文件异常且无参考音频，已生成静音音频替代: {temp_file}[/red]")
-                            duration = 1.0
-                        break
-                
-                # 检测并剪切静音片段
-                detect_silence(temp_file)
-                duration = get_audio_duration(temp_file)  # 重新计算剪切后的时长
-                real_dur += duration
-                break
-            except Exception as e:
-                if attempt == max_retries - 1:
-                    # 检查是否有参考音频作为后备方案 (先尝试带line_index后缀的格式)
-                    refer_file_new = f"output/audio/refers/{number}_{line_index}.wav"
-                    refer_file_old = f"output/audio/refers/{number}.wav"
-                    
-                    if os.path.exists(refer_file_new):
-                        shutil.copy2(refer_file_new, temp_file)
-                        duration = get_audio_duration(temp_file)
-                        rprint(f"[yellow]⚠️ TTS生成失败，已使用参考音频替代: {refer_file_new} -> {temp_file}[/yellow]")
-                        real_dur += duration
-                        break
-                    elif os.path.exists(refer_file_old):
-                        shutil.copy2(refer_file_old, temp_file)
-                        duration = get_audio_duration(temp_file)
-                        rprint(f"[yellow]⚠️ TTS生成失败，已使用旧格式参考音频替代: {refer_file_old} -> {temp_file}[/yellow]")
-                        real_dur += duration
-                        break
-                    else:
-                        rprint(f"[red]❌ TTS生成失败且无参考音频: {str(e)}[/red]")
-                        raise e
+    
+    for attempt in range(max_retries):
+        try:
+            tts_main(text, temp_file, number, tasks_df)
+            file_size = os.path.getsize(temp_file)
+            duration = get_audio_duration(temp_file)
+            
+            # 检查音频文件是否异常(小于20k或大于10秒)
+            if file_size < 20000 or duration > 10 or duration < 0.5:
+                os.remove(temp_file)
+                if attempt < max_retries - 1:
+                    rprint(f"[yellow]⚠️ 音频文件异常(大小:{file_size}字节,时长:{duration:.2f}秒), 重试中({attempt + 1}/{max_retries})[/yellow]")
+                    time.sleep(1)  # 增加重试间隔
+                    continue
+            
+            # 检测并剪切静音片段
+            detect_silence(temp_file)
+            duration = get_audio_duration(temp_file)  # 重新计算剪切后的时长
+            real_dur = duration
+            break
+            
+        except Exception as e:
+            if attempt == max_retries - 1:
+                # 检查是否有参考音频作为后备方案
+                refer_file = f"output/audio/refers/{number}.wav"
+                if os.path.exists(refer_file):
+                    shutil.copy2(refer_file, temp_file)
+                    duration = get_audio_duration(temp_file)
+                    rprint(f"[yellow]⚠️ TTS生成失败，已使用参考音频替代: {refer_file} -> {temp_file}[/yellow]")
+                    real_dur = duration
+                    break
+                else:
+                    # 没有参考音频则生成静音音频
+                    silence = AudioSegment.silent(duration=1000)  # 1秒静音
+                    silence.export(temp_file, format="wav")
+                    rprint(f"[red]⚠️ TTS生成失败且无参考音频，已生成静音音频替代: {temp_file}[/red]")
+                    real_dur = 1.0
+                    break
+            else:
+                rprint(f"[yellow]⚠️ TTS生成失败，重试中({attempt + 1}/{max_retries}): {str(e)}[/yellow]")
+                time.sleep(1)
+            
+        except Exception as e:
+            if attempt == max_retries - 1:
+                # 检查是否有参考音频作为后备方案
+                refer_file = f"output/audio/refers/{number}.wav"
+                if os.path.exists(refer_file):
+                    shutil.copy2(refer_file, temp_file)
+                    duration = get_audio_duration(temp_file)
+                    rprint(f"[yellow]⚠️ TTS生成失败，已使用参考音频替代: {refer_file} -> {temp_file}[/yellow]")
+                    real_dur = duration
+                    break
+                else:
+                    rprint(f"[red]❌ TTS生成失败且无参考音频: {str(e)}[/red]")
+                    raise e
+    
     return number, real_dur
 
 def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
@@ -245,15 +241,13 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                     cur_time += chunk_df.iloc[i-1]['gap']/speed_factor
                 new_sub_times = []
                 number = row['number']
-                lines = eval(row['lines']) if isinstance(row['lines'], str) else row['lines']
-                for line_index, line in enumerate(lines):
-                    # 🔄 Step2: Start speed change and save as OUTPUT_FILE_TEMPLATE
-                    temp_file = TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}")
-                    output_file = OUTPUT_FILE_TEMPLATE.format(f"{number}_{line_index}")
-                    adjust_audio_speed(temp_file, output_file, speed_factor)
-                    ad_dur = get_audio_duration(output_file)
-                    new_sub_times.append([cur_time, cur_time+ad_dur])
-                    cur_time += ad_dur
+                # 🔄 Step2: Start speed change and save as OUTPUT_FILE_TEMPLATE
+                temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
+                output_file = OUTPUT_FILE_TEMPLATE.format(f"{number}")
+                adjust_audio_speed(temp_file, output_file, speed_factor)
+                ad_dur = get_audio_duration(output_file)
+                new_sub_times.append([cur_time, cur_time+ad_dur])
+                cur_time += ad_dur
                 # 🔄 Step3: Find corresponding main DataFrame index and update new_sub_times
                 main_df_idx = tasks_df[tasks_df['number'] == row['number']].index[0]
                 tasks_df.at[main_df_idx, 'new_sub_times'] = new_sub_times
@@ -265,11 +259,9 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 time_diff = cur_time - chunk_end_time
                 if time_diff <= 2.0:  # Increased tolerance to 2.0s to cover 1.67s overrun
                     rprint(f"[yellow]⚠️ Chunk {chunk_start} to {index} exceeds by {time_diff:.3f}s (tolerance: 2.0s), truncating last audio[/yellow]")
-                    # Get the last audio file
+                    # Get the last audio file (use same format as process_row)
                     last_number = tasks_df.iloc[index]['number']
-                    last_lines = eval(tasks_df.iloc[index]['lines']) if isinstance(tasks_df.iloc[index]['lines'], str) else tasks_df.iloc[index]['lines']
-                    last_line_index = len(last_lines) - 1
-                    last_file = OUTPUT_FILE_TEMPLATE.format(f"{last_number}_{last_line_index}")
+                    last_file = OUTPUT_FILE_TEMPLATE.format(f"{last_number}")
                     
                     # Calculate the duration to keep
                     audio = AudioSegment.from_wav(last_file)

@@ -111,7 +111,7 @@ speed_factor:
   max: 1.4
 
 # *Merge audio configuration
-min_subtitle_duration: 2.5 # Minimum subtitle duration, will be forcibly extended
+min_subtitle_duration: 1.2 # Minimum subtitle duration, will be forcibly extended
 min_trim_duration: 3.5 # Subtitles shorter than this value won't be split
 tolerance: 1.5 # Allowed extension time to the next subtitle
 

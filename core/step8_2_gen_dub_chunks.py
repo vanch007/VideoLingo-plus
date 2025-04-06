@@ -157,7 +157,9 @@ def gen_dub_chunks():
         lines = [line.strip() for line in block.split('\n') if line.strip()]
         if len(lines) >= 3:
             text = ' '.join(lines[2:])
-            text = re.sub(r'\([^)]*\)|（[^）]*）', '', text).strip().replace('-', '')
+            text = re.sub(r'\([^)]*\)|（[^）]*）', '', text).strip()
+            # Remove only '-' character, keep other punctuation
+            text = text.replace('-', '')
             content_lines.append(text)
             
     # Process source subtitles (same structure)

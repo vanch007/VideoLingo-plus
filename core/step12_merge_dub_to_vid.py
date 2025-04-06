@@ -16,9 +16,12 @@ from pydub import AudioSegment
 
 DUB_VIDEO = "output/AI配音.mp4"
 DUB_SUB_FILE = 'output/dub.srt'
+SRC_SRT = 'output/src.srt'  # 新增原语言字幕路径
 DUB_AUDIO = 'output/dub.mp3'
 
+SRC_FONT_SIZE = 15  # 原语言字幕字号
 TRANS_FONT_SIZE = 17
+SRC_FONT_NAME = 'Arial'
 TRANS_FONT_NAME = 'Arial'
 if platform.system() == 'Linux':
     TRANS_FONT_NAME = 'NotoSansCJK-Regular'
@@ -67,15 +70,31 @@ def merge_video_audio():
     video.release()
     rprint(f"[bold green]Video resolution: {TARGET_WIDTH}x{TARGET_HEIGHT}[/bold green]")
     
-    subtitle_filter = (
+    # 原语言字幕样式 (默认位置，白色)
+    src_sub_filter = (
+        f"subtitles={SRC_SRT}:force_style='FontSize={SRC_FONT_SIZE},"
+        f"FontName={SRC_FONT_NAME},PrimaryColour=&HFFFFFF,"
+        f"OutlineColour=&H000000,OutlineWidth=1,"
+        f"Alignment=2,BorderStyle=1'"
+    )
+    
+    # 翻译字幕样式 (底部，黄色)
+    trans_sub_filter = (
         f"subtitles={DUB_SUB_FILE}:force_style='FontSize={TRANS_FONT_SIZE},"
         f"FontName={TRANS_FONT_NAME},PrimaryColour={TRANS_FONT_COLOR},"
         f"OutlineColour={TRANS_OUTLINE_COLOR},OutlineWidth={TRANS_OUTLINE_WIDTH},"
         f"BackColour={TRANS_BACK_COLOR},Alignment=2,MarginV=27,BorderStyle=4'"
     )
     
+    # 组合两个字幕filter (先处理原文字幕在上，再处理翻译字幕在下)
+    subtitle_filter = f"{src_sub_filter},{trans_sub_filter}"
+    
     cmd = [
-        'ffmpeg', '-y', '-i', VIDEO_FILE, '-i', background_file, '-i', normalized_dub_audio,
+        'ffmpeg', '-y', 
+        '-threads', '0',  # 自动使用所有可用线程
+        '-i', VIDEO_FILE, 
+        '-i', background_file, 
+        '-i', normalized_dub_audio,
         '-filter_complex',
         f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,'
         f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,'
@@ -85,14 +104,36 @@ def merge_video_audio():
 
     if check_gpu_available():
         rprint("[bold green]Using NVIDIA GPU acceleration...[/bold green]")
-        cmd.extend(['-map', '[v]', '-map', '[a]', '-c:v', 'h264_nvenc'])
+        cmd.extend([
+            '-map', '[v]', 
+            '-map', '[a]', 
+            '-c:v', 'h264_nvenc',
+            '-preset', 'fast'  # 更快的编码预设
+        ])
     elif platform.system() == 'Darwin':
         rprint("[bold green]Using Apple Silicon VideoToolbox acceleration...[/bold green]")
-        cmd.extend(['-map', '[v]', '-map', '[a]', '-c:v', 'h264_videotoolbox'])
+        cmd.extend([
+            '-map', '[v]', 
+            '-map', '[a]', 
+            '-c:v', 'h264_videotoolbox',
+            '-q:v', '70',  # 质量参数(0-100)
+            '-profile:v', 'high',
+            '-allow_sw', '1'  # 允许软件回退
+        ])
     else:
-        cmd.extend(['-map', '[v]', '-map', '[a]'])
+        cmd.extend([
+            '-map', '[v]', 
+            '-map', '[a]',
+            '-c:v', 'libx264',
+            '-preset', 'fast'
+        ])
     
-    cmd.extend(['-c:a', 'aac', '-b:a', '192k', DUB_VIDEO])
+    cmd.extend([
+        '-c:a', 'aac', 
+        '-b:a', '192k',
+        '-movflags', '+faststart',  # 优化网络播放
+        DUB_VIDEO
+    ])
     
     subprocess.run(cmd)
     rprint(f"[bold green]Video and audio successfully merged into {DUB_VIDEO}[/bold green]")
