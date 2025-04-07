@@ -103,44 +103,44 @@ def process_srt():
     
     df = pd.DataFrame(subtitles)
     
-    i = 0
-    MIN_SUB_DUR = load_key("min_subtitle_duration")
-    while i < len(df):
-        today = datetime.date.today()
-        if df.loc[i, 'duration'] < MIN_SUB_DUR:
-            # 检查前后字幕的duration
-            prev_dur = df.loc[i-1, 'duration'] if i > 0 else float('inf')
-            next_dur = df.loc[i+1, 'duration'] if i < len(df)-1 else float('inf')
+    # i = 0
+    # MIN_SUB_DUR = load_key("min_subtitle_duration")
+    # while i < len(df):
+    #     today = datetime.date.today()
+    #     if df.loc[i, 'duration'] < MIN_SUB_DUR:
+    #         # 检查前后字幕的duration
+    #         prev_dur = df.loc[i-1, 'duration'] if i > 0 else float('inf')
+    #         next_dur = df.loc[i+1, 'duration'] if i < len(df)-1 else float('inf')
             
-            # 选择duration较短的字幕合并
-            if prev_dur < next_dur and i > 0 and time_diff_seconds(df.loc[i-1, 'end_time'], df.loc[i, 'start_time'], today) < MIN_SUB_DUR:
-                # 向前合并
-                rprint(f"[bold yellow]Merging subtitle {i} with previous {i-1}[/bold yellow]")
-                df.loc[i-1, 'text'] += ' ' + df.loc[i, 'text']
-                df.loc[i-1, 'origin'] += ' ' + df.loc[i, 'origin']
-                df.loc[i-1, 'end_time'] = df.loc[i, 'end_time']
-                df.loc[i-1, 'duration'] = time_diff_seconds(df.loc[i-1, 'start_time'], df.loc[i, 'end_time'], today)
-                df = df.drop(i).reset_index(drop=True)
-                i -= 1  # 因为删除了当前行，需要回退索引
-            elif i < len(df)-1 and time_diff_seconds(df.loc[i, 'end_time'], df.loc[i+1, 'start_time'], today) < MIN_SUB_DUR:
-                # 向后合并
-                rprint(f"[bold yellow]Merging subtitle {i} with next {i+1}[/bold yellow]")
-                df.loc[i, 'text'] += ' ' + df.loc[i+1, 'text']
-                df.loc[i, 'origin'] += ' ' + df.loc[i+1, 'origin']
-                df.loc[i, 'end_time'] = df.loc[i+1, 'end_time']
-                df.loc[i, 'duration'] = time_diff_seconds(df.loc[i, 'start_time'], df.loc[i+1, 'end_time'], today)
-                df = df.drop(i+1).reset_index(drop=True)
-            else:
-                if i < len(df)-1:  # 不是最后一个字幕
-                    rprint(f"[bold blue]Extending subtitle {i} duration to {MIN_SUB_DUR} seconds[/bold blue]")
-                    df.loc[i, 'end_time'] = (datetime.datetime.combine(today, df.loc[i, 'start_time']) + 
-                                           datetime.timedelta(seconds=MIN_SUB_DUR)).time()
-                    df.loc[i, 'duration'] = MIN_SUB_DUR
-                else:
-                    rprint(f"[bold red]The last subtitle {i} duration is less than {MIN_SUB_DUR} seconds, but not extending[/bold red]")
-                i += 1
-        else:
-            i += 1
+    #         # 选择duration较短的字幕合并
+    #         if prev_dur < next_dur and i > 0 and time_diff_seconds(df.loc[i-1, 'end_time'], df.loc[i, 'start_time'], today) < MIN_SUB_DUR:
+    #             # 向前合并
+    #             rprint(f"[bold yellow]Merging subtitle {i} with previous {i-1}[/bold yellow]")
+    #             df.loc[i-1, 'text'] += ' ' + df.loc[i, 'text']
+    #             df.loc[i-1, 'origin'] += ' ' + df.loc[i, 'origin']
+    #             df.loc[i-1, 'end_time'] = df.loc[i, 'end_time']
+    #             df.loc[i-1, 'duration'] = time_diff_seconds(df.loc[i-1, 'start_time'], df.loc[i, 'end_time'], today)
+    #             df = df.drop(i).reset_index(drop=True)
+    #             i -= 1  # 因为删除了当前行，需要回退索引
+    #         elif i < len(df)-1 and time_diff_seconds(df.loc[i, 'end_time'], df.loc[i+1, 'start_time'], today) < MIN_SUB_DUR:
+    #             # 向后合并
+    #             rprint(f"[bold yellow]Merging subtitle {i} with next {i+1}[/bold yellow]")
+    #             df.loc[i, 'text'] += ' ' + df.loc[i+1, 'text']
+    #             df.loc[i, 'origin'] += ' ' + df.loc[i+1, 'origin']
+    #             df.loc[i, 'end_time'] = df.loc[i+1, 'end_time']
+    #             df.loc[i, 'duration'] = time_diff_seconds(df.loc[i, 'start_time'], df.loc[i+1, 'end_time'], today)
+    #             df = df.drop(i+1).reset_index(drop=True)
+    #         else:
+    #             if i < len(df)-1:  # 不是最后一个字幕
+    #                 rprint(f"[bold blue]Extending subtitle {i} duration to {MIN_SUB_DUR} seconds[/bold blue]")
+    #                 df.loc[i, 'end_time'] = (datetime.datetime.combine(today, df.loc[i, 'start_time']) + 
+    #                                        datetime.timedelta(seconds=MIN_SUB_DUR)).time()
+    #                 df.loc[i, 'duration'] = MIN_SUB_DUR
+    #             else:
+    #                 rprint(f"[bold red]The last subtitle {i} duration is less than {MIN_SUB_DUR} seconds, but not extending[/bold red]")
+    #             i += 1
+    #     else:
+    #         i += 1
     
     df['start_time'] = df['start_time'].apply(lambda x: x.strftime('%H:%M:%S.%f')[:-3])
     df['end_time'] = df['end_time'].apply(lambda x: x.strftime('%H:%M:%S.%f')[:-3])
