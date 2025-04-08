@@ -38,10 +38,8 @@ def calc_len(text: str) -> float:
 
     return sum(char_weight(char) for char in text)
 
-def align_subs(src_sub: str, tr_sub: str, tr_part: str) -> Tuple[List[str], List[str], str]:
-    # 注意：这里我们反转了参数的角色，tr_part是已经分割的目标语言部分
-    # 我们需要修改get_align_prompt函数调用，将源语言和目标语言的角色反转
-    align_prompt = get_align_prompt(tr_sub, src_sub, tr_part, reverse=True)
+def align_subs(src_sub: str, tr_sub: str, src_part: str) -> Tuple[List[str], List[str], str]:
+    align_prompt = get_align_prompt(src_sub, tr_sub, src_part)
     
     def valid_align(response_data):
         if 'align' not in response_data:
@@ -53,35 +51,36 @@ def align_subs(src_sub: str, tr_sub: str, tr_part: str) -> Tuple[List[str], List
     parsed = ask_gpt(align_prompt, response_json=True, valid_def=valid_align, log_title='align_subs')
     
     align_data = parsed['align']
-    tr_parts = tr_part.split('\n')
-    src_parts = [item[f'target_part_{i+1}'].strip() for i, item in enumerate(align_data)]
+    src_parts = src_part.split('\n')
+    tr_parts = [item[f'target_part_{i+1}'].strip() for i, item in enumerate(align_data)]
     
-    # 获取源语言的连接符
-    whisper_language = load_key("source_language") # 假设有这个配置项，如果没有需要添加
-    language = whisper_language if whisper_language != 'auto' else 'en' # 默认英语
+    whisper_language = load_key("whisper.language")
+    language = load_key("whisper.detected_language") if whisper_language == 'auto' else whisper_language
     joiner = get_joiner(language)
-    src_remerged = joiner.join(src_parts)
+    tr_remerged = joiner.join(tr_parts)
     
     table = Table(title="🔗 Aligned parts")
     table.add_column("Language", style="cyan")
     table.add_column("Parts", style="magenta")
-    table.add_row("TARGET_LANG", "\n".join(tr_parts))
     table.add_row("SRC_LANG", "\n".join(src_parts))
-    table.add_row("REMERGED", src_remerged)
+    table.add_row("TARGET_LANG", "\n".join(tr_parts))
+    table.add_row("REMERGED", tr_remerged)
     console.print(table)
     
-    return src_parts, tr_parts, src_remerged
+    return src_parts, tr_parts, tr_remerged
 
 def split_align_subs(src_lines: List[str], tr_lines: List[str]) -> Tuple[List[str], List[str], List[str]]:
     subtitle_set = load_key("subtitle")
     MAX_SUB_LENGTH = subtitle_set["max_length"]
     TARGET_SUB_MULTIPLIER = subtitle_set["target_multiplier"]
-    remerged_src_lines = src_lines.copy()
+    remerged_tr_lines = tr_lines.copy()
     
     to_split = []
     for i, (src, tr) in enumerate(zip(src_lines, tr_lines)):
         src, tr = str(src), str(tr)
-        if len(src) > MAX_SUB_LENGTH or calc_len(tr) * TARGET_SUB_MULTIPLIER > MAX_SUB_LENGTH:
+        # 只有当长度超过限制且不是仅由单个标点组成时才分割
+        if (len(src) > MAX_SUB_LENGTH or calc_len(tr) * TARGET_SUB_MULTIPLIER > MAX_SUB_LENGTH) and \
+           not (len(src.strip()) == 1 and src.strip() in ',.?!，。？！'):
             to_split.append(i)
             table = Table(title=f"📏 Line {i} needs to be split")
             table.add_column("Type", style="cyan")
@@ -91,13 +90,15 @@ def split_align_subs(src_lines: List[str], tr_lines: List[str]) -> Tuple[List[st
             console.print(table)
     
     def process(i):
-        # 首先分割目标语言（翻译）
-        split_tr = split_sentence(tr_lines[i], num_parts=2).strip()
-        # 然后将源语言与分割后的目标语言对齐
-        src_parts, tr_parts, src_remerged = align_subs(src_lines[i], tr_lines[i], split_tr)
+        split_src = split_sentence(src_lines[i], num_parts=2).strip()
+        # 检查分割结果是否合理，避免在单个标点处分割
+        if any(len(part.strip()) == 1 and part.strip() in ',.?!，。？！' for part in split_src.split('\n')):
+            # 如果分割结果不合理，尝试其他分割方式
+            split_src = split_sentence(src_lines[i], num_parts=2, force_split=True).strip()
+        src_parts, tr_parts, tr_remerged = align_subs(src_lines[i], tr_lines[i], split_src)
         src_lines[i] = src_parts
         tr_lines[i] = tr_parts
-        remerged_src_lines[i] = src_remerged
+        remerged_tr_lines[i] = tr_remerged
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=load_key("max_workers")) as executor:
         executor.map(process, to_split)
@@ -106,7 +107,7 @@ def split_align_subs(src_lines: List[str], tr_lines: List[str]) -> Tuple[List[st
     src_lines = [item for sublist in src_lines for item in (sublist if isinstance(sublist, list) else [sublist])]
     tr_lines = [item for sublist in tr_lines for item in (sublist if isinstance(sublist, list) else [sublist])]
     
-    return src_lines, tr_lines, remerged_src_lines
+    return src_lines, tr_lines, remerged_tr_lines
 
 def split_for_sub_main():
     console.print("[bold green]🚀 Start splitting subtitles...[/bold green]")
@@ -121,7 +122,7 @@ def split_for_sub_main():
     
     for attempt in range(3):  # 使用固定的3次重试
         console.print(Panel(f"🔄 Split attempt {attempt + 1}", expand=False))
-        split_src, split_trans, remerged_src = split_align_subs(src.copy(), trans)
+        split_src, split_trans, remerged = split_align_subs(src.copy(), trans)
         
         # 检查是否所有字幕都符合长度要求
         if all(len(src) <= MAX_SUB_LENGTH for src in split_src) and \
@@ -132,8 +133,15 @@ def split_for_sub_main():
         src = split_src
         trans = split_trans
 
+    # Make sure that the src and the remerged have the same length
+    # 确保二者有相同的长度，防止报错
+    if len(src) > len(remerged):
+        remerged += [None] * (len(src) - len(remerged))
+    elif len(remerged) > len(src):
+        src += [None] * (len(remerged) - len(src))
+    
     pd.DataFrame({'Source': split_src, 'Translation': split_trans}).to_excel(OUTPUT_SPLIT_FILE, index=False)
-    pd.DataFrame({'Source': remerged_src, 'Translation': trans}).to_excel(OUTPUT_REMERGED_FILE, index=False)
+    pd.DataFrame({'Source': src, 'Translation': remerged}).to_excel(OUTPUT_REMERGED_FILE, index=False)
 
 if __name__ == '__main__':
     split_for_sub_main()
