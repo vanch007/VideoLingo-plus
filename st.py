@@ -27,7 +27,7 @@ def text_processing_section():
                         # 不执行step7的字幕处理流程
                         with st.spinner(t("Using Whisper for transcription...")):
                             step2_whisperX.transcribe()
-                        with st.spinner(t("Splitting long sentences...")):  
+                        with st.spinner(t("Splitting long sentences...")):
                             step3_1_spacy_split.split_by_spacy()
                             step3_2_splitbymeaning.split_sentences_by_meaning()
                         with st.spinner(t("Summarizing and translating...")):
@@ -35,7 +35,7 @@ def text_processing_section():
                             if load_key("pause_before_translate"):
                                 input(t("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue..."))
                             step4_2_translate_all.translate_all()
-                        with st.spinner(t("Processing and aligning subtitles...")): 
+                        with st.spinner(t("Processing and aligning subtitles...")):
                             step5_splitforsub.split_for_sub_main()
                             step6_generate_final_timeline.align_timestamp_main()
                         process_audio()
@@ -44,7 +44,7 @@ def text_processing_section():
                 if st.button(t("Start Processing Subtitles"), key="text_processing_button"):
                     process_text()
                     st.rerun()
-                
+
         st.markdown(f"""
         <p style='font-size: 20px;'>
         {t("This stage includes the following steps:")}
@@ -61,16 +61,25 @@ def text_processing_section():
             if load_key("burn_subtitles"):
                 st.video(SUB_VIDEO)
             download_subtitle_zip_button(text=t("Download All Srt Files"))
-            
+
             if st.button(t("Archive to 'history'"), key="cleanup_in_text_processing"):
                 cleanup()
                 st.rerun()
             return True
 
 def process_text():
+    # Check if stable-ts is selected but not installed
+    if load_key("whisper.runtime") == "stable-ts":
+        try:
+            import stable_whisper
+        except ImportError:
+            st.error(t("stable-ts is not installed. Please run 'python install_stable_ts.py' to install it."))
+            st.info(t("Alternatively, you can change the WhisperX Runtime to 'local' or 'cloud' in the settings."))
+            return
+
     with st.spinner(t("Using Whisper for transcription...")):
         step2_whisperX.transcribe()
-    with st.spinner(t("Splitting long sentences...")):  
+    with st.spinner(t("Splitting long sentences...")):
         step3_1_spacy_split.split_by_spacy()
         step3_2_splitbymeaning.split_sentences_by_meaning()
     with st.spinner(t("Summarizing and translating...")):
@@ -78,12 +87,12 @@ def process_text():
         if load_key("pause_before_translate"):
             input(t("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue..."))
         step4_2_translate_all.translate_all()
-    with st.spinner(t("Processing and aligning subtitles...")): 
+    with st.spinner(t("Processing and aligning subtitles...")):
         step5_splitforsub.split_for_sub_main()
         step6_generate_final_timeline.align_timestamp_main()
     with st.spinner(t("Merging subtitles to video...")):
         step7_merge_sub_to_vid.merge_subtitles_to_video()
-    
+
     st.success(t("Subtitle processing complete! 🎉"))
     st.balloons()
 
@@ -106,7 +115,7 @@ def audio_processing_section():
         else:
             st.success(t("Audio processing is complete! You can check the audio files in the `output` folder."))
             if load_key("burn_subtitles"):
-                st.video(DUB_VIDEO) 
+                st.video(DUB_VIDEO)
             if st.button(t("删除配音文件"), key="delete_dubbing_files"):
                 delete_dubbing_files()
                 st.rerun()
@@ -115,7 +124,7 @@ def audio_processing_section():
                 st.rerun()
 
 def process_audio():
-    with st.spinner(t("Generate audio tasks")): 
+    with st.spinner(t("Generate audio tasks")):
         step8_1_gen_audio_task.gen_audio_task_main()
         step8_2_gen_dub_chunks.gen_dub_chunks()
     with st.spinner(t("Extract refer audio")):
@@ -126,7 +135,7 @@ def process_audio():
         step11_merge_full_audio.merge_full_audio()
     with st.spinner(t("Merge dubbing to the video")):
         step12_merge_dub_to_vid.merge_video_audio()
-    
+
     st.success(t("Audio processing complete! 🎇"))
     st.balloons()
 

@@ -15,7 +15,7 @@ def config_input(label, key, help=None):
 
 def page_setting():
 
-    display_language = st.selectbox("Display Language 🌐", 
+    display_language = st.selectbox("Display Language 🌐",
                                   options=list(DISPLAY_LANGUAGES.keys()),
                                   index=list(DISPLAY_LANGUAGES.values()).index(load_key("display_language")))
     if DISPLAY_LANGUAGES[display_language] != load_key("display_language"):
@@ -25,15 +25,15 @@ def page_setting():
     with st.expander(t("LLM Configuration"), expanded=True):
         config_input(t("API_KEY"), "api.key")
         config_input(t("BASE_URL"), "api.base_url", help=t("Openai format, will add /v1/chat/completions automatically"))
-        
+
         c1, c2 = st.columns([4, 1])
         with c1:
             config_input(t("MODEL"), "api.model", help=t("click to check API validity")+ " 👉")
         with c2:
             if st.button("📡", key="api"):
-                st.toast(t("API Key is valid") if check_api() else t("API Key is invalid"), 
+                st.toast(t("API Key is valid") if check_api() else t("API Key is invalid"),
                         icon="✅" if check_api() else "❌")
-    
+
     with st.expander(t("Subtitles Settings"), expanded=True):
         c1, c2 = st.columns(2)
         with c1:
@@ -57,7 +57,7 @@ def page_setting():
                 st.rerun()
 
         # add runtime selection in v2.2.0
-        runtime = st.selectbox(t("WhisperX Runtime"), options=["local", "cloud"], index=["local", "cloud"].index(load_key("whisper.runtime")), help=t("Local runtime requires >8GB GPU, cloud runtime requires 302ai API key"))
+        runtime = st.selectbox(t("WhisperX Runtime"), options=["local", "stable-ts", "cloud"], index=["local", "stable-ts", "cloud"].index(load_key("whisper.runtime")), help=t("Local runtime requires >8GB GPU, stable-ts provides better timestamps, cloud runtime requires 302ai API key"))
         if runtime != load_key("whisper.runtime"):
             update_key("whisper.runtime", runtime)
             st.rerun()
@@ -74,7 +74,7 @@ def page_setting():
         if demucs != load_key("demucs"):
             update_key("demucs", demucs)
             st.rerun()
-        
+
         burn_subtitles = st.toggle(t("Burn-in Subtitles"), value=load_key("burn_subtitles"), help=t("Whether to burn subtitles into the video, will increase processing time"))
         if burn_subtitles != load_key("burn_subtitles"):
             update_key("burn_subtitles", burn_subtitles)
@@ -89,7 +89,7 @@ def page_setting():
         # sub settings for each tts method
         if select_tts == "sf_fish_tts":
             config_input(t("SiliconFlow API Key"), "sf_fish_tts.api_key")
-            
+
             # Add mode selection dropdown
             mode_options = {
                 "preset": t("Preset"),
@@ -122,11 +122,11 @@ def page_setting():
         elif select_tts == "azure_tts":
             config_input("302ai API", "azure_tts.api_key")
             config_input(t("Azure Voice"), "azure_tts.voice")
-        
+
         elif select_tts == "gpt_sovits":
             st.info(t("Please refer to Github homepage for GPT_SoVITS configuration"))
             config_input(t("SoVITS Character"), "gpt_sovits.character")
-            
+
             refer_mode_options = {1: t("Mode 1: Use provided reference audio only"), 2: t("Mode 2: Use first audio from video as reference"), 3: t("Mode 3: Use each audio from video as reference")}
             selected_refer_mode = st.selectbox(
                 t("Refer Mode"),
@@ -138,19 +138,19 @@ def page_setting():
             if selected_refer_mode != load_key("gpt_sovits.refer_mode"):
                 update_key("gpt_sovits.refer_mode", selected_refer_mode)
                 st.rerun()
-                
+
         elif select_tts == "edge_tts":
             config_input(t("Edge TTS Voice"), "edge_tts.voice")
 
         elif select_tts == "sf_cosyvoice2":
             config_input(t("SiliconFlow API Key"), "sf_cosyvoice2.api_key")
-        
+
         elif select_tts == "f5tts":
             config_input("302ai API", "f5tts.302_api")
-        
+
 def check_api():
     try:
-        resp = ask_gpt("This is a test, response 'message':'success' in json format.", 
+        resp = ask_gpt("This is a test, response 'message':'success' in json format.",
                       response_json=True, log_title='None')
         return resp.get('message') == 'success'
     except Exception:

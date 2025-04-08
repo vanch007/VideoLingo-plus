@@ -16,7 +16,7 @@ def enhance_vocals(vocals_ratio=2.50):
     """Enhance vocals audio volume"""
     if not load_key("demucs"):
         return RAW_AUDIO_FILE
-        
+
     try:
         print(f"[cyan]🎙️ Enhancing vocals with volume ratio: {vocals_ratio}[/cyan]")
         ffmpeg_cmd = (
@@ -25,17 +25,17 @@ def enhance_vocals(vocals_ratio=2.50):
             f'"{ENHANCED_VOCAL_PATH}"'
         )
         subprocess.run(ffmpeg_cmd, shell=True, check=True, capture_output=True)
-        
+
         return ENHANCED_VOCAL_PATH
     except subprocess.CalledProcessError as e:
         print(f"[red]Error enhancing vocals: {str(e)}[/red]")
         return VOCAL_AUDIO_FILE  # Fallback to original vocals if enhancement fails
-    
+
 def transcribe():
     if os.path.exists(CLEANED_CHUNKS_EXCEL_PATH):
         rprint("[yellow]⚠️ Transcription results already exist, skipping transcription step.[/yellow]")
         return
-    
+
     # step0 Convert video to audio
     video_file = find_video_files()
     convert_video_to_audio(video_file)
@@ -43,19 +43,31 @@ def transcribe():
     # step1 Demucs vocal separation:
     if load_key("demucs"):
         demucs_main()
-    
+
     # step2 Compress audio
     choose_audio = enhance_vocals() if load_key("demucs") else RAW_AUDIO_FILE
     whisper_audio = compress_audio(choose_audio, WHISPER_FILE)
 
     # step3 Extract audio
     segments = split_audio(whisper_audio)
-    
+
     # step4 Transcribe audio
     all_results = []
-    if load_key("whisper.runtime") == "local":
+    runtime = load_key("whisper.runtime")
+    if runtime == "local":
         from core.all_whisper_methods.whisperX_local import transcribe_audio as ts
-        rprint("[cyan]🎤 Transcribing audio with local model...[/cyan]")
+        rprint("[cyan]🎤 Transcribing audio with local WhisperX model...[/cyan]")
+    elif runtime == "stable-ts":
+        try:
+            # Check if stable_whisper is installed
+            import stable_whisper
+            from core.all_whisper_methods.stable_ts_local import transcribe_audio as ts
+            rprint("[cyan]🎤 Transcribing audio with local stable-ts model...[/cyan]")
+        except ImportError:
+            rprint("[bold red]❌ Error: stable-whisper is not installed![/bold red]")
+            rprint("[yellow]Please run 'python install_stable_ts.py' to install stable-ts and its dependencies.[/yellow]")
+            rprint("[yellow]Alternatively, you can change the whisper.runtime to 'local' or 'cloud' in config.yaml.[/yellow]")
+            raise ImportError("stable-whisper is not installed. Please run 'python install_stable_ts.py' to install it.")
     else:
         from core.all_whisper_methods.whisperX_302 import transcribe_audio_302 as ts
         rprint("[cyan]🎤 Transcribing audio with 302 API...[/cyan]")
@@ -63,15 +75,15 @@ def transcribe():
     for start, end in segments:
         result = ts(whisper_audio, start, end)
         all_results.append(result)
-    
+
     # step5 Combine results
     combined_result = {'segments': []}
     for result in all_results:
         combined_result['segments'].extend(result['segments'])
-    
+
     # step6 Process df
     df = process_transcription(combined_result)
     save_results(df)
-        
+
 if __name__ == "__main__":
     transcribe()
