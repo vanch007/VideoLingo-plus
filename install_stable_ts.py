@@ -28,7 +28,10 @@ def install_package(package):
 def main():
     console.print(Panel.fit(
         "[bold cyan]Stable-TS Installation for VideoLingo[/bold cyan]\n\n"
-        "This script will install stable-ts and its dependencies.",
+        "This script will install stable-ts and its dependencies.\n"
+        "- Install stable-whisper from the local directory or from GitHub\n"
+        "- Install required dependencies (torch, librosa, etc.)\n"
+        "- Install MLX support for Apple Silicon devices (if applicable)",
         title="Installation"
     ))
 
@@ -48,29 +51,29 @@ def main():
                 console.print("[green]✓ Successfully installed stable-whisper from local directory![/green]")
             except subprocess.CalledProcessError:
                 console.print("[red]Failed to install stable-whisper from local directory[/red]")
-                console.print("[yellow]Trying to install from PyPI...[/yellow]")
-                # Try to install the latest version from PyPI
-                if not install_package("stable-whisper"):
-                    console.print("[red]Failed to install stable-whisper from PyPI.[/red]")
-                    console.print("[yellow]Trying to install a specific version...[/yellow]")
-                    # Try a specific version that is known to work
-                    if not install_package("stable-whisper==2.2.2"):
-                        console.print("[red]Failed to install stable-whisper. Please install it manually.[/red]")
-                        sys.exit(1)
-                    else:
-                        console.print("[green]✓ Successfully installed stable-whisper v2.2.2![/green]")
-        else:
-            console.print("[yellow]Local stable-ts directory not found. Installing from PyPI...[/yellow]")
-            # Try to install the latest version from PyPI
-            if not install_package("stable-whisper"):
-                console.print("[red]Failed to install stable-whisper from PyPI.[/red]")
-                console.print("[yellow]Trying to install a specific version...[/yellow]")
-                # Try a specific version that is known to work
-                if not install_package("stable-whisper==2.2.2"):
-                    console.print("[red]Failed to install stable-whisper. Please install it manually.[/red]")
+                console.print("[yellow]Trying to install from GitHub...[/yellow]")
+                # Try to install directly from GitHub
+                console.print("[yellow]Trying to install from GitHub repository...[/yellow]")
+                try:
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", "git+https://github.com/jianfch/stable-ts.git"])
+                    console.print("[green]✓ Successfully installed stable-whisper from GitHub![/green]")
+                except subprocess.CalledProcessError:
+                    console.print("[red]Failed to install stable-whisper from GitHub.[/red]")
+                    console.print("[yellow]Please try to install it manually with:[/yellow]")
+                    console.print("[cyan]pip install git+https://github.com/jianfch/stable-ts.git[/cyan]")
                     sys.exit(1)
-                else:
-                    console.print("[green]✓ Successfully installed stable-whisper v2.2.2![/green]")
+        else:
+            console.print("[yellow]Local stable-ts directory not found. Installing from GitHub...[/yellow]")
+            # Try to install directly from GitHub
+            console.print("[yellow]Trying to install from GitHub repository...[/yellow]")
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "git+https://github.com/jianfch/stable-ts.git"])
+                console.print("[green]✓ Successfully installed stable-whisper from GitHub![/green]")
+            except subprocess.CalledProcessError:
+                console.print("[red]Failed to install stable-whisper from GitHub.[/red]")
+                console.print("[yellow]Please try to install it manually with:[/yellow]")
+                console.print("[cyan]pip install git+https://github.com/jianfch/stable-ts.git[/cyan]")
+                sys.exit(1)
 
     # Check and install other dependencies
     dependencies = [

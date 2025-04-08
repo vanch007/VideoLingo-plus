@@ -30,8 +30,8 @@ Before using stable-ts, you need to install it and its dependencies:
    # Option 1: Install from local directory
    pip install -e ./stable-ts
 
-   # Option 2: Install from PyPI (specific version recommended)
-   pip install stable-whisper==2.2.2
+   # Option 2: Install directly from GitHub (recommended)
+   pip install git+https://github.com/jianfch/stable-ts.git
 
    # Install other dependencies
    pip install torch librosa rich numpy ffmpeg-python
@@ -40,7 +40,7 @@ Before using stable-ts, you need to install it and its dependencies:
    pip install mlx mlx-whisper
    ```
 
-   Note: If you encounter errors with the latest version of stable-whisper, try installing version 2.2.2 which is known to work with this integration.
+   Note: Installing from GitHub is recommended as it ensures you get the latest version with all bug fixes.
 
 ## Usage
 
