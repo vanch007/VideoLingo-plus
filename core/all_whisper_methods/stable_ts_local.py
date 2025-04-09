@@ -130,7 +130,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
             whisperx_segment = {
                 'start': segment.start + start,
                 'end': segment.end + start,
-                'text': segment.text,
+                'text': ' '.join(segment.text.split()),
                 'words': []
             }
 
@@ -140,7 +140,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
                     whisperx_word = {
                         'start': word.start + start,
                         'end': word.end + start,
-                        'word': word.word
+                        'word': word.word.strip()
                     }
                     whisperx_segment['words'].append(whisperx_word)
 

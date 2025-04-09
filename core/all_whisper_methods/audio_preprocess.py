@@ -30,21 +30,21 @@ def convert_video_to_audio(video_file: str):
             'ffmpeg', '-y', '-i', video_file, '-vn',
             '-c:a', 'libmp3lame', '-b:a', '128k',
             '-ar', '32000',
-            '-ac', '1', 
+            '-ac', '1',
             '-metadata', 'encoding=UTF-8', RAW_AUDIO_FILE
         ], check=True, stderr=subprocess.PIPE)
         print(f"🎬➡️🎵 Converted <{video_file}> to <{RAW_AUDIO_FILE}> with FFmpeg\n")
 
 def _detect_silence(audio_file: str, start: float, end: float) -> List[float]:
     """Detect silence points in the given audio segment"""
-    cmd = ['ffmpeg', '-y', '-i', audio_file, 
+    cmd = ['ffmpeg', '-y', '-i', audio_file,
            '-ss', str(start), '-to', str(end),
-           '-af', 'silencedetect=n=-30dB:d=0.5', 
+           '-af', 'silencedetect=n=-30dB:d=0.5',
            '-f', 'null', '-']
-    
-    output = subprocess.run(cmd, capture_output=True, text=True, 
+
+    output = subprocess.run(cmd, capture_output=True, text=True,
                           encoding='utf-8').stderr
-    
+
     return [float(line.split('silence_end: ')[1].split(' ')[0])
             for line in output.split('\n')
             if 'silence_end' in line]
@@ -55,7 +55,7 @@ def get_audio_duration(audio_file: str) -> float:
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     _, stderr = process.communicate()
     output = stderr.decode('utf-8', errors='ignore')
-    
+
     try:
         duration_str = [line for line in output.split('\n') if 'Duration' in line][0]
         duration_parts = duration_str.split('Duration: ')[1].split(',')[0].split(':')
@@ -68,9 +68,9 @@ def get_audio_duration(audio_file: str) -> float:
 def split_audio(audio_file: str, target_len: int = 30*60, win: int = 60) -> List[Tuple[float, float]]:
     # 30 min 16000 Hz 96kbps ~ 22MB < 25MB required by whisper
     print("[bold blue]🔪 Starting audio segmentation...[/]")
-    
+
     duration = get_audio_duration(audio_file)
-    
+
     segments = []
     pos = 0
     while pos < duration:
@@ -80,7 +80,7 @@ def split_audio(audio_file: str, target_len: int = 30*60, win: int = 60) -> List
         win_start = pos + target_len - win
         win_end = min(win_start + 2 * win, duration)
         silences = _detect_silence(audio_file, win_start, win_end)
-    
+
         if silences:
             target_pos = target_len - (win_start - pos)
             split_at = next((t for t in silences if t - win_start > target_pos), None)
@@ -90,7 +90,7 @@ def split_audio(audio_file: str, target_len: int = 30*60, win: int = 60) -> List
                 continue
         segments.append((pos, pos + target_len))
         pos += target_len
-    
+
     print(f"🔪 Audio split into {len(segments)} segments")
     return segments
 
@@ -102,15 +102,15 @@ def process_transcription(result: Dict) -> pd.DataFrame:
             if len(word["word"]) > 20:
                 print(f"⚠️ Warning: Detected word longer than 20 characters, skipping: {word['word']}")
                 continue
-                
+
             # ! For French, we need to convert guillemets to empty strings
-            word["word"] = word["word"].replace('»', '').replace('«', '')
-            
+            word["word"] = word["word"].replace('»', '').replace('«', '').strip()
+
             if 'start' not in word and 'end' not in word:
                 if all_words:
                     # Assign the end time of the previous word as the start and end time of the current word
                     word_dict = {
-                        'text': word["word"],
+                        'text': word["word"].strip(),
                         'start': all_words[-1]['end'],
                         'end': all_words[-1]['end'],
                     }
@@ -120,7 +120,7 @@ def process_transcription(result: Dict) -> pd.DataFrame:
                     next_word = next((w for w in segment['words'] if 'start' in w and 'end' in w), None)
                     if next_word:
                         word_dict = {
-                            'text': word["word"],
+                            'text': word["word"].strip(),
                             'start': next_word["start"],
                             'end': next_word["end"],
                         }
@@ -130,13 +130,13 @@ def process_transcription(result: Dict) -> pd.DataFrame:
             else:
                 # Normal case, with start and end times
                 word_dict = {
-                    'text': f'{word["word"]}',
+                    'text': f'{word["word"].strip()}',
                     'start': word.get('start', all_words[-1]['end'] if all_words else 0),
                     'end': word['end'],
                 }
-                
+
                 all_words.append(word_dict)
-    
+
     return pd.DataFrame(all_words)
 
 def save_results(df: pd.DataFrame):
@@ -148,13 +148,16 @@ def save_results(df: pd.DataFrame):
     removed_rows = initial_rows - len(df)
     if removed_rows > 0:
         print(f"ℹ️ Removed {removed_rows} row(s) with empty text.")
-    
+
+    # Normalize spaces in text
+    df['text'] = df['text'].apply(lambda x: ' '.join(x.split()))
+
     # Check for and remove words longer than 20 characters
     long_words = df[df['text'].str.len() > 20]
     if not long_words.empty:
         print(f"⚠️ Warning: Detected {len(long_words)} word(s) longer than 20 characters. These will be removed.")
         df = df[df['text'].str.len() <= 20]
-    
+
     df['text'] = df['text'].apply(lambda x: f'"{x}"')
     df.to_excel(CLEANED_CHUNKS_EXCEL_PATH, index=False)
     print(f"📊 Excel file saved to {CLEANED_CHUNKS_EXCEL_PATH}")

@@ -2,6 +2,7 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.ask_gpt import ask_gpt
 from core.prompts_storage import generate_shared_prompt, get_prompt_faithfulness, get_prompt_expressiveness
+from core.timing_utils import time_it
 from rich.panel import Panel
 from rich.console import Console
 from rich.table import Table
@@ -14,7 +15,7 @@ def valid_translate_result(result: dict, required_keys: list, required_sub_keys:
     # Check for the required key
     if not all(key in result for key in required_keys):
         return {"status": "error", "message": f"Missing required key(s): {', '.join(set(required_keys) - set(result.keys()))}"}
-    
+
     # Check for required sub-keys in all items
     for key in result:
         if not all(sub_key in result[key] for sub_key in required_sub_keys):
@@ -22,6 +23,7 @@ def valid_translate_result(result: dict, required_keys: list, required_sub_keys:
 
     return {"status": "success", "message": "Translation completed"}
 
+@time_it()
 def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_to_note_prompt, summary_prompt, index = 0):
     shared_prompt = generate_shared_prompt(previous_content_prompt, after_cotent_prompt, summary_prompt, things_to_note_prompt)
 
@@ -36,6 +38,7 @@ def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_
                 result = ask_gpt(prompt+retry* " ", response_json=True, valid_def=valid_faith, log_title=f'translate_{step_name}')
             elif step_name == 'expressiveness':
                 result = ask_gpt(prompt+retry* " ", response_json=True, valid_def=valid_express, log_title=f'translate_{step_name}')
+
             if len(lines.split('\n')) == len(result):
                 return result
             if retry != 2:
@@ -44,6 +47,7 @@ def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_
 
     ## Step 1: Faithful to the Original Text
     prompt1 = get_prompt_faithfulness(lines, shared_prompt)
+
     faith_result = retry_translation(prompt1, 'faithfulness')
 
     for i in faith_result:
@@ -54,7 +58,7 @@ def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_
     if not reflect_translate:
         # If reflect_translate is False or not set, use faithful translation directly
         translate_result = "\n".join([faith_result[i]["direct"].strip() for i in faith_result])
-        
+
         table = Table(title="Translation Results", show_header=False, box=box.ROUNDED)
         table.add_column("Translations", style="bold")
         for i, key in enumerate(faith_result):
@@ -62,12 +66,13 @@ def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_
             table.add_row(f"[magenta]Direct:  {faith_result[key]['direct']}[/magenta]")
             if i < len(faith_result) - 1:
                 table.add_row("[yellow]" + "-" * 50 + "[/yellow]")
-        
+
         console.print(table)
         return translate_result, lines
 
-    ## Step 2: Express Smoothly  
+    ## Step 2: Express Smoothly
     prompt2 = get_prompt_expressiveness(faith_result, lines, shared_prompt)
+
     express_result = retry_translation(prompt2, 'expressiveness')
 
     table = Table(title="Translation Results", show_header=False, box=box.ROUNDED)
