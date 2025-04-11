@@ -49,19 +49,37 @@ def find_split_positions(original, modified):
 
     return split_positions
 
-def split_sentence(sentence, num_parts, word_limit=18, index=-1, retry_attempt=0):
-    """Split a long sentence using GPT and return the result as a string."""
+def split_sentence(sentence, num_parts, word_limit=18, index=-1, retry_attempt=0, force_split=False):
+    """Split a long sentence using GPT and return the result as a string.
+    Args:
+        force_split: If True, force split even if it results in single punctuation.
+    """
     split_prompt = get_split_prompt(sentence, num_parts, word_limit)
+    
     def valid_split(response_data):
         if 'split' not in response_data:
             return {"status": "error", "message": "Missing required key: `split`"}
         if "[br]" not in response_data["split"]:
             return {"status": "error", "message": "Split failed, no [br] found"}
+        
+        # Validate split parts
+        parts = response_data["split"].split('[br]')
+        if not force_split:
+            for part in parts:
+                part = part.strip()
+                # Avoid splitting on single punctuation or single character
+                if len(part) == 1 and part in ',.?!，。？！' or len(part) == 1:
+                    return {"status": "error", "message": "Split resulted in single punctuation or character"}
+                # Avoid splitting in the middle of a phrase
+                if part.endswith(('的', '地', '得', '了', '着', '过')):
+                    return {"status": "error", "message": "Split in the middle of a phrase"}
+        
         return {"status": "success", "message": "Split completed"}
     
     response_data = ask_gpt(split_prompt + ' ' * retry_attempt, response_json=True, valid_def=valid_split, log_title='sentence_splitbymeaning')
     best_split = response_data["split"]
     split_points = find_split_positions(sentence, best_split)
+    
     # split the sentence based on the split points
     for i, split_point in enumerate(split_points):
         if i == 0:
@@ -71,8 +89,10 @@ def split_sentence(sentence, num_parts, word_limit=18, index=-1, retry_attempt=0
             last_part = parts[-1]
             parts[-1] = last_part[:split_point - split_points[i-1]] + '\n' + last_part[split_point - split_points[i-1]:]
             best_split = '\n'.join(parts)
+    
     if index != -1:
         console.print(f'[green]✅ Sentence {index} has been successfully split[/green]')
+    
     table = Table(title="")
     table.add_column("Type", style="cyan")
     table.add_column("Sentence")

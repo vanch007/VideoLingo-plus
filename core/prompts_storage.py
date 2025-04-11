@@ -37,7 +37,7 @@ Split the given subtitle text into {num_parts} parts, each less than {word_limit
 def get_summary_prompt(source_content, custom_terms_json=None):
     src_lang = load_key("whisper.detected_language")
     tgt_lang = load_key("target_language")
-    
+
     # add custom terms note
     terms_note = ""
     if custom_terms_json:
@@ -45,7 +45,7 @@ def get_summary_prompt(source_content, custom_terms_json=None):
         for term in custom_terms_json['terms']:
             terms_list.append(f"- {term['src']}: {term['tgt']} ({term['note']})")
         terms_note = "\n### Existing Terms\nPlease exclude these terms in your extraction:\n" + "\n".join(terms_list)
-    
+
     summary_prompt = f"""
 ## Role
 You are a video translation expert and terminology consultant, specializing in {src_lang} comprehension and {tgt_lang} expression optimization.
@@ -125,7 +125,7 @@ def get_prompt_faithfulness(lines, shared_prompt):
     TARGET_LANGUAGE = load_key("target_language")
     # Split lines by \n
     line_splits = lines.split('\n')
-    
+
     # Create JSON return format example
     json_format = {}
     for i, line in enumerate(line_splits, 1):
@@ -133,11 +133,11 @@ def get_prompt_faithfulness(lines, shared_prompt):
             "origin": line,
             "direct": f"<<direct {TARGET_LANGUAGE} translation>>"
         }
-    
+
     src_language = load_key("whisper.detected_language")
     prompt_faithfulness = f'''
 ## Role
-You are a professional Netflix subtitle translator, fluent in both {src_language} and {TARGET_LANGUAGE}, as well as their respective cultures. 
+You are a professional Netflix subtitle translator, fluent in both {src_language} and {TARGET_LANGUAGE}, as well as their respective cultures.
 Your expertise lies in accurately understanding the semantics and structure of the original {src_language} text and faithfully translating it into {TARGET_LANGUAGE} while preserving the original meaning.
 
 ## Task
@@ -170,6 +170,65 @@ Note: << >> represents placeholders that should not appear in your answer
 
 def get_prompt_expressiveness(faithfulness_result, lines, shared_prompt):
     TARGET_LANGUAGE = load_key("target_language")
+
+    # Examples for filler words in different languages
+    filler_examples = {
+        "zh": '''
+        - "Okay" → "好的", "没问题", "行", "可以", "明白了", "我知道了" (not just "好")
+        - "Right" → "对的", "没错", "是这样的", "确实如此" (not just "对")
+        - "Yeah" → "是的", "没错", "对的对的", "确实如此", "就是这样" (not just "对")
+        - "Yes" → "是的", "没错", "当然了", "没问题" (not just "是")
+        - "Well" → "嗯", "这个嘛", "其实呢", "那个" (context-dependent)
+        - "You know" → "你知道的", "你懂的", "你看" (conversational)
+        - "I mean" → "我是说", "我的意思是", "就是说" (clarification)''',
+
+        "ja": '''
+        - "Okay" → "わかりました", "了解しました", "大丈夫です", "いいですよ" (not just "はい")
+        - "Right" → "そうですね", "その通りです", "確かに" (not just "はい")
+        - "Yeah" → "そうですね", "その通りです", "そうですよ", "確かに" (not just "はい")
+        - "Well" → "えーと", "そうですね", "まあ", "あのー" (context-dependent)
+        - "You know" → "ご存知の通り", "わかるでしょう", "ね" (conversational)
+        - "I mean" → "つまり", "言いたいのは", "私が言いたいのは" (clarification)''',
+
+        "fr": '''
+        - "Okay" → "D'accord", "Très bien", "Entendu", "Pas de problème" (not just "OK")
+        - "Right" → "C'est vrai", "Exactement", "Tout à fait", "En effet" (not just "Oui")
+        - "Yeah" → "Ouais", "Effectivement", "Tout à fait", "C'est ça" (not just "Oui")
+        - "Well" → "Eh bien", "Bon", "Alors", "En fait" (context-dependent)
+        - "You know" → "Tu sais", "Vous savez", "Tu vois ce que je veux dire" (conversational)
+        - "I mean" → "Je veux dire", "C'est-à-dire", "En d'autres termes" (clarification)''',
+
+        "es": '''
+        - "Okay" → "De acuerdo", "Está bien", "Vale", "Perfecto" (not just "OK")
+        - "Right" → "Exacto", "Así es", "Correcto", "Efectivamente" (not just "Sí")
+        - "Yeah" → "Claro", "Por supuesto", "Desde luego", "Efectivamente" (not just "Sí")
+        - "Well" → "Bueno", "Pues", "Verás", "Es que" (context-dependent)
+        - "You know" → "Ya sabes", "Como sabrás", "¿Sabes?" (conversational)
+        - "I mean" → "Quiero decir", "O sea", "Es decir" (clarification)''',
+
+        "ru": '''
+        - "Okay" → "Хорошо", "Ладно", "Понятно", "Договорились" (not just "ОК")
+        - "Right" → "Верно", "Правильно", "Именно так", "Действительно" (not just "Да")
+        - "Yeah" → "Да конечно", "Точно", "Именно так", "Верно говоришь" (not just "Да")
+        - "Well" → "Ну", "Так", "Видите ли", "Дело в том, что" (context-dependent)
+        - "You know" → "Знаете", "Понимаете", "Видите ли" (conversational)
+        - "I mean" → "Я имею в виду", "То есть", "В смысле" (clarification)''',
+
+        "de": '''
+        - "Okay" → "In Ordnung", "Alles klar", "Verstanden", "Geht klar" (not just "OK")
+        - "Right" → "Richtig", "Genau", "Stimmt", "Ganz recht" (not just "Ja")
+        - "Yeah" → "Jawohl", "Na klar", "Aber sicher", "Selbstverständlich" (not just "Ja")
+        - "Well" → "Nun", "Also", "Tja", "Naja" (context-dependent)
+        - "You know" → "Weißt du", "Verstehst du", "Nicht wahr" (conversational)
+        - "I mean" → "Ich meine", "Das heißt", "Anders gesagt" (clarification)'''
+    }
+
+    # Get language code (first 2 characters)
+    lang_code = TARGET_LANGUAGE.lower()[:2]
+
+    # Get examples for the target language or use a generic message
+    examples = filler_examples.get(lang_code, "Use natural expressions in the target language for filler words like 'Okay', 'Right', etc.")
+
     json_format = {}
     for key, value in faithfulness_result.items():
         json_format[key] = {
@@ -207,8 +266,19 @@ Please use a two-step thinking process to handle the text line by line:
    - Aim for contextual smoothness and naturalness, conforming to {TARGET_LANGUAGE} expression habits
    - Ensure it's easy for {TARGET_LANGUAGE} audience to understand and accept
    - Adapt the language style to match the video's theme (e.g., use casual language for tutorials, professional terminology for technical content, formal language for documentaries)
+   - Pay special attention to conversational markers and filler words (e.g., "Okay", "right", "well", "you know", "I mean", etc.):
+     * Translate these using natural, culturally appropriate expressions in {TARGET_LANGUAGE} rather than literal translations
+     * Use varied expressions that sound natural to native speakers
+     * IMPORTANT: NEVER translate filler words or conversational markers into single-character words (e.g., never translate "Yeah" as just "对" in Chinese)
+     * Always use multi-character expressions for filler words to make them more suitable for dubbing and more natural sounding
+     * Consider the speaker's tone and context when translating these expressions
+     * Examples for common filler words in {TARGET_LANGUAGE}:
+       - For "Okay", "Right", "Well", "You know", "I mean", "Yeah", "Yes", "No", etc., use natural expressions that a native speaker would use
+       - Avoid direct word-for-word translations that sound unnatural
+       - Consider the context, tone, and formality level when choosing appropriate expressions
+       {examples}
 </Translation Analysis Steps>
-   
+
 ## INPUT
 <subtitles>
 {lines}
@@ -277,7 +347,7 @@ Pre-processed {src_language} Subtitles ([br] indicates split points): {src_part}
 ## ================================================================
 # @ step8_gen_audio_task.py @ step10_gen_audio.py
 def get_subtitle_trim_prompt(text, duration):
- 
+
     rule = '''Consider a. Reducing filler words without modifying meaningful content. b. Omitting unnecessary modifiers or pronouns, for example:
     - "Please explain your thought process" can be shortened to "Please explain thought process"
     - "We need to carefully analyze this complex problem" can be shortened to "We need to analyze this problem"
@@ -286,7 +356,7 @@ def get_subtitle_trim_prompt(text, duration):
 
     trim_prompt = '''
 ## Role
-You are a professional subtitle editor, editing and optimizing lengthy subtitles that exceed voiceover time before handing them to voice actors. 
+You are a professional subtitle editor, editing and optimizing lengthy subtitles that exceed voiceover time before handing them to voice actors.
 Your expertise lies in cleverly shortening subtitles slightly while ensuring the original meaning and structure remain unchanged.
 
 ## INPUT
