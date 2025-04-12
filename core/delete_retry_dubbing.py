@@ -7,7 +7,9 @@ def delete_dubbing_files():
         os.path.join("output", "AI配音.mp4"),
         os.path.join("output", "dub.mp3"),
         os.path.join("output", "dub.srt"),
-        os.path.join("output", "audio", "tts_tasks.xlsx")
+        os.path.join("output", "dub_orig.srt"),
+        os.path.join("output", "audio", "tts_tasks.xlsx"),
+        os.path.join("output", "normalized_dub.wav")
     ]
     
     for file_path in files_to_delete:
