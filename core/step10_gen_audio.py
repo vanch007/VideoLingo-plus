@@ -91,16 +91,19 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
             file_size = os.path.getsize(temp_file)
             duration = get_audio_duration(temp_file)
             
-            # 检查音频文件是否异常(小于20k或大于10秒)
+            # 检查音频文件是否异常(小于20k或大于10秒或小于0.5秒)
             if file_size < 20000 or duration > 10 or duration < 0.5:
                 os.remove(temp_file)
                 if attempt < max_retries - 1:
                     rprint(f"[yellow]⚠️ 音频文件异常(大小:{file_size}字节,时长:{duration:.2f}秒), 重试中({attempt + 1}/{max_retries})[/yellow]")
                     time.sleep(1)  # 增加重试间隔
                     continue
+                else:
+                    raise Exception(f"音频文件异常且达到最大重试次数(大小:{file_size}字节,时长:{duration:.2f}秒)")
             
-            # 检测并剪切静音片段
-            detect_silence(temp_file)
+            # 只对1.5秒以上的音频检测并剪切静音片段
+            if duration >= 1.5:
+                detect_silence(temp_file)
             duration = get_audio_duration(temp_file)  # 重新计算剪切后的时长
             real_dur = duration
             break
