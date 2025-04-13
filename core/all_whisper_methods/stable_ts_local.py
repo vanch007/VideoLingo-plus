@@ -6,14 +6,33 @@ warnings.filterwarnings("ignore")
 import torch
 import time
 import subprocess
-from typing import Dict
+from typing import Dict, List
 from rich import print as rprint
 import librosa
 import tempfile
-from core.config_utils import load_key
+import platform
+from core.config_utils import load_key, get_joiner
 from core.all_whisper_methods.audio_preprocess import save_language
 
 MODEL_DIR = load_key("model_dir")
+
+# MLX Whisper 模型映射
+MLX_MODELS = {
+    "tiny.en": "mlx-community/whisper-tiny.en-mlx",
+    "tiny": "mlx-community/whisper-tiny-mlx",
+    "base.en": "mlx-community/whisper-base.en-mlx",
+    "base": "mlx-community/whisper-base-mlx",
+    "small.en": "mlx-community/whisper-small.en-mlx",
+    "small": "mlx-community/whisper-small-mlx",
+    "medium.en": "mlx-community/whisper-medium.en-mlx",
+    "medium": "mlx-community/whisper-medium-mlx",
+    "large-v1": "mlx-community/whisper-large-v1-mlx",
+    "large-v2": "mlx-community/whisper-large-v2-mlx",
+    "large-v3": "mlx-community/whisper-large-v3-mlx",
+    "large": "mlx-community/whisper-large-v3-mlx",
+    "large-v3-turbo": "mlx-community/whisper-large-v3-turbo",
+    "turbo": "mlx-community/whisper-large-v3-turbo"
+}
 
 def check_device():
     """Check and return the available device"""
@@ -26,6 +45,38 @@ def check_device():
     elif device == "mps":
         rprint(f"[cyan]🍎 Using Apple Silicon acceleration[/cyan]")
     return device
+
+def generate_split_files(result: Dict, language: str) -> None:
+    """
+    使用 stable-ts 的预分段字幕生成 sentence_splitbynlp.txt 文件
+
+    Args:
+        result: stable-ts 转换为 WhisperX 格式的结果
+        language: 检测到的语言代码
+    """
+    try:
+        # 检查输出目录是否存在
+        os.makedirs('output/log', exist_ok=True)
+
+        # 生成 sentence_splitbynlp.txt
+        # 这个文件通常由 step3_1_spacy_split.py 生成，但我们直接使用 stable-ts 的分段结果
+        sentences = []
+        for segment in result['segments']:
+            # 清理文本（移除多余空格）
+            text = ' '.join(segment['text'].split())
+            if text.strip():
+                sentences.append(text)
+
+        # 写入 sentence_splitbynlp.txt
+        splitbynlp_path = 'output/log/sentence_splitbynlp.txt'
+        with open(splitbynlp_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(sentences))
+        rprint(f"[green]✅ Generated {splitbynlp_path} from stable-ts segments[/green]")
+        rprint(f"[yellow]ℹ️ Will use step3_2_splitbymeaning.py for further sentence splitting[/yellow]")
+
+    except Exception as e:
+        rprint(f"[red]❌ Error generating split files: {e}[/red]")
+        # 这里我们只记录错误，不抛出异常，以免影响主要的转录流程
 
 def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
     """
@@ -79,10 +130,31 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         else:
             rprint(f"[green]📥 Using WHISPER model from HuggingFace:[/green] {model_name} ...")
 
-        # On Apple Silicon, always use MLX with large-v3-turbo for better performance
+        # On Apple Silicon, use MLX with appropriate model for better performance
         if device == "mps":
-            rprint("[green]📥 Using MLX Whisper large-v3-turbo model for Apple Silicon...[/green]")
-            model = stable_whisper.load_mlx_whisper('large-v3-turbo')
+            # 强制将 MPS 设备视为 Apple Silicon
+            # 因为 MPS 只在 Apple Silicon 上可用
+            is_apple_silicon = True
+            rprint(f"[cyan]检测到 MPS 设备，将其视为 Apple Silicon[/cyan]")
+
+            # 使用用户选择的模型
+            mlx_model_name = WHISPER_MODEL
+
+            # 打印调试信息
+            rprint(f"[cyan]用户选择的模型: {mlx_model_name}[/cyan]")
+            rprint(f"[cyan]模型是否在 MLX_MODELS 中: {mlx_model_name in MLX_MODELS}[/cyan]")
+
+            # 如果用户选择的模型在 MLX_MODELS 中，使用该模型
+            if mlx_model_name in MLX_MODELS:
+                rprint(f"[green]📥 Using MLX Whisper {mlx_model_name} model for Apple Silicon...[/green]")
+                model = stable_whisper.load_mlx_whisper(mlx_model_name)
+            # 否则默认使用 large-v3-turbo
+            else:
+                rprint(f"[yellow]警告: 模型 {mlx_model_name} 不在 MLX 支持列表中，使用 large-v3-turbo 代替[/yellow]")
+                model = stable_whisper.load_mlx_whisper('large-v3-turbo')
+
+            # 记录使用的是 MLX Whisper
+            using_mlx_whisper = True
         else:
             # Load the model with stable_whisper on other devices
             rprint("[green]📥 Loading stable-ts model...[/green]")
@@ -91,17 +163,31 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
                 device=device,
                 download_root=MODEL_DIR
             )
+            # 记录使用的不是 MLX Whisper
+            using_mlx_whisper = False
 
         rprint("[bold green]note: You will see Progress if working correctly[/bold green]")
 
         # Transcribe with stable-ts
+        # 基本参数，所有模型都支持
         transcribe_options = {
             'word_timestamps': True,    # Enable word-level timestamps
             'vad': True,               # Use Voice Activity Detection for better timestamps
-            'suppress_silence': True,   # Suppress silent parts
-            'suppress_word_ts': True,   # Adjust word timestamps
+            'vad_threshold': 0.5,      # Higher threshold for more accurate speech detection
             'verbose': True            # Show progress
         }
+
+        # 只有非 MLX Whisper 模型支持的高级参数
+        if not using_mlx_whisper:
+            rprint("[green]添加高级参数以提高转录质量[/green]")
+            transcribe_options.update({
+                'suppress_silence': True,   # Suppress silent parts
+                'suppress_word_ts': True,   # Adjust word timestamps
+                'nonspeech_skip': 1.0,     # Skip non-speech sections longer than 1 second
+                'max_instant_words': 0.3,  # Remove segments with too many instantaneous words
+            })
+        else:
+            rprint("[yellow]MLX Whisper不支持某些高级参数，使用基本配置[/yellow]")
 
         # Add language parameter if not auto
         if WHISPER_LANGUAGE != 'auto':
@@ -145,6 +231,9 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
                     whisperx_segment['words'].append(whisperx_word)
 
             whisperx_result['segments'].append(whisperx_segment)
+
+        # 使用 stable-ts 的预分段字幕生成 sentence_splitbynlp.txt
+        generate_split_files(whisperx_result, result.language)
 
         return whisperx_result
 

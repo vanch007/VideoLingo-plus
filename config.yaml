@@ -18,7 +18,7 @@ demucs: true
 
 whisper:
   # ["medium", "large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
-  model: 'large-v3'
+  model: 'medium'
   # Whisper specified recognition language [en, zh, ...]
   language: 'en'
   detected_language: 'en'

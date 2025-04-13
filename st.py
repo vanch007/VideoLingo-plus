@@ -102,18 +102,30 @@ def process_text(skip_merge_subtitles=False):
                 display_timing_statistics(key_suffix="text_step1")
 
         with st.spinner(t("Splitting long sentences...")):
-            start_time = time.time()
-            step3_1_spacy_split.split_by_spacy()
-            elapsed = time.time() - start_time
-            save_timing("NLP分句", elapsed)
+            # 检查是否使用 stable-ts 且文件已存在
+            is_stable_ts = load_key("whisper.runtime") == "stable-ts"
+            splitbynlp_exists = os.path.exists('output/log/sentence_splitbynlp.txt')
+
+            # 如果使用 stable-ts 且文件已存在，则跳过 NLP 分句步骤
+            if is_stable_ts and splitbynlp_exists:
+                st.info(t("Using pre-segmented subtitles from stable-ts, skipping NLP sentence splitting."))
+                save_timing("NLP分句", 0.01)  # 记录一个很小的时间，表示跳过
+            else:
+                start_time = time.time()
+                step3_1_spacy_split.split_by_spacy()
+                elapsed = time.time() - start_time
+                save_timing("NLP分句", elapsed)
+
             # 更新耗时统计显示
             with timing_placeholder.container():
                 display_timing_statistics(key_suffix="text_step2")
 
+            # 始终执行 LLM 分句步骤，不跳过
             start_time = time.time()
             step3_2_splitbymeaning.split_sentences_by_meaning()
             elapsed = time.time() - start_time
             save_timing("LLM分句", elapsed)
+
             # 更新耗时统计显示
             with timing_placeholder.container():
                 display_timing_statistics(key_suffix="text_step3")

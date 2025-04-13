@@ -61,6 +61,21 @@ def page_setting():
         if runtime != load_key("whisper.runtime"):
             update_key("whisper.runtime", runtime)
             st.rerun()
+
+        # 添加Whisper模型选择
+        whisper_models = ["medium", "large-v3", "large-v3-turbo"]
+        if runtime == "stable-ts":
+            # 如果使用stable-ts，添加更多MLX支持的模型选项
+            whisper_models = ["tiny", "tiny.en", "base", "base.en", "small", "small.en", "medium", "medium.en",
+                             "large-v1", "large-v2", "large-v3", "large", "large-v3-turbo", "turbo"]
+
+        whisper_model = st.selectbox(t("Whisper Model"), options=whisper_models,
+                                   index=whisper_models.index(load_key("whisper.model")) if load_key("whisper.model") in whisper_models else 0,
+                                   help=t("Select model size. For Apple Silicon, MLX acceleration will be used automatically."))
+        if whisper_model != load_key("whisper.model"):
+            update_key("whisper.model", whisper_model)
+            st.rerun()
+
         if runtime == "cloud":
             config_input(t("WhisperX 302ai API"), "whisper.whisperX_302_api_key")
 
