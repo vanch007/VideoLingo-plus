@@ -19,16 +19,19 @@ YTB_RESOLUTION_KEY = "ytb_resolution"
 def process_video(file, dubbing=False, is_retry=False):
     if not is_retry:
         prepare_output_folder(OUTPUT_DIR)
-    
+
     text_steps = [
         ("🎥 Processing input file", partial(process_input_file, file)),
         ("🎙️ Transcribing with Whisper", partial(step2_whisperX.transcribe)),
         ("✂️ Splitting sentences", split_sentences),
         ("📝 Summarizing and translating", summarize_and_translate),
         ("⚡ Processing and aligning subtitles", process_and_align_subtitles),
-        ("🎬 Merging subtitles to video", step7_merge_sub_to_vid.merge_subtitles_to_video),
     ]
-    
+
+    # 只有当不需要配音时才执行step7合并字幕到视频
+    if not dubbing:
+        text_steps.append(("🎬 Merging subtitles to video", step7_merge_sub_to_vid.merge_subtitles_to_video))
+
     if dubbing:
         dubbing_steps = [
             ("🔊 Generating audio tasks", gen_audio_tasks),
@@ -38,7 +41,7 @@ def process_video(file, dubbing=False, is_retry=False):
             ("🎞️ Merging dubbing to video", step12_merge_dub_to_vid.merge_video_audio),
         ]
         text_steps.extend(dubbing_steps)
-    
+
     current_step = ""
     for step_name, step_func in text_steps:
         current_step = step_name
@@ -66,7 +69,7 @@ def process_video(file, dubbing=False, is_retry=False):
                     f"[yellow]Attempt {attempt + 1} failed. Retrying...[/]",
                     border_style="yellow"
                 ))
-    
+
     console.print(Panel("[bold green]All steps completed successfully! 🎉[/]", border_style="green"))
     cleanup(SAVE_DIR)
     return True, "", ""

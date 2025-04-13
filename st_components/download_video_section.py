@@ -15,8 +15,11 @@ OUTPUT_DIR = "output"
 def download_video_section():
     st.header(t("a. Download or Upload Video"))
     with st.container(border=True):
+        # 检查是否已经有视频文件
+        video_exists = False
         try:
             video_file = find_video_files()
+            video_exists = True
             st.video(video_file)
             col1, col2 = st.columns(2)
             with col1:
@@ -34,6 +37,7 @@ def download_video_section():
                     st.rerun()
             return True
         except:
+            # 如果没有找到视频文件，继续执行下面的代码
             col1, col2 = st.columns([3, 1])
             with col1:
                 url = st.text_input(t("Enter YouTube link:"))
@@ -73,10 +77,17 @@ def download_video_section():
                     project_start_time = time.time()
                     save_timing("项目开始时间", project_start_time)
 
-                    with st.spinner("Processing..."):
-                        from st import process_text, process_audio
-                        process_text()
-                        process_audio()
+                    # 确保视频文件存在后再处理
+                    try:
+                        # 检查视频文件是否存在
+                        find_video_files()
+                        with st.spinner("Processing..."):
+                            from st import process_text, process_audio
+                            process_text(skip_merge_subtitles=True)
+                            process_audio()
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+                        st.info("Please try again or check if the video was downloaded correctly.")
 
                     # 记录项目总耗时
                     project_elapsed = time.time() - project_start_time
@@ -110,10 +121,17 @@ def download_video_section():
                 project_start_time = time.time()
                 save_timing("项目开始时间", project_start_time)
 
-                with st.spinner("Processing..."):
-                    from st import process_text, process_audio
-                    process_text()
-                    process_audio()
+                # 确保视频文件存在后再处理
+                try:
+                    # 检查视频文件是否存在
+                    find_video_files()
+                    with st.spinner("Processing..."):
+                        from st import process_text, process_audio
+                        process_text(skip_merge_subtitles=True)
+                        process_audio()
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+                    st.info("Please try again or check if the video was uploaded correctly.")
 
                 # 记录项目总耗时
                 project_elapsed = time.time() - project_start_time

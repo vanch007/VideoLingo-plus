@@ -5,6 +5,7 @@ import pandas as pd
 from st_components.imports_and_utils import *
 from core.config_utils import load_key
 from core.timing_utils import time_it, get_formatted_timings, clear_timings, save_timing
+from core.step1_ytdlp import find_video_files
 
 # 确保set_page_config()只在主脚本中调用一次
 if not hasattr(st, '_page_config_set'):
@@ -27,26 +28,26 @@ def text_processing_section():
             with col1:
                 if st.button(t("Translate and Dub"), key="translate_and_dub_button"):
                     with st.spinner(t("Processing translation and dubbing...")):
-                        # 不执行step7的字幕处理流程
-                        with st.spinner(t("Using Whisper for transcription...")):
-                            step2_whisperX.transcribe()
-                        with st.spinner(t("Splitting long sentences...")):
-                            step3_1_spacy_split.split_by_spacy()
-                            step3_2_splitbymeaning.split_sentences_by_meaning()
-                        with st.spinner(t("Summarizing and translating...")):
-                            step4_1_summarize.get_summary()
-                            if load_key("pause_before_translate"):
-                                input(t("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue..."))
-                            step4_2_translate_all.translate_all()
-                        with st.spinner(t("Processing and aligning subtitles...")):
-                            step5_splitforsub.split_for_sub_main()
-                            step6_generate_final_timeline.align_timestamp_main()
-                        process_audio()
+                        # 调用process_text函数并跳过step7的字幕处理流程
+                        try:
+                            # 检查视频文件是否存在
+                            find_video_files()
+                            process_text(skip_merge_subtitles=True)
+                            process_audio()
+                        except Exception as e:
+                            st.error(f"Error: {str(e)}")
+                            st.info("Please make sure a video is available before processing.")
                     st.rerun()
             with col2:
                 if st.button(t("Start Processing Subtitles"), key="text_processing_button"):
-                    process_text()
-                    st.rerun()
+                    try:
+                        # 检查视频文件是否存在
+                        find_video_files()
+                        process_text()
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+                        st.info("Please make sure a video is available before processing.")
 
         st.markdown(f"""
         <p style='font-size: 20px;'>
@@ -70,7 +71,7 @@ def text_processing_section():
                 st.rerun()
             return True
 
-def process_text():
+def process_text(skip_merge_subtitles=False):
     # 记录整体字幕处理开始时间
     total_start_time = time.time()
 
@@ -154,14 +155,19 @@ def process_text():
             with timing_placeholder.container():
                 display_timing_statistics(key_suffix="text_step7")
 
-        with st.spinner(t("Merging subtitles to video...")):
-            start_time = time.time()
-            step7_merge_sub_to_vid.merge_subtitles_to_video()
-            elapsed = time.time() - start_time
-            save_timing("字幕合并到视频", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step8")
+        if not skip_merge_subtitles:
+            with st.spinner(t("Merging subtitles to video...")):
+                start_time = time.time()
+                step7_merge_sub_to_vid.merge_subtitles_to_video()
+                elapsed = time.time() - start_time
+                save_timing("字幕合并到视频", elapsed)
+                # 更新耗时统计显示
+                with timing_placeholder.container():
+                    display_timing_statistics(key_suffix="text_step8")
+        else:
+            # 跳过字幕合并到视频步骤
+            rprint = print if 'rprint' not in globals() else globals()['rprint']
+            rprint("[bold yellow]Skipping step7_merge_sub_to_vid.py as requested[/bold yellow]")
 
         # 记录整体字幕处理耗时
         save_timing("整体字幕处理", time.time() - total_start_time)
@@ -189,8 +195,14 @@ def audio_processing_section():
         """, unsafe_allow_html=True)
         if not os.path.exists(DUB_VIDEO):
             if st.button(t("Start Audio Processing"), key="audio_processing_button"):
-                process_audio()
-                st.rerun()
+                try:
+                    # 检查视频文件是否存在
+                    find_video_files()
+                    process_audio()
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+                    st.info("Please make sure a video is available before processing.")
         else:
             st.success(t("Audio processing is complete! You can check the audio files in the `output` folder."))
             if load_key("burn_subtitles"):
