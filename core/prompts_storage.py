@@ -405,3 +405,33 @@ Clean the given text by:
     "text": "cleaned text here"
 }}
 '''.strip()
+
+## ================================================================
+# @ step8_1_gen_audio_task.py
+def get_expand_short_text_prompt(text, origin_text):
+    TARGET_LANGUAGE = load_key("target_language")
+    return f'''
+## Role
+You are a professional subtitle editor specializing in {TARGET_LANGUAGE}, tasked with optimizing very short subtitles for text-to-speech systems.
+
+## Task
+Expand the given short subtitle text to make it more suitable for TTS processing while preserving the original meaning.
+
+1. The original text is too short (3 characters or less), which often causes TTS systems to fail
+2. Add natural filler words, descriptive elements, or context-appropriate phrases to extend the text
+3. Maintain the exact same meaning and tone as the original
+4. Keep the expanded text concise and natural - aim for 8-15 characters
+5. Do not change the core message or add new information
+
+## INPUT
+<subtitle>
+Short text: "{text}"
+Original source text: "{origin_text}"
+</subtitle>
+
+## Output in only JSON format
+{{
+    "analysis": "Brief analysis of why the text needs expansion",
+    "expanded_text": "The expanded text in {TARGET_LANGUAGE} that preserves the original meaning"
+}}
+'''.strip()
