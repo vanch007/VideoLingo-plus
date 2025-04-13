@@ -51,15 +51,38 @@ def _detect_silence(audio_file: str, start: float, end: float) -> List[float]:
 
 def get_audio_duration(audio_file: str) -> float:
     """Get the duration of an audio file using ffmpeg."""
+    # Check if file exists and has valid size
+    if not os.path.exists(audio_file):
+        print(f"[red]❌ Error: Audio file does not exist: {audio_file}[/red]")
+        return 0
+
+    file_size = os.path.getsize(audio_file)
+    if file_size < 1000:  # Less than 1KB is likely invalid
+        print(f"[red]❌ Error: Audio file too small ({file_size} bytes): {audio_file}[/red]")
+        return 0
+
     cmd = ['ffmpeg', '-i', audio_file]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     _, stderr = process.communicate()
     output = stderr.decode('utf-8', errors='ignore')
 
     try:
-        duration_str = [line for line in output.split('\n') if 'Duration' in line][0]
+        duration_str = [line for line in output.split('\n') if 'Duration' in line]
+        if not duration_str:  # No duration found
+            print(f"[red]❌ Error: No duration information found in file: {audio_file}[/red]")
+            return 0
+
+        duration_str = duration_str[0]
+        if 'N/A' in duration_str:  # Handle N/A duration
+            print(f"[red]❌ Error: Duration is N/A for file: {audio_file}[/red]")
+            return 0
+
         duration_parts = duration_str.split('Duration: ')[1].split(',')[0].split(':')
         duration = float(duration_parts[0])*3600 + float(duration_parts[1])*60 + float(duration_parts[2])
+
+        # Sanity check - if duration is unreasonably long or short
+        if duration > 3600 or duration <= 0:  # More than 1 hour or negative/zero
+            print(f"[yellow]⚠️ Warning: Unusual duration ({duration:.2f}s) for file: {audio_file}[/yellow]")
     except Exception as e:
         print(f"[red]❌ Error: Failed to get audio duration: {e}[/red]")
         duration = 0
