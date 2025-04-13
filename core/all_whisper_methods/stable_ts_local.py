@@ -72,7 +72,6 @@ def generate_split_files(result: Dict, language: str) -> None:
         with open(splitbynlp_path, 'w', encoding='utf-8') as f:
             f.write('\n'.join(sentences))
         rprint(f"[green]✅ Generated {splitbynlp_path} from stable-ts segments[/green]")
-        rprint(f"[yellow]ℹ️ Will use step3_2_splitbymeaning.py for further sentence splitting[/yellow]")
 
     except Exception as e:
         rprint(f"[red]❌ Error generating split files: {e}[/red]")
