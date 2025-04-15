@@ -120,11 +120,17 @@ def process_text(skip_merge_subtitles=False):
             with timing_placeholder.container():
                 display_timing_statistics(key_suffix="text_step2")
 
-            # 始终执行 LLM 分句步骤，不跳过
-            start_time = time.time()
-            step3_2_splitbymeaning.split_sentences_by_meaning()
-            elapsed = time.time() - start_time
-            save_timing("LLM分句", elapsed)
+            # 检查是否需要执行 LLM 分句步骤
+            splitbymeaning_exists = os.path.exists('output/log/sentence_splitbymeaning.txt')
+
+            if splitbymeaning_exists:
+                st.info(t("File 'sentence_splitbymeaning.txt' already exists. Skipping LLM sentence splitting."))
+                save_timing("LLM分句", 0.01)  # 记录一个很小的时间，表示跳过
+            else:
+                start_time = time.time()
+                step3_2_splitbymeaning.split_sentences_by_meaning()
+                elapsed = time.time() - start_time
+                save_timing("LLM分句", elapsed)
 
             # 更新耗时统计显示
             with timing_placeholder.container():

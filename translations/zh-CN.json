@@ -102,6 +102,9 @@
     "Installing requirements using `pip install -r requirements.txt`": "正在使用 `pip install -r requirements.txt` 安装依赖",
     "Detected NVIDIA GPU(s)": "检测到NVIDIA GPU",
     "No NVIDIA GPU detected": "未检测到NVIDIA GPU",
-    "No NVIDIA GPU detected or NVIDIA drivers not properly installed": "未检测到NVIDIA GPU或NVIDIA驱动未正确安装"
+    "No NVIDIA GPU detected or NVIDIA drivers not properly installed": "未检测到NVIDIA GPU或NVIDIA驱动未正确安装",
+    "Using pre-segmented subtitles from stable-ts, skipping NLP sentence splitting.": "使用 stable-ts 预分段字幕，跳过 NLP 句子分割。",
+    "File 'sentence_splitbymeaning.txt' already exists. Skipping LLM sentence splitting.": "文件 'sentence_splitbymeaning.txt' 已存在。跳过 LLM 句子分割。",
+    "Translate and Dub": "翻译并配音"
 }
 

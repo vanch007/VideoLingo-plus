@@ -46,36 +46,19 @@ def check_device():
         rprint(f"[cyan]🍎 Using Apple Silicon acceleration[/cyan]")
     return device
 
-def generate_split_files(result: Dict, language: str) -> None:
+def generate_split_files(result: Dict, language: str, is_first_segment: bool = False) -> None:
     """
-    使用 stable-ts 的预分段字幕生成 sentence_splitbynlp.txt 文件
+    此函数已被禁用，不再生成 sentence_splitbynlp.txt 文件
+    现在将由 step3_1_spacy_split.py 负责生成该文件
 
     Args:
         result: stable-ts 转换为 WhisperX 格式的结果
         language: 检测到的语言代码
+        is_first_segment: 是否是第一个音频段（已不再使用）
     """
-    try:
-        # 检查输出目录是否存在
-        os.makedirs('output/log', exist_ok=True)
-
-        # 生成 sentence_splitbynlp.txt
-        # 这个文件通常由 step3_1_spacy_split.py 生成，但我们直接使用 stable-ts 的分段结果
-        sentences = []
-        for segment in result['segments']:
-            # 清理文本（移除多余空格）
-            text = ' '.join(segment['text'].split())
-            if text.strip():
-                sentences.append(text)
-
-        # 写入 sentence_splitbynlp.txt
-        splitbynlp_path = 'output/log/sentence_splitbynlp.txt'
-        with open(splitbynlp_path, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(sentences))
-        rprint(f"[green]✅ Generated {splitbynlp_path} from stable-ts segments[/green]")
-
-    except Exception as e:
-        rprint(f"[red]❌ Error generating split files: {e}[/red]")
-        # 这里我们只记录错误，不抛出异常，以免影响主要的转录流程
+    # 不执行任何操作，让 step3_1_spacy_split.py 来处理
+    rprint(f"[cyan]ℹ️ 不生成 sentence_splitbynlp.txt，将由 step3_1_spacy_split.py 处理[/cyan]")
+    return
 
 def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
     """
@@ -231,8 +214,14 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
 
             whisperx_result['segments'].append(whisperx_segment)
 
-        # 使用 stable-ts 的预分段字幕生成 sentence_splitbynlp.txt
-        generate_split_files(whisperx_result, result.language)
+        # 不再生成 sentence_splitbynlp.txt 文件
+        # 注释掉相关代码，让 step3_1_spacy_split.py 来处理
+        # is_first_segment = start == 0 or start < 1.0
+        # generate_split_files(whisperx_result, result.language, is_first_segment)
+
+        # 只调用一次，记录日志
+        if start == 0 or start < 1.0:  # 只在第一个段时显示信息
+            rprint(f"[cyan]ℹ️ stable-ts 不再生成 sentence_splitbynlp.txt，将由 step3_1_spacy_split.py 处理[/cyan]")
 
         return whisperx_result
 

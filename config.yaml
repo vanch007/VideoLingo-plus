@@ -6,9 +6,9 @@ display_language: "zh-CN"
 
 # API settings
 api:
-  key: 'b6226e75-febb-4bac-89fb-b057fb2cd1c4'
-  base_url: 'https://ark.cn-beijing.volces.com/api'
-  model: 'ep-20250328122646-96xz4'
+  key: 'sk-awjktilzfzyuovnwmlikewbwlkezjbbolujevbnfrwgewaid'
+  base_url: 'https://api.siliconflow.cn'
+  model: 'THUDM/GLM-4-32B-0414'
 
 # Language settings, written into the prompt, can be described in natural language
 target_language: '简体中文'
