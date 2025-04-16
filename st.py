@@ -323,10 +323,82 @@ def display_timing_statistics(key_suffix="main"):
         from core.timing_utils import ensure_timing_file
         ensure_timing_file()
 
+        # 添加CSS样式
+        st.markdown("""
+        <style>
+        .timing-header {
+            background: linear-gradient(90deg, #FF4B4B, #FF8F8F);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .section-header {
+            background: linear-gradient(90deg, #4B8BF5, #6BA5F7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            margin: 15px 0 10px 0;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .timing-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .timing-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .timing-table th {
+            background-color: #f1f3f4;
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+            font-weight: bold;
+        }
+        .timing-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .timing-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .timing-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        .timing-icon {
+            margin-right: 8px;
+            font-size: 1.2em;
+        }
+        .timing-value {
+            font-weight: bold;
+            color: #333;
+        }
+        .timing-label {
+            color: #666;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
         # 使用高亮边框和颜色
         with st.container(border=True):
             # 使用更醒目的标题
-            st.markdown("<h3 style='color:#FF4B4B;'>⏱️ 处理耗时统计</h3>", unsafe_allow_html=True)
+            st.markdown(
+                "<div class='timing-header'><span class='timing-icon'>⏱️</span> 处理耗时统计</div>",
+                unsafe_allow_html=True
+            )
 
             try:
                 timings = get_formatted_timings()
@@ -353,28 +425,45 @@ def display_timing_statistics(key_suffix="main"):
                         else:
                             other_timings.append(item)
 
+                    # 创建两列布局
+                    col1, col2 = st.columns(2)
+
                     # 显示项目总耗时
                     if project_timings:
-                        st.markdown("<h4 style='color:#4B8BF5;'>项目总耗时</h4>", unsafe_allow_html=True)
-                        project_df = pd.DataFrame(project_timings)
-                        st.dataframe(project_df, use_container_width=True, height=min(35 * (len(project_timings) + 1), 150))
+                        with col1:
+                            st.markdown("<div class='section-header'><span class='timing-icon'>🕒</span> 项目总耗时</div>", unsafe_allow_html=True)
+                            with st.container(border=False):
+                                # 转换为HTML表格
+                                html_table = "<table class='timing-table'>"
+                                html_table += "<tr><th>序号</th><th>步骤</th><th>耗时</th></tr>"
+                                for i, item in enumerate(project_timings):
+                                    html_table += f"<tr><td>{i}</td><td>{item['步骤']}</td><td class='timing-value'>{item['耗时']}</td></tr>"
+                                html_table += "</table>"
+                                st.markdown(html_table, unsafe_allow_html=True)
 
                     # 显示下载/上传耗时
                     if download_timings:
-                        st.markdown("<h4 style='color:#4B8BF5;'>下载/上传耗时</h4>", unsafe_allow_html=True)
-                        download_df = pd.DataFrame(download_timings)
-                        st.dataframe(download_df, use_container_width=True, height=min(35 * (len(download_timings) + 1), 150))
+                        with col2:
+                            st.markdown("<div class='section-header'><span class='timing-icon'>📥</span> 下载/上传耗时</div>", unsafe_allow_html=True)
+                            with st.container(border=False):
+                                # 转换为HTML表格
+                                html_table = "<table class='timing-table'>"
+                                html_table += "<tr><th>序号</th><th>步骤</th><th>耗时</th></tr>"
+                                for i, item in enumerate(download_timings):
+                                    html_table += f"<tr><td>{i}</td><td>{item['步骤']}</td><td class='timing-value'>{item['耗时']}</td></tr>"
+                                html_table += "</table>"
+                                st.markdown(html_table, unsafe_allow_html=True)
 
                     # 显示翻译阶段耗时
                     if text_timings:
-                        st.markdown("<h4 style='color:#4B8BF5;'>翻译阶段耗时</h4>", unsafe_allow_html=True)
+                        st.markdown("<div class='section-header'><span class='timing-icon'>🔤</span> 翻译阶段耗时</div>", unsafe_allow_html=True)
                         # 定义翻译阶段的步骤顺序
                         text_step_order = {
                             '整体字幕处理': 0,
                             '转录': 1,
-                            '摘要': 2,
+                            'NLP分句': 2,
                             'LLM分句': 3,
-                            'NLP分句': 4,
+                            '摘要': 4,
                             '翻译': 5,
                             '字幕分割': 6,
                             '时间轴对齐': 7,
@@ -382,12 +471,17 @@ def display_timing_statistics(key_suffix="main"):
                         }
                         # 按步骤顺序排序
                         sorted_text_timings = sorted(text_timings, key=lambda x: text_step_order.get(x['步骤'], 100))
-                        text_df = pd.DataFrame(sorted_text_timings)
-                        st.dataframe(text_df, use_container_width=True, height=min(35 * (len(text_timings) + 1), 300))
+
+                        # 转换为HTML表格
+                        html_table = "<table class='timing-table'>"
+                        html_table += "<tr><th>序号</th><th>步骤</th><th>耗时</th></tr>"
+                        for i, item in enumerate(sorted_text_timings):
+                            html_table += f"<tr><td>{i}</td><td>{item['步骤']}</td><td class='timing-value'>{item['耗时']}</td></tr>"
+                        html_table += "</table>"
+                        st.markdown(html_table, unsafe_allow_html=True)
 
                         # 创建翻译阶段的条形图
                         try:
-
                             chart_data = pd.DataFrame({
                                 '步骤': [item['步骤'] for item in sorted_text_timings],
                                 '耗时(秒)': [float(item['耗时'].split()[0]) if '秒' in item['耗时'] and '分' not in item['耗时'] and '小时' not in item['耗时'] else
@@ -401,7 +495,7 @@ def display_timing_statistics(key_suffix="main"):
 
                     # 显示配音阶段耗时
                     if audio_timings:
-                        st.markdown("<h4 style='color:#4B8BF5;'>配音阶段耗时</h4>", unsafe_allow_html=True)
+                        st.markdown("<div class='section-header'><span class='timing-icon'>🔊</span> 配音阶段耗时</div>", unsafe_allow_html=True)
                         # 定义配音阶段的步骤顺序
                         audio_step_order = {
                             '整体配音处理': 0,
@@ -414,12 +508,17 @@ def display_timing_statistics(key_suffix="main"):
                         }
                         # 按步骤顺序排序
                         sorted_audio_timings = sorted(audio_timings, key=lambda x: audio_step_order.get(x['步骤'], 100))
-                        audio_df = pd.DataFrame(sorted_audio_timings)
-                        st.dataframe(audio_df, use_container_width=True, height=min(35 * (len(audio_timings) + 1), 300))
+
+                        # 转换为HTML表格
+                        html_table = "<table class='timing-table'>"
+                        html_table += "<tr><th>序号</th><th>步骤</th><th>耗时</th></tr>"
+                        for i, item in enumerate(sorted_audio_timings):
+                            html_table += f"<tr><td>{i}</td><td>{item['步骤']}</td><td class='timing-value'>{item['耗时']}</td></tr>"
+                        html_table += "</table>"
+                        st.markdown(html_table, unsafe_allow_html=True)
 
                         # 创建配音阶段的条形图
                         try:
-
                             chart_data = pd.DataFrame({
                                 '步骤': [item['步骤'] for item in sorted_audio_timings],
                                 '耗时(秒)': [float(item['耗时'].split()[0]) if '秒' in item['耗时'] and '分' not in item['耗时'] and '小时' not in item['耗时'] else
@@ -433,9 +532,14 @@ def display_timing_statistics(key_suffix="main"):
 
                     # 显示其他耗时
                     if other_timings:
-                        st.markdown("<h4 style='color:#4B8BF5;'>其他耗时</h4>", unsafe_allow_html=True)
-                        other_df = pd.DataFrame(other_timings)
-                        st.dataframe(other_df, use_container_width=True, height=min(35 * (len(other_timings) + 1), 200))
+                        st.markdown("<div class='section-header'><span class='timing-icon'>📋</span> 其他耗时</div>", unsafe_allow_html=True)
+                        # 转换为HTML表格
+                        html_table = "<table class='timing-table'>"
+                        html_table += "<tr><th>序号</th><th>步骤</th><th>耗时</th></tr>"
+                        for i, item in enumerate(other_timings):
+                            html_table += f"<tr><td>{i}</td><td>{item['步骤']}</td><td class='timing-value'>{item['耗时']}</td></tr>"
+                        html_table += "</table>"
+                        st.markdown(html_table, unsafe_allow_html=True)
                 else:
                     # 使用更醒目的提示
                     st.info("暂无耗时数据，运行处理后将显示在这里")
