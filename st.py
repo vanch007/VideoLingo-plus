@@ -4,7 +4,7 @@ import time
 import pandas as pd
 from st_components.imports_and_utils import *
 from core.config_utils import load_key
-from core.timing_utils import time_it, get_formatted_timings, clear_timings, save_timing
+from core.timing_utils import get_formatted_timings, save_timing
 from core.step1_ytdlp import find_video_files
 
 # 确保set_page_config()只在主脚本中调用一次
@@ -319,6 +319,16 @@ def display_timing_statistics(key_suffix="main"):
         key_suffix (str): 按钮的key后缀，用于区分不同实例的按钮
     """
     try:
+        # Check if we're being called during cleanup
+        import traceback
+        stack = traceback.extract_stack()
+        caller_files = [frame[0] for frame in stack]
+        in_cleanup = any('onekeycleanup.py' in file for file in caller_files)
+
+        if in_cleanup:
+            print(f"⚠️ display_timing_statistics() called during cleanup - skipping")
+            return
+
         # 确保计时文件存在
         from core.timing_utils import ensure_timing_file
         ensure_timing_file()

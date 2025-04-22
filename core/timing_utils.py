@@ -12,10 +12,21 @@ def ensure_timing_file():
     """确保计时文件存在"""
     global TIMING_FILE
     try:
+        # Check if we're being called during cleanup
+        import traceback
+        stack = traceback.extract_stack()
+        caller_files = [frame[0] for frame in stack]
+        in_cleanup = any('onekeycleanup.py' in file for file in caller_files)
+
+        if in_cleanup:
+            print(f"⚠️ ensure_timing_file() called during cleanup process - skipping file creation")
+            return
+
         os.makedirs(os.path.dirname(TIMING_FILE), exist_ok=True)
         if not os.path.exists(TIMING_FILE):
             with open(TIMING_FILE, 'w', encoding='utf-8') as f:
                 json.dump({}, f)
+            print(f"📊 Created new timing file: {TIMING_FILE}")
         # 测试文件是否可写
         elif os.path.exists(TIMING_FILE):
             with open(TIMING_FILE, 'r+', encoding='utf-8') as f:
@@ -26,6 +37,7 @@ def ensure_timing_file():
                     f.seek(0)
                     f.truncate()
                     json.dump({}, f)
+                    print(f"📊 Reset invalid timing file: {TIMING_FILE}")
     except (IOError, PermissionError) as e:
         print(f"警告: 无法访问计时文件 {TIMING_FILE}: {str(e)}")
         # 尝试使用临时目录
@@ -37,10 +49,25 @@ def ensure_timing_file():
 
 def get_all_timings() -> Dict[str, float]:
     """获取所有步骤的耗时"""
-    ensure_timing_file()
+    # Check if we're being called during cleanup
+    import traceback
+    stack = traceback.extract_stack()
+    caller_files = [frame[0] for frame in stack]
+    in_cleanup = any('onekeycleanup.py' in file for file in caller_files)
+
+    if not in_cleanup:
+        ensure_timing_file()
+
     try:
-        with open(TIMING_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        if os.path.exists(TIMING_FILE):
+            with open(TIMING_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        else:
+            if in_cleanup:
+                print(f"⚠️ get_all_timings() called during cleanup but file {TIMING_FILE} doesn't exist - returning empty dict")
+            else:
+                print(f"警告: 计时文件 {TIMING_FILE} 不存在")
+            return {}
     except (json.JSONDecodeError, FileNotFoundError, IOError, PermissionError) as e:
         print(f"警告: 无法读取计时文件: {str(e)}")
         return {}
@@ -88,6 +115,16 @@ def save_timing(step_name: str, elapsed_time: float):
     """保存步骤耗时"""
     global TIMING_FILE
 
+    # Check if we're being called during cleanup
+    import traceback
+    stack = traceback.extract_stack()
+    caller_files = [frame[0] for frame in stack]
+    in_cleanup = any('onekeycleanup.py' in file for file in caller_files)
+
+    if in_cleanup:
+        print(f"⚠️ save_timing() called during cleanup process - skipping for {step_name}")
+        return False
+
     # 特殊处理项目开始时间，它存储的是时间戳而不是耗时
     if step_name == "项目开始时间":
         # 确保计时文件存在
@@ -116,6 +153,12 @@ def save_timing(step_name: str, elapsed_time: float):
     # 确保计时文件存在
     ensure_timing_file()
 
+    # Check if the file exists after ensure_timing_file
+    # This is to prevent recreating the file if it was just moved during cleanup
+    if not os.path.exists(TIMING_FILE):
+        print(f"⚠️ Timing file {TIMING_FILE} does not exist after ensure_timing_file() - possible cleanup in progress")
+        return False
+
     try:
         # 获取当前所有耗时数据
         timings = get_all_timings()
@@ -124,6 +167,11 @@ def save_timing(step_name: str, elapsed_time: float):
 
         # 尝试写入文件
         try:
+            # Double-check that the file hasn't been moved during cleanup
+            if not os.path.exists(os.path.dirname(TIMING_FILE)):
+                print(f"⚠️ Directory {os.path.dirname(TIMING_FILE)} does not exist - possible cleanup in progress")
+                return False
+
             with open(TIMING_FILE, 'w', encoding='utf-8') as f:
                 json.dump(timings, f, indent=2)
         except (IOError, PermissionError) as e:
@@ -168,11 +216,12 @@ def time_it(step_name: Optional[str] = None):
             # 使用函数名作为步骤名称，如果没有提供
             name = step_name or func.__name__
 
-            # 检查是否是主要步骤
-            is_main_step = False
+            # Check if this is a main step that should be timed
+            # We don't need to store this result as save_timing will do the check again
+            # This is just for debugging and understanding the code flow
             for main_step in MAIN_STEPS:
                 if main_step in name or main_step in func.__name__:
-                    is_main_step = True
+                    # Found a main step, will be timed
                     break
 
             try:
@@ -211,7 +260,9 @@ def get_formatted_timings() -> List[Dict[str, str]]:
     result = []
 
     # 特殊处理项目开始时间和项目总耗时
-    project_start_time = timings.get("项目开始时间", 0)
+    # Note: project_start_time is not used directly in this function but is kept
+    # for potential future use and code clarity
+    _ = timings.get("项目开始时间", 0)
 
     for step, time_seconds in timings.items():
         # 如果是项目开始时间，则显示具体的时间
