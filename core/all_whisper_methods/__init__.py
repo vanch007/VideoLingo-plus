@@ -1,0 +1,1 @@
+# Initialize all_whisper_methods package
