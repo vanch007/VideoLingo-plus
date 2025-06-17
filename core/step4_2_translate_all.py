@@ -22,7 +22,7 @@ TERMINOLOGY_FILE = "output/log/terminology.json"
 CLEANED_CHUNKS_FILE = "output/log/cleaned_chunks.xlsx"
 
 # Function to split text into chunks
-def split_chunks_by_chars(chunk_size=400, max_i=8):
+def split_chunks_by_chars(chunk_size=2000, max_i=20):
     """Split text into chunks based on character count, return a list of multi-line text chunks"""
     with open(SENTENCE_SPLIT_FILE, "r", encoding="utf-8") as file:
         sentences = file.read().strip().split('\n')
@@ -72,7 +72,7 @@ def translate_all():
 
     console.print("[bold green]Start Translating All...[/bold green]")
 
-    chunks = split_chunks_by_chars(chunk_size=500, max_i=10)
+    chunks = split_chunks_by_chars(chunk_size=2000, max_i=20)
 
     with open(TERMINOLOGY_FILE, 'r', encoding='utf-8') as file:
         theme_prompt = json.load(file).get('theme')
