@@ -10,6 +10,7 @@ from rich.panel import Panel
 from rich.console import Console
 from core.config_utils import load_key
 from core.all_tts_functions.estimate_duration import init_estimator, estimate_duration
+import concurrent.futures  # 新增多进程支持
 
 console = Console()
 speed_factor = load_key("speed_factor")
@@ -19,27 +20,49 @@ SRC_SUBS_FOR_AUDIO_FILE = 'output/audio/src_subs_for_audio.srt'
 SOVITS_TASKS_FILE = 'output/audio/tts_tasks.xlsx'
 ESTIMATOR = None
 
-def expand_short_text(text, origin_text):
-    """Expand short text to make it more suitable for TTS processing"""
-    if len(text.strip()) <= 3:  # 只处理非常短的文本（3个字符或更少）
+def expand_short_text(text, origin_text, prev_text=None, next_text=None):
+    """Expand short text with natural language continuation without special symbols"""
+    if len(text.strip()) <= 3:  # 处理超短文本（3字符或更少）
         rprint(Panel(f"Text '{text}' is too short ({len(text.strip())} chars), expanding...", title="Processing", border_style="yellow"))
-        prompt = get_expand_short_text_prompt(text, origin_text)
+        
+        # 提取上下文的核心语义信息
+        context_hint = ""
+        if prev_text and next_text:
+            context_hint = f"Previous theme: {' '.join(prev_text.split()[-2:])}, Next theme: {' '.join(next_text.split()[:2])}"
+        elif prev_text:
+            context_hint = f"Previous theme: {' '.join(prev_text.split()[-2:])}"
+        elif next_text:
+            context_hint = f"Next theme: {' '.join(next_text.split()[:2])}"
+            
+        prompt = get_expand_short_text_prompt(text, origin_text, context_hint)  # 传递上下文语义提示
 
         def valid_expand(response):
             if 'expanded_text' not in response:
                 return {'status': 'error', 'message': 'No expanded_text in response'}
+            # 新增验证：禁止括号描述
+            if '(' in response['expanded_text'] or ')' in response['expanded_text']:
+                return {'status': 'error', 'message': 'Expanded text contains parentheses'}
             return {'status': 'success', 'message': ''}
 
         try:
-            response = ask_gpt(prompt, response_json=True, log_title='expand_short_text', valid_def=valid_expand)
+            model_name = get_valid_model_name()
+            response = ask_gpt(prompt, response_json=True, log_title='expand_short_text', valid_def=valid_expand, model=model_name)
             expanded_text = response['expanded_text']
-            rprint(Panel(f"Original text: {text}\nExpanded text: {expanded_text}\nAnalysis: {response['analysis']}",
-                         title="Text Expansion Result", border_style="green"))
+            
+            # 自然语言扩展替代方案
+            if len(expanded_text.strip()) <= 3:
+                # 使用重复关键词扩展而非符号
+                expanded_text = ' '.join([text.strip()] * 2) or text + '扩展'  # 最小化自然扩展
+                rprint(Panel(f"Applied natural expansion for text: {text}", title="Fallback", border_style="blue"))
+                
+            rprint(Panel(f"Original: {text}\nContext: {context_hint}\nExpanded: {expanded_text}\nAnalysis: {response['analysis']}",
+                         title="Natural Expansion Result", border_style="green"))
             return expanded_text
         except Exception as e:
             rprint(f"[bold red]🚫 Failed to expand text: {str(e)}[/bold red]")
-            return text  # Return original text if expansion fails
-    return text  # Return original text if it's not short
+            # 失败时使用最简自然扩展
+            return text + '扩展' if len(text.strip()) <= 2 else text
+    return text  # 如果不是超短文本返回原文本
 
 def check_len_then_trim(text, duration):
     global ESTIMATOR
@@ -69,11 +92,22 @@ def check_len_then_trim(text, duration):
     else:
         return text
 
-def time_diff_seconds(t1, t2, base_date):
+def time_diff_seconds(t1: datetime.time, t2: datetime.time, base_date: datetime.date) -> float:
     """Calculate the difference in seconds between two time objects"""
     dt1 = datetime.datetime.combine(base_date, t1)
     dt2 = datetime.datetime.combine(base_date, t2)
     return (dt2 - dt1).total_seconds()
+
+def parallel_expand_short_text(args):
+    """包装函数支持进程池调用"""
+    text, origin_text, prev_text, next_text, index = args
+    try:
+        from core.step8_1_gen_audio_task import expand_short_text
+        result = expand_short_text(text, origin_text, prev_text, next_text)  # 保持参数一致性
+        return (index, result)
+    except Exception as e:
+        print(f"Error in expand_short_text at index {index}: {str(e)}")
+        return (index, text)
 
 def process_srt():
     """Process srt file, generate audio tasks"""
@@ -201,7 +235,7 @@ def process_srt():
     else:
         rprint(Panel(f"Successfully processed all subtitles. All durations are now at least {MIN_MERGE_THRESHOLD} seconds.", title="Success", border_style="green"))
 
-    # 处理短文本字幕，使用GPT扩展文本
+    # 并行处理短文本字幕，使用GPT扩展文本
     rprint(Panel("Processing short text subtitles (3 characters or less)...", title="Processing", border_style="cyan"))
     short_text_count = 0
 
@@ -209,16 +243,33 @@ def process_srt():
     if 'original_text' not in df.columns:
         df['original_text'] = df['text'].copy()
 
+    # 统计需要处理的短文本数量
     for i, row in df.iterrows():
         if len(row['text'].strip()) <= 3:
-            # 保存原始文本
-            df.at[i, 'original_text'] = row['text']
-            # 扩展文本
-            df.at[i, 'text'] = expand_short_text(row['text'], row['origin'])
             short_text_count += 1
 
+    # 并行处理短文本字幕
     if short_text_count > 0:
-        rprint(Panel(f"Successfully expanded {short_text_count} short text subtitles.", title="Success", border_style="green"))
+        rprint(Panel(f"Processing {short_text_count} short text subtitles with parallel processing...", title="Processing", border_style="cyan"))
+        
+        # 创建任务列表
+        tasks = []
+        for i, row in df.iterrows():
+            if len(row['text'].strip()) <= 3:
+                prev_text = df.iloc[i-1]['text'] if i > 0 else None
+                next_text = df.iloc[i+1]['text'] if i < len(df)-1 else None
+                tasks.append((row['text'], row['origin'], prev_text, next_text, i))
+
+        # 使用进程池并行处理
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            results = list(executor.map(parallel_expand_short_text, tasks))
+            
+        # 更新结果回DataFrame
+        for index, expanded_text in results:
+            df.at[index, 'original_text'] = df.at[index, 'text']
+            df.at[index, 'text'] = expanded_text
+
+        rprint(Panel(f"Successfully expanded {short_text_count} short text subtitles in parallel", title="Success", border_style="green"))
     else:
         rprint(Panel("No short text subtitles found.", title="Info", border_style="blue"))
 
