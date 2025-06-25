@@ -8,7 +8,7 @@ display_language: "zh-CN"
 api:
   key: 'sk-gknihqdrqptifmzwrezivnyhtesemusgaletctihienbxmxx'
   base_url: 'https://api.siliconflow.cn'
-  model: 'MiniMaxAI/MiniMax-M1-80k'
+  model: 'deepseek-ai/DeepSeek-V3'
 
 # Language settings, written into the prompt, can be described in natural language
 target_language: '简体中文'
@@ -115,9 +115,8 @@ min_subtitle_duration: 1 # Minimum subtitle duration, will be forcibly extended
 min_trim_duration: 3.5 # Subtitles shorter than this value won't be split
 tolerance: 1.5 # Allowed extension time to the next subtitle
 
-
-
-
+# TPM (Tokens Per Minute) limit for API requests
+tpm_limit: 10000
 
 ## ======================== Additional settings 请勿修改======================== ##
 # Whisper model directory

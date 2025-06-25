@@ -71,7 +71,17 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default'):
     response_format = {"type": "json_object"} if response_json and api_set["model"] in llm_support_json else None
 
     max_retries = 3
+
+    # 移除固定的 time.sleep(1)，改为动态延迟
+    def calculate_delay(prompt):
+        tpm_limit = load_key("tpm_limit")  # 加载 TPM 限制参数
+        token_count = len(prompt.split())  # 粗略估计请求中的 token 数量
+        delay = 60 / (tpm_limit / token_count) if tpm_limit > 0 else 0  # 计算所需延迟
+        return delay
+
     for attempt in range(max_retries):
+        delay = calculate_delay(prompt)
+        time.sleep(delay)  # 根据 TPM 限制动态调整延迟
         try:
             completion_args = {
                 "model": api_set["model"],
@@ -79,7 +89,7 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default'):
             }
             if response_format is not None:
                 completion_args["response_format"] = response_format
-                
+        
             response = client.chat.completions.create(**completion_args)
             
             if response_json:

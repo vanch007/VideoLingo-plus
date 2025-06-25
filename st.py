@@ -583,7 +583,36 @@ def main():
     with st.sidebar:
         page_setting()
         st.markdown(give_star_button, unsafe_allow_html=True)
-
+        
+        # 添加TPM限制设置
+        st.divider()
+        st.subheader("API限制设置")
+        with st.expander("LLM配置"):
+            # API限制设置
+            tpm_limit = st.number_input(
+                "TPM Limit",
+                value=st.session_state.get("tpm_limit", 10000),
+                key="tpm_limit",
+                help="设置每分钟令牌数限制"
+            )
+            # 自动同步到session_state（通过key自动绑定）
+            retry_attempts = st.number_input(
+                "最大重试次数",
+                value=st.session_state.get("retry_attempts", 3),
+                min_value=1,
+                max_value=10,
+                key="retry_attempts",
+                help="达到TPM限制时的最大重试次数"
+            )
+            
+            retry_interval = st.number_input(
+                "重试间隔秒数",
+                value=st.session_state.get("retry_interval", 60),
+                min_value=1,
+                max_value=60,
+                key="retry_interval",
+                help="达到TPM限制时的等待间隔时间（秒）"
+            )
         # 在侧边栏添加耗时统计开关
         st.divider()
         st.subheader("耗时统计设置")
