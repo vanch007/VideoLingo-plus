@@ -117,8 +117,15 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
 
     for attempt in range(max_retries):
         try:
-            # Generate TTS audio
-            tts_main(text, temp_file, number, tasks_df)
+            # Generate TTS audio with a timeout
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(tts_main, text, temp_file, number, tasks_df)
+                try:
+                    # Set a 30-second timeout for the TTS task
+                    future.result(timeout=30)
+                except Exception as e:
+                    # Re-raise the exception to be caught by the outer loop
+                    raise e
 
             # Verify the file exists after TTS generation
             if not os.path.exists(temp_file):
@@ -194,6 +201,10 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
             break
 
         except Exception as e:
+            error_message = str(e)
+            if "TimeoutError" in str(type(e)):
+                 error_message = "TTS generation timed out after 30 seconds."
+
             if attempt == max_retries - 1:
                 # 检查是否有参考音频作为后备方案
                 refer_file = f"output/audio/refers/{number}.wav"
@@ -217,7 +228,7 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
                 real_dur = 1.0
                 break
             else:
-                rprint(f"[yellow]⚠️ TTS生成失败，重试中({attempt + 1}/{max_retries}): {str(e)}[/yellow]")
+                rprint(f"[yellow]⚠️ TTS生成失败，重试中({attempt + 1}/{max_retries}): {error_message}[/yellow]")
                 time.sleep(1)
 
     # Final check to ensure we have a valid audio file
