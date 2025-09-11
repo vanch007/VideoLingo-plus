@@ -6,7 +6,7 @@ display_language: "zh-CN"
 
 # API settings
 api:
-  key: 'sk-gknihqdrqptifmzwrezivnyhtesemusgaletctihienbxmxx'
+  key: ''
   base_url: 'https://api.siliconflow.cn'
   model: 'moonshotai/Kimi-K2-Instruct-0905'
 
