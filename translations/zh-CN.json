@@ -40,6 +40,11 @@
     "Mode 3: Use each audio from video as reference": "模式3:使用视频中的每段音频作为参考",
     "Configure reference audio mode for GPT-SoVITS": "配置GPT-SoVITS的参考音频模式",
     "Edge TTS Voice": "Edge TTS语音",
+    "Clone Mode": "克隆模式",
+    "Dynamic Clone": "动态克隆",
+    "Fixed Clone": "固定克隆",
+    "Fixed Voice": "固定声音",
+    "No fixed voices found. Please add voices in 'core/all_tts_functions/voice/' directory.": "未找到固定声音。请在 'core/all_tts_functions/voice/' 目录下添加声音。",
     "=====NOTE=====": "以下是st.py中的内容",
     "b. Translate and Generate Subtitles": "b. 翻译并生成字幕",
     "This stage includes the following steps:": "此阶段包含以下步骤:",
@@ -110,6 +115,8 @@
     "Translate and Dub": "翻译并配音",
     "删除配音文件": "删除配音文件",
     "归档到'history'文件夹": "归档到'history'文件夹",
-    "Download and Dub": "下载并配音"
+    "Download and Dub": "下载并配音",
+    "Merge/Split Subtitles": "合并/分割字幕",
+    "Uncheck to skip subtitle splitting and merging, directly using the original transcription result.": "取消选中则不执行字幕的分割和合并，直接使用原始识别结果。"
 }
 

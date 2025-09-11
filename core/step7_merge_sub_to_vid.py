@@ -89,7 +89,7 @@ def merge_subtitles_to_video():
         ffmpeg_cmd.extend(['-c:v', 'h264_nvenc'])
     elif platform.system() == 'Darwin':
         rprint("[bold green]Apple Silicon detected, will use VideoToolbox acceleration.[/bold green]")
-        ffmpeg_cmd.extend(['-c:v', 'h264_videotoolbox'])
+        ffmpeg_cmd.extend(['-c:v', 'h264_videotoolbox', '-b:v', '5M'])
     else:
         rprint("[bold yellow]No GPU encoder detected, will use CPU instead.[/bold yellow]")
     

@@ -139,6 +139,9 @@ def gen_dub_chunks():
     rprint("[🎬 Starting] Generating dubbing chunks...")
     df = pd.read_excel(INPUT_EXCEL)
 
+    # Load config
+    merge_split_subtitles = load_key("merge_split_subtitles", True)
+
     # Log the number of rows in the dataframe
     rprint(f"[📊 Info] Processing {len(df)} subtitle entries")
 
@@ -151,8 +154,11 @@ def gen_dub_chunks():
     rprint("[📊 Processing] Analyzing timing and speed...")
     df = analyze_subtitle_timing_and_speed(df)
 
-    rprint("[✂️ Processing] Processing cutoffs...")
-    df = process_cutoffs(df)
+    if merge_split_subtitles:
+        rprint("[✂️ Processing] Processing cutoffs...")
+        df = process_cutoffs(df)
+    else:
+        rprint("[ℹ️ Info] '合并/分割字幕' 选项未勾选，跳过过段合并操作。")
 
     rprint("[📝 Reading] Loading transcript files...")
     content = open(TRANS_SRT, "r", encoding="utf-8").read()

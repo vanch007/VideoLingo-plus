@@ -1,9 +1,13 @@
 import streamlit as st
+import os
+import shutil
+import json # Added this line
+from core.config_utils import get_work_dir
 import os, sys
 import time
 import pandas as pd
 from st_components.imports_and_utils import *
-from core.config_utils import load_key
+from core.config_utils import load_key, update_key
 from core.timing_utils import get_formatted_timings, save_timing
 from core.step1_ytdlp import find_video_files
 
@@ -21,6 +25,7 @@ SUB_VIDEO = "output/AI字幕.mp4"
 DUB_VIDEO = "output/AI配音.mp4"
 
 def text_processing_section():
+
     st.header(t("b. Translate and Generate Subtitles"))
     with st.container(border=True):
         if not os.path.exists(SUB_VIDEO) and not os.path.exists(DUB_VIDEO):
@@ -28,23 +33,30 @@ def text_processing_section():
             with col1:
                 if st.button(t("Translate and Dub"), key="translate_and_dub_button"):
                     with st.spinner(t("Processing translation and dubbing...")):
-                        # 调用process_text函数并跳过step7的字幕处理流程
                         try:
                             # 检查视频文件是否存在
                             find_video_files()
-                            process_text(skip_merge_subtitles=True)
+                            # Get the current state of 'merge_split_subtitles'
+                            should_do_full_processing = st.session_state.get('merge_split_subtitles', True)
+                            process_text(
+                                do_full_subtitle_processing=should_do_full_processing,
+                                skip_merge_subtitles=not should_do_full_processing # Skip step7 if full processing is skipped
+                            )
                             process_audio()
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
                             st.info("Please make sure a video is available before processing.")
-                    st.rerun()
             with col2:
                 if st.button(t("Start Processing Subtitles"), key="text_processing_button"):
                     try:
                         # 检查视频文件是否存在
                         find_video_files()
-                        process_text()
-                        st.rerun()
+                        # If merge_split_subtitles is unchecked, also skip merge_subtitles
+                        should_do_full_processing = st.session_state.get('merge_split_subtitles', True)
+                        process_text(
+                            do_full_subtitle_processing=should_do_full_processing,
+                            skip_merge_subtitles=not should_do_full_processing # Skip step7 if full processing is skipped
+                        )
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
                         st.info("Please make sure a video is available before processing.")
@@ -71,7 +83,7 @@ def text_processing_section():
                 st.rerun()
             return True
 
-def process_text(skip_merge_subtitles=False):
+def process_text(skip_merge_subtitles=False, do_full_subtitle_processing=True):
     # 记录整体字幕处理开始时间
     total_start_time = time.time()
 
@@ -101,79 +113,147 @@ def process_text(skip_merge_subtitles=False):
             with timing_placeholder.container():
                 display_timing_statistics(key_suffix="text_step1")
 
-        with st.spinner(t("Splitting long sentences...")):
-            # 检查是否使用 stable-ts 且文件已存在
-            is_stable_ts = load_key("whisper.runtime") == "stable-ts"
-            splitbynlp_exists = os.path.exists('output/log/sentence_splitbynlp.txt')
+        if do_full_subtitle_processing:
+            with st.spinner(t("Splitting long sentences...")):
+                splitbynlp_exists = os.path.exists('output/log/sentence_splitbynlp.txt')
+                splitbymeaning_exists = os.path.exists('output/log/sentence_splitbymeaning.txt')
 
-            # 如果使用 stable-ts 且文件已存在，则跳过 NLP 分句步骤
-            if is_stable_ts and splitbynlp_exists:
-                st.info(t("Using pre-segmented subtitles from stable-ts, skipping NLP sentence splitting."))
-                save_timing("NLP分句", 0.01)  # 记录一个很小的时间，表示跳过
-            else:
+                if splitbynlp_exists and splitbymeaning_exists:
+                    st.info(t("Skipping sentence splitting, files already exist."))
+                    save_timing("NLP分句", 0.01)
+                    save_timing("LLM分句", 0.01)
+                else:
+                    is_stable_ts = load_key("whisper.runtime") == "stable-ts"
+                    if is_stable_ts and splitbynlp_exists:
+                        st.info(t("Using pre-segmented subtitles from stable-ts, skipping NLP sentence splitting."))
+                        save_timing("NLP分句", 0.01)
+                    else:
+                        start_time = time.time()
+                        step3_1_spacy_split.split_by_spacy()
+                        elapsed = time.time() - start_time
+                        save_timing("NLP分句", elapsed)
+
+                    with timing_placeholder.container():
+                        display_timing_statistics(key_suffix="text_step2")
+
+                    if splitbymeaning_exists:
+                        st.info(t("File 'sentence_splitbymeaning.txt' already exists. Skipping LLM sentence splitting."))
+                        save_timing("LLM分句", 0.01)
+                    else:
+                        start_time = time.time()
+                        step3_2_splitbymeaning.split_sentences_by_meaning()
+                        elapsed = time.time() - start_time
+                        save_timing("LLM分句", elapsed)
+
+                with timing_placeholder.container():
+                    display_timing_statistics(key_suffix="text_step3")
+
+            with st.spinner(t("Summarizing and translating...")):
                 start_time = time.time()
-                step3_1_spacy_split.split_by_spacy()
+                step4_1_summarize.get_summary()
                 elapsed = time.time() - start_time
-                save_timing("NLP分句", elapsed)
+                save_timing("摘要", elapsed)
+                # 更新耗时统计显示
+                with timing_placeholder.container():
+                    display_timing_statistics(key_suffix="text_step4")
 
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step2")
+                if load_key("pause_before_translate"):
+                    input(t("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue..."))
 
-            # 检查是否需要执行 LLM 分句步骤
-            splitbymeaning_exists = os.path.exists('output/log/sentence_splitbymeaning.txt')
-
-            if splitbymeaning_exists:
-                st.info(t("File 'sentence_splitbymeaning.txt' already exists. Skipping LLM sentence splitting."))
-                save_timing("LLM分句", 0.01)  # 记录一个很小的时间，表示跳过
-            else:
                 start_time = time.time()
-                step3_2_splitbymeaning.split_sentences_by_meaning()
+                step4_2_translate_all.translate_all()
                 elapsed = time.time() - start_time
-                save_timing("LLM分句", elapsed)
+                save_timing("翻译", elapsed)
+                # 更新耗时统计显示
+                with timing_placeholder.container():
+                    display_timing_statistics(key_suffix="text_step5")
 
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step3")
+            with st.spinner(t("Processing and aligning subtitles...")):
+                start_time = time.time()
+                step5_splitforsub.split_for_sub_main()
+                elapsed = time.time() - start_time
+                save_timing("字幕分割", elapsed)
+                # 更新耗时统计显示
+                with timing_placeholder.container():
+                    display_timing_statistics(key_suffix="text_step6")
 
-        with st.spinner(t("Summarizing and translating...")):
-            start_time = time.time()
-            step4_1_summarize.get_summary()
-            elapsed = time.time() - start_time
-            save_timing("摘要", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step4")
+                start_time = time.time()
+                step6_generate_final_timeline.align_timestamp_main()
+                elapsed = time.time() - start_time
+                save_timing("时间轴对齐", elapsed)
+                # 更新耗时统计显示
+                with timing_placeholder.container():
+                    display_timing_statistics(key_suffix="text_step7")
+        else:
+            st.info("跳过字幕分割、翻译和时间轴生成步骤，直接使用原始识别结果。")
+            work_dir = get_work_dir()
+            video_name = st.session_state['video_name'] # Assuming video_name is stored in session_state
+            whisper_result_path = os.path.join(work_dir, video_name, "whisper_json", "result.json")
+            final_timeline_path = os.path.join(work_dir, video_name, "final_timeline.json")
+            
+            # Paths for the placeholder files
+            log_dir = os.path.join(work_dir, "output", "log")
+            os.makedirs(log_dir, exist_ok=True) # Ensure log directory exists
+            splitbynlp_path = os.path.join(log_dir, "sentence_splitbynlp.txt")
+            splitbymeaning_path = os.path.join(log_dir, "sentence_splitbymeaning.txt")
 
-            if load_key("pause_before_translate"):
-                input(t("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue..."))
+            if os.path.exists(whisper_result_path):
+                shutil.copy(whisper_result_path, final_timeline_path)
+                st.success(f"已将 {os.path.basename(whisper_result_path)} 复制为 {os.path.basename(final_timeline_path)}，用于后续处理。")
 
-            start_time = time.time()
-            step4_2_translate_all.translate_all()
-            elapsed = time.time() - start_time
-            save_timing("翻译", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step5")
+                # Create placeholder files for step3 outputs
+                try:
+                    import json
+                    with open(whisper_result_path, 'r', encoding='utf-8') as f:
+                        whisper_data = json.load(f)
+                    
+                    # Extract text from segments and write to placeholder files
+                    all_text = []
+                    if 'segments' in whisper_data:
+                        for segment in whisper_data['segments']:
+                            all_text.append(segment['text'].strip())
+                    
+                    content_to_write = "\n".join(all_text) # Use \n for literal newline in string
 
-        with st.spinner(t("Processing and aligning subtitles...")):
-            start_time = time.time()
-            step5_splitforsub.split_for_sub_main()
-            elapsed = time.time() - start_time
-            save_timing("字幕分割", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step6")
+                    with open(splitbynlp_path, 'w', encoding='utf-8') as f:
+                        f.write(content_to_write)
+                    st.info(f"已生成占位文件：{os.path.basename(splitbynlp_path)}")
 
-            start_time = time.time()
-            step6_generate_final_timeline.align_timestamp_main()
-            elapsed = time.time() - start_time
-            save_timing("时间轴对齐", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step7")
+                    with open(splitbymeaning_path, 'w', encoding='utf-8') as f:
+                        f.write(content_to_write)
+                    st.info(f"已生成占位文件：{os.path.basename(splitbymeaning_path)}")
+                    
+                    # Generate SRT for burning
+                    if load_key("burn_subtitles"):
+                        def to_srt_time(seconds):
+                            millis = int((seconds - int(seconds)) * 1000)
+                            hours = int(seconds // 3600)
+                            minutes = int((seconds % 3600) // 60)
+                            seconds = int(seconds % 60)
+                            return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
 
-        if not skip_merge_subtitles:
+                        srt_content = ""
+                        for i, segment in enumerate(whisper_data['segments']):
+                            start_time = to_srt_time(segment['start'])
+                            end_time = to_srt_time(segment['end'])
+                            text = segment['text'].strip()
+                            srt_content += f"{i+1}\n{start_time} --> {end_time}\n{text}\n\n"
+
+                        with open("output/src.srt", 'w', encoding='utf-8') as f:
+                            f.write(srt_content)
+                        
+                        # Create an empty trans.srt
+                        with open("output/trans.srt", 'w', encoding='utf-8') as f:
+                            f.write("")
+                        
+                        st.success("Generated src.srt from Whisper results for burning.")
+
+                except Exception as e:
+                    st.error(f"生成占位文件或SRT文件时出错: {str(e)}")
+            else:
+                st.error(f"错误：未找到原始字幕文件 {whisper_result_path}。请确保 step2_whisperX.py 已成功运行。")
+
+        if not skip_merge_subtitles or load_key("burn_subtitles"):
             with st.spinner(t("Merging subtitles to video...")):
                 start_time = time.time()
                 step7_merge_sub_to_vid.merge_subtitles_to_video()
@@ -399,7 +479,6 @@ def display_timing_statistics(key_suffix="main"):
         .timing-label {
             color: #666;
         }
-        </style>
         """, unsafe_allow_html=True)
 
         # 使用高亮边框和颜色
@@ -588,31 +667,55 @@ def main():
         st.divider()
         st.subheader("API限制设置")
         with st.expander("LLM配置"):
-            # API限制设置
+            # Function to handle config updates
+            def update_api_limit_config(key, value):
+                try:
+                    if load_key(f"api.{key}") != value:
+                        update_key(f"api.{key}", value)
+                except KeyError:
+                    update_key(f"api.{key}", value)
+
+            # Load or set default values
+            try:
+                tpm_limit_val = load_key("api.tpm_limit")
+            except KeyError:
+                tpm_limit_val = 10000
+
+            try:
+                retry_attempts_val = load_key("api.retry_attempts")
+            except KeyError:
+                retry_attempts_val = 3
+
+            try:
+                retry_interval_val = load_key("api.retry_interval")
+            except KeyError:
+                retry_interval_val = 60
+
+            # UI components
             tpm_limit = st.number_input(
                 "TPM Limit",
-                value=st.session_state.get("tpm_limit", 10000),
-                key="tpm_limit",
+                value=tpm_limit_val,
                 help="设置每分钟令牌数限制"
             )
-            # 自动同步到session_state（通过key自动绑定）
+            update_api_limit_config("tpm_limit", tpm_limit)
+
             retry_attempts = st.number_input(
                 "最大重试次数",
-                value=st.session_state.get("retry_attempts", 3),
+                value=retry_attempts_val,
                 min_value=1,
                 max_value=10,
-                key="retry_attempts",
                 help="达到TPM限制时的最大重试次数"
             )
+            update_api_limit_config("retry_attempts", retry_attempts)
             
             retry_interval = st.number_input(
                 "重试间隔秒数",
-                value=st.session_state.get("retry_interval", 60),
+                value=retry_interval_val,
                 min_value=1,
                 max_value=60,
-                key="retry_interval",
                 help="达到TPM限制时的等待间隔时间（秒）"
             )
+            update_api_limit_config("retry_interval", retry_interval)
         # 在侧边栏添加耗时统计开关
         st.divider()
         st.subheader("耗时统计设置")

@@ -18,6 +18,8 @@ speed_factor = load_key("speed_factor")
 TRANS_SUBS_FOR_AUDIO_FILE = 'output/audio/trans_subs_for_audio.srt'
 SRC_SUBS_FOR_AUDIO_FILE = 'output/audio/src_subs_for_audio.srt'
 SOVITS_TASKS_FILE = 'output/audio/tts_tasks.xlsx'
+SRC_SRT = 'output/src.srt'
+TRANS_SRT = 'output/trans.srt'
 ESTIMATOR = None
 
 def expand_short_text(text, origin_text, prev_text=None, next_text=None):
@@ -109,56 +111,7 @@ def parallel_expand_short_text(args):
         print(f"Error in expand_short_text at index {index}: {str(e)}")
         return (index, text)
 
-def process_srt():
-    """Process srt file, generate audio tasks"""
-
-    with open(TRANS_SUBS_FOR_AUDIO_FILE, 'r', encoding='utf-8') as file:
-        content = file.read()
-
-    with open(SRC_SUBS_FOR_AUDIO_FILE, 'r', encoding='utf-8') as src_file:
-        src_content = src_file.read()
-
-    subtitles = []
-    src_subtitles = {}
-
-    for block in src_content.strip().split('\n\n'):
-        lines = [line.strip() for line in block.split('\n') if line.strip()]
-        if len(lines) < 3:
-            continue
-
-        number = int(lines[0])
-        src_text = ' '.join(lines[2:])
-        src_subtitles[number] = src_text
-
-    for block in content.strip().split('\n\n'):
-        lines = [line.strip() for line in block.split('\n') if line.strip()]
-        if len(lines) < 3:
-            continue
-
-        try:
-            number = int(lines[0])
-            start_time, end_time = lines[1].split(' --> ')
-            start_time = datetime.datetime.strptime(start_time, '%H:%M:%S,%f').time()
-            end_time = datetime.datetime.strptime(end_time, '%H:%M:%S,%f').time()
-            duration = time_diff_seconds(start_time, end_time, datetime.date.today())
-            text = ' '.join(lines[2:])
-            # Remove content within parentheses (including English and Chinese parentheses)
-            text = re.sub(r'\([^)]*\)', '', text).strip()
-            text = re.sub(r'（[^）]*）', '', text).strip()
-            # Remove only '-' character, keep other punctuation
-            text = text.replace('-', '')
-
-            # Add the original text from src_subs_for_audio.srt
-            origin = src_subtitles.get(number, '')
-
-        except ValueError as e:
-            rprint(Panel(f"Unable to parse subtitle block '{block}', error: {str(e)}, skipping this subtitle block.", title="Error", border_style="red"))
-            continue
-
-        subtitles.append({'number': number, 'start_time': start_time, 'end_time': end_time, 'duration': duration, 'text': text, 'origin': origin})
-
-    df = pd.DataFrame(subtitles)
-
+def merge_short_subtitles(df):
     i = 0
     MIN_SUB_DUR = load_key("min_subtitle_duration")
     # 设置最小字幕时长阈值，低于此值的字幕将被合并或延长
@@ -227,13 +180,69 @@ def process_srt():
                 i += 1
         else:
             i += 1
-
+    
     # 统计处理结果
     short_subtitles = len(df[df['duration'] < MIN_MERGE_THRESHOLD])
     if short_subtitles > 0:
         rprint(Panel(f"Warning: Still have {short_subtitles} subtitles with duration less than {MIN_MERGE_THRESHOLD} seconds after processing.", title="Warning", border_style="yellow"))
     else:
         rprint(Panel(f"Successfully processed all subtitles. All durations are now at least {MIN_MERGE_THRESHOLD} seconds.", title="Success", border_style="green"))
+    
+    return df
+
+def process_srt():
+    """Process srt file, generate audio tasks"""
+
+    with open(TRANS_SUBS_FOR_AUDIO_FILE, 'r', encoding='utf-8') as file:
+        content = file.read()
+
+    with open(SRC_SUBS_FOR_AUDIO_FILE, 'r', encoding='utf-8') as src_file:
+        src_content = src_file.read()
+
+    subtitles = []
+    src_subtitles = {}
+
+    for block in src_content.strip().split('\n\n'):
+        lines = [line.strip() for line in block.split('\n') if line.strip()]
+        if len(lines) < 3:
+            continue
+
+        number = int(lines[0])
+        src_text = ' '.join(lines[2:])
+        src_subtitles[number] = src_text
+
+    for block in content.strip().split('\n\n'):
+        lines = [line.strip() for line in block.split('\n') if line.strip()]
+        if len(lines) < 3:
+            continue
+
+        try:
+            number = int(lines[0])
+            start_time, end_time = lines[1].split(' --> ')
+            start_time = datetime.datetime.strptime(start_time, '%H:%M:%S,%f').time()
+            end_time = datetime.datetime.strptime(end_time, '%H:%M:%S,%f').time()
+            duration = time_diff_seconds(start_time, end_time, datetime.date.today())
+            text = ' '.join(lines[2:])
+            # Remove content within parentheses (including English and Chinese parentheses)
+            text = re.sub(r'\([^)]*\)', '', text).strip()
+            text = re.sub(r'（[^）]*）', '', text).strip()
+            # Remove only '-' character, keep other punctuation
+            text = text.replace('-', '')
+
+            # Add the original text from src_subs_for_audio.srt
+            origin = src_subtitles.get(number, '')
+
+        except ValueError as e:
+            rprint(Panel(f"Unable to parse subtitle block '{block}', error: {str(e)}, skipping this subtitle block.", title="Error", border_style="red"))
+            continue
+
+        subtitles.append({'number': number, 'start_time': start_time, 'end_time': end_time, 'duration': duration, 'text': text, 'origin': origin})
+
+    df = pd.DataFrame(subtitles)
+
+    merge_split_subtitles = load_key("merge_split_subtitles", True)
+    if merge_split_subtitles:
+        df = merge_short_subtitles(df)
 
     # 并行处理短文本字幕，使用GPT扩展文本
     rprint(Panel("Processing short text subtitles (3 characters or less)...", title="Processing", border_style="cyan"))
@@ -273,6 +282,12 @@ def process_srt():
     else:
         rprint(Panel("No short text subtitles found.", title="Info", border_style="blue"))
 
+    # Add sub_times column
+    df['sub_times'] = df.apply(lambda row: [
+        (row['start_time'].hour * 3600 + row['start_time'].minute * 60 + row['start_time'].second + row['start_time'].microsecond / 1_000_000),
+        (row['end_time'].hour * 3600 + row['end_time'].minute * 60 + row['end_time'].second + row['end_time'].microsecond / 1_000_000)
+    ], axis=1)
+
     df['start_time'] = df['start_time'].apply(lambda x: x.strftime('%H:%M:%S.%f')[:-3])
     df['end_time'] = df['end_time'].apply(lambda x: x.strftime('%H:%M:%S.%f')[:-3])
 
@@ -282,6 +297,7 @@ def process_srt():
 
     return df
 
+
 def gen_audio_task_main():
     if os.path.exists(SOVITS_TASKS_FILE):
         rprint(Panel(f"{SOVITS_TASKS_FILE} already exists, skip.", title="Info", border_style="blue"))
@@ -289,8 +305,8 @@ def gen_audio_task_main():
         df = process_srt()
         console.print(df)
         df.to_excel(SOVITS_TASKS_FILE, index=False)
-
         rprint(Panel(f"Successfully generated {SOVITS_TASKS_FILE}", title="Success", border_style="green"))
+
 
 if __name__ == '__main__':
     gen_audio_task_main()

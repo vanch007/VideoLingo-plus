@@ -70,13 +70,24 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default'):
     client = OpenAI(api_key=api_set["key"], base_url=base_url)
     response_format = {"type": "json_object"} if response_json and api_set["model"] in llm_support_json else None
 
-    max_retries = 3
+    try:
+        max_retries = load_key("api.retry_attempts")
+    except KeyError:
+        max_retries = 3
+
+    try:
+        retry_interval = load_key("api.retry_interval")
+    except KeyError:
+        retry_interval = 60
 
     # 移除固定的 time.sleep(1)，改为动态延迟
     def calculate_delay(prompt):
-        tpm_limit = load_key("tpm_limit")  # 加载 TPM 限制参数
+        try:
+            tpm_limit = load_key("api.tpm_limit")
+        except KeyError:
+            tpm_limit = 10000
         token_count = len(prompt.split())  # 粗略估计请求中的 token 数量
-        delay = 60 / (tpm_limit / token_count) if tpm_limit > 0 else 0  # 计算所需延迟
+        delay = 60 / (tpm_limit / token_count) if tpm_limit > 0 and token_count > 0 else 0  # 计算所需延迟
         return delay
 
     for attempt in range(max_retries):

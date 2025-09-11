@@ -18,12 +18,14 @@ OUTPUT_FILE_TEMPLATE = f"{SEGS_DIR}/{{}}.wav"
 def load_and_flatten_data(excel_file):
     """Load Excel data without flattening"""
     df = pd.read_excel(excel_file)
+    if 'sub_times' not in df.columns:
+        df['sub_times'] = [[0, 0]] * len(df)
     # Use text and origin columns directly
     texts = df['text'].tolist()
     origins = df['origin'].tolist() # Load origin text
     # Get first time range for each segment
-    times = [eval(times)[0] if isinstance(times, str) else times[0] 
-             for times in df['new_sub_times'].tolist()]
+    times = [eval(t) if isinstance(t, str) else t
+             for t in df['sub_times'].tolist()]
     return df, texts, origins, times # Return origins as well
 
 def get_audio_files(df):
@@ -57,7 +59,11 @@ def process_audio_segment(audio_file):
     return audio_segment
 
 def merge_audio_segments(audios, new_sub_times, sample_rate):
-    merged_audio = AudioSegment.silent(duration=0, frame_rate=sample_rate)
+    # Get the total duration from the last timestamp
+    total_duration_ms = int(new_sub_times[-1][1] * 1000)
+    
+    # Create a silent audio track with the total duration
+    merged_audio = AudioSegment.silent(duration=total_duration_ms, frame_rate=sample_rate)
     
     with Progress(
         SpinnerColumn(),
@@ -74,20 +80,11 @@ def merge_audio_segments(audios, new_sub_times, sample_rate):
                 continue
                 
             audio_segment = process_audio_segment(audio_file)
-            start_time, end_time = time_range
+            start_time_ms = int(time_range[0] * 1000)
             
-            # Add silence segment
-            if i > 0:
-                prev_end = new_sub_times[i-1][1]
-                silence_duration = start_time - prev_end
-                if silence_duration > 0:
-                    silence = AudioSegment.silent(duration=int(silence_duration * 1000), frame_rate=sample_rate)
-                    merged_audio += silence
-            elif start_time > 0:
-                silence = AudioSegment.silent(duration=int(start_time * 1000), frame_rate=sample_rate)
-                merged_audio += silence
-                
-            merged_audio += audio_segment
+            # Overlay the audio segment at the correct start time
+            merged_audio = merged_audio.overlay(audio_segment, position=start_time_ms)
+            
             progress.advance(merge_task)
     
     return merged_audio

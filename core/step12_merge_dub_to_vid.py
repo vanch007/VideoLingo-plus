@@ -46,19 +46,6 @@ def merge_video_audio():
     VIDEO_FILE = find_video_files()
     background_file = BACKGROUND_AUDIO_FILE
     
-    if not load_key("burn_subtitles"):
-        rprint("[bold yellow]Warning: A 0-second black video will be generated as a placeholder as subtitles are not burned in.[/bold yellow]")
-
-        # Create a black frame
-        frame = np.zeros((1080, 1920, 3), dtype=np.uint8)
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(DUB_VIDEO, fourcc, 1, (1920, 1080))
-        out.write(frame)
-        out.release()
-
-        rprint("[bold green]Placeholder video has been generated.[/bold green]")
-        return
-
     # Normalize dub audio
     normalized_dub_audio = 'output/normalized_dub.wav'
     normalize_audio_volume(DUB_AUDIO, normalized_dub_audio)
@@ -70,36 +57,33 @@ def merge_video_audio():
     video.release()
     rprint(f"[bold green]Video resolution: {TARGET_WIDTH}x{TARGET_HEIGHT}[/bold green]")
     
-    # 原语言字幕样式 (默认位置，白色)
-    src_sub_filter = (
-        f"subtitles={SRC_SRT}:force_style='FontSize={SRC_FONT_SIZE},"
-        f"FontName={SRC_FONT_NAME},PrimaryColour=&HFFFFFF,"
-        f"OutlineColour=&H000000,OutlineWidth=1,"
-        f"Alignment=2,BorderStyle=1'"
-    )
-    
-    # 翻译字幕样式 (底部，黄色)
-    trans_sub_filter = (
-        f"subtitles={DUB_SUB_FILE}:force_style='FontSize={TRANS_FONT_SIZE},"
-        f"FontName={TRANS_FONT_NAME},PrimaryColour={TRANS_FONT_COLOR},"
-        f"OutlineColour={TRANS_OUTLINE_COLOR},OutlineWidth={TRANS_OUTLINE_WIDTH},"
-        f"BackColour={TRANS_BACK_COLOR},Alignment=2,MarginV=27,BorderStyle=4'"
-    )
-    
-    # 组合两个字幕filter (先处理原文字幕在上，再处理翻译字幕在下)
-    subtitle_filter = f"{src_sub_filter},{trans_sub_filter}"
-    
+    # 根据配置决定是否烧录字幕
+    video_filter_parts = [
+        f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease',
+        f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2'
+    ]
+
+    if load_key("burn_subtitles"):
+        # 为Windows路径转义反斜杠
+        escaped_dub_file = DUB_SUB_FILE.replace('\\', '/')
+        subtitle_filter = (
+            f"subtitles={escaped_dub_file}:force_style='FontSize={TRANS_FONT_SIZE},"
+            f"FontName={TRANS_FONT_NAME},PrimaryColour={TRANS_FONT_COLOR},"
+            f"OutlineColour={TRANS_OUTLINE_COLOR},OutlineWidth={TRANS_OUTLINE_WIDTH},"
+            f"BackColour={TRANS_BACK_COLOR},Alignment=2,MarginV=27,BorderStyle=4'"
+        )
+        video_filter_parts.append(subtitle_filter)
+
+    video_filter = ",".join(video_filter_parts) + "[v]"
+
     cmd = [
-        'ffmpeg', '-y', 
-        '-threads', '0',  # 自动使用所有可用线程
-        '-i', VIDEO_FILE, 
-        '-i', background_file, 
+        'ffmpeg', '-y',
+        '-threads', '0',
+        '-i', VIDEO_FILE,
+        '-i', background_file,
         '-i', normalized_dub_audio,
         '-filter_complex',
-        f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,'
-        f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,'
-        f'{subtitle_filter}[v];'
-        f'[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]'
+        f'{video_filter};[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]'
     ]
 
     if check_gpu_available():

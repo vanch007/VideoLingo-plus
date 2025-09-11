@@ -26,21 +26,33 @@ OUTPUT_FILE = "output/audio/tts_tasks.xlsx"
 TEMP_FILE_TEMPLATE = f"{TEMP_DIR}/{{}}_temp.wav"
 OUTPUT_FILE_TEMPLATE = f"{SEGS_DIR}/{{}}.wav"
 WARMUP_SIZE = 5
+MIN_SPEED_DENOMINATOR = 0.01 # Small positive value to prevent division by zero or negative denominators for speed factor calculation
 
 def parse_df_srt_time(time_str: str) -> float:
     """Convert SRT time format to seconds"""
     hours, minutes, seconds = time_str.strip().split(':')
-    seconds, milliseconds = seconds.split('.')
-    return int(hours) * 3600 + int(minutes) * 60 + int(seconds) + int(milliseconds) / 1000
+    if '.' in seconds:
+        seconds, microseconds = seconds.split('.')
+        # Convert microseconds to fraction of second
+        # If the microseconds part has 6 digits, divide by 1000000
+        # If it has 3 digits, divide by 1000
+        microseconds_value = float('0.' + microseconds)
+    else:
+        microseconds_value = 0
+    return int(hours) * 3600 + int(minutes) * 60 + int(seconds) + microseconds_value
 
 def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -> None:
     """Adjust audio speed and handle edge cases"""
+    # Validate speed factor to prevent negative or invalid values
+    if speed_factor <= 0:
+        raise ValueError(f"Invalid speed factor: {speed_factor}. Speed factor must be positive.")
+    
     # If the speed factor is close to 1, directly copy the file
     if abs(speed_factor - 1.0) < 0.001:
         shutil.copy2(input_file, output_file)
         return
 
-    atempo = speed_factor
+    atempo = max(0.5, min(speed_factor, 100.0))
     cmd = ['ffmpeg', '-i', input_file, '-filter:a', f'atempo={atempo}', '-y', output_file]
     input_duration = get_audio_duration(input_file)
     max_retries = 2
@@ -77,6 +89,13 @@ def detect_silence(audio_file: str, silence_threshold: float = -40.0, min_silenc
     )
     trimmed_audio.export(audio_file, format="wav")
 
+def create_silent_fallback(temp_file):
+    """Creates a 1-second silent WAV file as a fallback."""
+    silence = AudioSegment.silent(duration=1000, frame_rate=16000)
+    silence = silence.set_channels(1)
+    silence.export(temp_file, format="wav", parameters=["-ar", "16000", "-ac", "1"])
+    return 1.0
+
 def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     """Helper function for processing single row data"""
     number = row['number']
@@ -95,7 +114,7 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     # Check if file already exists and is valid
     if os.path.exists(temp_file):
         file_size = os.path.getsize(temp_file)
-        if file_size < 20000:  # File exists but is too small
+        if file_size < 10000:  # File exists but is too small
             rprint(f"[yellow]⚠️ 已存在的音频文件过小 ({file_size} 字节)，将重新生成: {temp_file}[/yellow]")
             os.remove(temp_file)
         else:
@@ -105,7 +124,7 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
                 audio = AudioSegment.from_wav(temp_file)
                 duration = len(audio) / 1000  # Convert to seconds
 
-                if duration > 0.5 and duration < 10:  # Valid duration
+                if duration > 0.2 and duration < 10:  # Valid duration
                     rprint(f"[green]✅ 使用已存在的有效音频文件: {temp_file} (时长: {duration:.2f}秒)[/green]")
                     return number, duration
                 else:
@@ -121,8 +140,8 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
             with ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(tts_main, text, temp_file, number, tasks_df)
                 try:
-                    # Set a 30-second timeout for the TTS task
-                    future.result(timeout=30)
+                    # Set a 60-second timeout for the TTS task
+                    future.result(timeout=60)
                 except Exception as e:
                     # Re-raise the exception to be caught by the outer loop
                     raise e
@@ -134,7 +153,7 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
             file_size = os.path.getsize(temp_file)
 
             # Check if file is too small (likely invalid)
-            if file_size < 20000:
+            if file_size < 10000:
                 os.remove(temp_file)
                 if attempt < max_retries - 1:
                     rprint(f"[yellow]⚠️ 音频文件过小 (大小:{file_size}字节), 重试中({attempt + 1}/{max_retries})[/yellow]")
@@ -157,8 +176,8 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
                 else:
                     raise Exception(f"音频文件损坏且达到最大重试次数: {str(e)}")
 
-            # 检查音频文件是否异常(大于10秒或小于0.5秒)
-            if duration > 10 or duration < 0.5:
+            # 检查音频文件是否异常(大于10秒或小于0.2秒)
+            if duration > 10 or duration < 0.2:
                 os.remove(temp_file)
                 if attempt < max_retries - 1:
                     rprint(f"[yellow]⚠️ 音频文件时长异常(时长:{duration:.2f}秒), 重试中({attempt + 1}/{max_retries})[/yellow]")
@@ -175,8 +194,8 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
                     audio = AudioSegment.from_wav(temp_file)
                     new_duration = len(audio) / 1000  # Convert to seconds
 
-                    # 如果剪切后时长小于1秒，使用原始音频
-                    if new_duration < 1.0:
+                    # 如果剪切后时长小于0.4秒，使用原始音频
+                    if new_duration < 0.4:
                         rprint(f"[yellow]⚠️ 剪切静音后时长过短 ({new_duration:.2f}秒)，使用原始音频[/yellow]")
                         tts_main(text, temp_file, number, tasks_df)  # 重新生成
                         audio = AudioSegment.from_wav(temp_file)
@@ -190,12 +209,9 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
             # Final validation
             if os.path.exists(temp_file):
                 file_size = os.path.getsize(temp_file)
-                if file_size < 20000 or duration <= 0:
+                if file_size < 10000 or duration <= 0:
                     rprint(f"[red]❌ 最终验证失败: 文件大小={file_size}字节, 时长={duration:.2f}秒[/red]")
-                    # Try one more time with a simple silent audio
-                    silence = AudioSegment.silent(duration=1000)  # 1秒静音
-                    silence.export(temp_file, format="wav")
-                    duration = 1.0
+                    duration = create_silent_fallback(temp_file)
 
             real_dur = duration
             break
@@ -205,38 +221,13 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
             if "TimeoutError" in str(type(e)):
                  error_message = "TTS generation timed out after 30 seconds."
 
-            if attempt == max_retries - 1:
-                # 检查是否有参考音频作为后备方案
-                refer_file = f"output/audio/refers/{number}.wav"
-                if os.path.exists(refer_file) and os.path.getsize(refer_file) > 20000:
-                    try:
-                        # Verify the reference file is valid
-                        audio = AudioSegment.from_wav(refer_file)
-                        if len(audio) > 500:  # At least 500ms
-                            shutil.copy2(refer_file, temp_file)
-                            duration = len(audio) / 1000  # Convert to seconds
-                            rprint(f"[yellow]⚠️ TTS生成失败，已使用参考音频替代: {refer_file} -> {temp_file}[/yellow]")
-                            real_dur = duration
-                            break
-                    except Exception as ref_e:
-                        rprint(f"[red]❌ 参考音频无效: {str(ref_e)}[/red]")
-
-                # If we get here, either no reference file or it's invalid
-                rprint(f"[red]⚠️ TTS生成失败且无有效参考音频，已生成静音音频替代: {temp_file}[/red]")
-                silence = AudioSegment.silent(duration=1000)  # 1秒静音
-                silence.export(temp_file, format="wav")
-                real_dur = 1.0
-                break
-            else:
-                rprint(f"[yellow]⚠️ TTS生成失败，重试中({attempt + 1}/{max_retries}): {error_message}[/yellow]")
+            if attempt < max_retries - 1:
+                rprint(f"[yellow]⚠️ TTS generation failed for {number}, retrying ({attempt + 1}/{max_retries}): {error_message}[/yellow]")
                 time.sleep(1)
-
-    # Final check to ensure we have a valid audio file
-    if not os.path.exists(temp_file) or os.path.getsize(temp_file) < 20000 or real_dur <= 0:
-        rprint(f"[red]❌ 最终检查失败，生成静音替代: {temp_file}[/red]")
-        silence = AudioSegment.silent(duration=1000)  # 1秒静音
-        silence.export(temp_file, format="wav")
-        real_dur = 1.0
+            else:
+                rprint(f"[red]❌ TTS for number {number} failed after {max_retries} retries: {error_message}.[/red]")
+                real_dur = 0  # Mark as failed
+                break  # Exit the retry loop
 
     return number, real_dur
 
@@ -254,32 +245,82 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
             try:
                 number, real_dur = process_row(row, tasks_df)
                 tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = real_dur
-                progress.advance(task)
             except Exception as e:
-                rprint(f"[red]❌ Error in warmup: {str(e)}[/red]")
-                raise e
+                rprint(f"[red]❌ Error in warmup for task {row['number']}: {str(e)}[/red]")
+                tasks_df.loc[tasks_df['number'] == row['number'], 'real_dur'] = 0
+            finally:
+                progress.advance(task)
 
         # for gpt_sovits, do not use parallel to avoid mistakes
-        max_workers = load_key("max_workers") if load_key("tts_method") != "gpt_sovits" else 1
+        tts_method = load_key("tts_method")
+        max_workers = load_key("max_workers") if tts_method != "gpt_sovits" and tts_method != "custom_tts" else 1
         # parallel processing for remaining tasks
         if len(tasks_df) > warmup_size:
             remaining_tasks = tasks_df.iloc[warmup_size:].copy()
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = [
-                    executor.submit(process_row, row, tasks_df.copy())
-                    for _, row in remaining_tasks.iterrows()
-                ]
+                futures = {executor.submit(process_row, row, tasks_df.copy()): row for _, row in remaining_tasks.iterrows()}
 
                 for future in as_completed(futures):
+                    row = futures[future]
+                    number = row['number']
                     try:
-                        number, real_dur = future.result()
-                        tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = real_dur
-                        progress.advance(task)
+                        returned_number, real_dur = future.result()
+                        # Make sure the returned number matches
+                        if returned_number == number:
+                            tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = real_dur
+                        else:
+                            rprint(f"[red]❌ Mismatched number in future result! Expected {number}, got {returned_number}.[/red]")
+                            tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = 0
                     except Exception as e:
-                        rprint(f"[red]❌ Error: {str(e)}[/red]")
-                        raise e
+                        rprint(f"[red]❌ Error for task {number}: {str(e)}[/red]")
+                        tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = 0
+                    finally:
+                        progress.advance(task)
 
-    rprint("[bold green]✨ TTS audio generation completed![/bold green]")
+    rprint("[bold green]✨ Initial TTS audio generation completed![/bold green]")
+
+    # Retry failed tasks
+    failed_tasks = tasks_df[tasks_df['real_dur'] == 0]
+    if not failed_tasks.empty:
+        rprint(f"[bold yellow]⚠️ Found {len(failed_tasks)} failed tasks. Retrying them now...[/bold yellow]")
+        
+        with Progress() as progress:
+            retry_task_progress = progress.add_task("[cyan]🔄 Retrying failed tasks...", total=len(failed_tasks))
+            
+            for _, row in failed_tasks.iterrows():
+                number = row['number']
+                try:
+                    # Retry logic is inside process_row, so just call it again.
+                    _, real_dur = process_row(row, tasks_df)
+                    tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = real_dur
+                    
+                    if real_dur == 0:
+                        # If it still fails, try to use reference audio as a fallback
+                        rprint(f"[red]❌ Retry failed for task {number}. Trying to use reference audio as fallback.[/red]")
+                        temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
+                        ref_audio_path = f"output/audio/refers/{number}.wav"
+
+                        if os.path.exists(ref_audio_path) and os.path.getsize(ref_audio_path) > 20000:
+                            try:
+                                shutil.copy2(ref_audio_path, temp_file)
+                                duration = get_audio_duration(temp_file)
+                                tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = duration
+                                rprint(f"[green]✅ Used reference audio for task {number}.[/green]")
+                            except Exception as e:
+                                rprint(f"[red]❌ Failed to use reference audio for task {number}: {e}. Generating 1s silent audio.[/red]")
+                                tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = create_silent_fallback(temp_file)
+                        else:
+                            rprint(f"[red]❌ Reference audio for task {number} is missing or invalid. Generating 1s silent audio.[/red]")
+                            tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = create_silent_fallback(temp_file)
+                        
+                except Exception as e:
+                    rprint(f"[red]❌ An unexpected error occurred during retry for task {number}: {str(e)}. Generating 1s silent audio.[/red]")
+                    temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
+                    tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = create_silent_fallback(temp_file)
+                
+                progress.advance(retry_task_progress)
+
+    rprint("[bold green]✅ All TTS audio tasks completed (with retries if necessary).[/bold green]")
     return tasks_df
 
 def process_chunk(chunk_df: pd.DataFrame, accept: float, min_speed: float) -> tuple[float, bool]:
@@ -293,15 +334,20 @@ def process_chunk(chunk_df: pd.DataFrame, accept: float, min_speed: float) -> tu
     speed_var_error = 0.1
 
     # Calculate base speed factor with more tolerance
+    # Ensure denominators are always positive to prevent negative speed factors
     if (chunk_durs + all_gaps) / accept < durations:
-        base_factor = (chunk_durs + all_gaps) / (durations-speed_var_error*2)
+        denominator = max(MIN_SPEED_DENOMINATOR, durations-speed_var_error*2)
+        base_factor = max(min_speed, (chunk_durs + all_gaps) / denominator)
     elif chunk_durs / accept < durations:
-        base_factor = chunk_durs / (durations-speed_var_error*2)
+        denominator = max(MIN_SPEED_DENOMINATOR, durations-speed_var_error*2)
+        base_factor = max(min_speed, chunk_durs / denominator)
         keep_gaps = False
     elif (chunk_durs + all_gaps) / accept < tol_durs:
-        base_factor = (chunk_durs + all_gaps) / (tol_durs-speed_var_error*2)
+        denominator = max(MIN_SPEED_DENOMINATOR, tol_durs-speed_var_error*2)
+        base_factor = max(min_speed, (chunk_durs + all_gaps) / denominator)
     else:
-        base_factor = chunk_durs / (tol_durs-speed_var_error*2)
+        denominator = max(MIN_SPEED_DENOMINATOR, tol_durs-speed_var_error*2)
+        base_factor = max(min_speed, chunk_durs / denominator)
         keep_gaps = False
 
     # Apply safety margin when approaching limits
@@ -318,6 +364,13 @@ def process_chunk(chunk_df: pd.DataFrame, accept: float, min_speed: float) -> tu
 def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
     """Merge audio chunks and adjust timeline"""
     rprint("[bold blue]🔄 Starting audio chunks processing...[/bold blue]")
+
+    if 'cut_off' not in tasks_df.columns:
+        rprint("[yellow]⚠️ 'cut_off' column not found in task file. Treating all tasks as a single chunk.[/yellow]")
+        tasks_df['cut_off'] = 0
+        if not tasks_df.empty:
+            tasks_df.iloc[-1, tasks_df.columns.get_loc('cut_off')] = 1
+
     accept = load_key("speed_factor.accept")
     min_speed = load_key("speed_factor.min")
     chunk_start = 0
@@ -329,7 +382,7 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
     for _, row in tasks_df.iterrows():
         number = row['number']
         temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
-        if not os.path.exists(temp_file) or os.path.getsize(temp_file) < 20000:
+        if not os.path.exists(temp_file) or os.path.getsize(temp_file) < 10000:
             missing_files.append(number)
 
     if missing_files:
@@ -372,8 +425,10 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
 
             # If total duration exceeds chunk time, adjust speed factor
             available_time = chunk_end_time - chunk_start_time
-            if total_duration > available_time:
-                adjusted_factor = speed_factor * (total_duration / available_time) * 1.05  # Add 5% safety margin
+            if total_duration > available_time and available_time > 0:
+                adjusted_factor = speed_factor * (total_duration / available_time)
+                # Ensure adjusted factor is positive and within reasonable limits
+                adjusted_factor = max(min_speed, adjusted_factor)
                 if adjusted_factor <= accept * 1.1:  # Only adjust if within reasonable limits
                     rprint(f"[yellow]⚠️ Adjusted speed factor from {speed_factor:.3f} to {adjusted_factor:.3f} for chunk {chunk_start} to {index}[/yellow]")
                     speed_factor = round(adjusted_factor, 3)
@@ -390,7 +445,7 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 output_file = OUTPUT_FILE_TEMPLATE.format(f"{number}")
 
                 # Verify the temp file exists and is valid
-                if not os.path.exists(temp_file) or os.path.getsize(temp_file) < 20000:
+                if not os.path.exists(temp_file) or os.path.getsize(temp_file) < 10000:
                     rprint(f"[red]❌ Missing or invalid audio file: {temp_file}[/red]")
                     # Create a silent audio file as a fallback
                     silence = AudioSegment.silent(duration=1000)  # 1 second silence
@@ -410,9 +465,10 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 # 🔄 Step3: Find corresponding main DataFrame index and update new_sub_times
                 main_df_idx = tasks_df[tasks_df['number'] == row['number']].index[0]
                 tasks_df.at[main_df_idx, 'new_sub_times'] = new_sub_times
-                # 🎯 Step4: Choose emoji based on speed_factor and accept comparison
-                emoji = "⚡" if speed_factor <= accept else "⚠️"
-                rprint(f"[cyan]{emoji} Processed chunk {chunk_start} to {index} with speed factor {speed_factor}[/cyan]")
+
+            # 🎯 Step4: Choose emoji based on speed_factor and accept comparison
+            emoji = "⚡" if speed_factor <= accept else "⚠️"
+            rprint(f"[cyan]{emoji} Processed chunk {chunk_start} to {index} with speed factor {speed_factor}[/cyan]")
 
             # 🔄 Step5: Check if the last row exceeds the range
             if cur_time > chunk_end_time:
@@ -507,7 +563,7 @@ def clean_invalid_audio_files() -> None:
             file_size = os.path.getsize(file_path)
 
             # Check if file is too small (likely invalid)
-            if file_size < 20000:
+            if file_size < 10000:
                 small_files.append((file_path, file_size))
                 invalid_count += 1
             else:

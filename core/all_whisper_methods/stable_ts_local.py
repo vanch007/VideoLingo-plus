@@ -46,19 +46,7 @@ def check_device():
         rprint(f"[cyan]🍎 Using Apple Silicon acceleration[/cyan]")
     return device
 
-def generate_split_files(result: Dict, language: str, is_first_segment: bool = False) -> None:
-    """
-    此函数已被禁用，不再生成 sentence_splitbynlp.txt 文件
-    现在将由 step3_1_spacy_split.py 负责生成该文件
-
-    Args:
-        result: stable-ts 转换为 WhisperX 格式的结果
-        language: 检测到的语言代码
-        is_first_segment: 是否是第一个音频段（已不再使用）
-    """
-    # 不执行任何操作，让 step3_1_spacy_split.py 来处理
-    rprint(f"[cyan]ℹ️ 不生成 sentence_splitbynlp.txt，将由 step3_1_spacy_split.py 处理[/cyan]")
-    return
+# generate_split_files has been moved to step2_whisperX.py
 
 def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
     """
@@ -214,14 +202,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
 
             whisperx_result['segments'].append(whisperx_segment)
 
-        # 不再生成 sentence_splitbynlp.txt 文件
-        # 注释掉相关代码，让 step3_1_spacy_split.py 来处理
-        # is_first_segment = start == 0 or start < 1.0
-        # generate_split_files(whisperx_result, result.language, is_first_segment)
 
-        # 只调用一次，记录日志
-        if start == 0 or start < 1.0:  # 只在第一个段时显示信息
-            rprint(f"[cyan]ℹ️ stable-ts 不再生成 sentence_splitbynlp.txt，将由 step3_1_spacy_split.py 处理[/cyan]")
 
         return whisperx_result
 

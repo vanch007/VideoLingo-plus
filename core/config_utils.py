@@ -11,7 +11,7 @@ config_lock = threading.Lock()
 yaml = YAML()
 yaml.preserve_quotes = True
 
-def load_key(key: str) -> Any:
+def load_key(key: str, default: Any = None) -> Any:
     with config_lock:
         with open(CONFIG_PATH, 'r', encoding='utf-8') as file:
             data = yaml.load(file)
@@ -22,6 +22,8 @@ def load_key(key: str) -> Any:
         if isinstance(value, dict) and k in value:
             value = value[k]
         else:
+            if default is not None:
+                return default
             raise KeyError(f"Key '{k}' not found in configuration")
     return value
 
@@ -32,19 +34,16 @@ def update_key(key: str, new_value: Any) -> bool:
 
         keys = key.split('.')
         current = data
-        for k in keys[:-1]:
-            if isinstance(current, dict) and k in current:
-                current = current[k]
-            else:
-                return False
+        for i, k in enumerate(keys[:-1]):
+            if k not in current or not isinstance(current.get(k), dict):
+                current[k] = {}
+            current = current[k]
 
-        if isinstance(current, dict) and keys[-1] in current:
-            current[keys[-1]] = new_value
-            with open(CONFIG_PATH, 'w', encoding='utf-8') as file:
-                yaml.dump(data, file)
-            return True
-        else:
-            raise KeyError(f"Key '{keys[-1]}' not found in configuration")
+        current[keys[-1]] = new_value
+        
+        with open(CONFIG_PATH, 'w', encoding='utf-8') as file:
+            yaml.dump(data, file)
+        return True
         
 # basic utils
 def get_joiner(language):
@@ -54,6 +53,9 @@ def get_joiner(language):
         return ""
     else:
         raise ValueError(f"Unsupported language code: {language}")
+
+def get_work_dir():
+    return os.getcwd()
 
 if __name__ == "__main__":
     print(load_key('language_split_with_space'))

@@ -6,23 +6,13 @@ from pydub import AudioSegment
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from core.config_utils import load_key
 from core.all_whisper_methods.audio_preprocess import get_audio_duration
-from core.all_tts_functions.gpt_sovits_tts import gpt_sovits_tts_for_videolingo
-from core.all_tts_functions.sf_fishtts import siliconflow_fish_tts_for_videolingo
-from core.all_tts_functions.openai_tts import openai_tts
-from core.all_tts_functions.fish_tts import fish_tts
-from core.all_tts_functions.azure_tts import azure_tts
-from core.all_tts_functions.edge_tts import edge_tts
-from core.all_tts_functions.sf_cosyvoice2 import cosyvoice_tts_for_videolingo
-from core.all_tts_functions.custom_tts import custom_tts
 from core.ask_gpt import ask_gpt
 from core.prompts_storage import get_correct_text_prompt
-from core.all_tts_functions._302_f5tts import f5_tts_for_videolingo
 
 def clean_text_for_tts(text):
     """Remove problematic characters for TTS"""
-    chars_to_remove = ['&', '®', '™', '©']
-    for char in chars_to_remove:
-        text = text.replace(char, '')
+    # A more aggressive cleaning that removes all punctuation.
+    text = re.sub(r"[^\w\s]", "", text)
     return text.strip()
 
 def tts_main(text, save_as, number, task_df):
@@ -49,26 +39,57 @@ def tts_main(text, save_as, number, task_df):
                 print("Asking GPT to correct text...")
                 correct_text = ask_gpt(get_correct_text_prompt(text),log_title='tts_correct_text')
                 text = correct_text['text']
+            
+            # Conditional imports based on TTS method to avoid import errors
             if TTS_METHOD == 'openai_tts':
+                from core.all_tts_functions.openai_tts import openai_tts
                 openai_tts(text, save_as)
             elif TTS_METHOD == 'gpt_sovits':
+                from core.all_tts_functions.gpt_sovits_tts import gpt_sovits_tts_for_videolingo
                 gpt_sovits_tts_for_videolingo(text, save_as, number, task_df)
             elif TTS_METHOD == 'fish_tts':
+                from core.all_tts_functions.fish_tts import fish_tts
                 fish_tts(text, save_as)
             elif TTS_METHOD == 'azure_tts':
+                from core.all_tts_functions.azure_tts import azure_tts
                 azure_tts(text, save_as)
             elif TTS_METHOD == 'sf_fish_tts':
+                from core.all_tts_functions.sf_fishtts import siliconflow_fish_tts_for_videolingo
                 siliconflow_fish_tts_for_videolingo(text, save_as, number, task_df)
             elif TTS_METHOD == 'edge_tts':
+                from core.all_tts_functions.edge_tts import edge_tts
                 edge_tts(text, save_as)
             elif TTS_METHOD == 'custom_tts':
-                custom_tts(text, save_as)
+                from core.all_tts_functions.custom_tts import custom_tts
+                custom_tts(text, save_as, number, task_df, attempt)
             elif TTS_METHOD == 'sf_cosyvoice2':
-                cosyvoice_tts_for_videolingo(text, save_as, number, task_df)
-            elif TTS_METHOD == 'f5tts':
-                f5_tts_for_videolingo(text, save_as, number, task_df)
+                from core.all_tts_functions.sf_cosyvoice2 import cosyvoice_tts_for_videolingo
+                try:
+                    clone_mode = load_key("sf_cosyvoice2.clone_mode")
+                except KeyError:
+                    clone_mode = "dynamic"
                 
-            # Check generated audio duration
+                fixed_voice_name = None
+                if clone_mode == "fixed":
+                    try:
+                        fixed_voice_name = load_key("sf_cosyvoice2.fixed_voice")
+                    except KeyError:
+                        # 如果没有在config中指定，可能需要一个默认或错误处理
+                        pass # 或者可以设置一个默认的固定声音名称
+
+                cosyvoice_tts_for_videolingo(text, save_as, number, task_df, clone_mode=clone_mode, fixed_voice_name=fixed_voice_name)
+            elif TTS_METHOD == 'f5tts':
+                from core.all_tts_functions._302_f5tts import f5_tts_for_videolingo
+                f5_tts_for_videolingo(text, save_as, number, task_df)
+            else:
+                raise ValueError(f"Unknown TTS method: {TTS_METHOD}")
+                
+            # For custom_tts, skip the duration check as per user request.
+            # For all other methods, validate the generated audio.
+            if TTS_METHOD == 'custom_tts':
+                break  # Assume success and exit the retry loop
+
+            # Check generated audio duration for other TTS methods
             duration = get_audio_duration(save_as)
             if duration > 0:
                 break

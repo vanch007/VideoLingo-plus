@@ -110,11 +110,21 @@ def split_align_subs(src_lines: List[str], tr_lines: List[str]) -> Tuple[List[st
     return src_lines, tr_lines, remerged_tr_lines
 
 def split_for_sub_main():
-    console.print("[bold green]🚀 Start splitting subtitles...[/bold green]")
+    console.print("[bold green]🚀 Processing subtitles...[/bold green]")
     
     df = pd.read_excel(INPUT_FILE)
     src = df['Source'].tolist()
     trans = df['Translation'].tolist()
+    
+    # 检查是否需要执行分割
+    merge_split_subtitles = load_key("merge_split_subtitles", default=True)
+    
+    if not merge_split_subtitles:
+        console.print("[yellow]⚠️ 跳过字幕分割步骤，直接使用原始翻译结果[/yellow]")
+        # 直接将原始结果写入两个输出文件
+        pd.DataFrame({'Source': src, 'Translation': trans}).to_excel(OUTPUT_SPLIT_FILE, index=False)
+        pd.DataFrame({'Source': src, 'Translation': trans}).to_excel(OUTPUT_REMERGED_FILE, index=False)
+        return
     
     subtitle_set = load_key("subtitle")
     MAX_SUB_LENGTH = subtitle_set["max_length"]
