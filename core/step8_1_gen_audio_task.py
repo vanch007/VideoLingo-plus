@@ -193,10 +193,10 @@ def merge_short_subtitles(df):
 def process_srt():
     """Process srt file, generate audio tasks"""
 
-    with open(TRANS_SUBS_FOR_AUDIO_FILE, 'r', encoding='utf-8') as file:
+    with open(TRANS_SRT, 'r', encoding='utf-8') as file:
         content = file.read()
 
-    with open(SRC_SUBS_FOR_AUDIO_FILE, 'r', encoding='utf-8') as src_file:
+    with open(SRC_SRT, 'r', encoding='utf-8') as src_file:
         src_content = src_file.read()
 
     subtitles = []
