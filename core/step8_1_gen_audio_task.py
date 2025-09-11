@@ -240,8 +240,8 @@ def process_srt():
 
     df = pd.DataFrame(subtitles)
 
-    merge_split_subtitles = load_key("merge_split_subtitles", True)
-    if merge_split_subtitles:
+    merge_subtitles = load_key("merge_subtitles", True)
+    if merge_subtitles:
         df = merge_short_subtitles(df)
 
     # 并行处理短文本字幕，使用GPT扩展文本

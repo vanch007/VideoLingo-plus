@@ -95,13 +95,13 @@ def page_setting():
             update_key("burn_subtitles", burn_subtitles)
             st.rerun()
 
-        merge_split_subtitles = st.checkbox(
-            t("Merge/Split Subtitles"),
-            value=load_key("merge_split_subtitles", True), # Default to True
-            help=t("Uncheck to skip subtitle splitting and merging, directly using the original transcription result.")
+        merge_subtitles = st.checkbox(
+            t("Merge Subtitles"),
+            value=load_key("merge_subtitles", True), # Default to True
+            help=t("Check to merge short or fast subtitles for better dubbing quality.")
         )
-        if merge_split_subtitles != load_key("merge_split_subtitles", True):
-            update_key("merge_split_subtitles", merge_split_subtitles)
+        if merge_subtitles != load_key("merge_subtitles", True):
+            update_key("merge_subtitles", merge_subtitles)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
         tts_methods = ["azure_tts", "openai_tts", "fish_tts", "sf_fish_tts", "edge_tts", "gpt_sovits", "custom_tts", "sf_cosyvoice2", "f5tts"]

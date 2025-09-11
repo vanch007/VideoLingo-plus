@@ -36,11 +36,11 @@ def text_processing_section():
                         try:
                             # 检查视频文件是否存在
                             find_video_files()
-                            # Get the current state of 'merge_split_subtitles'
-                            should_do_full_processing = st.session_state.get('merge_split_subtitles', True)
+                            # Subtitle splitting and translation will now always run.
+                            # The "Merge Subtitles" switch only affects audio processing steps.
                             process_text(
-                                do_full_subtitle_processing=should_do_full_processing,
-                                skip_merge_subtitles=not should_do_full_processing # Skip step7 if full processing is skipped
+                                do_full_subtitle_processing=True,
+                                skip_merge_subtitles=False
                             )
                             process_audio()
                         except Exception as e:
@@ -51,11 +51,11 @@ def text_processing_section():
                     try:
                         # 检查视频文件是否存在
                         find_video_files()
-                        # If merge_split_subtitles is unchecked, also skip merge_subtitles
-                        should_do_full_processing = st.session_state.get('merge_split_subtitles', True)
+                        # Subtitle splitting and translation will now always run.
+                        # The "Merge Subtitles" switch only affects audio processing steps.
                         process_text(
-                            do_full_subtitle_processing=should_do_full_processing,
-                            skip_merge_subtitles=not should_do_full_processing # Skip step7 if full processing is skipped
+                            do_full_subtitle_processing=True,
+                            skip_merge_subtitles=False
                         )
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
