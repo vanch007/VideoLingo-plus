@@ -93,7 +93,7 @@ fish_tts:
 
 # SiliconFlow CosyVoice2 Clone
 sf_cosyvoice2:
-  api_key: 'sk-awjktilzfzyuovnwmlikewbwlkezjbbolujevbnfrwgewaid'
+  api_key: ''
 
 # Edge TTS configuration
   clone_mode: dynamic
