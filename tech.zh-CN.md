@@ -71,8 +71,20 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
    - `core/step2_whisperX.py`: 利用 WhisperX 或 stable-ts 模型进行高精度的语音识别
      —— `enhance_vocals(vocals_ratio=2.50)`: 增强人声音量
      —— `transcribe()`: 执行转录主函数
-     —— 输入文件: `output/[video_name].[ext]` (视频文件)
-     —— 输出文件: `output/log/cleaned_chunks.xlsx` (转录结果)
+     —— `preprocess_audio()`: 预处理音频，包括转换格式和分割
+     —— `align_timestamps()`: 对齐语音识别结果的时间戳
+     —— `save_results()`: 保存转录结果到Excel文件
+     —— `process()`: 主处理流程，整合音频处理和转录
+     —— 输入文件: 
+       - `output/[video_name].[ext]` (视频文件)
+       - `config.yaml` (配置文件，包含模型路径、语言等参数)
+     —— 输出文件: 
+       - `output/log/cleaned_chunks.xlsx` (转录结果)
+       - `output/audio/raw.mp3` (原始音频)
+       - `output/audio/for_whisper.mp3` (处理后的音频)
+     —— 依赖模块:
+       - `core/all_whisper_methods/audio_preprocess.py`
+       - `core/all_whisper_methods/demucs_vl.py`
    - `core/all_whisper_methods/audio_preprocess.py`: 音频预处理工具
      —— `compress_audio(input_file: str, output_file: str)`: 压缩音频文件
      —— `convert_video_to_audio(video_file: str)`: 视频转音频
@@ -93,9 +105,9 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
      —— 输入文件: `output/log/cleaned_chunks.xlsx` (转录结果)
      —— 输出文件: `output/log/sentence_splitbynlp.txt` (初步分割的句子)
    - `core/step3_2_splitbymeaning.py`: 结合 GPT 模型的语义理解能力，对长句进行更精确的分割。
-     —— `split_sentence(sentence, num_parts, word_limit=18)`: 分割单个句子
-     —— `parallel_split_sentences(sentences, max_length, max_workers, nlp)`: 并行分割多个句子
-     —— `split_sentences_by_meaning()`: 执行语义分割主函数
+     —— `split_sentence(sentence, num_parts, word_limit=18)`: 分割单个句子，包含参数说明
+     —— `parallel_split_sentences(sentences, max_length, max_workers, nlp)`: 并行分割多个句子，支持多线程处理
+     —— `split_sentences_by_meaning()`: 执行语义分割主函数，包含完整的处理流程
      —— 输入文件: `output/log/sentence_splitbynlp.txt` (初步分割的句子)
      —— 输出文件: `output/log/sentence_splitbymeaning.txt` (语义分割后的句子)
    - `core/step4_1_summarize.py`: 利用 GPT 模型对视频内容进行智能摘要，提取关键术语。
@@ -140,15 +152,16 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
 4. **字幕处理与合成模块**:
    - `core/step5_splitforsub.py`: 根据字幕格式规范，对翻译后的文本进行精确分割和时间对齐。
       —— `calc_len(text: str)`: 计算文本长度，支持多语言字符权重计算(中文/日文1.75，韩文1.5，泰文1，全角符号1.75，其他1)
-      —— `align_subs(src_sub: str, tr_sub: str, tr_part: str)`: 使用GPT模型对齐源字幕和翻译字幕，支持角色反转参数
+      —— `align_subs(src_sub: str, tr_sub: str, src_part: str)`: 使用GPT模型对齐源字幕和翻译字幕，支持角色反转参数
       —— `split_align_subs(src_lines: List[str], tr_lines: List[str])`: 并行处理字幕分割和对齐，支持多线程
       —— `split_for_sub_main()`: 执行字幕分割主函数，包含3次重试机制确保字幕长度符合规范
       —— 输入文件: `output/log/translation_results.xlsx` (翻译结果)
       —— 输出文件: `output/log/translation_results_for_subtitles.xlsx` (分割后的字幕), `output/log/translation_results_remerged.xlsx` (重新合并的字幕)
    - `core/step6_generate_final_timeline.py`: 生成标准 SRT 格式的字幕文件，包含精确的时间轴信息。
-      —— `seconds_to_hmsm(seconds)`: 秒数转换为时间格式
+      —— `convert_to_srt_format(start_time, end_time)`: 秒数转换为时间格式
       —— `get_sentence_timestamps(df_words, df_sentences)`: 获取句子时间戳
       —— `align_timestamp(df_text, df_translate, subtitle_output_configs, output_dir, for_display)`: 对齐时间戳
+      —— `clean_translation(x)`: 清理翻译文本
       —— `align_timestamp_main()`: 执行时间轴对齐主函数
       —— 输入文件: `output/log/cleaned_chunks.xlsx` (转录结果), `output/log/translation_results_for_subtitles.xlsx` (分割后的字幕)
       —— 输出文件: `output/src.srt`, `output/trans.srt`, `output/src_trans.srt`, `output/trans_src.srt` (各种格式的字幕文件)
@@ -160,12 +173,16 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
 
 5. **音频处理与配音模块**:
      - `core/step8_1_gen_audio_task.py`: 生成音频任务，处理字幕以确保与时间相符。
+       —— `expand_short_text(text, origin_text, prev_text=None, next_text=None)`: 扩展短文本内容
        —— `check_len_then_trim(text, duration)`: 检查并修剪文本长度，支持AI辅助和手动处理
+       —— `merge_short_subtitles(df)`: 合并短字幕
        —— `process_srt()`: 处理SRT字幕文件，智能选择前后较短字幕进行合并，自动延长不足时长
        —— `gen_audio_task_main()`: 生成音频任务主函数，跳过已存在任务
        —— 输入文件: `output/trans.srt` (翻译字幕), `output/src.srt` (原始字幕)
        —— 输出文件: `output/audio/tts_tasks.xlsx` (配音任务文件)
      - `core/step9_extract_refer_audio.py`: 提取参考音频，支持Apple Silicon加速。
+       —— `time_str_to_seconds(time_str)`: 时间字符串转换为秒数
+       —— `seconds_to_time_str(seconds)`: 秒数转换为时间字符串
        —— `time_to_samples(time_str, sr)`: 统一时间转换
        —— `extract_audio(audio_data, sr, start_time, end_time, out_file)`: 音频提取核心函数
        —— `extract_refer_audio_main()`: 提取参考音频主函数，自动跳过已处理文件
@@ -178,18 +195,37 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
        —— `generate_tts_audio(tasks_df: pd.DataFrame)`: 生成TTS音频，支持预热和多线程
        —— `process_chunk(chunk_df: pd.DataFrame, accept: float, min_speed: float)`: 处理音频块，含安全边际计算
        —— `merge_chunks(tasks_df: pd.DataFrame)`: 合并音频块，支持时间轴精确调整和异常处理
+       —— `clean_invalid_audio_files()`: 清理无效的音频文件
        —— `gen_audio()`: 生成音频主函数，包含完整错误处理流程
        —— 输入文件: `output/audio/tts_tasks.xlsx` (配音任务文件), `output/audio/refers/[number].wav` (参考音频片段)
        —— 输出文件: `output/audio/segs/[number].wav` (生成的配音片段)
      - `core/step11_merge_full_audio.py`: 合并完整音频
+       —— `load_and_flatten_data(excel_file)`: 加载并展平Excel数据
+       —— `get_audio_files(df)`: 获取音频文件列表
+       —— `process_audio_segment(audio_file)`: 处理音频片段
+       —— `merge_audio_segments(audios, new_sub_times, sample_rate)`: 合并音频片段
+       —— `create_srt_subtitle()`: 创建SRT字幕文件
+       —— `create_orig_srt_subtitle()`: 创建原始文本SRT字幕文件
        —— `merge_full_audio()`: 合并音频主函数
        —— 输入文件: `output/audio/tts_tasks.xlsx` (配音任务文件), `output/audio/segs/[number].wav` (配音片段)
        —— 输出文件: `output/dub.mp3` (合并后的完整配音), `output/dub.srt` (配音字幕)
-     - `core/step12_merge_dub_to_vid.py`: 将配音合并到视频，支持多线程加速。
-       —— `normalize_audio_volume(audio_path: str, output_path: str, target_db: float)`: 标准化音频音量
-       —— `merge_video_audio()`: 合并视频音频主函数，优化ffmpeg参数提升处理速度
-       —— 输入文件: `output/[video_name].[ext]` (原始视频), `output/dub.mp3` (完整配音), `output/dub.srt` (配音字幕)
-       —— 输出文件: `output/AI配音.mp4` (带配音的视频)
+     - `core/step12_merge_dub_to_vid.py`: 将配音合并到视频，支持多线程加速和音频标准化处理。
+       —— `normalize_audio_volume(audio_path: str, output_path: str, target_db: float = -20.0)`: 标准化音频音量，使用EBU R128标准
+       —— `merge_video_audio(video_path: str, audio_path: str, subtitle_path: str, output_path: str = 'output/AI配音.mp4')`: 合并视频音频主函数，优化ffmpeg参数提升处理速度，支持硬件加速
+       —— `get_video_duration(video_path: str)`: 获取视频文件的实际播放时长
+       —— `check_sync(video_duration: float, audio_duration: float, threshold: float = 1.5)`: 检查音视频时长同步性，确保差异在阈值范围内
+       —— 输入文件: 
+         - `output/[video_name].[ext]` (原始视频)
+         - `output/dub.mp3` (完整配音)
+         - `output/dub.srt` (配音字幕)
+       —— 输出文件: 
+         - `output/AI配音.mp4` (带配音的视频)
+         - `output/AI配音_调试版.mp4` (带时间戳的调试视频)
+       —— 参数配置:
+         - `USE_GPU` (bool): 是否使用GPU加速
+         - `AUDIO_BITRATE` (str): 音频码率
+         - `VIDEO_BITRATE` (str): 视频码率
+         - `SYNC_THRESHOLD` (float): 音视频同步阈值
      - `core/all_tts_functions/`: 文本转语音功能
        - `azure_tts.py`: Azure TTS
          —— `azure_tts(text: str, save_path: str)`: Azure文本转语音

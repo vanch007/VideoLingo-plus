@@ -8,23 +8,23 @@ display_language: "zh-CN"
 api:
   key: 'sk-gknihqdrqptifmzwrezivnyhtesemusgaletctihienbxmxx'
   base_url: 'https://api.siliconflow.cn'
-  model: 'moonshotai/Kimi-K2-Instruct-0905'
+  model: 'deepseek-ai/DeepSeek-V3'
 
 # Language settings, written into the prompt, can be described in natural language
   tpm_limit: 10000
   retry_attempts: 10
   retry_interval: 3
-target_language: 'zh'
+target_language: 'en'
 
 # Whether to use Demucs for vocal separation before transcription
 demucs: true
 
 whisper:
   # ["medium", "large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
-  model: 'large-v3'
+  model: 'medium'
   # Whisper specified recognition language [en, zh, ...]
-  language: 'ja'
-  detected_language: 'ja'
+  language: 'zh'
+  detected_language: 'zh'
   # Whisper running mode ["local", "stable-ts", "cloud"]. Specifies where to run, cloud uses 302.ai API
   runtime: 'stable-ts'
   # 302.ai API key
