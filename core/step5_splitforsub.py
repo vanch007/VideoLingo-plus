@@ -90,11 +90,18 @@ def split_align_subs(src_lines: List[str], tr_lines: List[str]) -> Tuple[List[st
             console.print(table)
     
     def process(i):
-        split_src = split_sentence(src_lines[i], num_parts=2).strip()
-        # 检查分割结果是否合理，避免在单个标点处分割
-        if any(len(part.strip()) == 1 and part.strip() in ',.?!，。？！' for part in split_src.split('\n')):
-            # 如果分割结果不合理，尝试其他分割方式
+        # 尝试正常分割，如果失败则强制分割
+        try:
+            split_src = split_sentence(src_lines[i], num_parts=2).strip()
+            # 检查分割结果是否合理，避免在单个标点处分割
+            if any(len(part.strip()) == 1 and part.strip() in ',.?!，。？！' for part in split_src.split('\n')):
+                # 如果分割结果不合理，尝试强制分割模式
+                split_src = split_sentence(src_lines[i], num_parts=2, force_split=True).strip()
+        except Exception as e:
+            console.print(f"[yellow]Warning: Normal split failed for line {i}, using forced split. Error: {e}[/yellow]")
+            # 如果正常分割失败，使用强制分割
             split_src = split_sentence(src_lines[i], num_parts=2, force_split=True).strip()
+            
         src_parts, tr_parts, tr_remerged = align_subs(src_lines[i], tr_lines[i], split_src)
         src_lines[i] = src_parts
         tr_lines[i] = tr_parts
@@ -122,14 +129,27 @@ def split_for_sub_main():
     MAX_SUB_LENGTH = subtitle_set["max_length"]
     TARGET_SUB_MULTIPLIER = subtitle_set["target_multiplier"]
     
-    for attempt in range(3):  # 使用固定的3次重试
+    for attempt in range(5):  # 增加到5次重试以提高成功率
         console.print(Panel(f"🔄 Split attempt {attempt + 1}", expand=False))
-        split_src, split_trans, remerged = split_align_subs(src.copy(), trans)
+        try:
+            split_src, split_trans, remerged = split_align_subs(src.copy(), trans)
+        except Exception as e:
+            console.print(f"[red]Error in split attempt {attempt + 1}: {e}[/red]")
+            if attempt == 4:  # 最后一次尝试
+                raise
+            continue
         
         # 检查是否所有字幕都符合长度要求
-        if all(len(src) <= MAX_SUB_LENGTH for src in split_src) and \
-           all(calc_len(tr) * TARGET_SUB_MULTIPLIER <= MAX_SUB_LENGTH for tr in split_trans):
+        src_check = all(len(str(src)) <= MAX_SUB_LENGTH for src in split_src)
+        trans_check = all(calc_len(str(tr)) * TARGET_SUB_MULTIPLIER <= MAX_SUB_LENGTH for tr in split_trans)
+        
+        if src_check and trans_check:
+            console.print("[green]✅ All subtitles meet the length requirements![/green]")
             break
+        else:
+            console.print(f"[yellow]⚠️ Some subtitles still exceed length limits:[/yellow]")
+            console.print(f"  - Source check passed: {src_check}")
+            console.print(f"  - Translation check passed: {trans_check}")
         
         # 更新源数据继续下一轮分割
         src = split_src

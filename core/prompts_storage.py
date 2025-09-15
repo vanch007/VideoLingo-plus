@@ -4,8 +4,14 @@ from core.config_utils import load_key
 
 ## ================================================================
 # @ step4_splitbymeaning.py
-def get_split_prompt(sentence, num_parts = 2, word_limit = 20):
+def get_split_prompt(sentence, num_parts = 2, word_limit = 20, retry_count = 0):
     language = load_key("whisper.detected_language")
+    
+    retry_instruction = ""
+    if retry_count > 0:
+        retry_instruction = f"""
+(Important: This is a retry attempt #{retry_count}. The previous attempts failed because the split was in the middle of phrases or resulted in single characters. Please pay special attention to creating meaningful splits.)"""
+
     split_prompt = f"""
 ## Role
 You are a professional Netflix subtitle splitter in {language}.
@@ -17,6 +23,9 @@ Split the given subtitle text into {num_parts} parts, each less than {word_limit
 2. Keep parts roughly equal in length (minimum 3 words each)
 3. Split at natural points like punctuation marks or conjunctions
 4. If provided text is repeated words, simply split at the middle of the repeated words.
+5. NEVER split in the middle of grammatical phrases or words
+6. NEVER create segments with just a single character or punctuation mark
+7. Each segment should be grammatically complete as much as possible{retry_instruction}
 
 ## Output in only JSON format
 {{

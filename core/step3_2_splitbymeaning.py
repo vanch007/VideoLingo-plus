@@ -54,7 +54,7 @@ def split_sentence(sentence, num_parts, word_limit=18, index=-1, retry_attempt=0
     Args:
         force_split: If True, force split even if it results in single punctuation.
     """
-    split_prompt = get_split_prompt(sentence, num_parts, word_limit)
+    split_prompt = get_split_prompt(sentence, num_parts, word_limit, retry_attempt)
 
     def valid_split(response_data):
         if 'split' not in response_data:
@@ -68,15 +68,15 @@ def split_sentence(sentence, num_parts, word_limit=18, index=-1, retry_attempt=0
             for part in parts:
                 part = part.strip()
                 # Avoid splitting on single punctuation or single character
-                if len(part) == 1 and part in ',.?!，。？！' or len(part) == 1:
+                if len(part) == 1 and part in ',.?!，。？！' or len(part) == 0:
                     return {"status": "error", "message": "Split resulted in single punctuation or character"}
-                # Avoid splitting in the middle of a phrase
-                if part.endswith(('的', '地', '得', '了', '着', '过')):
+                # Avoid splitting in the middle of a phrase - but allow some flexibility
+                if part.endswith(('的', '地', '得', '了', '着', '过')) and len(part) < 3:
                     return {"status": "error", "message": "Split in the middle of a phrase"}
 
         return {"status": "success", "message": "Split completed"}
 
-    response_data = ask_gpt(split_prompt + ' ' * retry_attempt, response_json=True, valid_def=valid_split, log_title='sentence_splitbymeaning')
+    response_data = ask_gpt(split_prompt, response_json=True, valid_def=valid_split, log_title='sentence_splitbymeaning')
     best_split = response_data["split"]
     split_points = find_split_positions(sentence, best_split)
 
@@ -140,12 +140,27 @@ def parallel_split_sentences(sentences, max_length, max_workers, nlp, retry_atte
                 new_sentences[index] = [sentence]
 
         for future, index, num_parts, sentence in futures:
-            split_result = future.result()
-            if split_result:
-                split_lines = split_result.strip().split('\n')
-                new_sentences[index] = [line.strip() for line in split_lines]
-            else:
-                new_sentences[index] = [sentence]
+            try:
+                split_result = future.result()
+                if split_result:
+                    split_lines = split_result.strip().split('\n')
+                    new_sentences[index] = [line.strip() for line in split_lines]
+                else:
+                    new_sentences[index] = [sentence]
+            except Exception as e:
+                console.print(f"[red]Error splitting sentence {index}: {e}[/red]")
+                # 如果分割失败，尝试强制分割
+                try:
+                    console.print(f"[yellow]Trying forced split for sentence {index}...[/yellow]")
+                    split_result = split_sentence(sentence, num_parts, max_length, index=index, retry_attempt=retry_attempt, force_split=True)
+                    if split_result:
+                        split_lines = split_result.strip().split('\n')
+                        new_sentences[index] = [line.strip() for line in split_lines]
+                    else:
+                        new_sentences[index] = [sentence]
+                except Exception as e2:
+                    console.print(f"[red]Forced split also failed for sentence {index}: {e2}[/red]")
+                    new_sentences[index] = [sentence]
 
     # 添加统计信息
     result_sentences = [sentence for sublist in new_sentences for sentence in sublist]
