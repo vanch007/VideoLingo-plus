@@ -330,10 +330,12 @@ def process_extracted_subtitles():
         os.makedirs('output/log', exist_ok=True)
         os.makedirs('output/audio', exist_ok=True)
         
-        # 首先执行音频预处理步骤（与原有流程一致）
+        # 首先执行音频预处理步骤（仅处理音频，不进行转录）
         with st.spinner(t("音频预处理...")):
             start_time = time.time()
-            step2_whisperX.transcribe()  # 这会执行prepare_audio_and_vocals但跳过转录步骤
+            # 使用仅处理音频的函数而不是完整的转录函数
+            from core.step2_whisperX import prepare_audio_only
+            prepare_audio_only()  # 这只会处理音频文件，不会执行转录
             elapsed = time.time() - start_time
             save_timing("音频预处理", elapsed)
             with timing_placeholder.container():

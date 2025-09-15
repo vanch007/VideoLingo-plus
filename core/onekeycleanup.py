@@ -5,15 +5,34 @@ from core.step1_ytdlp import find_video_files
 import shutil
 
 def cleanup(history_dir="history"):
-    print(f"Starting cleanup process, moving files to {history_dir}")
+    print(f"🔍 Starting cleanup process with history_dir={history_dir}")
+
+    # Check if step_timings.json exists before cleanup
+    step_timings_path = "output/log/step_timings.json"
+    if os.path.exists(step_timings_path):
+        print(f"🔍 step_timings.json exists before cleanup: {step_timings_path}")
+        print(f"🔍 File size: {os.path.getsize(step_timings_path)} bytes")
+        # Make a backup of step_timings.json content
+        try:
+            with open(step_timings_path, 'r', encoding='utf-8') as f:
+                step_timings_content = f.read()
+            print(f"🔍 Successfully read step_timings.json content: {len(step_timings_content)} bytes")
+        except Exception as e:
+            print(f"⚠️ Error reading step_timings.json: {str(e)}")
+            step_timings_content = None
+    else:
+        print(f"🔍 step_timings.json does not exist before cleanup")
+        step_timings_content = None
 
     # Get video file name to create a unique history folder
     try:
         video_file = find_video_files()
         video_name = os.path.splitext(os.path.basename(video_file))[0]
         video_name = sanitize_filename(video_name)
+        print(f"🔍 Using video name for history folder: {video_name}")
     except Exception as e:
-        print(f"Could not find a unique video file, using 'unknown' for history folder. Error: {e}")
+        print(f"⚠️ Error finding video file: {str(e)}")
+        print("⚠️ Using 'unknown' as video name")
         video_name = "unknown"
 
     # Define history paths
@@ -24,11 +43,35 @@ def cleanup(history_dir="history"):
     # Create history directories
     os.makedirs(log_dir, exist_ok=True)
     os.makedirs(gpt_log_dir, exist_ok=True)
+    print(f"🔍 Created history directories: {log_dir}, {gpt_log_dir}")
+
+    # Special handling for step_timings.json - move it first
+    if os.path.exists(step_timings_path):
+        print(f"🔍 Special handling for step_timings.json")
+        # Force copy instead of move to ensure it's properly transferred
+        dst_path = os.path.join(log_dir, "step_timings.json")
+        try:
+            shutil.copy2(step_timings_path, dst_path)
+            print(f"✅ Copied step_timings.json to {dst_path}")
+            # Verify the copy was successful
+            if os.path.exists(dst_path):
+                print(f"✅ Verified step_timings.json exists at destination: {dst_path}")
+                print(f"✅ Destination file size: {os.path.getsize(dst_path)} bytes")
+                # Now remove the original file
+                os.remove(step_timings_path)
+                print(f"✅ Removed original step_timings.json at {step_timings_path}")
+            else:
+                print(f"❌ Failed to copy step_timings.json to {dst_path}")
+        except Exception as e:
+            print(f"❌ Error during special handling of step_timings.json: {str(e)}")
 
     # Move all files and subdirectories from output/log to the new log_dir
+    # Skip step_timings.json as it's already handled
     if os.path.exists("output/log"):
         for item in os.listdir("output/log"):
-            move_file(os.path.join("output/log", item), log_dir)
+            # Skip step_timings.json as it's already handled
+            if item != "step_timings.json":
+                move_file(os.path.join("output/log", item), log_dir)
 
     # Move all files from output/gpt_log to the new gpt_log_dir
     if os.path.exists("output/gpt_log"):
@@ -42,16 +85,65 @@ def cleanup(history_dir="history"):
             if item not in ['log', 'gpt_log']:
                 move_file(src_path, video_history_dir)
 
+    # Check if step_timings.json exists in history after moving
+    history_step_timings_path = os.path.join(log_dir, "step_timings.json")
+    if os.path.exists(history_step_timings_path):
+        print(f"🔍 step_timings.json exists in history after cleanup: {history_step_timings_path}")
+        print(f"🔍 File size in history: {os.path.getsize(history_step_timings_path)} bytes")
+        # Verify the content matches
+        if step_timings_content:
+            try:
+                with open(history_step_timings_path, 'r', encoding='utf-8') as f:
+                    history_content = f.read()
+                if history_content == step_timings_content:
+                    print(f"✅ Content verification: History file content matches original")
+                else:
+                    print(f"⚠️ Content verification: History file content DOES NOT match original")
+            except Exception as e:
+                print(f"⚠️ Error verifying history file content: {str(e)}")
+    else:
+        print(f"🔍 step_timings.json does not exist in history after cleanup: {history_step_timings_path}")
+        # If the file doesn't exist in history but we have the content, recreate it
+        if step_timings_content:
+            try:
+                with open(history_step_timings_path, 'w', encoding='utf-8') as f:
+                    f.write(step_timings_content)
+                print(f"✅ Recreated step_timings.json in history from backup content")
+            except Exception as e:
+                print(f"❌ Failed to recreate step_timings.json in history: {str(e)}")
+
     # Clean up empty source directories
     try:
+        # Check if output/log directory is empty before removing
         if os.path.exists("output/log") and not os.listdir("output/log"):
             os.rmdir("output/log")
+            print("🔍 Removed empty output/log directory")
+        elif os.path.exists("output/log"):
+            print(f"⚠️ output/log directory not empty, contains: {os.listdir('output/log')}")
+
+        # Check if output/gpt_log directory is empty before removing
         if os.path.exists("output/gpt_log") and not os.listdir("output/gpt_log"):
             os.rmdir("output/gpt_log")
+            print("🔍 Removed empty output/gpt_log directory")
+        elif os.path.exists("output/gpt_log"):
+            print(f"⚠️ output/gpt_log directory not empty, contains: {os.listdir('output/gpt_log')}")
+
+        # Check if output directory is empty before removing
         if os.path.exists("output") and not os.listdir("output"):
             os.rmdir("output")
+            print("🔍 Removed empty output directory")
+        elif os.path.exists("output"):
+            print(f"⚠️ output directory not empty, contains: {os.listdir('output')}")
     except OSError as e:
-        print(f"Could not remove all source directories: {e}")
+        print(f"⚠️ Could not remove output directories: {str(e)}")  # Log the error
+
+    # Final check to see if step_timings.json was recreated after cleanup
+    if os.path.exists(step_timings_path):
+        print(f"⚠️ step_timings.json was recreated after cleanup: {step_timings_path}")
+        print(f"⚠️ File size: {os.path.getsize(step_timings_path)} bytes")
+        # Try to determine what recreated it
+        import traceback
+        print(f"⚠️ Current call stack:\n{traceback.format_stack()}")
 
 def move_file(src, dst):
     try:

@@ -291,6 +291,18 @@ def process_srt():
     df['start_time'] = df['start_time'].apply(lambda x: x.strftime('%H:%M:%S.%f')[:-3])
     df['end_time'] = df['end_time'].apply(lambda x: x.strftime('%H:%M:%S.%f')[:-3])
 
+    # 添加 cut_off 列以确保与后续处理兼容
+    # 如果 merge_subtitles 为 False，则每个字幕都是一个独立的块（每行都切分）
+    # 如果 merge_subtitles 为 True，但未经过 process_cutoffs 处理，则默认最后一行切分
+    if not merge_subtitles:
+        # 如果不合并字幕，每行都是独立的块
+        df['cut_off'] = 1
+    else:
+        # 如果合并字幕，默认只有最后一行是切分点
+        df['cut_off'] = 0
+        if not df.empty:
+            df.iloc[-1, df.columns.get_loc('cut_off')] = 1
+
     ##! No longer perform secondary trim
     # check and trim subtitle length, for twice to ensure the subtitle length is within the limit, 允许tolerance
     # df['text'] = df.apply(lambda x: check_len_then_trim(x['text'], x['duration']+x['tolerance']), axis=1)

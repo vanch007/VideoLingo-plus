@@ -159,6 +159,12 @@ def gen_dub_chunks():
         df = process_cutoffs(df)
     else:
         rprint("[ℹ️ Info] '合并字幕' 选项未勾选，跳过分块合并操作。")
+        # 即使不合并字幕，也要确保 cut_off 列存在且正确设置
+        # 每行都作为一个独立的块
+        if 'cut_off' not in df.columns:
+            df['cut_off'] = 1
+        else:
+            df['cut_off'] = 1
 
     rprint("[📝 Reading] Loading transcript files...")
     content = open(TRANS_SRT, "r", encoding="utf-8").read()

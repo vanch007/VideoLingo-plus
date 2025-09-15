@@ -96,6 +96,17 @@ def merge_video_audio():
 
     video_filter = ",".join(video_filter_parts) + "[v]"
 
+    # 获取背景音量调节参数，默认为1.5（增加50%音量）
+    background_volume = load_key("background_volume", 1.5)
+    
+    # 构建音频处理滤镜，调节背景音量
+    if background_volume != 1.0:
+        # 如果需要调节背景音量，则使用volume滤镜
+        audio_filter = f"[1:a]volume={background_volume}[bg];[bg][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]"
+    else:
+        # 如果不需要调节音量，使用默认的混合方式
+        audio_filter = "[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]"
+
     cmd = [
         'ffmpeg', '-y',
         '-threads', '0',
@@ -103,7 +114,7 @@ def merge_video_audio():
         '-i', background_file,
         '-i', normalized_dub_audio,
         '-filter_complex',
-        f'{video_filter};[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]'
+        f'{video_filter};{audio_filter}'
     ]
 
     if check_gpu_available():

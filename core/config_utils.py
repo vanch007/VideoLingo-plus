@@ -11,21 +11,33 @@ config_lock = threading.Lock()
 yaml = YAML()
 yaml.preserve_quotes = True
 
-def load_key(key: str, default: Any = None) -> Any:
+def load_config():
+    """Load the config.yaml file into a dictionary."""
     with config_lock:
         with open(CONFIG_PATH, 'r', encoding='utf-8') as file:
-            data = yaml.load(file)
+            return yaml.load(file)
 
-    keys = key.split('.')
-    value = data
-    for k in keys:
-        if isinstance(value, dict) and k in value:
-            value = value[k]
-        else:
-            if default is not None:
-                return default
-            raise KeyError(f"Key '{k}' not found in configuration")
-    return value
+def load_key(key_path: str, default=None):
+    """Load a specific key's value from the config.yaml file.
+    
+    Args:
+        key_path (str): Path to the key in dot notation (e.g., 'whisper.language')
+        default: Default value to return if key is not found
+        
+    Returns:
+        The value of the key or default if not found
+    """
+    config = load_config()
+    keys = key_path.split('.')
+    value = config
+    try:
+        for key in keys:
+            value = value[key]
+        return value
+    except (KeyError, TypeError):
+        if default is not None:
+            return default
+        raise KeyError(f"Key '{key_path}' not found in config")
 
 def update_key(key: str, new_value: Any) -> bool:
     with config_lock:

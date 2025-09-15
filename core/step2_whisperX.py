@@ -33,6 +33,20 @@ def prepare_audio_and_vocals():
     
     return whisper_audio
 
+def prepare_audio_only():
+    """Prepare only audio files without vocal separation - for embedded subtitle workflow"""
+    # step0 Convert video to audio
+    video_file = find_video_files()
+    convert_video_to_audio(video_file)
+    
+    # step1 Compress audio for whisper
+    whisper_audio = compress_audio(RAW_AUDIO_FILE, WHISPER_FILE)
+    
+    # 确保输出目录存在
+    os.makedirs('output/log', exist_ok=True)
+    
+    return whisper_audio
+
 def enhance_vocals(vocals_ratio=2.50):
     """Enhance vocals audio volume"""
     if not load_key("demucs"):
