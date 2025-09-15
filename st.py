@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import shutil
-import json # Added this line
+import json
 from core.config_utils import get_work_dir
 import os, sys
 import time
@@ -10,6 +10,24 @@ from st_components.imports_and_utils import *
 from core.config_utils import load_key, update_key
 from core.timing_utils import get_formatted_timings, save_timing
 from core.step1_ytdlp import find_video_files
+import core.step2_whisperX as step2_whisperX
+import core.step3_1_spacy_split as step3_1_spacy_split
+import core.step3_2_splitbymeaning as step3_2_splitbymeaning
+import core.step4_1_summarize as step4_1_summarize
+import core.step4_2_translate_all as step4_2_translate_all
+import core.step5_splitforsub as step5_splitforsub
+import core.step6_generate_final_timeline as step6_generate_final_timeline
+import core.step7_merge_sub_to_vid as step7_merge_sub_to_vid
+import core.step8_1_gen_audio_task as step8_1_gen_audio_task
+import core.step8_2_gen_dub_chunks as step8_2_gen_dub_chunks
+import core.step9_extract_refer_audio as step9_extract_refer_audio
+import core.step10_gen_audio as step10_gen_audio
+import core.step11_merge_full_audio as step11_merge_full_audio
+import core.step12_merge_dub_to_vid as step12_merge_dub_to_vid
+
+# 导入新功能模块
+import core.step2_extract_subtitles as step2_extract_subtitles
+import core.step3_3_process_extracted_subs as step3_3_process_extracted_subs
 
 # 确保set_page_config()只在主脚本中调用一次
 if not hasattr(st, '_page_config_set'):
@@ -28,6 +46,10 @@ def text_processing_section():
 
     st.header(t("b. Translate and Generate Subtitles"))
     with st.container(border=True):
+        # 添加使用内嵌字幕的选项
+        use_extracted_subs = st.checkbox(t("使用内嵌字幕"), value=False, 
+                                       help=t("如果视频包含内嵌字幕，可以使用此选项直接提取字幕而不进行语音识别"))
+        
         if not os.path.exists(SUB_VIDEO) and not os.path.exists(DUB_VIDEO):
             col1, col2 = st.columns(2)
             with col1:
@@ -36,13 +58,19 @@ def text_processing_section():
                         try:
                             # 检查视频文件是否存在
                             find_video_files()
-                            # Subtitle splitting and translation will now always run.
-                            # The "Merge Subtitles" switch only affects audio processing steps.
-                            process_text(
-                                do_full_subtitle_processing=True,
-                                skip_merge_subtitles=False
-                            )
-                            process_audio()
+                            if use_extracted_subs:
+                                # 使用内嵌字幕的工作流程
+                                process_extracted_subtitles()
+                                process_audio()
+                            else:
+                                # 原有的工作流程
+                                # Subtitle splitting and translation will now always run.
+                                # The "Merge Subtitles" switch only affects audio processing steps.
+                                process_text(
+                                    do_full_subtitle_processing=True,
+                                    skip_merge_subtitles=False
+                                )
+                                process_audio()
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
                             st.info("Please make sure a video is available before processing.")
@@ -51,12 +79,17 @@ def text_processing_section():
                     try:
                         # 检查视频文件是否存在
                         find_video_files()
-                        # Subtitle splitting and translation will now always run.
-                        # The "Merge Subtitles" switch only affects audio processing steps.
-                        process_text(
-                            do_full_subtitle_processing=True,
-                            skip_merge_subtitles=False
-                        )
+                        if use_extracted_subs:
+                            # 使用内嵌字幕的工作流程
+                            process_extracted_subtitles()
+                        else:
+                            # 原有的工作流程
+                            # Subtitle splitting and translation will now always run.
+                            # The "Merge Subtitles" switch only affects audio processing steps.
+                            process_text(
+                                do_full_subtitle_processing=True,
+                                skip_merge_subtitles=False
+                            )
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
                         st.info("Please make sure a video is available before processing.")
@@ -278,6 +311,67 @@ def process_text(skip_merge_subtitles=False, do_full_subtitle_processing=True):
     finally:
         # 无论是否出错，都显示耗时统计
         display_timing_statistics(key_suffix="text_final")
+
+def process_extracted_subtitles():
+    """使用内嵌字幕的工作流程"""
+    # 记录整体字幕处理开始时间
+    total_start_time = time.time()
+
+    # 创建一个占位符来显示实时耗时统计
+    timing_placeholder = st.empty()
+
+    # 显示初始耗时统计
+    with timing_placeholder.container():
+        display_timing_statistics(key_suffix="extracted_subs_init")
+
+    try:
+        # 确保必要的目录存在
+        import os
+        os.makedirs('output/log', exist_ok=True)
+        os.makedirs('output/audio', exist_ok=True)
+        
+        # 首先执行音频预处理步骤（与原有流程一致）
+        with st.spinner(t("音频预处理...")):
+            start_time = time.time()
+            step2_whisperX.transcribe()  # 这会执行prepare_audio_and_vocals但跳过转录步骤
+            elapsed = time.time() - start_time
+            save_timing("音频预处理", elapsed)
+            with timing_placeholder.container():
+                display_timing_statistics(key_suffix="extracted_subs_step0")
+
+        with st.spinner(t("提取内嵌字幕...")):
+            start_time = time.time()
+            from core import step2_extract_subtitles
+            success = step2_extract_subtitles.extract_subtitles_main()
+            if not success:
+                raise Exception("提取内嵌字幕失败")
+            elapsed = time.time() - start_time
+            save_timing("提取内嵌字幕", elapsed)
+            with timing_placeholder.container():
+                display_timing_statistics(key_suffix="extracted_subs_step1")
+
+        with st.spinner(t("处理提取的字幕...")):
+            start_time = time.time()
+            from core import step3_3_process_extracted_subs
+            success = step3_3_process_extracted_subs.process_extracted_subs_main()
+            if not success:
+                raise Exception("处理提取的字幕失败")
+            elapsed = time.time() - start_time
+            save_timing("处理提取的字幕", elapsed)
+            with timing_placeholder.container():
+                display_timing_statistics(key_suffix="extracted_subs_step2")
+
+        # 记录整体字幕处理耗时
+        save_timing("整体字幕处理(内嵌)", time.time() - total_start_time)
+
+        st.success(t("内嵌字幕处理完成! 🎉"))
+        st.balloons()
+    except Exception as e:
+        st.error(f"处理内嵌字幕时出错: {str(e)}")
+        raise e
+    finally:
+        # 无论是否出错，都显示耗时统计
+        display_timing_statistics(key_suffix="extracted_subs_final")
 
 def audio_processing_section():
     st.header(t("c. Dubbing"))

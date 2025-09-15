@@ -41,6 +41,33 @@ Videolingo 系统遵循以下核心处理流程：
 
 整个流程高度自动化，各模块可独立运行或组合使用，支持批量处理和自定义配置。
 
+### 新功能：使用内嵌字幕的工作流程
+
+此工作流程适用于视频文件已包含高质量、时间轴准确的源语言和目标语言字幕的情况。它通过直接利用现有字幕，绕过了语音识别（Whisper）和机器翻译等耗时步骤，可以更快速、更精确地生成配音任务。
+
+**核心处理流程如下：**
+
+1.  **视频获取与字幕下载 (core/step1_ytdlp.py)**
+    -   与原有流程相同，但下载时会配置 `yt-dlp` 以确保下载 MKV 格式并 **嵌入所有可用字幕轨道**。
+
+2.  **音频预处理 (core/step2_whisperX.py)**
+    -   此为通用步骤，无论使用何种模式，都需执行以确保后续配音流程所需的文件存在。
+    -   `prepare_audio_and_vocals()`: 从视频中提取原始音频 (`raw.mp3`)，并使用 Demucs 分离人声和背景音乐。
+    -   **输出文件**: `output/audio/raw.mp3`, `output/audio/vocals.mp3`, `output/audio/no_vocals.mp3` (背景音乐，配音合成时需要)。
+
+3.  **字幕轨道提取 (core/step2_extract_subtitles.py)**
+    -   当用户在界面选择“使用内嵌字幕”模式后，此模块启动。
+    -   `get_subtitle_tracks()`: 使用 `ffprobe` 解析视频文件，向用户展示所有可用的内嵌字幕轨道。
+    -   `extract_subtitles_main()`: 根据用户选择的轨道，使用 `ffmpeg` 提取源语言和目标语言的字幕。
+    -   **输出文件**: `output/raw_src.srt`, `output/raw_trans.srt`。
+
+4.  **字幕处理与时间轴生成 (core/step3_3_process_extracted_subs.py)**
+    -   此模块负责清洗和对齐提取出的两条字幕轨道。
+    -   `process_extracted_subs_main()`: 读取 SRT 文件，清理非对话内容，并生成配音所需文件
+    -   **输出文件**:`output/src.srt`, `output/trans.srt`, `output/src_trans.srt`, `output/trans_src.srt` (各种格式的字幕文件)
+
+通过以上步骤，新功能实现了对现有字幕的再利用，为后续的配音（Step 9, 10, 11, 12）提供了高质量的文本和时间轴输入，同时保证了音频文件也准备就绪。
+
 Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视频下载、音频提取、语音识别、字幕生成、文本翻译，以及音视频合成等一系列复杂操作。该系统还提供了一个 Web 界面，用于任务管理和系统配置。
 
 对于开发人员，可以单步执行 `core` 下的每一个 `step__.py` 文件并在 `output` 下检查每一步的输出。

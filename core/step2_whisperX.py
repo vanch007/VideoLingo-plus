@@ -12,6 +12,27 @@ from core.step1_ytdlp import find_video_files
 WHISPER_FILE = "output/audio/for_whisper.mp3"
 ENHANCED_VOCAL_PATH = "output/audio/enhanced_vocals.mp3"
 
+def prepare_audio_and_vocals():
+    """Prepare audio files and vocals - this is needed for both transcription and embedded subtitle workflows"""
+    # step0 Convert video to audio
+    video_file = find_video_files()
+    convert_video_to_audio(video_file)
+
+    # step1 Demucs vocal separation:
+    if load_key("demucs"):
+        demucs_main()
+
+    # step2 Enhance vocals if needed
+    choose_audio = enhance_vocals() if load_key("demucs") else RAW_AUDIO_FILE
+    
+    # step3 Compress audio for whisper
+    whisper_audio = compress_audio(choose_audio, WHISPER_FILE)
+    
+    # 确保输出目录存在
+    os.makedirs('output/log', exist_ok=True)
+    
+    return whisper_audio
+
 def enhance_vocals(vocals_ratio=2.50):
     """Enhance vocals audio volume"""
     if not load_key("demucs"):
@@ -34,27 +55,17 @@ def enhance_vocals(vocals_ratio=2.50):
 def transcribe():
     if os.path.exists(CLEANED_CHUNKS_EXCEL_PATH):
         rprint("[yellow]⚠️ Transcription results already exist, skipping transcription step.[/yellow]")
+        # 但仍然需要确保音频文件存在
+        prepare_audio_and_vocals()
         return
 
-    # step0 Convert video to audio
-    video_file = find_video_files()
-    convert_video_to_audio(video_file)
+    # Prepare audio files (this is also needed for embedded subtitle workflow)
+    whisper_audio = prepare_audio_and_vocals()
 
-    # step1 Demucs vocal separation:
-    if load_key("demucs"):
-        demucs_main()
-
-    # step2 Compress audio
-    choose_audio = enhance_vocals() if load_key("demucs") else RAW_AUDIO_FILE
-    whisper_audio = compress_audio(choose_audio, WHISPER_FILE)
-
-    # 确保输出目录存在
-    os.makedirs('output/log', exist_ok=True)
-
-    # step3 Extract audio
+    # step4 Extract audio
     segments = split_audio(whisper_audio)
 
-    # step4 Transcribe audio
+    # step5 Transcribe audio
     all_results = []
     runtime = load_key("whisper.runtime")
     if runtime == "local":
@@ -85,7 +96,7 @@ def transcribe():
         if runtime == "stable-ts":
             rprint(f"[green]✅ Completed segment {i+1}/{len(segments)} ({(i+1)/len(segments)*100:.1f}%)[/green]")
 
-    # step5 Combine results
+    # step6 Combine results
     combined_result = {'segments': []}
     for result in all_results:
         combined_result['segments'].extend(result['segments'])
@@ -109,7 +120,7 @@ def transcribe():
         
         rprint(f"[green]✅ stable-ts 分句结果已写入 {output_path_nlp} 和 {output_path_meaning}[/green]")
 
-    # step6 Process df
+    # step7 Process df
     df = process_transcription(combined_result)
     save_results(df)
 

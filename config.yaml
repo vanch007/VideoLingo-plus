@@ -14,6 +14,10 @@ api:
   tpm_limit: 10000
   retry_attempts: 10
   retry_interval: 3
+
+# Source language for embedded subtitles
+source_language: 'en'
+
 target_language: 'en'
 
 # Whether to use Demucs for vocal separation before transcription
