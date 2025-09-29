@@ -83,7 +83,12 @@
     "Local runtime requires >8GB GPU, stable-ts provides better timestamps, cloud runtime requires 302ai API key": "本地运行需要>8GB显存GPU，stable-ts提供更好的时间戳，云端运行需要302ai API密钥",
     "Whisper Model": "Whisper模型",
     "Select model size. For Apple Silicon, MLX acceleration will be used automatically.": "选择模型大小。对于苹果芯片，将自动使用MLX加速",
+    "Select a model compatible with MLX. 'turbo' is optimized for Apple Silicon.": "选择与MLX兼容的模型。'turbo'针对Apple Silicon进行了优化。",
+    "Use MLX Acceleration": "使用MLX加速",
+    "Enable MLX for faster processing on Apple Silicon. Disable if you encounter issues or want to use features not supported by MLX (like refine/regroup post-processing).": "启用MLX以在Apple Silicon上实现更快的处理速度。如果遇到问题或想要使用MLX不支持的功能（如refine/regroup后处理），请禁用。",
+    "Processing translation and dubbing...": "正在处理翻译和配音...",
     "清除耗时统计": "清除耗时统计",
+    "使用内嵌字幕": "使用内嵌字幕",
     "=====NOTE2=====": "以下是install.py中的内容",
     "🚀 Starting Installation": "🚀 开始安装",
     "Do you need to auto-configure PyPI mirrors? (Recommended if you have difficulty accessing pypi.org)": "是否需要自动配置PyPI镜像？（如果访问pypi.org困难，建议使用）",
@@ -123,4 +128,3 @@
     "Use Embedded Subtitles": "使用内嵌字幕",
     "如果视频包含内嵌字幕，可以使用此选项直接提取字幕而不进行语音识别": "如果视频包含内嵌字幕，可以使用此选项直接提取字幕而不进行语音识别"
 }
-

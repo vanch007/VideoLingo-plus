@@ -272,6 +272,7 @@ Please use a two-step thinking process to handle the text line by line:
    - Check the conciseness of the subtitles, point out where the translation is too wordy, the translation should be close to the original text in length
 
 2. {TARGET_LANGUAGE} Free Translation:
+   - **IMPORTANT: Match Spoken Duration.** The length of the translated text should be proportional to the original text's spoken duration. This is crucial for TTS dubbing to avoid inconsistent pacing (some parts too fast, some too slow). Aim for the translated text's syllable count or spoken length to be within a close range of the original.
    - Aim for contextual smoothness and naturalness, conforming to {TARGET_LANGUAGE} expression habits
    - Ensure it's easy for {TARGET_LANGUAGE} audience to understand and accept
    - Adapt the language style to match the video's theme (e.g., use casual language for tutorials, professional terminology for technical content, formal language for documentaries)
