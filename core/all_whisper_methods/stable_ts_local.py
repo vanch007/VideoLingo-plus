@@ -13,6 +13,8 @@ import tempfile
 import platform
 from core.config_utils import load_key, get_joiner
 from core.all_whisper_methods.audio_preprocess import save_language
+from huggingface_hub import snapshot_download
+from huggingface_hub import snapshot_download
 
 # 过滤torchaudio相关警告
 warnings.filterwarnings("ignore", message=".*torchaudio.*backend.*")
@@ -37,20 +39,6 @@ MLX_MODELS = {
     "turbo": "mlx-community/whisper-large-v3-turbo"
 }
 
-def check_device():
-    """Check and return the available device"""
-    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-    rprint(f"🚀 Using device: {device}")
-
-    if device == "cuda":
-        gpu_mem = torch.cuda.get_device_properties(0).total_memory / (1024**3)
-        rprint(f"[cyan]🎮 GPU memory:[/cyan] {gpu_mem:.2f} GB")
-    elif device == "mps":
-        rprint(f"[cyan]🍎 Using Apple Silicon acceleration[/cyan]")
-    return device
-
-# generate_split_files has been moved to step2_whisperX.py
-
 def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
     """
     Transcribe audio segment using stable-ts
@@ -67,9 +55,24 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         # Import stable_whisper here to avoid loading it unnecessarily
         import stable_whisper
 
-        device = check_device()
         WHISPER_LANGUAGE = load_key("whisper.language")
         WHISPER_MODEL = load_key("whisper.model")
+
+        # Determine if we should use MLX
+        use_mlx = False
+        is_apple_silicon = (platform.system() == "Darwin" and "arm" in platform.machine())
+        if is_apple_silicon and load_key("whisper.stable_ts_mlx", default=True):
+            use_mlx = True
+            device = "mps"
+            rprint(f"🚀 Using device: {device} (MLX enabled by user)")
+        else:
+            if is_apple_silicon:
+                rprint("[yellow]MLX disabled by user. Using CPU instead. This will be slower but allows for more features.[/yellow]")
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            rprint(f"🚀 Using device: {device}")
+            if device == "cuda":
+                gpu_mem = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+                rprint(f"[cyan]🎮 GPU memory:[/cyan] {gpu_mem:.2f} GB")
 
         rprint(f"[green]▶️ Starting stable-ts for segment {start:.2f}s to {end:.2f}s...[/green]")
 
@@ -78,7 +81,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
             temp_audio_path = temp_audio.name
 
         # Extract audio segment using ffmpeg
-        ffmpeg_cmd = f'ffmpeg -y -i "{audio_file}" -ss {start} -t {end-start} -vn -ar 32000 -ac 1 "{temp_audio_path}"'
+        ffmpeg_cmd = f'ffmpeg -y -i "{audio_file}" -ss {start} -t {end-start} -vn -ar 16000 -ac 1 "{temp_audio_path}"'
         subprocess.run(ffmpeg_cmd, shell=True, check=True, capture_output=True)
 
         try:
@@ -89,84 +92,133 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
             if os.path.exists(temp_audio_path):
                 os.unlink(temp_audio_path)
 
-        # Determine model path or name
-        if WHISPER_LANGUAGE == 'zh':
-            model_name = "Huan69/Belle-whisper-large-v3-zh-punct-fasterwhisper"
-            local_model = os.path.join(MODEL_DIR, "Belle-whisper-large-v3-zh-punct-fasterwhisper")
-        else:
-            model_name = WHISPER_MODEL
-            local_model = os.path.join(MODEL_DIR, model_name)
-
-        if os.path.exists(local_model):
-            rprint(f"[green]📥 Loading local WHISPER model:[/green] {local_model} ...")
-            model_name = local_model
-        else:
-            rprint(f"[green]📥 Using WHISPER model from HuggingFace:[/green] {model_name} ...")
+        model_name = WHISPER_MODEL
 
         # On Apple Silicon, use MLX with appropriate model for better performance
-        if device == "mps":
-            # 强制将 MPS 设备视为 Apple Silicon
-            # 因为 MPS 只在 Apple Silicon 上可用
-            is_apple_silicon = True
-            rprint(f"[cyan]检测到 MPS 设备，将其视为 Apple Silicon[/cyan]")
-
-            # 使用用户选择的模型
+        if use_mlx:
             mlx_model_name = WHISPER_MODEL
-
-            # 打印调试信息
-            rprint(f"[cyan]用户选择的模型: {mlx_model_name}[/cyan]")
-            rprint(f"[cyan]模型是否在 MLX_MODELS 中: {mlx_model_name in MLX_MODELS}[/cyan]")
-
-            # 如果用户选择的模型在 MLX_MODELS 中，使用该模型
+            rprint(f"[cyan]User selected model: {mlx_model_name}[/cyan]")
             if mlx_model_name in MLX_MODELS:
                 rprint(f"[green]📥 Using MLX Whisper {mlx_model_name} model for Apple Silicon...[/green]")
                 model = stable_whisper.load_mlx_whisper(mlx_model_name)
-            # 否则默认使用 large-v3-turbo
             else:
-                rprint(f"[yellow]警告: 模型 {mlx_model_name} 不在 MLX 支持列表中，使用 large-v3-turbo 代替[/yellow]")
+                rprint(f"[yellow]Warning: Model {mlx_model_name} not in MLX support list, defaulting to large-v3-turbo[/yellow]")
                 model = stable_whisper.load_mlx_whisper('large-v3-turbo')
-
-            # 记录使用的是 MLX Whisper
             using_mlx_whisper = True
         else:
-            # Load the model with stable_whisper on other devices
-            rprint("[green]📥 Loading stable-ts model...[/green]")
-            model = stable_whisper.load_model(
-                model_name,
-                device=device,
-                download_root=MODEL_DIR
-            )
-            # 记录使用的不是 MLX Whisper
+            # For non-MLX devices, handle standard vs. faster-whisper models
+            if model_name == "Huan69/Belle-whisper-large-v3-zh-punct-fasterwhisper":
+                # This is our special faster-whisper model. Ensure it's downloaded.
+                local_model_path = os.path.abspath(os.path.join(MODEL_DIR, model_name))
+                if not os.path.exists(local_model_path):
+                    rprint(f"[yellow]Local Chinese model not found at {local_model_path}.[/yellow]")
+                    rprint(f"[cyan]Downloading from Hugging Face: {model_name}...[/cyan]")
+                    try:
+                        snapshot_download(repo_id=model_name, local_dir=local_model_path, local_dir_use_symlinks=False)
+                        rprint(f"[green]✓ Successfully downloaded model to {local_model_path}[/green]")
+                    except Exception as e:
+                        raise RuntimeError(
+                            f"Failed to download model. Please manually download from 'https://huggingface.co/{model_name}' "
+                            f"and place it in {os.path.abspath(MODEL_DIR)}. Error: {e}"
+                        )
+                
+                # Bypass `load_model` and instantiate directly for robustness
+                from stable_whisper.whisper_word_level import FasterWhisper
+                rprint("[green]📥 Directly instantiating faster-whisper model for Chinese...[/green]")
+                model = FasterWhisper(local_model_path, device=device)
+
+            else:
+                # For other standard models, use the regular load_model function
+                rprint("[green]📥 Loading stable-ts model...[/green]")
+                download_root_path = MODEL_DIR if not os.path.isabs(model_name) else None
+                model = stable_whisper.load_model(
+                    model_name,
+                    device=device,
+                    download_root=download_root_path
+                )
             using_mlx_whisper = False
 
         rprint("[bold green]note: You will see Progress if working correctly[/bold green]")
 
         # Transcribe with stable-ts
-        # 基本参数，所有模型都支持
         transcribe_options = {
-            'word_timestamps': True,    # Enable word-level timestamps
-            'vad': True,               # Use Voice Activity Detection for better timestamps
-            'vad_threshold': 0.5,      # Higher threshold for more accurate speech detection
-            'verbose': True            # Show progress
+            'word_timestamps': True,
+            'vad': True,
+            'vad_threshold': 0.3, # Lower threshold for more sensitive VAD
+            'verbose': True,
         }
 
-        # 只有非 MLX Whisper 模型支持的高级参数
         if not using_mlx_whisper:
-            rprint("[green]添加高级参数以提高转录质量[/green]")
+            rprint("[green]Applying advanced options for non-MLX models[/green]")
             transcribe_options.update({
-                'suppress_silence': True,   # Suppress silent parts
-                'suppress_word_ts': True,   # Adjust word timestamps
-                'nonspeech_skip': 1.0,     # Skip non-speech sections longer than 1 second
-                'max_instant_words': 0.3,  # Remove segments with too many instantaneous words
+                'suppress_silence': False, # Let VAD handle silence
+                'regroup': False # We will regroup manually after refining
             })
         else:
-            rprint("[yellow]MLX Whisper不支持某些高级参数，使用基本配置[/yellow]")
+            rprint("[yellow]MLX Whisper does not support some advanced features, but enabling regroup.[/yellow]")
+            transcribe_options['regroup'] = True
 
-        # Add language parameter if not auto
         if WHISPER_LANGUAGE != 'auto':
             transcribe_options['language'] = WHISPER_LANGUAGE
 
-        result = model.transcribe(audio_segment, **transcribe_options)
+        # For non-MLX, use the high-level `transcribe_stable` function which handles refine/regroup internally.
+        if not using_mlx_whisper:
+            rprint("[green]Transcribing with `transcribe_stable` for improved accuracy...[/green]")
+            result = stable_whisper.transcribe_stable(model, audio_segment, refine=True, regroup=True, **transcribe_options)
+        else:
+            # MLX backend does not support `transcribe_stable`, use the basic `transcribe`.
+            result = model.transcribe(audio_segment, **transcribe_options)
+            # Manual post-processing for MLX to split segments by sentence
+            rprint("[green]Manually splitting MLX results by sentence...[/green]")
+            new_segments = []
+            for segment in result.segments:
+                # Split by common punctuation and spaces
+                import re
+                sentences = re.split(r'([。？！\s])', segment.text)
+                # Process sentences to keep delimiters
+                processed_sentences = []
+                for i in range(0, len(sentences) - 1, 2):
+                    processed_sentences.append(sentences[i] + (sentences[i+1] if sentences[i+1] else ''))
+                if len(sentences) % 2 == 1 and sentences[-1]:
+                    processed_sentences.append(sentences[-1])
+
+                if not processed_sentences:
+                    continue
+
+                # If only one sentence, just add it
+                if len(processed_sentences) <= 1:
+                    new_segments.append(segment)
+                    continue
+
+                # If multiple sentences, we need to approximate timestamps
+                total_chars = len(segment.text)
+                duration = segment.end - segment.start
+                current_start = segment.start
+
+                for sent in processed_sentences:
+                    sent = sent.strip()
+                    if not sent:
+                        continue
+                    
+                    char_ratio = len(sent) / total_chars
+                    segment_duration = duration * char_ratio
+                    
+                    new_segment_data = {
+                        'text': sent,
+                        'start': current_start,
+                        'end': current_start + segment_duration,
+                        'words': [] # Word timestamps are lost in this process
+                    }
+                    # Create a new segment object (assuming a simple dict or a class with this structure)
+                    # We need to check what type `result.segments` contains.
+                    # It's a list of `stable_whisper.result.Segment` objects.
+                    from stable_whisper.result import Segment, WordTiming
+                    new_seg = Segment(start=new_segment_data['start'], end=new_segment_data['end'], text=new_segment_data['text'], words=[])
+                    new_segments.append(new_seg)
+                    current_start += segment_duration
+            
+            result.segments = new_segments
+
 
         # Free GPU resources
         del model

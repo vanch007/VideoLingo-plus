@@ -38,6 +38,7 @@ whisper:
   whisperX_302_api_key: 'YOUR_302_API_KEY'
 
 # Whether to burn subtitles into the video
+  stable_ts_mlx: true
 burn_subtitles: true
 
 ## ======================== Advanced Settings ======================== ##

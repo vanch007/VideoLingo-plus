@@ -10,70 +10,52 @@ console = Console()
 def check_package_installed(package_name):
     """Check if a package is installed"""
     try:
-        __import__(package_name)
-        return True
-    except ImportError:
-        return False
-
-def install_package(package):
-    """Install a package using pip"""
-    console.print(f"[yellow]Installing {package}...[/yellow]")
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        # A more robust way to check for installation
+        subprocess.check_call([sys.executable, "-m", "pip", "show", package_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return True
     except subprocess.CalledProcessError:
-        console.print(f"[red]Failed to install {package}[/red]")
+        return False
+
+def install_package(package, upgrade=False):
+    """Install a package using pip"""
+    cmd = [sys.executable, "-m", "pip", "install"]
+    if upgrade:
+        cmd.append("--upgrade")
+    
+    # Add git+ for github urls
+    if "github.com" in package:
+        cmd.append(package)
+    else:
+        cmd.append(package)
+
+    console.print(f"[yellow]Running: {' '.join(cmd)}[/yellow]")
+    try:
+        subprocess.check_call(cmd)
+        return True
+    except subprocess.CalledProcessError:
+        console.print(f"[red]Failed to install/upgrade {package}[/red]")
         return False
 
 def main():
     console.print(Panel.fit(
         "[bold cyan]Stable-TS Installation for VideoLingo[/bold cyan]\n\n"
-        "This script will install stable-ts and its dependencies.\n"
-        "- Install stable-whisper from the local directory or from GitHub\n"
-        "- Install required dependencies (torch, librosa, etc.)\n"
-        "- Install MLX support for Apple Silicon devices (if applicable)",
-        title="Installation"
+        "This script will install or upgrade stable-ts and its dependencies.\n"
+        "- Installs/upgrades stable-whisper directly from GitHub for the latest version.\n"
+        "- Installs required dependencies (torch, librosa, etc.).\n"
+        "- Installs MLX support for Apple Silicon devices (if applicable).",
+        title="Installation/Upgrade"
     ))
 
-    # Check if stable_whisper is already installed
-    if check_package_installed("stable_whisper"):
-        console.print("[green]✓ stable-whisper is already installed![/green]")
+    # Always try to install/upgrade stable-whisper from GitHub
+    console.print("[cyan]Attempting to install or upgrade stable-whisper from GitHub...[/cyan]")
+    if not install_package("git+https://github.com/jianfch/stable-ts.git", upgrade=True):
+        console.print("[red]Failed to install stable-whisper from GitHub.[/red]")
+        console.print("[yellow]Please try to install it manually with:[/yellow]")
+        console.print("[cyan]pip install --upgrade git+https://github.com/jianfch/stable-ts.git[/cyan]")
+        sys.exit(1)
     else:
-        console.print("[yellow]stable-whisper is not installed. Installing now...[/yellow]")
+        console.print("[green]✓ Successfully installed/upgraded stable-whisper from GitHub![/green]")
 
-        # Install stable-whisper from the local directory
-        stable_ts_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stable-ts")
-        if os.path.exists(stable_ts_dir):
-            console.print(f"[cyan]Installing stable-whisper from local directory: {stable_ts_dir}[/cyan]")
-            try:
-                # Install with editable mode to use the local version
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "-e", stable_ts_dir])
-                console.print("[green]✓ Successfully installed stable-whisper from local directory![/green]")
-            except subprocess.CalledProcessError:
-                console.print("[red]Failed to install stable-whisper from local directory[/red]")
-                console.print("[yellow]Trying to install from GitHub...[/yellow]")
-                # Try to install directly from GitHub
-                console.print("[yellow]Trying to install from GitHub repository...[/yellow]")
-                try:
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", "git+https://github.com/jianfch/stable-ts.git"])
-                    console.print("[green]✓ Successfully installed stable-whisper from GitHub![/green]")
-                except subprocess.CalledProcessError:
-                    console.print("[red]Failed to install stable-whisper from GitHub.[/red]")
-                    console.print("[yellow]Please try to install it manually with:[/yellow]")
-                    console.print("[cyan]pip install git+https://github.com/jianfch/stable-ts.git[/cyan]")
-                    sys.exit(1)
-        else:
-            console.print("[yellow]Local stable-ts directory not found. Installing from GitHub...[/yellow]")
-            # Try to install directly from GitHub
-            console.print("[yellow]Trying to install from GitHub repository...[/yellow]")
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "git+https://github.com/jianfch/stable-ts.git"])
-                console.print("[green]✓ Successfully installed stable-whisper from GitHub![/green]")
-            except subprocess.CalledProcessError:
-                console.print("[red]Failed to install stable-whisper from GitHub.[/red]")
-                console.print("[yellow]Please try to install it manually with:[/yellow]")
-                console.print("[cyan]pip install git+https://github.com/jianfch/stable-ts.git[/cyan]")
-                sys.exit(1)
 
     # Check and install other dependencies
     dependencies = [
@@ -85,28 +67,22 @@ def main():
     ]
 
     for dep in dependencies:
-        if check_package_installed(dep.split("==")[0]):
-            console.print(f"[green]✓ {dep} is already installed![/green]")
-        else:
+        if not check_package_installed(dep.split("==")[0]):
             if not install_package(dep):
                 console.print(f"[red]Failed to install {dep}. Please install it manually.[/red]")
+        else:
+            console.print(f"[green]✓ {dep} is already installed.[/green]")
+
 
     # Check for Apple Silicon and install MLX if needed
     if sys.platform == "darwin" and "arm" in os.uname().machine:
         console.print("[cyan]Detected Apple Silicon. Checking for MLX support...[/cyan]")
-        if check_package_installed("mlx"):
-            console.print("[green]✓ MLX is already installed![/green]")
-        else:
+        if not check_package_installed("mlx"):
             console.print("[yellow]MLX is not installed. Installing now for Apple Silicon acceleration...[/yellow]")
             if not install_package("mlx"):
                 console.print("[yellow]Failed to install MLX. Stable-TS will still work but without Apple Silicon acceleration.[/yellow]")
-
-        if check_package_installed("mlx_whisper"):
-            console.print("[green]✓ MLX-Whisper is already installed![/green]")
         else:
-            console.print("[yellow]MLX-Whisper is not installed. Installing now for Apple Silicon acceleration...[/yellow]")
-            if not install_package("mlx-whisper"):
-                console.print("[yellow]Failed to install MLX-Whisper. Stable-TS will still work but without Apple Silicon acceleration.[/yellow]")
+            console.print("[green]✓ MLX is already installed![/green]")
 
     console.print(Panel.fit(
         "[bold green]Installation Complete![/bold green]\n\n"

@@ -31,3 +31,5 @@ pypinyin
 g2p-en
 
 
+huggingface_hub
+huggingface_hub
