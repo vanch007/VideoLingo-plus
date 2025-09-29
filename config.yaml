@@ -8,7 +8,7 @@ display_language: "zh-CN"
 api:
   key: 'sk-gknihqdrqptifmzwrezivnyhtesemusgaletctihienbxmxx'
   base_url: 'https://api.siliconflow.cn'
-  model: 'deepseek-ai/DeepSeek-V3'
+  model: 'deepseek-ai/DeepSeek-V3.1-Terminus'
 
 # Language settings, written into the prompt, can be described in natural language
   tpm_limit: 10000
@@ -18,7 +18,7 @@ api:
 # Source language for embedded subtitles
 source_language: 'en'
 
-target_language: 'zh'
+target_language: 'en'
 
 # Whether to use Demucs for vocal separation before transcription
 demucs: true
@@ -30,8 +30,8 @@ whisper:
   # ["medium", "large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
   model: 'medium'
   # Whisper specified recognition language [en, zh, ...]
-  language: 'en'
-  detected_language: 'en'
+  language: 'zh'
+  detected_language: 'zh'
   # Whisper running mode ["local", "stable-ts", "cloud"]. Specifies where to run, cloud uses 302.ai API
   runtime: 'stable-ts'
   # 302.ai API key
@@ -66,7 +66,7 @@ pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
 # TTS selection [sf_fish_tts, openai_tts, gpt_sovits, azure_tts, fish_tts, edge_tts, custom_tts]
-tts_method: 'custom_tts'
+tts_method: 'sf_cosyvoice2'
 
 # SiliconFlow FishTTS
 sf_fish_tts:
@@ -100,7 +100,7 @@ fish_tts:
 
 # SiliconFlow CosyVoice2 Clone
 sf_cosyvoice2:
-  api_key: ''
+  api_key: 'sk-gknihqdrqptifmzwrezivnyhtesemusgaletctihienbxmxx'
 
 # Edge TTS configuration
   clone_mode: dynamic

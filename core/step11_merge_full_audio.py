@@ -39,6 +39,22 @@ def get_audio_files(df):
 
 def process_audio_segment(audio_file):
     """Process a single audio segment with MP3 compression"""
+    # 检查文件是否存在且有效
+    if not os.path.exists(audio_file):
+        console.print(f"[bold red]❌ Audio file does not exist: {audio_file}[/bold red]")
+        # 创建一个100ms的静音文件作为替代
+        silence = AudioSegment.silent(duration=100)
+        temp_file = f"{audio_file}_temp_silence.wav"
+        silence.export(temp_file, format="wav")
+        audio_file = temp_file
+    elif os.path.getsize(audio_file) < 1000:  # 文件太小，可能已损坏
+        console.print(f"[bold yellow]⚠️ Audio file too small ({os.path.getsize(audio_file)} bytes): {audio_file}[/bold yellow]")
+        # 创建一个100ms的静音文件作为替代
+        silence = AudioSegment.silent(duration=100)
+        temp_file = f"{audio_file}_temp_silence.wav"
+        silence.export(temp_file, format="wav")
+        audio_file = temp_file
+    
     temp_file = f"{audio_file}_temp.mp3"
     ffmpeg_cmd = [
         'ffmpeg', '-y',
@@ -53,9 +69,22 @@ def process_audio_segment(audio_file):
         subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
     except subprocess.CalledProcessError as e:
         console.print(f"[bold red]❌ FFmpeg处理失败: {e.stderr.decode('utf-8') if e.stderr else str(e)}[/bold red]")
-        raise
+        # 如果FFmpeg处理失败，尝试直接使用pydub加载
+        try:
+            audio_segment = AudioSegment.from_file(audio_file)
+            audio_segment.export(temp_file, format="mp3", parameters=["-ar", "16000", "-ac", "1", "-b:a", "64k"])
+        except Exception as pydub_error:
+            console.print(f"[bold red]❌ Pydub处理也失败了: {str(pydub_error)}[/bold red]")
+            # 创建一个100ms的静音文件作为最终替代
+            silence = AudioSegment.silent(duration=100)
+            silence.export(temp_file, format="mp3", parameters=["-ar", "16000", "-ac", "1", "-b:a", "64k"])
     audio_segment = AudioSegment.from_mp3(temp_file)
     os.remove(temp_file)
+    
+    # 如果是临时静音文件，也删除它
+    if "_temp_silence.wav" in audio_file:
+        os.remove(audio_file)
+        
     return audio_segment
 
 def merge_audio_segments(audios, new_sub_times, sample_rate):
@@ -74,16 +103,29 @@ def merge_audio_segments(audios, new_sub_times, sample_rate):
         merge_task = progress.add_task("🎵 Merging audio segments...", total=len(audios))
         
         for i, (audio_file, time_range) in enumerate(zip(audios, new_sub_times)):
-            if not os.path.exists(audio_file):
-                console.print(f"[bold yellow]⚠️  Warning: File {audio_file} does not exist, skipping...[/bold yellow]")
-                progress.advance(merge_task)
-                continue
+            try:
+                if not os.path.exists(audio_file):
+                    console.print(f"[bold yellow]⚠️  Warning: File {audio_file} does not exist, creating silent segment...[/bold yellow]")
+                    # 创建一个短暂的静音段作为替代
+                    audio_segment = AudioSegment.silent(duration=100, frame_rate=sample_rate)
+                elif os.path.getsize(audio_file) < 1000:  # 文件太小可能是无效文件
+                    console.print(f"[bold yellow]⚠️  Warning: File {audio_file} is too small ({os.path.getsize(audio_file)} bytes), creating silent segment...[/bold yellow]")
+                    audio_segment = AudioSegment.silent(duration=100, frame_rate=sample_rate)
+                else:
+                    audio_segment = process_audio_segment(audio_file)
+                    
+                start_time_ms = int(time_range[0] * 1000)
                 
-            audio_segment = process_audio_segment(audio_file)
-            start_time_ms = int(time_range[0] * 1000)
-            
-            # Overlay the audio segment at the correct start time
-            merged_audio = merged_audio.overlay(audio_segment, position=start_time_ms)
+                # Overlay the audio segment at the correct start time
+                merged_audio = merged_audio.overlay(audio_segment, position=start_time_ms)
+                
+            except Exception as e:
+                console.print(f"[bold red]❌ Error processing {audio_file}: {str(e)}[/bold red]")
+                console.print(f"[bold yellow]⚠️  Creating silent segment as fallback...[/bold yellow]")
+                # 出错时使用静音段替代
+                silent_segment = AudioSegment.silent(duration=100, frame_rate=sample_rate)
+                start_time_ms = int(time_range[0] * 1000)
+                merged_audio = merged_audio.overlay(silent_segment, position=start_time_ms)
             
             progress.advance(merge_task)
     
@@ -145,7 +187,14 @@ def merge_full_audio():
     console.print(f"[bold green]✅ Sample rate: {sample_rate}Hz[/bold green]")
 
     console.print("[bold cyan]🔄 Starting audio merge process...[/bold cyan]")
-    merged_audio = merge_audio_segments(audios, new_sub_times, sample_rate)
+    try:
+        merged_audio = merge_audio_segments(audios, new_sub_times, sample_rate)
+    except Exception as e:
+        console.print(f"[bold red]❌ Error during audio merging: {str(e)}[/bold red]")
+        console.print("[bold yellow]⚠️  Creating a merged audio with silence as fallback...[/bold yellow]")
+        # 计算总时长并创建静音音频作为后备方案
+        total_duration_ms = int(new_sub_times[-1][1] * 1000)
+        merged_audio = AudioSegment.silent(duration=total_duration_ms, frame_rate=sample_rate)
     
     with console.status("[bold cyan]💾 Exporting final audio file...[/bold cyan]"):
         merged_audio = merged_audio.set_frame_rate(16000).set_channels(1)

@@ -61,12 +61,18 @@ def cosyvoice_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dyn
 
     save_path = Path(save_as)
     save_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # 将文件扩展名从.wav改为.mp3，因为API实际返回的是MP3格式
+    if save_path.suffix.lower() == '.wav':
+        mp3_save_path = save_path.with_suffix('.mp3')
+    else:
+        mp3_save_path = save_path
 
     with client.audio.speech.with_streaming_response.create(
         model="IndexTeam/IndexTTS-2",
         voice="",
         input=text,
-        response_format="wav",
+        response_format="mp3",  # 改为mp3格式
         extra_body={
             "references": [
                 {
@@ -76,7 +82,7 @@ def cosyvoice_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dyn
             ]
         }
     ) as response:
-        response.stream_to_file(save_path)
+        response.stream_to_file(mp3_save_path)
     
-    print(f"音频已成功保存至: {save_path}")
+    print(f"音频已成功保存至: {mp3_save_path}")
     return True

@@ -14,6 +14,9 @@ import platform
 from core.config_utils import load_key, get_joiner
 from core.all_whisper_methods.audio_preprocess import save_language
 
+# 过滤torchaudio相关警告
+warnings.filterwarnings("ignore", message=".*torchaudio.*backend.*")
+
 MODEL_DIR = load_key("model_dir")
 
 # MLX Whisper 模型映射

@@ -23,7 +23,7 @@ TEMP_DIR = 'output/audio/tmp'
 SEGS_DIR = 'output/audio/segs'
 TASKS_FILE = "output/audio/tts_tasks.xlsx"
 OUTPUT_FILE = "output/audio/tts_tasks.xlsx"
-TEMP_FILE_TEMPLATE = f"{TEMP_DIR}/{{}}_temp.wav"
+TEMP_FILE_TEMPLATE = f"{TEMP_DIR}/{{}}_temp.{{}}"
 OUTPUT_FILE_TEMPLATE = f"{SEGS_DIR}/{{}}.wav"
 WARMUP_SIZE = 5
 MIN_SPEED_DENOMINATOR = 0.01 # Small positive value to prevent division by zero or negative denominators for speed factor calculation
@@ -52,6 +52,9 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
         shutil.copy2(input_file, output_file)
         return
 
+    # Determine input format
+    input_format = os.path.splitext(input_file)[1][1:].lower()  # Get extension without dot
+    
     atempo = max(0.5, min(speed_factor, 100.0))
     cmd = ['ffmpeg', '-i', input_file, '-filter:a', f'atempo={atempo}', '-y', output_file]
     input_duration = get_audio_duration(input_file)
@@ -64,7 +67,7 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
             diff = output_duration - expected_duration
             # If the output duration exceeds the expected duration, but the input audio is less than 3 seconds, and the error is within 0.1 seconds, truncate to the expected length
             if output_duration >= expected_duration * 1.02 and input_duration < 3 and diff <= 0.1:
-                audio = AudioSegment.from_wav(output_file)
+                audio = AudioSegment.from_file(output_file)
                 trimmed_audio = audio[:(expected_duration * 1000)]  # pydub uses milliseconds
                 trimmed_audio.export(output_file, format="wav")
                 print(f"✂️ Trimmed to expected duration: {expected_duration:.2f} seconds")
@@ -82,7 +85,7 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
 
 def detect_silence(audio_file: str, silence_threshold: float = -40.0, min_silence_duration: float = 0.5) -> None:
     """Detect and trim silence from audio file"""
-    audio = AudioSegment.from_wav(audio_file)
+    audio = AudioSegment.from_file(audio_file)
     trimmed_audio = audio.strip_silence(
         silence_thresh=silence_threshold,
         silence_len=int(min_silence_duration * 1000)  # Convert to integer explicitly
@@ -100,7 +103,8 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     """Helper function for processing single row data"""
     number = row['number']
     text = row['text']
-    temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
+    temp_file_mp3 = TEMP_FILE_TEMPLATE.format(f"{number}", "mp3")
+    temp_file_wav = TEMP_FILE_TEMPLATE.format(f"{number}", "wav")
     real_dur = 0
     max_retries = 3
 
@@ -108,10 +112,12 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     problematic_numbers = [693, 699, 700, 701, 702, 703, 704, 705, 698, 858, 653, 1069]
     if number in problematic_numbers:
         rprint(f"[yellow]⚠️ 检测到问题音频文件编号: {number}, 将强制重新生成[/yellow]")
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
+        for temp_file in [temp_file_mp3, temp_file_wav]:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
 
     # Check if file already exists and is valid
+    temp_file = temp_file_mp3 if os.path.exists(temp_file_mp3) else temp_file_wav
     if os.path.exists(temp_file):
         file_size = os.path.getsize(temp_file)
         if file_size < 10000:  # File exists but is too small
@@ -121,7 +127,7 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
             # Try to get duration to validate file
             try:
                 # Try to load with pydub to verify it's a valid audio file
-                audio = AudioSegment.from_wav(temp_file)
+                audio = AudioSegment.from_file(temp_file)
                 duration = len(audio) / 1000  # Convert to seconds
 
                 if duration > 0.2 and duration < 10:  # Valid duration
@@ -138,7 +144,7 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
         try:
             # Generate TTS audio with a timeout
             with ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(tts_main, text, temp_file, number, tasks_df)
+                future = executor.submit(tts_main, text, temp_file_mp3, number, tasks_df)
                 try:
                     # Set a 60-second timeout for the TTS task
                     future.result(timeout=60)
@@ -147,14 +153,14 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
                     raise e
 
             # Verify the file exists after TTS generation
-            if not os.path.exists(temp_file):
-                raise Exception(f"TTS生成后文件不存在: {temp_file}")
+            if not os.path.exists(temp_file_mp3):
+                raise Exception(f"TTS生成后文件不存在: {temp_file_mp3}")
 
-            file_size = os.path.getsize(temp_file)
+            file_size = os.path.getsize(temp_file_mp3)
 
             # Check if file is too small (likely invalid)
             if file_size < 10000:
-                os.remove(temp_file)
+                os.remove(temp_file_mp3)
                 if attempt < max_retries - 1:
                     rprint(f"[yellow]⚠️ 音频文件过小 (大小:{file_size}字节), 重试中({attempt + 1}/{max_retries})[/yellow]")
                     time.sleep(1)  # 增加重试间隔
@@ -165,12 +171,12 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
             # Verify the file is a valid audio file
             try:
                 # Try to load with pydub to verify it's a valid audio file
-                audio = AudioSegment.from_wav(temp_file)
+                audio = AudioSegment.from_file(temp_file_mp3)
                 duration = len(audio) / 1000  # Convert to seconds
             except Exception as e:
-                os.remove(temp_file)
+                os.remove(temp_file_mp3)
                 if attempt < max_retries - 1:
-                    rprint(f"[red]❌ 音频文件损坏: {temp_file} - {str(e)}[/red]")
+                    rprint(f"[red]❌ 音频文件损坏: {temp_file_mp3} - {str(e)}[/red]")
                     time.sleep(1)
                     continue
                 else:
@@ -178,7 +184,7 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
 
             # 检查音频文件是否异常(大于10秒或小于0.2秒)
             if duration > 10 or duration < 0.2:
-                os.remove(temp_file)
+                os.remove(temp_file_mp3)
                 if attempt < max_retries - 1:
                     rprint(f"[yellow]⚠️ 音频文件时长异常(时长:{duration:.2f}秒), 重试中({attempt + 1}/{max_retries})[/yellow]")
                     time.sleep(1)  # 增加重试间隔
@@ -189,16 +195,16 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
             # 只对1.5秒以上的音频检测并剪切静音片段
             if duration >= 1.5:
                 try:
-                    detect_silence(temp_file)
+                    detect_silence(temp_file_mp3)
                     # 重新检查剪切后的时长
-                    audio = AudioSegment.from_wav(temp_file)
+                    audio = AudioSegment.from_file(temp_file_mp3)
                     new_duration = len(audio) / 1000  # Convert to seconds
 
                     # 如果剪切后时长小于0.4秒，使用原始音频
                     if new_duration < 0.4:
                         rprint(f"[yellow]⚠️ 剪切静音后时长过短 ({new_duration:.2f}秒)，使用原始音频[/yellow]")
-                        tts_main(text, temp_file, number, tasks_df)  # 重新生成
-                        audio = AudioSegment.from_wav(temp_file)
+                        tts_main(text, temp_file_mp3, number, tasks_df)  # 重新生成
+                        audio = AudioSegment.from_file(temp_file_mp3)
                         duration = len(audio) / 1000  # Convert to seconds
                     else:
                         duration = new_duration
@@ -207,11 +213,11 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
                     # Continue with the original audio
 
             # Final validation
-            if os.path.exists(temp_file):
-                file_size = os.path.getsize(temp_file)
+            if os.path.exists(temp_file_mp3):
+                file_size = os.path.getsize(temp_file_mp3)
                 if file_size < 10000 or duration <= 0:
                     rprint(f"[red]❌ 最终验证失败: 文件大小={file_size}字节, 时长={duration:.2f}秒[/red]")
-                    duration = create_silent_fallback(temp_file)
+                    duration = create_silent_fallback(temp_file_wav)
 
             real_dur = duration
             break
@@ -297,26 +303,27 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                     if real_dur == 0:
                         # If it still fails, try to use reference audio as a fallback
                         rprint(f"[red]❌ Retry failed for task {number}. Trying to use reference audio as fallback.[/red]")
-                        temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
+                        temp_file_mp3 = TEMP_FILE_TEMPLATE.format(f"{number}", "mp3")
+                        temp_file_wav = TEMP_FILE_TEMPLATE.format(f"{number}", "wav")
                         ref_audio_path = f"output/audio/refers/{number}.wav"
 
                         if os.path.exists(ref_audio_path) and os.path.getsize(ref_audio_path) > 20000:
                             try:
-                                shutil.copy2(ref_audio_path, temp_file)
-                                duration = get_audio_duration(temp_file)
+                                shutil.copy2(ref_audio_path, temp_file_wav)
+                                duration = get_audio_duration(temp_file_wav)
                                 tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = duration
                                 rprint(f"[green]✅ Used reference audio for task {number}.[/green]")
                             except Exception as e:
                                 rprint(f"[red]❌ Failed to use reference audio for task {number}: {e}. Generating 1s silent audio.[/red]")
-                                tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = create_silent_fallback(temp_file)
+                                tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = create_silent_fallback(temp_file_wav)
                         else:
                             rprint(f"[red]❌ Reference audio for task {number} is missing or invalid. Generating 1s silent audio.[/red]")
-                            tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = create_silent_fallback(temp_file)
+                            tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = create_silent_fallback(temp_file_wav)
                         
                 except Exception as e:
                     rprint(f"[red]❌ An unexpected error occurred during retry for task {number}: {str(e)}. Generating 1s silent audio.[/red]")
-                    temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
-                    tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = create_silent_fallback(temp_file)
+                    temp_file_wav = TEMP_FILE_TEMPLATE.format(f"{number}", "wav")
+                    tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = create_silent_fallback(temp_file_wav)
                 
                 progress.advance(retry_task_progress)
 
@@ -381,7 +388,9 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
     missing_files = []
     for _, row in tasks_df.iterrows():
         number = row['number']
-        temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
+        temp_file_mp3 = TEMP_FILE_TEMPLATE.format(f"{number}", "mp3")
+        temp_file_wav = TEMP_FILE_TEMPLATE.format(f"{number}", "wav")
+        temp_file = temp_file_mp3 if os.path.exists(temp_file_mp3) else temp_file_wav
         if not os.path.exists(temp_file) or os.path.getsize(temp_file) < 10000:
             missing_files.append(number)
 
@@ -417,7 +426,9 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
             total_duration = 0
             for i, row in chunk_df.iterrows():
                 number = row['number']
-                temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
+                temp_file_mp3 = TEMP_FILE_TEMPLATE.format(f"{number}", "mp3")
+                temp_file_wav = TEMP_FILE_TEMPLATE.format(f"{number}", "wav")
+                temp_file = temp_file_mp3 if os.path.exists(temp_file_mp3) else temp_file_wav
                 duration = get_audio_duration(temp_file) / speed_factor
                 total_duration += duration
                 if i != 0 and keep_gaps:
@@ -441,7 +452,9 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 new_sub_times = []
                 number = row['number']
                 # 🔄 Step2: Start speed change and save as OUTPUT_FILE_TEMPLATE
-                temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
+                temp_file_mp3 = TEMP_FILE_TEMPLATE.format(f"{number}", "mp3")
+                temp_file_wav = TEMP_FILE_TEMPLATE.format(f"{number}", "wav")
+                temp_file = temp_file_mp3 if os.path.exists(temp_file_mp3) else temp_file_wav
                 output_file = OUTPUT_FILE_TEMPLATE.format(f"{number}")
 
                 # Verify the temp file exists and is valid
@@ -449,7 +462,7 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                     rprint(f"[red]❌ Missing or invalid audio file: {temp_file}[/red]")
                     # Create a silent audio file as a fallback
                     silence = AudioSegment.silent(duration=1000)  # 1 second silence
-                    silence.export(temp_file, format="wav")
+                    silence.export(temp_file_wav, format="wav")
 
                 adjust_audio_speed(temp_file, output_file, speed_factor)
                 ad_dur = get_audio_duration(output_file)
@@ -517,7 +530,9 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                                 cur_time += chunk_df.iloc[i-1]['gap']/new_speed_factor
                             new_sub_times = []
                             number = row['number']
-                            temp_file = TEMP_FILE_TEMPLATE.format(f"{number}")
+                            temp_file_mp3 = TEMP_FILE_TEMPLATE.format(f"{number}", "mp3")
+                            temp_file_wav = TEMP_FILE_TEMPLATE.format(f"{number}", "wav")
+                            temp_file = temp_file_mp3 if os.path.exists(temp_file_mp3) else temp_file_wav
                             output_file = OUTPUT_FILE_TEMPLATE.format(f"{number}")
                             adjust_audio_speed(temp_file, output_file, new_speed_factor)
                             ad_dur = get_audio_duration(output_file)
@@ -556,7 +571,7 @@ def clean_invalid_audio_files() -> None:
 
         # Check all files in the directory
         for filename in os.listdir(directory):
-            if not filename.endswith('.wav'):
+            if not (filename.endswith('.wav') or filename.endswith('.mp3')):
                 continue
 
             file_path = os.path.join(directory, filename)
@@ -570,7 +585,7 @@ def clean_invalid_audio_files() -> None:
                 # Verify the file is a valid audio file
                 try:
                     # Try to load the file with pydub to verify it's a valid audio file
-                    audio = AudioSegment.from_wav(file_path)
+                    audio = AudioSegment.from_file(file_path)
                     if len(audio) < 100:  # Less than 100ms is likely invalid
                         small_files.append((file_path, file_size))
                         invalid_count += 1

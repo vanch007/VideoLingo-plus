@@ -117,6 +117,10 @@
     "归档到'history'文件夹": "归档到'history'文件夹",
     "Download and Dub": "下载并配音",
     "Merge/Split Subtitles": "合并/分割字幕",
-    "Uncheck to skip subtitle splitting and merging, directly using the original transcription result.": "取消选中则不执行字幕的分割和合并，直接使用原始识别结果。"
+    "Uncheck to skip subtitle splitting and merging, directly using the original transcription result.": "取消选中则不执行字幕的分割和合并，直接使用原始识别结果。",
+    "Merge Subtitles": "合并字幕",
+    "Check to merge short or fast subtitles for better dubbing quality.": "勾选以合并短字幕或语速快的字幕以提高配音质量。",
+    "Use Embedded Subtitles": "使用内嵌字幕",
+    "如果视频包含内嵌字幕，可以使用此选项直接提取字幕而不进行语音识别": "如果视频包含内嵌字幕，可以使用此选项直接提取字幕而不进行语音识别"
 }
 
