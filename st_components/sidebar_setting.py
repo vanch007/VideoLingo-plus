@@ -13,6 +13,14 @@ def config_input(label, key, help=None):
         update_key(key, val)
     return val
 
+def config_number_input(label, key, help=None, min_value=None, max_value=None, step=None):
+    """Generic config number input handler"""
+    current_value = int(load_key(key))
+    val = st.number_input(label, value=current_value, help=help, min_value=min_value, max_value=max_value, step=step)
+    if val != current_value:
+        update_key(key, val)
+    return val
+
 def page_setting():
 
     display_language = st.selectbox("Display Language 🌐",
@@ -219,6 +227,7 @@ def page_setting():
 
         elif select_tts == "sf_indextts2":
             config_input(t("SiliconFlow API Key"), "sf_indextts2.api_key")
+            config_number_input(t("Max Workers"), "max_workers", help=t("Number of parallel processes for TTS generation."), min_value=1, step=1)
 
             # 获取固定声音列表
             voice_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "core", "all_tts_functions", "voice")

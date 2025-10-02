@@ -10,7 +10,7 @@ from pydub import AudioSegment
 from rich import print as rprint
 from rich.console import Console
 from rich.progress import Progress
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.config_utils import load_key
@@ -259,11 +259,14 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
 
         # for gpt_sovits, do not use parallel to avoid mistakes
         tts_method = load_key("tts_method")
-        max_workers = load_key("max_workers") if tts_method != "gpt_sovits" and tts_method != "custom_tts" else 1
+        max_workers = load_key("max_workers") if tts_method not in ["gpt_sovits", "custom_tts"] else 1
+        
+        Executor = ProcessPoolExecutor if tts_method == "sf_indextts2" else ThreadPoolExecutor
+        
         # parallel processing for remaining tasks
         if len(tasks_df) > warmup_size:
             remaining_tasks = tasks_df.iloc[warmup_size:].copy()
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            with Executor(max_workers=max_workers) as executor:
                 futures = {executor.submit(process_row, row, tasks_df.copy()): row for _, row in remaining_tasks.iterrows()}
 
                 for future in as_completed(futures):
