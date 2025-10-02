@@ -79,30 +79,48 @@ def extract_refer_audio_main():
         BarColumn(),
         TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
     ) as progress:
-        task = progress.add_task("[green]Extracting audio segments (fixed)...", total=len(df))
+        task = progress.add_task("[green]Extracting audio segments with optimized logic...", total=len(df))
         
         for i in range(len(df)):
             current_row = df.iloc[i]
-            start_time_str = str(current_row['start_time'])
-            
+            current_start_sec = time_str_to_seconds(str(current_row['start_time']))
             current_end_sec = time_str_to_seconds(str(current_row['end_time']))
+
+            # --- Calculate new_start_sec ---
+            new_start_sec = current_start_sec - 1.0
+
+            if i > 0:
+                prev_row = df.iloc[i-1]
+                prev_end_sec = time_str_to_seconds(str(prev_row['end_time']))
+                if new_start_sec < prev_end_sec:
+                    # Midpoint calculation
+                    new_start_sec = prev_end_sec + (current_start_sec - prev_end_sec) / 2
+            
+            # Ensure start time is not negative
+            new_start_sec = max(0, new_start_sec)
+
+            # --- Calculate new_end_sec ---
             new_end_sec = current_end_sec + 1.0
 
             if i < len(df) - 1:
                 next_row = df.iloc[i+1]
                 next_start_sec = time_str_to_seconds(str(next_row['start_time']))
                 if new_end_sec > next_start_sec:
-                    new_end_sec = next_start_sec
+                    # Midpoint calculation
+                    new_end_sec = current_end_sec + (next_start_sec - current_end_sec) / 2
             
+            # Ensure end time does not exceed total duration
             new_end_sec = min(new_end_sec, total_audio_duration_sec)
 
+            # Convert back to time strings
+            final_start_time_str = seconds_to_time_str(new_start_sec)
             final_end_time_str = seconds_to_time_str(new_end_sec)
 
             out_file = os.path.join(REF_DIR, f"{current_row['number']}.wav")
-            extract_audio(data, sr, start_time_str, final_end_time_str, out_file)
+            extract_audio(data, sr, final_start_time_str, final_end_time_str, out_file)
             progress.update(task, advance=1)
             
-    rprint(Panel(f"Audio segments saved to {REF_DIR} with fixed logic", title="Success", border_style="green"))
+    rprint(Panel(f"Audio segments saved to {REF_DIR} with optimized logic", title="Success", border_style="green"))
 
 if __name__ == "__main__":
     extract_refer_audio_main()
