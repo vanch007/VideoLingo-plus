@@ -62,22 +62,22 @@ def tts_main(text, save_as, number, task_df):
             elif TTS_METHOD == 'custom_tts':
                 from core.all_tts_functions.custom_tts import custom_tts
                 custom_tts(text, save_as, number, task_df, attempt)
-            elif TTS_METHOD == 'sf_cosyvoice2':
-                from core.all_tts_functions.sf_cosyvoice2 import cosyvoice_tts_for_videolingo
+            elif TTS_METHOD == 'sf_indextts2':
+                from core.all_tts_functions.sf_indextts2 import indextts2_tts_for_videolingo
                 try:
-                    clone_mode = load_key("sf_cosyvoice2.clone_mode")
+                    clone_mode = load_key("sf_indextts2.clone_mode")
                 except KeyError:
                     clone_mode = "dynamic"
                 
                 fixed_voice_name = None
                 if clone_mode == "fixed":
                     try:
-                        fixed_voice_name = load_key("sf_cosyvoice2.fixed_voice")
+                        fixed_voice_name = load_key("sf_indextts2.fixed_voice")
                     except KeyError:
                         # 如果没有在config中指定，可能需要一个默认或错误处理
                         pass # 或者可以设置一个默认的固定声音名称
 
-                cosyvoice_tts_for_videolingo(text, save_as, number, task_df, clone_mode=clone_mode, fixed_voice_name=fixed_voice_name)
+                indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode=clone_mode, fixed_voice_name=fixed_voice_name)
             elif TTS_METHOD == 'f5tts':
                 from core.all_tts_functions._302_f5tts import f5_tts_for_videolingo
                 f5_tts_for_videolingo(text, save_as, number, task_df)

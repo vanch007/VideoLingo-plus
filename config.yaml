@@ -67,7 +67,7 @@ pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
 # TTS selection [sf_fish_tts, openai_tts, gpt_sovits, azure_tts, fish_tts, edge_tts, custom_tts]
-tts_method: 'sf_cosyvoice2'
+tts_method: 'sf_indextts2'
 
 # SiliconFlow FishTTS
 sf_fish_tts:
@@ -99,8 +99,8 @@ fish_tts:
     'AD学姐': '7f92f8afb8ec43bf81429cc1c9199cb1'
     '丁真': '54a5170264694bfc8e9ad98df7bd89c3'
 
-# SiliconFlow CosyVoice2 Clone
-sf_cosyvoice2:
+# SiliconFlow IndexTTS2 Clone
+sf_indextts2:
   api_key: 'sk-gknihqdrqptifmzwrezivnyhtesemusgaletctihienbxmxx'
 
 # Edge TTS configuration

@@ -155,7 +155,7 @@ def page_setting():
             update_key("merge_subtitles", merge_subtitles)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
-        tts_methods = ["azure_tts", "openai_tts", "fish_tts", "sf_fish_tts", "edge_tts", "gpt_sovits", "custom_tts", "sf_cosyvoice2", "f5tts"]
+        tts_methods = ["azure_tts", "openai_tts", "fish_tts", "sf_fish_tts", "edge_tts", "gpt_sovits", "custom_tts", "sf_indextts2", "f5tts"]
         select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(load_key("tts_method")))
         if select_tts != load_key("tts_method"):
             update_key("tts_method", select_tts)
@@ -217,8 +217,8 @@ def page_setting():
         elif select_tts == "edge_tts":
             config_input(t("Edge TTS Voice"), "edge_tts.voice")
 
-        elif select_tts == "sf_cosyvoice2":
-            config_input(t("SiliconFlow API Key"), "sf_cosyvoice2.api_key")
+        elif select_tts == "sf_indextts2":
+            config_input(t("SiliconFlow API Key"), "sf_indextts2.api_key")
 
             # 获取固定声音列表
             voice_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "core", "all_tts_functions", "voice")
@@ -235,7 +235,7 @@ def page_setting():
             }
             
             try:
-                default_clone_mode = load_key("sf_cosyvoice2.clone_mode")
+                default_clone_mode = load_key("sf_indextts2.clone_mode")
             except KeyError:
                 default_clone_mode = "dynamic"
 
@@ -247,20 +247,20 @@ def page_setting():
                 key="cosyvoice_clone_mode"
             )
             if selected_clone_mode != default_clone_mode:
-                update_key("sf_cosyvoice2.clone_mode", selected_clone_mode)
+                update_key("sf_indextts2.clone_mode", selected_clone_mode)
                 st.rerun()
 
             if selected_clone_mode == "fixed":
                 if fixed_voices:
                     try:
-                        default_fixed_voice = load_key("sf_cosyvoice2.fixed_voice")
+                        default_fixed_voice = load_key("sf_indextts2.fixed_voice")
                         if default_fixed_voice not in fixed_voices:
                             default_fixed_voice = fixed_voices[0]
-                            update_key("sf_cosyvoice2.fixed_voice", default_fixed_voice)
+                            update_key("sf_indextts2.fixed_voice", default_fixed_voice)
                     except KeyError:
                         default_fixed_voice = fixed_voices[0] if fixed_voices else None
                         if default_fixed_voice:
-                            update_key("sf_cosyvoice2.fixed_voice", default_fixed_voice)
+                            update_key("sf_indextts2.fixed_voice", default_fixed_voice)
 
                     if default_fixed_voice:
                         selected_fixed_voice = st.selectbox(
@@ -270,7 +270,7 @@ def page_setting():
                             key="cosyvoice_fixed_voice"
                         )
                         if selected_fixed_voice != default_fixed_voice:
-                            update_key("sf_cosyvoice2.fixed_voice", selected_fixed_voice)
+                            update_key("sf_indextts2.fixed_voice", selected_fixed_voice)
                             st.rerun()
                 else:
                     st.warning(t("No fixed voices found. Please add voices in 'core/all_tts_functions/voice/' directory."))

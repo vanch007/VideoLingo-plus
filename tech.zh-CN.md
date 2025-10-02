@@ -344,7 +344,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
      —— `edge_tts(text, save_path)`: Edge文本转语音
      —— 输入文件: 文本内容
      —— 输出文件: 指定路径的WAV音频文件
-   - `core/all_tts_functions/sf_cosyvoice2.py`: 使用 CosyVoice2 进行文本转语音，支持参考音频。
+   - `core/all_tts_functions/sf_indextts2.py`: 使用 IndexTTS2 进行文本转语音，支持参考音频。
      —— `wav_to_base64(wav_file_path)`: 将WAV音频转换为base64格式
      —— `cosyvoice_tts_for_videolingo(text, save_as, number, task_df)`: TTS主函数，自动处理参考音频获取和格式转换
      —— 输入文件: 文本内容, 参考音频文件

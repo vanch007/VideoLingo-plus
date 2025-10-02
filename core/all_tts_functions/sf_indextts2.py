@@ -14,11 +14,11 @@ def wav_to_base64(wav_file_path):
 
 import random
 
-def cosyvoice_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dynamic", fixed_voice_name=None):
+def indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dynamic", fixed_voice_name=None):
     """
     使用 CosyVoice 进行 TTS 转换，支持参考音频
     """
-    API_KEY = load_key("sf_cosyvoice2.api_key")
+    API_KEY = load_key("sf_indextts2.api_key")
 
     if clone_mode == "fixed" and fixed_voice_name:
         # 固定克隆模式
