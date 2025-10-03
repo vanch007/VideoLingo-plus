@@ -14,9 +14,9 @@ def wav_to_base64(wav_file_path):
 
 import random
 
-def indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dynamic", fixed_voice_name=None):
+def indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dynamic", fixed_voice_name=None, use_emo_text=False, emo_text=None, verbose=True, speed=1.0):
     """
-    使用 CosyVoice 进行 TTS 转换，支持参考音频
+    使用 index-tts2 进行 TTS 转换，支持参考音频、文本情感等高级功能
     """
     API_KEY = load_key("sf_indextts2.api_key")
 
@@ -68,19 +68,29 @@ def indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dyn
     else:
         mp3_save_path = save_path
 
+    # 构建请求体
+    extra_body = {
+        "references": [
+            {
+                "audio": f"data:audio/wav;base64,{reference_base64}",
+                "text": prompt_text
+            }
+        ],
+        "verbose": verbose,
+        "speed": speed
+    }
+
+    # 如果启用了文本情感，则添加到请求体
+    if use_emo_text and emo_text:
+        extra_body["use_emo_text"] = True
+        extra_body["emo_text"] = emo_text
+
     with client.audio.speech.with_streaming_response.create(
         model="IndexTeam/IndexTTS-2",
         voice="",
         input=text,
         response_format="mp3",  # 改为mp3格式
-        extra_body={
-            "references": [
-                {
-                    "audio": f"data:audio/wav;base64,{reference_base64}",
-                    "text": prompt_text
-                }
-            ]
-        }
+        extra_body=extra_body
     ) as response:
         response.stream_to_file(mp3_save_path)
     
