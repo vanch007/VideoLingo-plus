@@ -62,6 +62,9 @@ def tts_main(text, save_as, number, task_df):
             elif TTS_METHOD == 'custom_tts':
                 from core.all_tts_functions.custom_tts import custom_tts
                 custom_tts(text, save_as, number, task_df, attempt)
+            elif TTS_METHOD == 'index_tts2':
+                from core.all_tts_functions.index_tts2 import custom_tts
+                custom_tts(text, save_as, number, task_df, attempt)
             elif TTS_METHOD == 'sf_indextts2':
                 from core.all_tts_functions.sf_indextts2 import indextts2_tts_for_videolingo
                 try:
