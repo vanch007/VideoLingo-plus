@@ -18,7 +18,7 @@ api:
 # Source language for embedded subtitles
 source_language: 'en'
 
-target_language: 'en'
+target_language: 'zh'
 
 # Whether to use Demucs for vocal separation before transcription
 demucs: true
@@ -28,10 +28,10 @@ background_volume: 1.5
 
 whisper:
   # ["medium", "large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
-  model: 'medium'
+  model: 'large-v3-turbo'
   # Whisper specified recognition language [en, zh, ...]
-  language: 'zh'
-  detected_language: 'zh'
+  language: 'id'
+  detected_language: 'id'
   # Whisper running mode ["local", "stable-ts", "cloud"]. Specifies where to run, cloud uses 302.ai API
   runtime: 'stable-ts'
   # 302.ai API key

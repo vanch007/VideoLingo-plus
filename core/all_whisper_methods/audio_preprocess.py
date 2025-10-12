@@ -120,45 +120,53 @@ def split_audio(audio_file: str, target_len: int = 30*60, win: int = 60) -> List
 def process_transcription(result: Dict) -> pd.DataFrame:
     all_words = []
     for segment in result['segments']:
-        for word in segment['words']:
-            # Check word length
-            if len(word["word"]) > 20:
-                print(f"⚠️ Warning: Detected word longer than 20 characters, skipping: {word['word']}")
-                continue
+        if 'words' in segment and segment['words']:
+            for word in segment['words']:
+                # Check word length
+                if len(word["word"]) > 20:
+                    print(f"⚠️ Warning: Detected word longer than 20 characters, skipping: {word['word']}")
+                    continue
 
-            # ! For French, we need to convert guillemets to empty strings
-            word["word"] = word["word"].replace('»', '').replace('«', '').strip()
+                # ! For French, we need to convert guillemets to empty strings
+                word["word"] = word["word"].replace('»', '').replace('«', '').strip()
 
-            if 'start' not in word and 'end' not in word:
-                if all_words:
-                    # Assign the end time of the previous word as the start and end time of the current word
-                    word_dict = {
-                        'text': word["word"].strip(),
-                        'start': all_words[-1]['end'],
-                        'end': all_words[-1]['end'],
-                    }
-                    all_words.append(word_dict)
-                else:
-                    # If it's the first word, look next for a timestamp then assign it to the current word
-                    next_word = next((w for w in segment['words'] if 'start' in w and 'end' in w), None)
-                    if next_word:
+                if 'start' not in word and 'end' not in word:
+                    if all_words:
+                        # Assign the end time of the previous word as the start and end time of the current word
                         word_dict = {
                             'text': word["word"].strip(),
-                            'start': next_word["start"],
-                            'end': next_word["end"],
+                            'start': all_words[-1]['end'],
+                            'end': all_words[-1]['end'],
                         }
                         all_words.append(word_dict)
                     else:
-                        raise Exception(f"No next word with timestamp found for the current word : {word}")
-            else:
-                # Normal case, with start and end times
-                word_dict = {
-                    'text': f'{word["word"].strip()}',
-                    'start': word.get('start', all_words[-1]['end'] if all_words else 0),
-                    'end': word['end'],
-                }
+                        # If it's the first word, look next for a timestamp then assign it to the current word
+                        next_word = next((w for w in segment['words'] if 'start' in w and 'end' in w), None)
+                        if next_word:
+                            word_dict = {
+                                'text': word["word"].strip(),
+                                'start': next_word["start"],
+                                'end': next_word["end"],
+                            }
+                            all_words.append(word_dict)
+                        else:
+                            raise Exception(f"No next word with timestamp found for the current word : {word}")
+                else:
+                    # Normal case, with start and end times
+                    word_dict = {
+                        'text': f'{word["word"].strip()}',
+                        'start': word.get('start', all_words[-1]['end'] if all_words else 0),
+                        'end': word['end'],
+                    }
 
-                all_words.append(word_dict)
+                    all_words.append(word_dict)
+        elif 'text' in segment:
+            word_dict = {
+                'text': segment['text'].strip(),
+                'start': segment['start'],
+                'end': segment['end'],
+            }
+            all_words.append(word_dict)
 
     return pd.DataFrame(all_words)
 
