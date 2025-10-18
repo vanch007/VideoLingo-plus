@@ -42,34 +42,49 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 SUB_VIDEO = "output/AI字幕.mp4"
 DUB_VIDEO = "output/AI配音.mp4"
 
-def text_processing_section():
+import core.step2_prepare_from_srt as step2_prepare_from_srt
 
+def text_processing_section():
     st.header(t("b. Translate and Generate Subtitles"))
     with st.container(border=True):
-        # 添加使用内嵌字幕的选项
-        use_extracted_subs = st.checkbox(t("使用内嵌字幕"), value=False, 
-                                       help=t("如果视频包含内嵌字幕，可以使用此选项直接提取字幕而不进行语音识别"))
-        
+        # 初始化 session_state
+        if 'processing_mode' not in st.session_state:
+            st.session_state.processing_mode = t("模式一：ASR语音识别")
+
+        # 模式选择
+        processing_mode = st.radio(
+            t("字幕处理模式"),
+            options=[
+                t("模式一：ASR语音识别"),
+                t("模式二：提取内嵌字幕"),
+                t("模式三：提供视频和源字幕")
+            ],
+            captions=[
+                t("从音频转录文字并翻译"),
+                t("使用视频内已有的字幕轨道"),
+                t("提供自己的SRT字幕文件进行翻译")
+            ],
+            horizontal=True,
+            key='processing_mode' # 绑定到 session_state
+        )
+
+        # 为模式三添加文件上传组件
+        uploaded_srt_file = None
+        if st.session_state.processing_mode == t("模式三：提供视频和源字幕"):
+            uploaded_srt_file = st.file_uploader(
+                t("上传您的SRT源字幕文件"),
+                type=['srt'],
+                help=t("请上传一个UTF-8编码的SRT格式字幕文件")
+            )
+
         if not os.path.exists(SUB_VIDEO) and not os.path.exists(DUB_VIDEO):
             col1, col2 = st.columns(2)
             with col1:
                 if st.button(t("Translate and Dub"), key="translate_and_dub_button"):
                     with st.spinner(t("Processing translation and dubbing...")):
                         try:
-                            # 检查视频文件是否存在
                             find_video_files()
-                            if use_extracted_subs:
-                                # 使用内嵌字幕的工作流程
-                                process_extracted_subtitles()
-                                process_audio()
-                            else:
-                                # 原有的工作流程
-                                # Subtitle splitting and translation will now always run.
-                                # The "Merge Subtitles" switch only affects audio processing steps.
-                                process_text(
-                                    do_full_subtitle_processing=True,
-                                    skip_merge_subtitles=False
-                                )
+                            if run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file):
                                 process_audio()
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
@@ -77,19 +92,8 @@ def text_processing_section():
             with col2:
                 if st.button(t("Start Processing Subtitles"), key="text_processing_button"):
                     try:
-                        # 检查视频文件是否存在
                         find_video_files()
-                        if use_extracted_subs:
-                            # 使用内嵌字幕的工作流程
-                            process_extracted_subtitles()
-                        else:
-                            # 原有的工作流程
-                            # Subtitle splitting and translation will now always run.
-                            # The "Merge Subtitles" switch only affects audio processing steps.
-                            process_text(
-                                do_full_subtitle_processing=True,
-                                skip_merge_subtitles=False
-                            )
+                        run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file)
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
                         st.info("Please make sure a video is available before processing.")
@@ -116,200 +120,149 @@ def text_processing_section():
                 st.rerun()
             return True
 
-def process_text(skip_merge_subtitles=False, do_full_subtitle_processing=True):
-    # 记录整体字幕处理开始时间
-    total_start_time = time.time()
+import core.step2_prepare_from_srt as step2_prepare_from_srt
 
-    # 创建一个占位符来显示实时耗时统计
-    timing_placeholder = st.empty()
+def run_text_processing_pipeline(processing_mode, uploaded_srt_file):
+    """根据选择的模式运行相应的文本处理流程。"""
 
-    # 显示初始耗时统计
-    with timing_placeholder.container():
-        display_timing_statistics(key_suffix="text_init")
-
-    # Check if stable-ts is selected but not installed
-    if load_key("whisper.runtime") == "stable-ts":
-        try:
-            import stable_whisper
-        except ImportError:
-            st.error(t("stable-ts is not installed. Please run 'python install_stable_ts.py' to install it."))
-            st.info(t("Alternatively, you can change the WhisperX Runtime to 'local' or 'cloud' in the settings."))
-            return
-
-    try:
+    # 模式一：ASR
+    if processing_mode == t("模式一：ASR语音识别"):
         with st.spinner(t("Using Whisper for transcription...")):
             start_time = time.time()
             step2_whisperX.transcribe()
             elapsed = time.time() - start_time
             save_timing("转录", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step1")
+        run_translation_pipeline(perform_splitting=True)
+        return True
 
-        if do_full_subtitle_processing:
+    # 模式二：提取内嵌字幕
+    elif processing_mode == t("模式二：提取内嵌字幕"):
+        process_extracted_subtitles()
+        return True
+
+    # 模式三：提供SRT文件
+    elif processing_mode == t("模式三：提供视频和源字幕"):
+        if uploaded_srt_file is None:
+            st.error(t("请先上传一个SRT文件"))
+            return False
+        
+        # 为配音流程准备音频文件
+        with st.spinner(t("音频预处理中...")):
+            from core.step2_whisperX import prepare_audio_only
+            prepare_audio_only()
+
+        # 保存上传的SRT文件
+        srt_path = os.path.join("output", "user_provided.srt")
+        with open(srt_path, "wb") as f:
+            f.write(uploaded_srt_file.getbuffer())
+        
+        with st.spinner(t("正在从SRT文件准备时间轴...")):
+            start_time = time.time()
+            step2_prepare_from_srt.prepare_from_srt(srt_path)
+            elapsed = time.time() - start_time
+            save_timing("SRT字幕解析", elapsed)
+        
+        run_translation_pipeline(perform_splitting=False)
+        return True
+    
+    return False
+
+def run_translation_pipeline(perform_splitting: bool):
+    """运行共享的翻译和字幕生成流程。"""
+    total_start_time = time.time()
+    timing_placeholder = st.empty()
+    with timing_placeholder.container():
+        display_timing_statistics(key_suffix="text_init")
+
+    try:
+        # Step 3: Conditional Sentence Splitting
+        if perform_splitting:
             with st.spinner(t("Splitting long sentences...")):
-                splitbynlp_exists = os.path.exists('output/log/sentence_splitbynlp.txt')
-                splitbymeaning_exists = os.path.exists('output/log/sentence_splitbymeaning.txt')
+                start_time = time.time()
+                step3_1_spacy_split.split_by_spacy()
+                elapsed = time.time() - start_time
+                save_timing("NLP分句", elapsed)
+                with timing_placeholder.container():
+                    display_timing_statistics(key_suffix="text_step2")
 
-                if splitbynlp_exists and splitbymeaning_exists:
-                    st.info(t("Skipping sentence splitting, files already exist."))
-                    save_timing("NLP分句", 0.01)
-                    save_timing("LLM分句", 0.01)
-                else:
-                    is_stable_ts = load_key("whisper.runtime") == "stable-ts"
-                    if is_stable_ts and splitbynlp_exists:
-                        st.info(t("Using pre-segmented subtitles from stable-ts, skipping NLP sentence splitting."))
-                        save_timing("NLP分句", 0.01)
-                    else:
-                        start_time = time.time()
-                        step3_1_spacy_split.split_by_spacy()
-                        elapsed = time.time() - start_time
-                        save_timing("NLP分句", elapsed)
-
-                    with timing_placeholder.container():
-                        display_timing_statistics(key_suffix="text_step2")
-
-                    if splitbymeaning_exists:
-                        st.info(t("File 'sentence_splitbymeaning.txt' already exists. Skipping LLM sentence splitting."))
-                        save_timing("LLM分句", 0.01)
-                    else:
-                        start_time = time.time()
-                        step3_2_splitbymeaning.split_sentences_by_meaning()
-                        elapsed = time.time() - start_time
-                        save_timing("LLM分句", elapsed)
-
+                start_time = time.time()
+                step3_2_splitbymeaning.split_sentences_by_meaning()
+                elapsed = time.time() - start_time
+                save_timing("LLM分句", elapsed)
                 with timing_placeholder.container():
                     display_timing_statistics(key_suffix="text_step3")
+        else:
+            st.info(t("Skipping sentence splitting, using lines from provided SRT."))
+            df_chunks = pd.read_excel('output/log/cleaned_chunks.xlsx')
+            all_text = '\n'.join(df_chunks['text'].str.strip('"'))
+            with open('output/log/sentence_splitbymeaning.txt', 'w', encoding='utf-8') as f:
+                f.write(all_text)
+            save_timing("NLP分句", 0.01)
+            save_timing("LLM分句", 0.01)
 
-            with st.spinner(t("Summarizing and translating...")):
-                start_time = time.time()
-                step4_1_summarize.get_summary()
-                elapsed = time.time() - start_time
-                save_timing("摘要", elapsed)
-                # 更新耗时统计显示
-                with timing_placeholder.container():
-                    display_timing_statistics(key_suffix="text_step4")
+        # Step 4: Summarize and Translate
+        with st.spinner(t("Summarizing and translating...")):
+            start_time = time.time()
+            step4_1_summarize.get_summary()
+            elapsed = time.time() - start_time
+            save_timing("摘要", elapsed)
+            with timing_placeholder.container():
+                display_timing_statistics(key_suffix="text_step4")
 
-                if load_key("pause_before_translate"):
-                    input(t("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue..."))
+            if load_key("pause_before_translate"):
+                input(t("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue..."))
 
-                start_time = time.time()
-                step4_2_translate_all.translate_all()
-                elapsed = time.time() - start_time
-                save_timing("翻译", elapsed)
-                # 更新耗时统计显示
-                with timing_placeholder.container():
-                    display_timing_statistics(key_suffix="text_step5")
+            start_time = time.time()
+            step4_2_translate_all.translate_all()
+            elapsed = time.time() - start_time
+            save_timing("翻译", elapsed)
+            with timing_placeholder.container():
+                display_timing_statistics(key_suffix="text_step5")
 
+        # Step 5: Conditional Subtitle Splitting
+        if perform_splitting:
             with st.spinner(t("Processing and aligning subtitles...")):
                 start_time = time.time()
                 step5_splitforsub.split_for_sub_main()
                 elapsed = time.time() - start_time
                 save_timing("字幕分割", elapsed)
-                # 更新耗时统计显示
                 with timing_placeholder.container():
                     display_timing_statistics(key_suffix="text_step6")
-
-                start_time = time.time()
-                step6_generate_final_timeline.align_timestamp_main()
-                elapsed = time.time() - start_time
-                save_timing("时间轴对齐", elapsed)
-                # 更新耗时统计显示
-                with timing_placeholder.container():
-                    display_timing_statistics(key_suffix="text_step7")
         else:
-            st.info("跳过字幕分割、翻译和时间轴生成步骤，直接使用原始识别结果。")
-            work_dir = get_work_dir()
-            video_name = st.session_state['video_name'] # Assuming video_name is stored in session_state
-            whisper_result_path = os.path.join(work_dir, video_name, "whisper_json", "result.json")
-            final_timeline_path = os.path.join(work_dir, video_name, "final_timeline.json")
-            
-            # Paths for the placeholder files
-            log_dir = os.path.join(work_dir, "output", "log")
-            os.makedirs(log_dir, exist_ok=True) # Ensure log directory exists
-            splitbynlp_path = os.path.join(log_dir, "sentence_splitbynlp.txt")
-            splitbymeaning_path = os.path.join(log_dir, "sentence_splitbymeaning.txt")
+            shutil.copy('output/log/translation_results.xlsx', 'output/log/translation_results_for_subtitles.xlsx')
+            shutil.copy('output/log/translation_results.xlsx', 'output/log/translation_results_remerged.xlsx')
+            st.info(t("Skipping subtitle line splitting."))
+            save_timing("字幕分割", 0.01)
 
-            if os.path.exists(whisper_result_path):
-                shutil.copy(whisper_result_path, final_timeline_path)
-                st.success(f"已将 {os.path.basename(whisper_result_path)} 复制为 {os.path.basename(final_timeline_path)}，用于后续处理。")
+        # Step 6: Generate Final Timeline (In-Memory)
+        with st.spinner(t("Generating final timeline...")):
+            start_time = time.time()
+            df_text = pd.read_excel('output/log/cleaned_chunks.xlsx')
+            df_text['text'] = df_text['text'].str.strip('"').str.strip()
+            df_translate = pd.read_excel('output/log/translation_results_for_subtitles.xlsx')
+            step6_generate_final_timeline.align_timestamp_main(df_text, df_translate)
+            elapsed = time.time() - start_time
+            save_timing("时间轴对齐", elapsed)
+            with timing_placeholder.container():
+                display_timing_statistics(key_suffix="text_step7")
 
-                # Create placeholder files for step3 outputs
-                try:
-                    import json
-                    with open(whisper_result_path, 'r', encoding='utf-8') as f:
-                        whisper_data = json.load(f)
-                    
-                    # Extract text from segments and write to placeholder files
-                    all_text = []
-                    if 'segments' in whisper_data:
-                        for segment in whisper_data['segments']:
-                            all_text.append(segment['text'].strip())
-                    
-                    content_to_write = "\n".join(all_text) # Use \n for literal newline in string
+        # Step 7: Merge Subtitles to Video
+        with st.spinner(t("Merging subtitles to video...")):
+            start_time = time.time()
+            step7_merge_sub_to_vid.merge_subtitles_to_video()
+            elapsed = time.time() - start_time
+            save_timing("字幕合并到视频", elapsed)
+            with timing_placeholder.container():
+                display_timing_statistics(key_suffix="text_step8")
 
-                    with open(splitbynlp_path, 'w', encoding='utf-8') as f:
-                        f.write(content_to_write)
-                    st.info(f"已生成占位文件：{os.path.basename(splitbynlp_path)}")
-
-                    with open(splitbymeaning_path, 'w', encoding='utf-8') as f:
-                        f.write(content_to_write)
-                    st.info(f"已生成占位文件：{os.path.basename(splitbymeaning_path)}")
-                    
-                    # Generate SRT for burning
-                    if load_key("burn_subtitles"):
-                        def to_srt_time(seconds):
-                            millis = int((seconds - int(seconds)) * 1000)
-                            hours = int(seconds // 3600)
-                            minutes = int((seconds % 3600) // 60)
-                            seconds = int(seconds % 60)
-                            return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
-
-                        srt_content = ""
-                        for i, segment in enumerate(whisper_data['segments']):
-                            start_time = to_srt_time(segment['start'])
-                            end_time = to_srt_time(segment['end'])
-                            text = segment['text'].strip()
-                            srt_content += f"{i+1}\n{start_time} --> {end_time}\n{text}\n\n"
-
-                        with open("output/src.srt", 'w', encoding='utf-8') as f:
-                            f.write(srt_content)
-                        
-                        # Create an empty trans.srt
-                        with open("output/trans.srt", 'w', encoding='utf-8') as f:
-                            f.write("")
-                        
-                        st.success("Generated src.srt from Whisper results for burning.")
-
-                except Exception as e:
-                    st.error(f"生成占位文件或SRT文件时出错: {str(e)}")
-            else:
-                st.error(f"错误：未找到原始字幕文件 {whisper_result_path}。请确保 step2_whisperX.py 已成功运行。")
-
-        if not skip_merge_subtitles or load_key("burn_subtitles"):
-            with st.spinner(t("Merging subtitles to video...")):
-                start_time = time.time()
-                step7_merge_sub_to_vid.merge_subtitles_to_video()
-                elapsed = time.time() - start_time
-                save_timing("字幕合并到视频", elapsed)
-                # 更新耗时统计显示
-                with timing_placeholder.container():
-                    display_timing_statistics(key_suffix="text_step8")
-        else:
-            # 跳过字幕合并到视频步骤
-            rprint = print if 'rprint' not in globals() else globals()['rprint']
-            rprint("[bold yellow]Skipping step7_merge_sub_to_vid.py as requested[/bold yellow]")
-
-        # 记录整体字幕处理耗时
         save_timing("整体字幕处理", time.time() - total_start_time)
-
         st.success(t("Subtitle processing complete! 🎉"))
         st.balloons()
+
     except Exception as e:
         st.error(f"Error during text processing: {str(e)}")
         raise e
     finally:
-        # 无论是否出错，都显示耗时统计
         display_timing_statistics(key_suffix="text_final")
 
 def process_extracted_subtitles():

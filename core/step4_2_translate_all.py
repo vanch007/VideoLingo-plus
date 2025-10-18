@@ -65,7 +65,6 @@ def similar(a, b):
 # 🚀 Main function to translate all chunks
 @time_it("翻译全部")
 def translate_all():
-    # Check if the file exists
     if os.path.exists(TRANSLATION_RESULTS_FILE):
         console.print(Panel("🚨 File `translation_results.xlsx` already exists, skipping TRANSLATE ALL.", title="Warning", border_style="yellow"))
         return
@@ -77,7 +76,6 @@ def translate_all():
     with open(TERMINOLOGY_FILE, 'r', encoding='utf-8') as file:
         theme_prompt = json.load(file).get('theme')
 
-    # 🔄 Use concurrent execution for translation
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
@@ -85,31 +83,20 @@ def translate_all():
     ) as progress:
         task = progress.add_task("[cyan]Translating chunks...", total=len(chunks))
         with concurrent.futures.ThreadPoolExecutor(max_workers=load_key("max_workers")) as executor:
-            futures = []
-            for i, chunk in enumerate(chunks):
-                future = executor.submit(translate_chunk, chunk, chunks, theme_prompt, i)
-                futures.append(future)
+            futures = [executor.submit(translate_chunk, chunk, chunks, theme_prompt, i) for i, chunk in enumerate(chunks)]
+            results = [future.result() for future in concurrent.futures.as_completed(futures)]
+            progress.update(task, advance=len(chunks))
 
-            results = []
-            for future in concurrent.futures.as_completed(futures):
-                results.append(future.result())
-                progress.update(task, advance=1)
+    results.sort(key=lambda x: x[0])
 
-    results.sort(key=lambda x: x[0])  # Sort results based on original order
-
-    # 💾 Save results to lists and Excel file
     src_text, trans_text = [], []
     for i, chunk in enumerate(chunks):
         chunk_lines = chunk.split('\n')
         src_text.extend(chunk_lines)
 
-        # Calculate similarity between current chunk and translation results
-        chunk_text = ''.join(chunk_lines).lower()
-        matching_results = [(r, similar(''.join(r[1].split('\n')).lower(), chunk_text))
-                          for r in results]
+        matching_results = [(r, similar(''.join(r[1].split('\n')).lower(), ''.join(chunk_lines).lower())) for r in results]
         best_match = max(matching_results, key=lambda x: x[1])
 
-        # Check similarity and handle exceptions
         if best_match[1] < 0.9:
             console.print(f"[yellow]Warning: No matching translation found for chunk {i}[/yellow]")
             raise ValueError(f"Translation matching failed (chunk {i})")
@@ -118,19 +105,10 @@ def translate_all():
 
         trans_text.extend(best_match[0][2].split('\n'))
 
-    # Trim long translation text
-    df_text = pd.read_excel(CLEANED_CHUNKS_FILE)
-    df_text['text'] = df_text['text'].str.strip('"').str.strip()
     df_translate = pd.DataFrame({'Source': src_text, 'Translation': trans_text})
-    subtitle_output_configs = [('trans_subs_for_audio.srt', ['Translation'])]
-    df_time = align_timestamp(df_text, df_translate, subtitle_output_configs, output_dir=None, for_display=False)
-    console.print(df_time)
+    df_translate.to_excel(TRANSLATION_RESULTS_FILE, index=False)
 
-    # apply check_len_then_trim to df_time['Translation'], only when duration > MIN_TRIM_DURATION.
-    df_time['Translation'] = df_time.apply(lambda x: check_len_then_trim(x['Translation'], x['duration']) if x['duration'] > load_key("min_trim_duration") else x['Translation'], axis=1)
-    console.print(df_time)
-
-    df_time.to_excel(TRANSLATION_RESULTS_FILE, index=False)
+    console.print("[bold green]✅ Translation completed and results saved.[/bold green]")
 
     console.print("[bold green]✅ Translation completed and results saved.[/bold green]")
 
