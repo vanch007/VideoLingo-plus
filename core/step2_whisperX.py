@@ -115,25 +115,6 @@ def transcribe():
     for result in all_results:
         combined_result['segments'].extend(result['segments'])
 
-    if runtime == "stable-ts":
-        output_path_nlp = 'output/log/sentence_splitbynlp.txt'
-        output_path_meaning = 'output/log/sentence_splitbymeaning.txt'
-        
-        # 确保目录存在
-        os.makedirs(os.path.dirname(output_path_nlp), exist_ok=True)
-
-        sentences = [segment['text'] for segment in combined_result['segments']]
-        
-        with open(output_path_nlp, 'w', encoding='utf-8') as f:
-            for sentence in sentences:
-                f.write(sentence + '\n')
-                
-        with open(output_path_meaning, 'w', encoding='utf-8') as f:
-            for sentence in sentences:
-                f.write(sentence + '\n')
-        
-        rprint(f"[green]✅ stable-ts 分句结果已写入 {output_path_nlp} 和 {output_path_meaning}[/green]")
-
     # step7 Process df
     df = process_transcription(combined_result)
     save_results(df)

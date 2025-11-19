@@ -11,8 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Define output paths
 OUTPUT_LOG_DIR = 'output/log'
-CLEANED_CHUNKS_PATH = os.path.join(OUTPUT_LOG_DIR, 'cleaned_chunks.xlsx')
-SENTENCE_MARK_PATH = os.path.join(OUTPUT_LOG_DIR, 'sentence_by_mark.txt')
+SRT_CHUNKS_PATH = os.path.join(OUTPUT_LOG_DIR, 'srt_chunks.xlsx')
 
 def time_str_to_seconds(time_str):
     """Converts an SRT time string (HH:MM:SS,ms) to seconds."""
@@ -75,10 +74,9 @@ def prepare_from_srt(user_srt_path: str):
         rprint(Panel("[bold red]Error: DataFrame is empty after parsing SRT. Cannot proceed.[/bold red]", title="Error"))
         return
 
-    # 2. Save the DataFrame to cleaned_chunks.xlsx
-    # This file is the key bridge to the existing pipeline.
-    df.to_excel(CLEANED_CHUNKS_PATH, index=False)
-    rprint(f"✅ Successfully created intermediate timeline file: [cyan]{CLEANED_CHUNKS_PATH}[/cyan]")
+    # 2. Save the DataFrame to srt_chunks.xlsx
+    df.to_excel(SRT_CHUNKS_PATH, index=False)
+    rprint(f"✅ Successfully created intermediate timeline file: [cyan]{SRT_CHUNKS_PATH}[/cyan]")
 
     # 3. Create the sentence_by_mark.txt file for the NLP splitting step
     # This file contains the raw text content, which step3_1 expects.

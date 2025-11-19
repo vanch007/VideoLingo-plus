@@ -78,9 +78,28 @@ def text_processing_section():
             )
 
         if not os.path.exists(SUB_VIDEO) and not os.path.exists(DUB_VIDEO):
+            # 定义清理函数
+            def cleanup_intermediate_files():
+                st.toast("Cleaning up intermediate files from previous run...")
+                files_to_delete = [
+                    'output/log/cleaned_chunks.xlsx',
+                    'output/log/srt_chunks.xlsx', # Add the new srt_chunks file to cleanup
+                    'output/log/sentence_by_mark.txt',
+                    'output/log/sentence_splitbynlp.txt',
+                    'output/log/sentence_splitbymeaning.txt',
+                    'output/log/translation_results.xlsx',
+                    'output/log/translation_results_for_subtitles.xlsx',
+                    'output/log/translation_results_remerged.xlsx'
+                ]
+                for file_path in files_to_delete:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                st.toast("Cleanup complete.")
+
             col1, col2 = st.columns(2)
             with col1:
                 if st.button(t("Translate and Dub"), key="translate_and_dub_button"):
+                    cleanup_intermediate_files() # 在处理前清理
                     with st.spinner(t("Processing translation and dubbing...")):
                         try:
                             find_video_files()
@@ -91,6 +110,7 @@ def text_processing_section():
                             st.info("Please make sure a video is available before processing.")
             with col2:
                 if st.button(t("Start Processing Subtitles"), key="text_processing_button"):
+                    cleanup_intermediate_files() # 在处理前清理
                     try:
                         find_video_files()
                         run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file)
@@ -234,12 +254,18 @@ def run_translation_pipeline(perform_splitting: bool):
             st.info(t("Skipping subtitle line splitting."))
             save_timing("字幕分割", 0.01)
 
-        # Step 6: Generate Final Timeline (In-Memory)
+        # --- Step 6: Generate Final Timeline (In-Memory) ---
         with st.spinner(t("Generating final timeline...")):
             start_time = time.time()
-            df_text = pd.read_excel('output/log/cleaned_chunks.xlsx')
+            # Load the necessary data into memory, with isolated paths
+            if perform_splitting: # Mode 1
+                df_text = pd.read_excel('output/log/cleaned_chunks.xlsx')
+            else: # Mode 3
+                df_text = pd.read_excel('output/log/srt_chunks.xlsx')
+
             df_text['text'] = df_text['text'].str.strip('"').str.strip()
             df_translate = pd.read_excel('output/log/translation_results_for_subtitles.xlsx')
+            # Call the refactored function with DataFrames
             step6_generate_final_timeline.align_timestamp_main(df_text, df_translate)
             elapsed = time.time() - start_time
             save_timing("时间轴对齐", elapsed)

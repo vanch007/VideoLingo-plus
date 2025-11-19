@@ -64,51 +64,109 @@ def show_difference(str1, str2):
     print(f"Difference indices: {diff_positions}")
 
 def get_sentence_timestamps(df_words, df_sentences):
-    print("--- Running Patched get_sentence_timestamps ---")
-    # This is a patch to bypass the text-matching logic, which fails due to data corruption.
-    # It assumes a 1-to-1 correspondence between the rows of the original SRT (in df_words)
-    # and the translated sentences (in df_sentences), which is true for Mode 3.
+    """Original text-matching alignment logic for ASR workflow (Mode 1)."""
+    time_stamp_list = []
+    full_words_str = ''
+    position_to_word_idx = {}
+    
+    for idx, word in enumerate(df_words['text']):
+        clean_word = remove_punctuation(str(word).lower())
+        start_pos = len(full_words_str)
+        full_words_str += clean_word
+        for pos in range(start_pos, len(full_words_str)):
+            position_to_word_idx[pos] = idx
+    
+    current_pos = 0
+    for idx, sentence in df_sentences['Source'].items():
+        clean_sentence = remove_punctuation(str(sentence).lower()).replace(" ", "")
+        sentence_len = len(clean_sentence)
+        
+        match_found = False
+        # Allow for some flexibility in matching
+        search_range = min(len(full_words_str) - sentence_len + 1, current_pos + 500) # Search within a reasonable window
+        
+        # Find the best match in the search window
+        best_match_pos = -1
+        highest_similarity = 0.8 # Require a high similarity to consider it a match
 
+        temp_pos = current_pos
+        while temp_pos < search_range:
+            substring = full_words_str[temp_pos:temp_pos+sentence_len]
+            # Using difflib for fuzzy matching
+            from difflib import SequenceMatcher
+            similarity = SequenceMatcher(None, substring, clean_sentence).ratio()
+
+            if similarity > highest_similarity:
+                highest_similarity = similarity
+                best_match_pos = temp_pos
+            
+            if similarity > 0.95: # If very high similarity, lock it in
+                break
+            temp_pos += 1
+
+        if best_match_pos != -1:
+            start_word_idx = position_to_word_idx[best_match_pos]
+            end_word_idx = position_to_word_idx[best_match_pos + sentence_len - 1]
+            
+            time_stamp_list.append((
+                float(df_words['start'][start_word_idx]),
+                float(df_words['end'][end_word_idx])
+            ))
+            
+            current_pos = best_match_pos + sentence_len
+            match_found = True
+
+        if not match_found:
+            console.print(f"\n⚠️ Warning: No exact match found for sentence: {sentence}")
+            show_difference(clean_sentence, 
+                          full_words_str[current_pos:current_pos+len(clean_sentence)])
+            console.print("\nOriginal sentence:", df_sentences['Source'][idx])
+            raise ValueError("❎ No match found for sentence.")
+    
+    return time_stamp_list
+
+def get_sentence_timestamps_by_index(df_words, df_sentences):
+    """Patched index-based alignment logic for provided SRT workflow (Mode 3)."""
     if len(df_words) != len(df_sentences):
-        raise Exception(f"FATAL PATCH ERROR in step6: Row count mismatch. Word file has {len(df_words)} rows, Sentence file has {len(df_sentences)} rows. Cannot align.")
+        raise Exception(f"FATAL ERROR in step6: Row count mismatch. Word file has {len(df_words)} rows, Sentence file has {len(df_sentences)} rows. Cannot align.")
 
     time_stamp_list = []
     for i in range(len(df_words)):
-        start_time = float(df_words.iloc[i]['start'])
-        end_time = float(df_words.iloc[i]['end'])
-        time_stamp_list.append((start_time, end_time))
-    
-    print("--- Patch successful. Timestamps aligned by index. ---")
+        try:
+            start_time = float(df_words.iloc[i]['start'])
+            end_time = float(df_words.iloc[i]['end'])
+            time_stamp_list.append((start_time, end_time))
+        except (ValueError, TypeError) as e:
+            # Fallback for non-convertible timestamp data
+            console.print(f"\n❌ WARNING: Could not convert timestamp to float at row {i}. Data: start='{df_words.iloc[i]['start']}', end='{df_words.iloc[i]['end']}'. Error: {e}")
+            last_valid_end = time_stamp_list[-1][1] if time_stamp_list else 0
+            time_stamp_list.append((last_valid_end, last_valid_end))
+            continue
     return time_stamp_list
 
 def align_timestamp(df_text, df_translate, subtitle_output_configs: list, output_dir: str, for_display: bool = True):
-    """Align timestamps and add a new timestamp column to df_translate"""
+    """Dispatcher function to select the correct alignment logic."""
     df_trans_time = df_translate.copy()
 
-    # Assign an ID to each word in df_text['text'] and create a new DataFrame
-    words = df_text['text'].str.split(expand=True).stack().reset_index(level=1, drop=True).reset_index()
-    words.columns = ['id', 'word']
-    words['id'] = words['id'].astype(int)
+    # Check if Mode 3 is active by looking for the unique file it creates.
+    if os.path.exists('output/log/srt_chunks.xlsx'):
+        time_stamp_list = get_sentence_timestamps_by_index(df_text, df_translate)
+    else:
+        time_stamp_list = get_sentence_timestamps(df_text, df_translate)
 
-    # Process timestamps ⏰
-    time_stamp_list = get_sentence_timestamps(df_text, df_translate)
     df_trans_time['timestamp'] = time_stamp_list
     df_trans_time['duration'] = df_trans_time['timestamp'].apply(lambda x: x[1] - x[0])
 
-    # Remove gaps 🕳️
     for i in range(len(df_trans_time)-1):
         delta_time = df_trans_time.loc[i+1, 'timestamp'][0] - df_trans_time.loc[i, 'timestamp'][1]
         if 0 < delta_time < 1:
             df_trans_time.at[i, 'timestamp'] = (df_trans_time.loc[i, 'timestamp'][0], df_trans_time.loc[i+1, 'timestamp'][0])
 
-    # Convert start and end timestamps to SRT format
     df_trans_time['timestamp'] = df_trans_time['timestamp'].apply(lambda x: convert_to_srt_format(x[0], x[1]))
 
-    # Polish subtitles: replace punctuation in Translation if for_display
     if for_display:
         df_trans_time['Translation'] = df_trans_time['Translation'].apply(lambda x: re.sub(r'[，。]', ' ', x).strip())
 
-    # Output subtitles 📜
     def generate_subtitle_string(df, columns):
         return ''.join([f"{i+1}\n{row['timestamp']}\n{row[columns[0]].strip()}\n{row[columns[1]].strip() if len(columns) > 1 else ''}\n\n" for i, row in df.iterrows()]).strip()
 

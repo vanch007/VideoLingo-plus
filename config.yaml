@@ -31,7 +31,7 @@ whisper:
   model: 'large-v3-turbo'
   # Whisper specified recognition language [en, zh, ...]
   language: 'en'
-  detected_language: 'id'
+  detected_language: 'en'
   # Whisper running mode ["local", "stable-ts", "cloud"]. Specifies where to run, cloud uses 302.ai API
   runtime: 'stable-ts'
   # 302.ai API key
@@ -182,4 +182,4 @@ language_split_without_space:
 - 'zh'
 - 'ja'
 merge_split_subtitles: false
-merge_subtitles: false
+merge_subtitles: true
