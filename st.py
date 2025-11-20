@@ -7,6 +7,7 @@ import os, sys
 import time
 import pandas as pd
 from st_components.imports_and_utils import *
+from st_components.timing_display import display_timing_statistics_component
 from core.config_utils import load_key, update_key
 from core.timing_utils import get_formatted_timings, save_timing
 from core.step1_ytdlp import find_video_files
@@ -100,20 +101,26 @@ def text_processing_section():
             with col1:
                 if st.button(t("Translate and Dub"), key="translate_and_dub_button"):
                     cleanup_intermediate_files() # 在处理前清理
+                    project_start_time = time.time()
+                    save_timing("项目开始时间", project_start_time)
                     with st.spinner(t("Processing translation and dubbing...")):
                         try:
                             find_video_files()
                             if run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file):
                                 process_audio()
+                            save_timing("项目总耗时", time.time() - project_start_time)
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
                             st.info("Please make sure a video is available before processing.")
             with col2:
                 if st.button(t("Start Processing Subtitles"), key="text_processing_button"):
                     cleanup_intermediate_files() # 在处理前清理
+                    project_start_time = time.time()
+                    save_timing("项目开始时间", project_start_time)
                     try:
                         find_video_files()
                         run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file)
+                        save_timing("项目总耗时", time.time() - project_start_time)
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
                         st.info("Please make sure a video is available before processing.")
@@ -192,7 +199,7 @@ def run_translation_pipeline(perform_splitting: bool):
     total_start_time = time.time()
     timing_placeholder = st.empty()
     with timing_placeholder.container():
-        display_timing_statistics(key_suffix="text_init")
+        display_timing_statistics_component(key_suffix="text_init")
 
     try:
         # Step 3: Conditional Sentence Splitting
@@ -203,14 +210,14 @@ def run_translation_pipeline(perform_splitting: bool):
                 elapsed = time.time() - start_time
                 save_timing("NLP分句", elapsed)
                 with timing_placeholder.container():
-                    display_timing_statistics(key_suffix="text_step2")
+                    display_timing_statistics_component(key_suffix="text_step2")
 
                 start_time = time.time()
                 step3_2_splitbymeaning.split_sentences_by_meaning()
                 elapsed = time.time() - start_time
                 save_timing("LLM分句", elapsed)
                 with timing_placeholder.container():
-                    display_timing_statistics(key_suffix="text_step3")
+                    display_timing_statistics_component(key_suffix="text_step3")
         else:
             st.info(t("Skipping sentence splitting, using lines from provided SRT."))
             df_chunks = pd.read_excel('output/log/cleaned_chunks.xlsx')
@@ -227,7 +234,7 @@ def run_translation_pipeline(perform_splitting: bool):
             elapsed = time.time() - start_time
             save_timing("摘要", elapsed)
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step4")
+                display_timing_statistics_component(key_suffix="text_step4")
 
             if load_key("pause_before_translate"):
                 input(t("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue..."))
@@ -237,7 +244,7 @@ def run_translation_pipeline(perform_splitting: bool):
             elapsed = time.time() - start_time
             save_timing("翻译", elapsed)
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step5")
+                display_timing_statistics_component(key_suffix="text_step5")
 
         # Step 5: Conditional Subtitle Splitting
         if perform_splitting:
@@ -247,7 +254,7 @@ def run_translation_pipeline(perform_splitting: bool):
                 elapsed = time.time() - start_time
                 save_timing("字幕分割", elapsed)
                 with timing_placeholder.container():
-                    display_timing_statistics(key_suffix="text_step6")
+                    display_timing_statistics_component(key_suffix="text_step6")
         else:
             shutil.copy('output/log/translation_results.xlsx', 'output/log/translation_results_for_subtitles.xlsx')
             shutil.copy('output/log/translation_results.xlsx', 'output/log/translation_results_remerged.xlsx')
@@ -270,7 +277,7 @@ def run_translation_pipeline(perform_splitting: bool):
             elapsed = time.time() - start_time
             save_timing("时间轴对齐", elapsed)
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step7")
+                display_timing_statistics_component(key_suffix="text_step7")
 
         # Step 7: Merge Subtitles to Video
         with st.spinner(t("Merging subtitles to video...")):
@@ -279,7 +286,7 @@ def run_translation_pipeline(perform_splitting: bool):
             elapsed = time.time() - start_time
             save_timing("字幕合并到视频", elapsed)
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="text_step8")
+                display_timing_statistics_component(key_suffix="text_step8")
 
         save_timing("整体字幕处理", time.time() - total_start_time)
         st.success(t("Subtitle processing complete! 🎉"))
@@ -289,7 +296,8 @@ def run_translation_pipeline(perform_splitting: bool):
         st.error(f"Error during text processing: {str(e)}")
         raise e
     finally:
-        display_timing_statistics(key_suffix="text_final")
+        with timing_placeholder.container():
+            display_timing_statistics_component(key_suffix="text_final")
 
 def process_extracted_subtitles():
     """使用内嵌字幕的工作流程"""
@@ -301,7 +309,7 @@ def process_extracted_subtitles():
 
     # 显示初始耗时统计
     with timing_placeholder.container():
-        display_timing_statistics(key_suffix="extracted_subs_init")
+        display_timing_statistics_component(key_suffix="extracted_subs_init")
 
     try:
         # 确保必要的目录存在
@@ -318,7 +326,7 @@ def process_extracted_subtitles():
             elapsed = time.time() - start_time
             save_timing("音频预处理", elapsed)
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="extracted_subs_step0")
+                display_timing_statistics_component(key_suffix="extracted_subs_step0")
 
         with st.spinner(t("提取内嵌字幕...")):
             start_time = time.time()
@@ -329,7 +337,7 @@ def process_extracted_subtitles():
             elapsed = time.time() - start_time
             save_timing("提取内嵌字幕", elapsed)
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="extracted_subs_step1")
+                display_timing_statistics_component(key_suffix="extracted_subs_step1")
 
         with st.spinner(t("处理提取的字幕...")):
             start_time = time.time()
@@ -340,7 +348,7 @@ def process_extracted_subtitles():
             elapsed = time.time() - start_time
             save_timing("处理提取的字幕", elapsed)
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="extracted_subs_step2")
+                display_timing_statistics_component(key_suffix="extracted_subs_step2")
 
         # 记录整体字幕处理耗时
         save_timing("整体字幕处理(内嵌)", time.time() - total_start_time)
@@ -352,7 +360,8 @@ def process_extracted_subtitles():
         raise e
     finally:
         # 无论是否出错，都显示耗时统计
-        display_timing_statistics(key_suffix="extracted_subs_final")
+        with timing_placeholder.container():
+            display_timing_statistics_component(key_suffix="extracted_subs_final")
 
 def audio_processing_section():
     st.header(t("c. Dubbing"))
@@ -369,9 +378,12 @@ def audio_processing_section():
         if not os.path.exists(DUB_VIDEO):
             if st.button(t("Start Audio Processing"), key="audio_processing_button"):
                 try:
+                    project_start_time = time.time()
+                    save_timing("项目开始时间", project_start_time)
                     # 检查视频文件是否存在
                     find_video_files()
                     process_audio()
+                    save_timing("项目总耗时", time.time() - project_start_time)
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
@@ -396,7 +408,7 @@ def process_audio():
 
     # 显示初始耗时统计
     with timing_placeholder.container():
-        display_timing_statistics(key_suffix="audio_init")
+        display_timing_statistics_component(key_suffix="audio_init")
 
     try:
         with st.spinner(t("Generate audio tasks")):
@@ -406,7 +418,7 @@ def process_audio():
             save_timing("生成配音任务", elapsed)
             # 更新耗时统计显示
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="audio_step1")
+                display_timing_statistics_component(key_suffix="audio_step1")
 
             start_time = time.time()
             step8_2_gen_dub_chunks.gen_dub_chunks()
@@ -414,7 +426,7 @@ def process_audio():
             save_timing("生成配音分块", elapsed)
             # 更新耗时统计显示
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="audio_step2")
+                display_timing_statistics_component(key_suffix="audio_step2")
 
         with st.spinner(t("Extract refer audio")):
             start_time = time.time()
@@ -423,7 +435,7 @@ def process_audio():
             save_timing("提取参考音频", elapsed)
             # 更新耗时统计显示
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="audio_step3")
+                display_timing_statistics_component(key_suffix="audio_step3")
 
         with st.spinner(t("Generate all audio")):
             start_time = time.time()
@@ -432,7 +444,7 @@ def process_audio():
             save_timing("生成配音", elapsed)
             # 更新耗时统计显示
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="audio_step4")
+                display_timing_statistics_component(key_suffix="audio_step4")
 
         with st.spinner(t("Merge full audio")):
             start_time = time.time()
@@ -441,7 +453,7 @@ def process_audio():
             save_timing("合并配音", elapsed)
             # 更新耗时统计显示
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="audio_step5")
+                display_timing_statistics_component(key_suffix="audio_step5")
 
         with st.spinner(t("Merge dubbing to the video")):
             start_time = time.time()
@@ -450,13 +462,13 @@ def process_audio():
             save_timing("配音合并到视频", elapsed)
             # 更新耗时统计显示
             with timing_placeholder.container():
-                display_timing_statistics(key_suffix="audio_step6")
+                display_timing_statistics_component(key_suffix="audio_step6")
 
         # 记录整体配音处理耗时
         save_timing("整体配音处理", time.time() - total_start_time)
         # 最终更新耗时统计显示
         with timing_placeholder.container():
-            display_timing_statistics(key_suffix="audio_final")
+            display_timing_statistics_component(key_suffix="audio_final")
 
         st.success(t("Audio processing complete! 🎇"))
         st.balloons()
@@ -465,266 +477,10 @@ def process_audio():
         raise e
     finally:
         # 无论是否出错，都显示耗时统计
-        display_timing_statistics(key_suffix="audio_error")
+        with timing_placeholder.container():
+            display_timing_statistics_component(key_suffix="audio_error")
 
-def display_timing_statistics(key_suffix="main"):
-    """显示各步骤耗时统计
 
-    Args:
-        key_suffix (str): 按钮的key后缀，用于区分不同实例的按钮
-    """
-    try:
-        # Check if we're being called during cleanup
-        import traceback
-        stack = traceback.extract_stack()
-        caller_files = [frame[0] for frame in stack]
-        in_cleanup = any('onekeycleanup.py' in file for file in caller_files)
-
-        if in_cleanup:
-            print(f"⚠️ display_timing_statistics() called during cleanup - skipping")
-            return
-
-        # 确保计时文件存在
-        from core.timing_utils import ensure_timing_file
-        ensure_timing_file()
-
-        # 添加CSS样式
-        st.markdown("""
-        <style>
-        .timing-header {
-            background: linear-gradient(90deg, #FF4B4B, #FF8F8F);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .section-header {
-            background: linear-gradient(90deg, #4B8BF5, #6BA5F7);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 6px;
-            margin: 15px 0 10px 0;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .timing-card {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .timing-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        .timing-table th {
-            background-color: #f1f3f4;
-            padding: 8px 12px;
-            text-align: left;
-            border-bottom: 2px solid #ddd;
-            font-weight: bold;
-        }
-        .timing-table td {
-            padding: 8px 12px;
-            border-bottom: 1px solid #eee;
-        }
-        .timing-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .timing-table tr:hover {
-            background-color: #f1f1f1;
-        }
-        .timing-icon {
-            margin-right: 8px;
-            font-size: 1.2em;
-        }
-        .timing-value {
-            font-weight: bold;
-            color: #333;
-        }
-        .timing-label {
-            color: #666;
-        }
-        """, unsafe_allow_html=True)
-
-        # 使用高亮边框和颜色
-        with st.container(border=True):
-            # 使用更醒目的标题
-            st.markdown(
-                "<div class='timing-header'><span class='timing-icon'>⏱️</span> 处理耗时统计</div>",
-                unsafe_allow_html=True
-            )
-
-            try:
-                timings = get_formatted_timings()
-
-                if timings:
-                    # 分类耗时数据
-                    project_timings = []
-                    download_timings = []
-                    text_timings = []
-                    audio_timings = []
-                    other_timings = []
-
-                    # 直接使用已排序的耗时数据
-                    for item in timings:
-                        step_name = item['步骤']
-                        if step_name in ['项目开始时间', '项目总耗时']:
-                            project_timings.append(item)
-                        elif step_name in ['下载视频', '上传视频']:
-                            download_timings.append(item)
-                        elif step_name in ['转录', 'NLP分句', 'LLM分句', '摘要', '翻译', '字幕分割', '时间轴对齐', '字幕合并到视频', '整体字幕处理']:
-                            text_timings.append(item)
-                        elif step_name in ['生成配音任务', '生成配音分块', '提取参考音频', '生成配音', '合并配音', '配音合并到视频', '整体配音处理']:
-                            audio_timings.append(item)
-                        else:
-                            other_timings.append(item)
-
-                    # 创建两列布局
-                    col1, col2 = st.columns(2)
-
-                    # 显示项目总耗时
-                    if project_timings:
-                        with col1:
-                            st.markdown("<div class='section-header'><span class='timing-icon'>🕒</span> 项目总耗时</div>", unsafe_allow_html=True)
-                            with st.container(border=False):
-                                # 转换为HTML表格
-                                html_table = "<table class='timing-table'>"
-                                html_table += "<tr><th>序号</th><th>步骤</th><th>耗时</th></tr>"
-                                for i, item in enumerate(project_timings):
-                                    html_table += f"<tr><td>{i}</td><td>{item['步骤']}</td><td class='timing-value'>{item['耗时']}</td></tr>"
-                                html_table += "</table>"
-                                st.markdown(html_table, unsafe_allow_html=True)
-
-                    # 显示下载/上传耗时
-                    if download_timings:
-                        with col2:
-                            st.markdown("<div class='section-header'><span class='timing-icon'>📥</span> 下载/上传耗时</div>", unsafe_allow_html=True)
-                            with st.container(border=False):
-                                # 转换为HTML表格
-                                html_table = "<table class='timing-table'>"
-                                html_table += "<tr><th>序号</th><th>步骤</th><th>耗时</th></tr>"
-                                for i, item in enumerate(download_timings):
-                                    html_table += f"<tr><td>{i}</td><td>{item['步骤']}</td><td class='timing-value'>{item['耗时']}</td></tr>"
-                                html_table += "</table>"
-                                st.markdown(html_table, unsafe_allow_html=True)
-
-                    # 显示翻译阶段耗时
-                    if text_timings:
-                        st.markdown("<div class='section-header'><span class='timing-icon'>🔤</span> 翻译阶段耗时</div>", unsafe_allow_html=True)
-                        # 定义翻译阶段的步骤顺序
-                        text_step_order = {
-                            '整体字幕处理': 0,
-                            '转录': 1,
-                            'NLP分句': 2,
-                            'LLM分句': 3,
-                            '摘要': 4,
-                            '翻译': 5,
-                            '字幕分割': 6,
-                            '时间轴对齐': 7,
-                            '字幕合并到视频': 8
-                        }
-                        # 按步骤顺序排序
-                        sorted_text_timings = sorted(text_timings, key=lambda x: text_step_order.get(x['步骤'], 100))
-
-                        # 转换为HTML表格
-                        html_table = "<table class='timing-table'>"
-                        html_table += "<tr><th>序号</th><th>步骤</th><th>耗时</th></tr>"
-                        for i, item in enumerate(sorted_text_timings):
-                            html_table += f"<tr><td>{i}</td><td>{item['步骤']}</td><td class='timing-value'>{item['耗时']}</td></tr>"
-                        html_table += "</table>"
-                        st.markdown(html_table, unsafe_allow_html=True)
-
-                        # 创建翻译阶段的条形图
-                        try:
-                            chart_data = pd.DataFrame({
-                                '步骤': [item['步骤'] for item in sorted_text_timings],
-                                '耗时(秒)': [float(item['耗时'].split()[0]) if '秒' in item['耗时'] and '分' not in item['耗时'] and '小时' not in item['耗时'] else
-                                          float(item['耗时'].split()[0]) * 60 + float(item['耗时'].split()[2]) if '分' in item['耗时'] and '小时' not in item['耗时'] else
-                                          float(item['耗时'].split()[0]) * 3600 + float(item['耗时'].split()[2]) * 60 + float(item['耗时'].split()[4]) if '小时' in item['耗时'] else 0
-                                         for item in sorted_text_timings]
-                            })
-                            st.bar_chart(chart_data.set_index('步骤'), use_container_width=True, height=200)
-                        except Exception as e:
-                            st.warning(f"无法生成翻译阶段图表: {str(e)}")
-
-                    # 显示配音阶段耗时
-                    if audio_timings:
-                        st.markdown("<div class='section-header'><span class='timing-icon'>🔊</span> 配音阶段耗时</div>", unsafe_allow_html=True)
-                        # 定义配音阶段的步骤顺序
-                        audio_step_order = {
-                            '整体配音处理': 0,
-                            '生成配音任务': 1,
-                            '生成配音分块': 2,
-                            '提取参考音频': 3,
-                            '生成配音': 4,
-                            '合并配音': 5,
-                            '配音合并到视频': 6
-                        }
-                        # 按步骤顺序排序
-                        sorted_audio_timings = sorted(audio_timings, key=lambda x: audio_step_order.get(x['步骤'], 100))
-
-                        # 转换为HTML表格
-                        html_table = "<table class='timing-table'>"
-                        html_table += "<tr><th>序号</th><th>步骤</th><th>耗时</th></tr>"
-                        for i, item in enumerate(sorted_audio_timings):
-                            html_table += f"<tr><td>{i}</td><td>{item['步骤']}</td><td class='timing-value'>{item['耗时']}</td></tr>"
-                        html_table += "</table>"
-                        st.markdown(html_table, unsafe_allow_html=True)
-
-                        # 创建配音阶段的条形图
-                        try:
-                            chart_data = pd.DataFrame({
-                                '步骤': [item['步骤'] for item in sorted_audio_timings],
-                                '耗时(秒)': [float(item['耗时'].split()[0]) if '秒' in item['耗时'] and '分' not in item['耗时'] and '小时' not in item['耗时'] else
-                                          float(item['耗时'].split()[0]) * 60 + float(item['耗时'].split()[2]) if '分' in item['耗时'] and '小时' not in item['耗时'] else
-                                          float(item['耗时'].split()[0]) * 3600 + float(item['耗时'].split()[2]) * 60 + float(item['耗时'].split()[4]) if '小时' in item['耗时'] else 0
-                                         for item in sorted_audio_timings]
-                            })
-                            st.bar_chart(chart_data.set_index('步骤'), use_container_width=True, height=200)
-                        except Exception as e:
-                            st.warning(f"无法生成配音阶段图表: {str(e)}")
-
-                    # 显示其他耗时
-                    if other_timings:
-                        st.markdown("<div class='section-header'><span class='timing-icon'>📋</span> 其他耗时</div>", unsafe_allow_html=True)
-                        # 转换为HTML表格
-                        html_table = "<table class='timing-table'>"
-                        html_table += "<tr><th>序号</th><th>步骤</th><th>耗时</th></tr>"
-                        for i, item in enumerate(other_timings):
-                            html_table += f"<tr><td>{i}</td><td>{item['步骤']}</td><td class='timing-value'>{item['耗时']}</td></tr>"
-                        html_table += "</table>"
-                        st.markdown(html_table, unsafe_allow_html=True)
-                else:
-                    # 使用更醒目的提示
-                    st.info("暂无耗时数据，运行处理后将显示在这里")
-            except Exception as e:
-                st.error(f"获取耗时数据出错: {str(e)}")
-
-            # 添加清除按钮
-            col1, col2 = st.columns([3, 1])
-            with col2:
-                # 使用不同的key后缀来区分不同实例的按钮
-                button_key = f"clear_timing_{key_suffix}"
-                if st.button("清除耗时统计", key=button_key, type="primary"):
-                    try:
-                        from core.timing_utils import clear_timings
-                        clear_timings()
-                        st.success("耗时统计数据已清除")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"清除耗时统计出错: {str(e)}")
-    except Exception as e:
-        st.error(f"显示耗时统计出错: {str(e)}")
 
 def main():
     logo_col, _ = st.columns([1,1])
@@ -808,7 +564,7 @@ def main():
     # 根据开关状态显示耗时统计区域
     if st.session_state.get("show_timing_toggle", True):
         st.divider()
-        display_timing_statistics(key_suffix="main_page")
+        display_timing_statistics_component(key_suffix="main_page")
 
 if __name__ == "__main__":
     main()
