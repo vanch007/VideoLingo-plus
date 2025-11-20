@@ -62,7 +62,7 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
             # If the output duration exceeds the expected duration, but the input audio is less than 3 seconds, and the error is within 0.1 seconds, truncate to the expected length
             if output_duration >= expected_duration * 1.02 and input_duration < 3 and diff <= 0.1:
                 audio = AudioSegment.from_wav(output_file)
-                trimmed_audio = audio[:(expected_duration * 1000)]  # pydub uses milliseconds
+                trimmed_audio = audio[:(expected_duration * 1000)].fade_out(10)  # pydub uses milliseconds
                 trimmed_audio.export(output_file, format="wav")
                 print(f"✂️ Trimmed to expected duration: {expected_duration:.2f} seconds")
                 return
@@ -77,6 +77,19 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
                 rprint(f"[red]❌ Audio speed adjustment failed, max retries reached ({max_retries})[/red]")
                 raise e
 
+def check_audio(file_path: str) -> None:
+    """Check and fix audio file: ensure no popping at the end"""
+    if not os.path.exists(file_path):
+        return
+    try:
+        audio = AudioSegment.from_wav(file_path)
+        # Apply 10ms fade out to prevent popping
+        if len(audio) > 20:
+            audio = audio.fade_out(10)
+            audio.export(file_path, format="wav")
+    except Exception as e:
+        rprint(f"[yellow]⚠️ Audio check failed for {file_path}: {e}[/yellow]")
+
 def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     """Helper function for processing single row data"""
     number = row['number']
@@ -85,6 +98,7 @@ def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     for line_index, line in enumerate(lines):
         temp_file = TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}")
         tts_main(line, temp_file, number, tasks_df)
+        check_audio(temp_file)
         real_dur += get_audio_duration(temp_file)
     return number, real_dur
 
@@ -211,7 +225,7 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                     audio = AudioSegment.from_wav(last_file)
                     original_duration = len(audio) / 1000  # Convert to seconds
                     new_duration = original_duration - time_diff
-                    trimmed_audio = audio[:(new_duration * 1000)]  # pydub uses milliseconds
+                    trimmed_audio = audio[:(new_duration * 1000)].fade_out(10)  # pydub uses milliseconds
                     trimmed_audio.export(last_file, format="wav")
 
                     # Update the last timestamp

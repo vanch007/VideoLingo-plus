@@ -47,6 +47,7 @@ import core.step2_prepare_from_srt as step2_prepare_from_srt
 
 def text_processing_section():
     st.header(t("b. Translate and Generate Subtitles"))
+    timing_placeholder = st.empty()
     with st.container(border=True):
         # 初始化 session_state
         if 'processing_mode' not in st.session_state:
@@ -106,8 +107,8 @@ def text_processing_section():
                     with st.spinner(t("Processing translation and dubbing...")):
                         try:
                             find_video_files()
-                            if run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file):
-                                process_audio()
+                            if run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file, timing_placeholder):
+                                process_audio(timing_placeholder)
                             save_timing("项目总耗时", time.time() - project_start_time)
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
@@ -119,7 +120,7 @@ def text_processing_section():
                     save_timing("项目开始时间", project_start_time)
                     try:
                         find_video_files()
-                        run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file)
+                        run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file, timing_placeholder)
                         save_timing("项目总耗时", time.time() - project_start_time)
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
@@ -149,7 +150,7 @@ def text_processing_section():
 
 import core.step2_prepare_from_srt as step2_prepare_from_srt
 
-def run_text_processing_pipeline(processing_mode, uploaded_srt_file):
+def run_text_processing_pipeline(processing_mode, uploaded_srt_file, timing_placeholder):
     """根据选择的模式运行相应的文本处理流程。"""
 
     # 模式一：ASR
@@ -159,12 +160,12 @@ def run_text_processing_pipeline(processing_mode, uploaded_srt_file):
             step2_whisperX.transcribe()
             elapsed = time.time() - start_time
             save_timing("转录", elapsed)
-        run_translation_pipeline(perform_splitting=True)
+        run_translation_pipeline(perform_splitting=True, timing_placeholder=timing_placeholder)
         return True
 
     # 模式二：提取内嵌字幕
     elif processing_mode == t("模式二：提取内嵌字幕"):
-        process_extracted_subtitles()
+        process_extracted_subtitles(timing_placeholder)
         return True
 
     # 模式三：提供SRT文件
@@ -189,15 +190,15 @@ def run_text_processing_pipeline(processing_mode, uploaded_srt_file):
             elapsed = time.time() - start_time
             save_timing("SRT字幕解析", elapsed)
         
-        run_translation_pipeline(perform_splitting=False)
+        run_translation_pipeline(perform_splitting=False, timing_placeholder=timing_placeholder)
         return True
     
     return False
 
-def run_translation_pipeline(perform_splitting: bool):
+def run_translation_pipeline(perform_splitting: bool, timing_placeholder):
     """运行共享的翻译和字幕生成流程。"""
     total_start_time = time.time()
-    timing_placeholder = st.empty()
+    # timing_placeholder = st.empty() # Removed local placeholder creation
     with timing_placeholder.container():
         display_timing_statistics_component(key_suffix="text_init")
 
@@ -299,13 +300,13 @@ def run_translation_pipeline(perform_splitting: bool):
         with timing_placeholder.container():
             display_timing_statistics_component(key_suffix="text_final")
 
-def process_extracted_subtitles():
+def process_extracted_subtitles(timing_placeholder):
     """使用内嵌字幕的工作流程"""
     # 记录整体字幕处理开始时间
     total_start_time = time.time()
 
     # 创建一个占位符来显示实时耗时统计
-    timing_placeholder = st.empty()
+    # timing_placeholder = st.empty() # Removed local placeholder creation
 
     # 显示初始耗时统计
     with timing_placeholder.container():
@@ -365,6 +366,7 @@ def process_extracted_subtitles():
 
 def audio_processing_section():
     st.header(t("c. Dubbing"))
+    timing_placeholder = st.empty()
     with st.container(border=True):
         st.markdown(f"""
         <p style='font-size: 20px;'>
@@ -382,7 +384,7 @@ def audio_processing_section():
                     save_timing("项目开始时间", project_start_time)
                     # 检查视频文件是否存在
                     find_video_files()
-                    process_audio()
+                    process_audio(timing_placeholder)
                     save_timing("项目总耗时", time.time() - project_start_time)
                     st.rerun()
                 except Exception as e:
@@ -399,12 +401,12 @@ def audio_processing_section():
                 cleanup()
                 st.rerun()
 
-def process_audio():
+def process_audio(timing_placeholder):
     # 记录整体配音处理开始时间
     total_start_time = time.time()
 
     # 创建一个占位符来显示实时耗时统计
-    timing_placeholder = st.empty()
+    # timing_placeholder = st.empty() # Removed local placeholder creation
 
     # 显示初始耗时统计
     with timing_placeholder.container():

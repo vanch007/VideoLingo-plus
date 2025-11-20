@@ -142,7 +142,7 @@ def merge_audio_segments(audios, new_sub_times, sample_rate):
                 if i > 0:
                     prev_end = new_sub_times[i-1][1]
                     silence_duration = start_time - prev_end
-                    if silence_duration > 0:
+                    if silence_duration > 0.05: # Ignore silence less than 50ms
                         silence = AudioSegment.silent(duration=int(silence_duration * 1000), frame_rate=sample_rate)
                         merged_audio += silence
                 elif start_time > 0:

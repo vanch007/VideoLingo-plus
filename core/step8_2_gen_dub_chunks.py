@@ -85,6 +85,20 @@ def analyze_subtitle_timing_and_speed(df):
 
     ## Calculate speed indicators
     accept = load_key("speed_factor.accept") # Maximum acceptable speed factor
+    def process_chunk(chunk_df: pd.DataFrame, accept: float, min_speed: float) -> tuple[float, bool]:
+        "Process audio chunk and calculate speed factor"
+        chunk_durs = chunk_df['real_dur'].sum()
+        tol_durs = chunk_df['tol_dur'].sum()
+        
+        # Check the gap of the last line in the chunk
+        last_gap = chunk_df.iloc[-1]['gap']
+        
+        # If the gap is small (less than 0.1s), it means continuous speech, so we don't want to leave any gap
+        speed_var_error = 0.1 if last_gap >= 0.1 else 0
+        
+        durations = tol_durs - chunk_df.iloc[-1]['tolerance']
+        all_gaps = chunk_df['gap'].sum() - last_gap
+
     def calc_if_too_fast(row):
         est_dur = row['est_dur']
         tol_dur = row['tol_dur']
