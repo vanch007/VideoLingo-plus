@@ -144,7 +144,11 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         transcribe_options = {
             'word_timestamps': True,
             'vad': True,
-            'vad_threshold': 0.3, # Lower threshold for more sensitive VAD
+            'vad_threshold': 0.25,  # More sensitive VAD for better voice detection
+            'only_voice_freq': True,  # Filter to 200-5000 Hz (human speech range)
+            'min_word_dur': 0.1,  # Prevent overly short word durations
+            'nonspeech_error': 0.3,  # 30% tolerance for non-speech detection
+            'use_word_position': True,  # Use word position for timestamp adjustments
             'verbose': True,
         }
 
@@ -165,6 +169,14 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         if not using_mlx_whisper:
             rprint("[green]Transcribing with `transcribe_stable` for improved accuracy...[/green]")
             result = stable_whisper.transcribe_stable(model, audio_segment, refine=True, regroup=True, **transcribe_options)
+            
+            # Post-refinement for even better timestamp accuracy
+            rprint("[cyan]Applying additional refinement for precise timestamps...[/cyan]")
+            result = result.refine(audio_segment, precision=0.05, verbose=False)
+            
+            # Gap adjustment for optimal segment boundaries
+            rprint("[cyan]Adjusting gaps for better segment boundaries...[/cyan]")
+            result = result.adjust_gaps(duration_threshold=0.75, one_section=False)
         else:
             # MLX backend does not support `transcribe_stable`, use the basic `transcribe`.
             result = model.transcribe(audio_segment, **transcribe_options)
@@ -218,6 +230,10 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
                     current_start += segment_duration
             
             result.segments = new_segments
+            
+            # Gap adjustment for MLX models (refine not supported)
+            rprint("[cyan]Adjusting gaps for better segment boundaries...[/cyan]")
+            result = result.adjust_gaps(duration_threshold=0.75, one_section=False)
 
 
         # Free GPU resources

@@ -110,6 +110,7 @@ def text_processing_section():
                             if run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file, timing_placeholder):
                                 process_audio(timing_placeholder)
                             save_timing("项目总耗时", time.time() - project_start_time)
+                            timing_placeholder.empty()
                         except Exception as e:
                             st.error(f"Error: {str(e)}")
                             st.info("Please make sure a video is available before processing.")
@@ -122,6 +123,7 @@ def text_processing_section():
                         find_video_files()
                         run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file, timing_placeholder)
                         save_timing("项目总耗时", time.time() - project_start_time)
+                        timing_placeholder.empty()
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
                         st.info("Please make sure a video is available before processing.")

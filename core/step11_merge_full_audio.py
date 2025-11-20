@@ -142,9 +142,13 @@ def merge_audio_segments(audios, new_sub_times, sample_rate):
                 if i > 0:
                     prev_end = new_sub_times[i-1][1]
                     silence_duration = start_time - prev_end
-                    if silence_duration > 0.05: # Ignore silence less than 50ms
+                    # Only insert silence if the gap is significant (> 10ms) to avoid accumulation of small errors
+                    if silence_duration > 0.01: 
                         silence = AudioSegment.silent(duration=int(silence_duration * 1000), frame_rate=sample_rate)
                         merged_audio += silence
+                    # If overlap (negative duration), we might need to crossfade or just append (current logic appends, which pushes timing)
+                    # Ideally we should strictly adhere to timeline, but pydub concatenates. 
+                    # For now, we assume step10 handled overlaps by adjusting speed/truncating.
                 elif start_time > 0:
                     silence = AudioSegment.silent(duration=int(start_time * 1000), frame_rate=sample_rate)
                     merged_audio += silence

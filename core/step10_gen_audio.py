@@ -59,15 +59,27 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
             output_duration = get_audio_duration(output_file)
             expected_duration = input_duration / speed_factor
             diff = output_duration - expected_duration
-            # If the output duration exceeds the expected duration, but the input audio is less than 3 seconds, and the error is within 0.1 seconds, truncate to the expected length
-            if output_duration >= expected_duration * 1.02 and input_duration < 3 and diff <= 0.1:
-                audio = AudioSegment.from_wav(output_file)
-                trimmed_audio = audio[:(expected_duration * 1000)].fade_out(10)  # pydub uses milliseconds
-                trimmed_audio.export(output_file, format="wav")
-                print(f"✂️ Trimmed to expected duration: {expected_duration:.2f} seconds")
+            
+            # Allow a slightly larger margin of error (0.05s) for floating point inaccuracies
+            if abs(diff) < 0.05:
                 return
-            elif output_duration >= expected_duration * 1.02:
-                raise Exception(f"Audio duration abnormal: input file={input_file}, output file={output_file}, speed factor={speed_factor}, input duration={input_duration:.2f}s, output duration={output_duration:.2f}s")
+                
+            # If the output duration exceeds the expected duration significantly
+            if output_duration > expected_duration + 0.05:
+                # If input audio is short (< 3s) and error is small (< 0.1s), truncate
+                if input_duration < 3 and diff <= 0.1:
+                    audio = AudioSegment.from_wav(output_file)
+                    trimmed_audio = audio[:(expected_duration * 1000)].fade_out(10)
+                    trimmed_audio.export(output_file, format="wav")
+                    rprint(f"[yellow]✂️ Trimmed to expected duration: {expected_duration:.2f}s (was {output_duration:.2f}s)[/yellow]")
+                    return
+                else:
+                    # Log warning but accept if it's not too far off (within 5%)
+                    if output_duration <= expected_duration * 1.05:
+                         rprint(f"[yellow]⚠️ Duration mismatch accepted: {output_duration:.2f}s (expected {expected_duration:.2f}s)[/yellow]")
+                         return
+                    
+                    raise Exception(f"Audio duration abnormal: input={input_duration:.2f}s, output={output_duration:.2f}s, expected={expected_duration:.2f}s")
             return
         except subprocess.CalledProcessError as e:
             if attempt < max_retries - 1:
@@ -78,17 +90,20 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
                 raise e
 
 def check_audio(file_path: str) -> None:
-    """Check and fix audio file: ensure no popping at the end"""
+    """Check and fix audio file: apply fade-out to prevent popping"""
     if not os.path.exists(file_path):
         return
     try:
         audio = AudioSegment.from_wav(file_path)
-        # Apply 10ms fade out to prevent popping
+        
+        # Only apply fade-out to prevent popping
+        # Silence trimming is too aggressive and can cause issues
         if len(audio) > 20:
             audio = audio.fade_out(10)
             audio.export(file_path, format="wav")
     except Exception as e:
         rprint(f"[yellow]⚠️ Audio check failed for {file_path}: {e}[/yellow]")
+
 
 def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     """Helper function for processing single row data"""
@@ -155,8 +170,17 @@ def process_chunk(chunk_df: pd.DataFrame, accept: float, min_speed: float) -> tu
     durations = tol_durs - chunk_df.iloc[-1]['tolerance']
     all_gaps = chunk_df['gap'].sum() - chunk_df.iloc[-1]['gap']
 
+    # Check the gap of the last line in the chunk
+    last_gap = chunk_df.iloc[-1]['gap']
+    
+    # Dynamic speed_var_error: if gap is small (< 0.1s), it means continuous speech
+    # In this case, we don't want to leave any safety gap (speed_var_error = 0)
+    # Otherwise, we keep the 0.1s safety margin
+    speed_var_error = 0.1 if last_gap >= 0.1 else 0
+    
+    rprint(f"[dim]  └─ Last gap: {last_gap:.3f}s, speed_var_error: {speed_var_error:.3f}s[/dim]")
+
     keep_gaps = True
-    speed_var_error = 0.1
 
     if (chunk_durs + all_gaps) / accept < durations:
         speed_factor = max(min_speed, (chunk_durs + all_gaps) / (durations-speed_var_error))
@@ -170,6 +194,7 @@ def process_chunk(chunk_df: pd.DataFrame, accept: float, min_speed: float) -> tu
         keep_gaps = False
 
     return round(speed_factor, 3), keep_gaps
+
 
 def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
     """Merge audio chunks and adjust timeline"""

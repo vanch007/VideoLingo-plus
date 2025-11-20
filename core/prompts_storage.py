@@ -272,12 +272,13 @@ Please use a two-step thinking process to handle the text line by line:
    - Check the conciseness of the subtitles, point out where the translation is too wordy, the translation should be close to the original text in length
 
 2. {TARGET_LANGUAGE} Free Translation:
-   - **IMPORTANT: Match Spoken Duration.** The length of the translated text should be proportional to the original text's spoken duration. This is crucial for TTS dubbing to avoid inconsistent pacing (some parts too fast, some too slow). Aim for the translated text's syllable count or spoken length to be within a close range of the original.
+   - **CRITICAL: Match Spoken Duration.** The length of the translated text MUST be proportional to the original text's spoken duration. This is crucial for TTS dubbing.
+   - **Avoid Unnecessary Expansion.** Do not add filler words or extra explanations unless absolutely necessary for meaning.
    - Aim for contextual smoothness and naturalness, conforming to {TARGET_LANGUAGE} expression habits
    - Ensure it's easy for {TARGET_LANGUAGE} audience to understand and accept
-   - Adapt the language style to match the video's theme (e.g., use casual language for tutorials, professional terminology for technical content, formal language for documentaries)
+   - Adapt the language style to match the video's theme
    - Pay special attention to conversational markers and filler words (e.g., "Okay", "right", "well", "you know", "I mean", etc.):
-     * Translate these using natural, culturally appropriate expressions in {TARGET_LANGUAGE} rather than literal translations
+     * Translate these using natural, culturally appropriate expressions in {TARGET_LANGUAGE}
      * Use varied expressions that sound natural to native speakers
      * IMPORTANT: NEVER translate filler words or conversational markers into single-character words (e.g., never translate "Yeah" as just "对" in Chinese)
      * Always use multi-character expressions for filler words to make them more suitable for dubbing and more natural sounding

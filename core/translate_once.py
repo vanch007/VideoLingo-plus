@@ -31,8 +31,34 @@ def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_
     def retry_translation(prompt, step_name):
         def valid_faith(response_data):
             return valid_translate_result(response_data, ['1'], ['direct'])
+        
         def valid_express(response_data):
-            return valid_translate_result(response_data, ['1'], ['free'])
+            # First check structure
+            structure_valid = valid_translate_result(response_data, ['1'], ['free'])
+            if structure_valid['status'] == 'error':
+                return structure_valid
+            
+            # Then check duration
+            # Initialize estimator if needed (lazy load to avoid overhead if not used)
+            global ESTIMATOR
+            if 'ESTIMATOR' not in globals() or ESTIMATOR is None:
+                from core.all_tts_functions.estimate_duration import init_estimator
+                ESTIMATOR = init_estimator()
+            from core.all_tts_functions.estimate_duration import estimate_duration
+            
+            for key, value in response_data.items():
+                origin_dur = estimate_duration(value['origin'], ESTIMATOR)
+                trans_dur = estimate_duration(value['free'], ESTIMATOR)
+                
+                # If translation is significantly longer (> 50% longer and > 1s difference), reject
+                if trans_dur > origin_dur * 1.5 and (trans_dur - origin_dur) > 1.0:
+                    return {
+                        "status": "error", 
+                        "message": f"Translation too long for item {key}: Origin={origin_dur:.2f}s, Trans={trans_dur:.2f}s. Please shorten it."
+                    }
+            
+            return {"status": "success", "message": ""}
+
         for retry in range(3):
             if step_name == 'faithfulness':
                 result = ask_gpt(prompt+retry* " ", response_json=True, valid_def=valid_faith, log_title=f'translate_{step_name}')
