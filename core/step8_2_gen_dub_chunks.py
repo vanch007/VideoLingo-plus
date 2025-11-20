@@ -6,7 +6,6 @@ from core.all_whisper_methods.audio_preprocess import get_audio_duration
 from core.step8_1_gen_audio_task import time_diff_seconds
 import datetime
 import re
-from difflib import SequenceMatcher
 from core.all_tts_functions.estimate_duration import init_estimator, estimate_duration
 from rich import print as rprint
 
@@ -139,32 +138,11 @@ def gen_dub_chunks():
     rprint("[🎬 Starting] Generating dubbing chunks...")
     df = pd.read_excel(INPUT_EXCEL)
 
-    # Load config
-    merge_subtitles = load_key("merge_subtitles", True)
-
-    # Log the number of rows in the dataframe
-    rprint(f"[📊 Info] Processing {len(df)} subtitle entries")
-
-    # Check if original_text column exists
-    if 'original_text' in df.columns:
-        rprint("[📊 Info] Found 'original_text' column, will use it for primary matching")
-    else:
-        rprint("[📊 Info] No 'original_text' column found, will use 'text' column for matching")
-
     rprint("[📊 Processing] Analyzing timing and speed...")
     df = analyze_subtitle_timing_and_speed(df)
 
-    if merge_subtitles:
-        rprint("[✂️ Processing] Processing cutoffs...")
-        df = process_cutoffs(df)
-    else:
-        rprint("[ℹ️ Info] '合并字幕' 选项未勾选，跳过分块合并操作。")
-        # 即使不合并字幕，也要确保 cut_off 列存在且正确设置
-        # 每行都作为一个独立的块
-        if 'cut_off' not in df.columns:
-            df['cut_off'] = 1
-        else:
-            df['cut_off'] = 1
+    rprint("[✂️ Processing] Processing cutoffs...")
+    df = process_cutoffs(df)
 
     rprint("[📝 Reading] Loading transcript files...")
     content = open(TRANS_SRT, "r", encoding="utf-8").read()
@@ -204,26 +182,12 @@ def gen_dub_chunks():
         # First remove all punctuation and whitespace
         return re.sub(r'[^\w\s]|[\s]', '', text)
 
-    def text_similarity(text1, text2):
-        """Calculate similarity between two texts using SequenceMatcher"""
-        if not text1 or not text2:
-            return 0
-        return SequenceMatcher(None, text1, text2).ratio()
-
     for idx, row in df.iterrows():
-        # 优先使用 original_text 字段进行匹配，如果存在的话
-        if 'original_text' in df.columns and not pd.isna(row['original_text']):
-            target = clean_text(row['original_text'])
-            rprint(f"[Info] Using original_text for matching at line {idx}: '{row['original_text']}'")
-        else:
-            target = clean_text(row['text'])
-
+        target = clean_text(row['text'])
         matches = []
         current = ''
         match_indices = []  # Store indices for matching lines
 
-        # Try exact matching first
-        exact_match_found = False
         for i in range(last_idx, len(content_lines)):
             line = content_lines[i]
             cleaned_line = clean_text(line)
@@ -235,129 +199,12 @@ def gen_dub_chunks():
                 df.at[idx, 'lines'] = matches
                 df.at[idx, 'src_lines'] = [ori_content_lines[i] for i in match_indices]
                 last_idx = i + 1
-                exact_match_found = True
                 break
-
-        # If exact match fails, try fuzzy matching
-        if not exact_match_found and len(target) > 0:
-            # Reset for fuzzy matching
-            matches = []
-            match_indices = []
-            best_similarity = 0
-            best_matches = []
-            best_indices = []
-
-            # Try different combinations of lines for fuzzy matching
-            for start_idx in range(last_idx, min(last_idx + 10, len(content_lines))):
-                for end_idx in range(start_idx, min(start_idx + 5, len(content_lines))):
-                    combined_text = ''
-                    current_matches = []
-                    current_indices = []
-
-                    for i in range(start_idx, end_idx + 1):
-                        line = content_lines[i]
-                        cleaned_line = clean_text(line)
-                        combined_text += cleaned_line
-                        current_matches.append(line)
-                        current_indices.append(i)
-
-                    similarity = text_similarity(target, combined_text)
-                    if similarity > best_similarity and similarity > 0.7:  # 70% similarity threshold
-                        best_similarity = similarity
-                        best_matches = current_matches
-                        best_indices = current_indices
-
-            if best_similarity > 0.7:  # Found a good fuzzy match
-                rprint(f"[🔍 Fuzzy Match] Found match with {best_similarity:.2f} similarity for line {idx}")
-                df.at[idx, 'lines'] = best_matches
-                df.at[idx, 'src_lines'] = [ori_content_lines[i] for i in best_indices]
-                last_idx = best_indices[-1] + 1 if best_indices else last_idx
-                exact_match_found = True  # Mark as found to skip the error handling
-        if not exact_match_found:  # If no match is found
-            # 如果使用 original_text 匹配失败，尝试使用 text 字段
-            if 'original_text' in df.columns and not pd.isna(row['original_text']):
-                target = clean_text(row['text'])
-                rprint(f"[Info] Fallback to text for matching at line {idx}: '{row['text']}'")
-                current = ''
-                matches = []
-                match_indices = []
-                exact_match_found = False
-
-                # Try exact matching with text field
-                for i in range(last_idx, len(content_lines)):
-                    line = content_lines[i]
-                    cleaned_line = clean_text(line)
-                    current += cleaned_line
-                    matches.append(line)
-                    match_indices.append(i)
-
-                    if current == target:
-                        df.at[idx, 'lines'] = matches
-                        df.at[idx, 'src_lines'] = [ori_content_lines[i] for i in match_indices]
-                        last_idx = i + 1
-                        exact_match_found = True
-                        break
-
-                # If exact match with text field fails, try fuzzy matching
-                if not exact_match_found and len(target) > 0:
-                    # Reset for fuzzy matching
-                    matches = []
-                    match_indices = []
-                    best_similarity = 0
-                    best_matches = []
-                    best_indices = []
-
-                    # Try different combinations of lines for fuzzy matching
-                    for start_idx in range(last_idx, min(last_idx + 10, len(content_lines))):
-                        for end_idx in range(start_idx, min(start_idx + 5, len(content_lines))):
-                            combined_text = ''
-                            current_matches = []
-                            current_indices = []
-
-                            for i in range(start_idx, end_idx + 1):
-                                line = content_lines[i]
-                                cleaned_line = clean_text(line)
-                                combined_text += cleaned_line
-                                current_matches.append(line)
-                                current_indices.append(i)
-
-                            similarity = text_similarity(target, combined_text)
-                            if similarity > best_similarity and similarity > 0.7:  # 70% similarity threshold
-                                best_similarity = similarity
-                                best_matches = current_matches
-                                best_indices = current_indices
-
-                    if best_similarity > 0.7:  # Found a good fuzzy match
-                        rprint(f"[🔍 Fuzzy Match] Found match with {best_similarity:.2f} similarity for line {idx} using text field")
-                        df.at[idx, 'lines'] = best_matches
-                        df.at[idx, 'src_lines'] = [ori_content_lines[i] for i in best_indices]
-                        last_idx = best_indices[-1] + 1 if best_indices else last_idx
-                        exact_match_found = True  # Mark as found to skip the error handling
-                else:
-                    rprint(f"[❌ Error] Matching failed at line {idx}:")
-                    rprint(f"Target (original): '{clean_text(row['original_text'])}'")
-                    rprint(f"Target (expanded): '{clean_text(row['text'])}'")
-                    rprint(f"Current: '{current}'")
-
-                    # Fallback: Use the current text as is and continue
-                    rprint(f"[🔄 Fallback] Using current text as fallback for line {idx}")
-                    df.at[idx, 'lines'] = matches
-                    df.at[idx, 'src_lines'] = [ori_content_lines[i] for i in match_indices]
-                    last_idx = match_indices[-1] + 1 if match_indices else last_idx
-            else:
-                rprint(f"[❌ Error] Matching failed at line {idx}:")
-                rprint(f"Target: '{target}'")
-                rprint(f"Current: '{current}'")
-
-                # Fallback: Use the current text as is and continue
-                rprint(f"[🔄 Fallback] Using current text as fallback for line {idx}")
-                df.at[idx, 'lines'] = matches
-                df.at[idx, 'src_lines'] = [ori_content_lines[i] for i in match_indices]
-                last_idx = match_indices[-1] + 1 if match_indices else last_idx
-
-    # Count successful matches
-    match_count = len(df[df['lines'].notna()])
-    rprint(f"[📊 Stats] Successfully matched {match_count} out of {len(df)} entries ({match_count/len(df)*100:.1f}%)")
+        else:  # If no match is found
+            rprint(f"[❌ Error] Matching failed at line {idx}:")
+            rprint(f"Target: '{target}'")
+            rprint(f"Current: '{current}'")
+            raise ValueError("Matching failed")
 
     # Save results
     df.to_excel(OUTPUT_EXCEL, index=False)

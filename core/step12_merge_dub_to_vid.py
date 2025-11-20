@@ -15,8 +15,8 @@ from core.step1_ytdlp import find_video_files
 from pydub import AudioSegment
 
 DUB_VIDEO = "output/AI配音.mp4"
-DUB_SUB_FILE = "output/trans.srt"
-SRC_SRT = "output/src.srt"
+DUB_SUB_FILE = "output/dub.srt"
+SRC_SRT = "output/dub_orig.srt"
 DUB_AUDIO = 'output/dub.mp3'
 
 # --- Bilingual Subtitle Styles (from step7) ---

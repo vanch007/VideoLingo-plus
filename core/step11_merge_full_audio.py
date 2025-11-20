@@ -16,25 +16,51 @@ SEGS_DIR = 'output/audio/segs'
 OUTPUT_FILE_TEMPLATE = f"{SEGS_DIR}/{{}}.wav"
 
 def load_and_flatten_data(excel_file):
-    """Load Excel data without flattening"""
+    """Load Excel data and flatten timestamps"""
     df = pd.read_excel(excel_file)
-    if 'sub_times' not in df.columns:
-        df['sub_times'] = [[0, 0]] * len(df)
-    # Use text and origin columns directly
-    texts = df['text'].tolist()
-    origins = df['origin'].tolist() # Load origin text
-    # Get first time range for each segment
-    times = [eval(t) if isinstance(t, str) else t
-             for t in df['sub_times'].tolist()]
-    return df, texts, origins, times # Return origins as well
+    
+    # Flatten lines (translated text)
+    if 'lines' in df.columns:
+        lines = [eval(line) if isinstance(line, str) else line for line in df['lines'].tolist()]
+        lines = [item for sublist in lines for item in sublist]
+    else:
+        # Fallback to 'text' if 'lines' is missing (should not happen with new step8_2)
+        lines = df['text'].tolist()
+
+    # Flatten src_lines (original text)
+    if 'src_lines' in df.columns:
+        src_lines = [eval(line) if isinstance(line, str) else line for line in df['src_lines'].tolist()]
+        # Handle potential None values or empty lists if any
+        src_lines = [item for sublist in src_lines for item in (sublist if sublist is not None else [])]
+    else:
+        # Fallback to 'origin' if 'src_lines' is missing
+        src_lines = df['origin'].tolist()
+
+    # Flatten timestamps
+    if 'new_sub_times' in df.columns:
+        times = [eval(t) if isinstance(t, str) else t for t in df['new_sub_times'].tolist()]
+        # Flatten if it's list of lists (step10 generates list of lists)
+        if times and isinstance(times[0], list):
+             times = [item for sublist in times for item in sublist]
+    else:
+         times = [eval(t) if isinstance(t, str) else t for t in df['sub_times'].tolist()]
+    
+    return df, lines, src_lines, times
 
 def get_audio_files(df):
     """Generate a list of audio file paths"""
     audios = []
     for index, row in df.iterrows():
         number = row['number']
-        audio_file = OUTPUT_FILE_TEMPLATE.format(f"{number}")
-        audios.append(audio_file)
+        if 'lines' in df.columns:
+            lines_data = eval(row['lines']) if isinstance(row['lines'], str) else row['lines']
+            line_count = len(lines_data)
+            for line_index in range(line_count):
+                audio_file = OUTPUT_FILE_TEMPLATE.format(f"{number}_{line_index}")
+                audios.append(audio_file)
+        else:
+            audio_file = OUTPUT_FILE_TEMPLATE.format(f"{number}")
+            audios.append(audio_file)
     return audios
 
 def process_audio_segment(audio_file):
@@ -88,11 +114,8 @@ def process_audio_segment(audio_file):
     return audio_segment
 
 def merge_audio_segments(audios, new_sub_times, sample_rate):
-    # Get the total duration from the last timestamp
-    total_duration_ms = int(new_sub_times[-1][1] * 1000)
-    
-    # Create a silent audio track with the total duration
-    merged_audio = AudioSegment.silent(duration=total_duration_ms, frame_rate=sample_rate)
+    # Initialize empty audio
+    merged_audio = AudioSegment.silent(duration=0, frame_rate=sample_rate)
     
     with Progress(
         SpinnerColumn(),
@@ -106,33 +129,40 @@ def merge_audio_segments(audios, new_sub_times, sample_rate):
             try:
                 if not os.path.exists(audio_file):
                     console.print(f"[bold yellow]⚠️  Warning: File {audio_file} does not exist, creating silent segment...[/bold yellow]")
-                    # 创建一个短暂的静音段作为替代
                     audio_segment = AudioSegment.silent(duration=100, frame_rate=sample_rate)
-                elif os.path.getsize(audio_file) < 1000:  # 文件太小可能是无效文件
-                    console.print(f"[bold yellow]⚠️  Warning: File {audio_file} is too small ({os.path.getsize(audio_file)} bytes), creating silent segment...[/bold yellow]")
+                elif os.path.getsize(audio_file) < 1000:
+                    console.print(f"[bold yellow]⚠️  Warning: File {audio_file} is too small, creating silent segment...[/bold yellow]")
                     audio_segment = AudioSegment.silent(duration=100, frame_rate=sample_rate)
                 else:
                     audio_segment = process_audio_segment(audio_file)
                     
-                start_time_ms = int(time_range[0] * 1000)
+                start_time, end_time = time_range
                 
-                # Overlay the audio segment at the correct start time
-                merged_audio = merged_audio.overlay(audio_segment, position=start_time_ms)
+                # Add silence segment if needed
+                if i > 0:
+                    prev_end = new_sub_times[i-1][1]
+                    silence_duration = start_time - prev_end
+                    if silence_duration > 0:
+                        silence = AudioSegment.silent(duration=int(silence_duration * 1000), frame_rate=sample_rate)
+                        merged_audio += silence
+                elif start_time > 0:
+                    silence = AudioSegment.silent(duration=int(start_time * 1000), frame_rate=sample_rate)
+                    merged_audio += silence
+                
+                merged_audio += audio_segment
                 
             except Exception as e:
                 console.print(f"[bold red]❌ Error processing {audio_file}: {str(e)}[/bold red]")
                 console.print(f"[bold yellow]⚠️  Creating silent segment as fallback...[/bold yellow]")
-                # 出错时使用静音段替代
                 silent_segment = AudioSegment.silent(duration=100, frame_rate=sample_rate)
-                start_time_ms = int(time_range[0] * 1000)
-                merged_audio = merged_audio.overlay(silent_segment, position=start_time_ms)
+                merged_audio += silent_segment
             
             progress.advance(merge_task)
     
     return merged_audio
 
 def create_srt_subtitle():
-    # Correctly unpack all four returned values, even if origins isn't used here
+    # Correctly unpack all four returned values
     df, lines, _, new_sub_times = load_and_flatten_data(INPUT_EXCEL) 
     
     with open(DUB_SUB_FILE, 'w', encoding='utf-8') as f:

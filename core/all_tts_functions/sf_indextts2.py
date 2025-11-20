@@ -85,14 +85,37 @@ def indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dyn
         extra_body["use_emo_text"] = True
         extra_body["emo_text"] = emo_text
 
+    # Use a temporary path for the MP3 download
+    temp_mp3_path = save_path.with_suffix('.mp3')
+
     with client.audio.speech.with_streaming_response.create(
         model="IndexTeam/IndexTTS-2",
         voice="",
         input=text,
-        response_format="mp3",  # 改为mp3格式
+        response_format="mp3",
         extra_body=extra_body
     ) as response:
-        response.stream_to_file(mp3_save_path)
+        response.stream_to_file(temp_mp3_path)
     
-    print(f"音频已成功保存至: {mp3_save_path}")
+    # If the requested save path is .wav, convert the MP3 to WAV
+    if save_path.suffix.lower() == '.wav':
+        try:
+            from pydub import AudioSegment
+            audio = AudioSegment.from_mp3(temp_mp3_path)
+            audio.export(save_path, format="wav")
+            # Optionally remove the temp mp3 file
+            if temp_mp3_path != save_path:
+                os.remove(temp_mp3_path)
+            print(f"音频已成功保存并转换为: {save_path}")
+        except Exception as e:
+            print(f"转换 MP3 到 WAV 失败: {e}")
+            # Fallback: keep the mp3 file
+            print(f"保留 MP3 文件: {temp_mp3_path}")
+    else:
+        # If not .wav (e.g. .mp3), and we saved to temp_mp3_path which is .mp3
+        # If save_path was .mp3, temp_mp3_path is same as save_path
+        if temp_mp3_path != save_path:
+             os.rename(temp_mp3_path, save_path)
+        print(f"音频已成功保存至: {save_path}")
+
     return True
