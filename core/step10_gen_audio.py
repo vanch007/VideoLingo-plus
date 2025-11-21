@@ -136,29 +136,44 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 rprint(f"[red]❌ Error in warmup: {str(e)}[/red]")
                 raise e
 
-        # for gpt_sovits, do not use parallel to avoid mistakes
+        # for gpt_sovits and custom_tts, do not use parallel to avoid mistakes
         tts_method = load_key("tts_method")
-        max_workers = load_key("max_workers") if tts_method not in ["gpt_sovits", "custom_tts"] else 1
         
-        Executor = ProcessPoolExecutor if tts_method == "sf_indextts2" else ThreadPoolExecutor
-
-        # parallel processing for remaining tasks
-        if len(tasks_df) > warmup_size:
-            remaining_tasks = tasks_df.iloc[warmup_size:].copy()
-            with Executor(max_workers=max_workers) as executor:
-                futures = [
-                    executor.submit(process_row, row, tasks_df.copy())
-                    for _, row in remaining_tasks.iterrows()
-                ]
-
-                for future in as_completed(futures):
+        # For custom_tts (index_tts2), completely skip parallel processing
+        if tts_method == "custom_tts":
+            # Process all remaining tasks sequentially
+            if len(tasks_df) > warmup_size:
+                rprint("[yellow]📌 Using sequential processing for custom_tts to avoid audio scrambling[/yellow]")
+                for _, row in tasks_df.iloc[warmup_size:].iterrows():
                     try:
-                        number, real_dur = future.result()
+                        number, real_dur = process_row(row, tasks_df)
                         tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = real_dur
                         progress.advance(task)
                     except Exception as e:
                         rprint(f"[red]❌ Error: {str(e)}[/red]")
                         raise e
+        else:
+            # For other TTS methods, use parallel processing
+            max_workers = load_key("max_workers") if tts_method != "gpt_sovits" else 1
+            Executor = ThreadPoolExecutor
+
+            # parallel processing for remaining tasks
+            if len(tasks_df) > warmup_size:
+                remaining_tasks = tasks_df.iloc[warmup_size:].copy()
+                with Executor(max_workers=max_workers) as executor:
+                    futures = [
+                        executor.submit(process_row, row, tasks_df)
+                        for _, row in remaining_tasks.iterrows()
+                    ]
+
+                    for future in as_completed(futures):
+                        try:
+                            number, real_dur = future.result()
+                            tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = real_dur
+                            progress.advance(task)
+                        except Exception as e:
+                            rprint(f"[red]❌ Error: {str(e)}[/red]")
+                            raise e
 
     rprint("[bold green]✨ TTS audio generation completed![/bold green]")
     return tasks_df
