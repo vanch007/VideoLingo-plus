@@ -122,6 +122,43 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         torch.cuda.empty_cache()
         del model_a
 
+        # Diarization
+        hf_token = load_key("hf_token", default=None)
+        if hf_token:
+            # Re-create temp audio for diarization as the previous one was deleted
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_audio:
+                temp_audio_path = temp_audio.name
+            
+            try:
+                # Extract audio segment again
+                ffmpeg_cmd = f'ffmpeg -y -i "{audio_file}" -ss {start} -t {end-start} -vn -ar 32000 -ac 1 "{temp_audio_path}"'
+                subprocess.run(ffmpeg_cmd, shell=True, check=True, capture_output=True)
+
+                rprint(f"[green]👥 Starting Diarization...[/green]")
+                rprint("[cyan]ℹ️ Note: First-time run will download the segmentation model (approx. 100MB). Please wait...[/cyan]")
+                
+                # Set OMP_NUM_THREADS to avoid deadlocks in pyannote.audio
+                os.environ["OMP_NUM_THREADS"] = "1"
+                
+                diarize_model = whisperx.DiarizationPipeline(use_auth_token=hf_token, device=device)
+                
+                # Use whisperx's load_audio for consistency
+                diarize_audio = whisperx.load_audio(temp_audio_path)
+                diarize_segments = diarize_model(diarize_audio)
+                
+                result = whisperx.assign_word_speakers(diarize_segments, result)
+                rprint(f"[green]✅ Diarization complete![/green]")
+                
+                # Free GPU resources
+                del diarize_model
+                torch.cuda.empty_cache()
+            except Exception as e:
+                rprint(f"[red]❌ Diarization failed: {e}[/red]")
+                rprint("[yellow]⚠️ Proceeding without speaker information.[/yellow]")
+            finally:
+                if os.path.exists(temp_audio_path):
+                    os.unlink(temp_audio_path)
+
         # Adjust timestamps
         for segment in result['segments']:
             segment['start'] += start

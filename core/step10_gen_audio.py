@@ -105,7 +105,7 @@ def check_audio(file_path: str) -> None:
         rprint(f"[yellow]⚠️ Audio check failed for {file_path}: {e}[/yellow]")
 
 
-def process_row(row: pd.Series, tasks_df: pd.DataFrame) -> Tuple[int, float]:
+def process_row(row: dict, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     """Helper function for processing single row data"""
     number = row['number']
     lines = eval(row['lines']) if isinstance(row['lines'], str) else row['lines']
@@ -129,7 +129,7 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
         warmup_size = min(WARMUP_SIZE, len(tasks_df))
         for _, row in tasks_df.head(warmup_size).iterrows():
             try:
-                number, real_dur = process_row(row, tasks_df)
+                number, real_dur = process_row(row.to_dict(), tasks_df)
                 tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = real_dur
                 progress.advance(task)
             except Exception as e:
@@ -146,7 +146,7 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 rprint("[yellow]📌 Using sequential processing for custom_tts to avoid audio scrambling[/yellow]")
                 for _, row in tasks_df.iloc[warmup_size:].iterrows():
                     try:
-                        number, real_dur = process_row(row, tasks_df)
+                        number, real_dur = process_row(row.to_dict(), tasks_df)
                         tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = real_dur
                         progress.advance(task)
                     except Exception as e:
@@ -162,7 +162,7 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 remaining_tasks = tasks_df.iloc[warmup_size:].copy()
                 with Executor(max_workers=max_workers) as executor:
                     futures = [
-                        executor.submit(process_row, row, tasks_df)
+                        executor.submit(process_row, row.to_dict(), tasks_df)
                         for _, row in remaining_tasks.iterrows()
                     ]
 

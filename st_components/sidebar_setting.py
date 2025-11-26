@@ -121,6 +121,25 @@ def page_setting():
             update_key("whisper.runtime", runtime)
             st.rerun()
 
+        if runtime == "local":
+            config_input(t("HuggingFace Token"), "hf_token", help=t("Required for Diarization (Speaker Identification). Get it from https://huggingface.co/settings/tokens"))
+            
+        if runtime == "stable-ts":
+            c_sts1, c_sts2 = st.columns(2)
+            with c_sts1:
+                val_vad = st.slider(t("VAD Threshold"), min_value=0.0, max_value=1.0, value=float(load_key("whisper.vad_threshold", 0.3)), step=0.05, help=t("Higher value = more aggressive voice detection"))
+                if val_vad != load_key("whisper.vad_threshold", 0.3):
+                    update_key("whisper.vad_threshold", val_vad)
+            with c_sts2:
+                val_min_dur = st.slider(t("Min Word Duration"), min_value=0.0, max_value=0.5, value=float(load_key("whisper.min_word_dur", 0.1)), step=0.01, help=t("Minimum duration for a word to be kept"))
+                if val_min_dur != load_key("whisper.min_word_dur", 0.1):
+                    update_key("whisper.min_word_dur", val_min_dur)
+            
+            use_dq = st.toggle(t("Use Dynamic Quantization (CPU)"), value=load_key("whisper.stable_ts_dq", True), help=t("Speeds up inference on CPU, slightly lower accuracy"))
+            if use_dq != load_key("whisper.stable_ts_dq", True):
+                update_key("whisper.stable_ts_dq", use_dq)
+                st.rerun()
+
         # Dynamically determine the list of models based on the runtime and MLX setting
         help_text = ""
         whisper_models = ["medium", "large-v2", "large-v3"]

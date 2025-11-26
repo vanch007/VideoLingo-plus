@@ -4,6 +4,7 @@ version: "2.2.2"
 ## ======================== Basic Settings ======================== ##
 display_language: "zh-CN"
 
+hf_token: 
 # API settings
 api:
   key: 'sk-gknihqdrqptifmzwrezivnyhtesemusgaletctihienbxmxx'
@@ -33,14 +34,20 @@ whisper:
   language: 'en'
   detected_language: 'en'
   # Whisper running mode ["local", "stable-ts", "cloud"]. Specifies where to run, cloud uses 302.ai API
-  runtime: 'stable-ts'
+  runtime: 'local'
   # 302.ai API key
   whisperX_302_api_key: 'YOUR_302_API_KEY'
+  # Use MLX acceleration for stable-ts on Apple Silicon
+  stable_ts_mlx: true
+  # Stable-TS dynamic quantization for CPU
+  stable_ts_dq: true
+  # VAD threshold for stable-ts (0-1)
+  vad_threshold: 0.3
+  # Minimum word duration for stable-ts
+  min_word_dur: 0.1
 
 # Whether to burn subtitles into the video
-  stable_ts_mlx: true
 burn_subtitles: true
-
 ## ======================== Advanced Settings ======================== ##
 # *Default resolution for downloading YouTube videos [360, 1080, best]
 ytb_resolution: '1080'
@@ -55,7 +62,7 @@ subtitle:
 summary_length: 8000
 
 # *Number of LLM multi-threaded accesses, set to 1 if using local LLM
-max_workers: 5
+max_workers: 11
 # *Maximum number of words for the first rough cut, below 18 will cut too finely affecting translation, above 22 is too long and will make subsequent subtitle splitting difficult to align
 max_split_length: 20
 
@@ -67,7 +74,7 @@ pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
 # TTS selection [sf_fish_tts, openai_tts, gpt_sovits, azure_tts, fish_tts, edge_tts, custom_tts]
-tts_method: 'index_tts2'
+tts_method: 'sf_indextts2'
 
 # SiliconFlow FishTTS
 sf_fish_tts:

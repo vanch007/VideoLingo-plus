@@ -14,7 +14,6 @@ import platform
 from core.config_utils import load_key, get_joiner
 from core.all_whisper_methods.audio_preprocess import save_language
 from huggingface_hub import snapshot_download
-from huggingface_hub import snapshot_download
 
 # 过滤torchaudio相关警告
 warnings.filterwarnings("ignore", message=".*torchaudio.*backend.*")
@@ -134,7 +133,8 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
                 model = stable_whisper.load_model(
                     model_name,
                     device=device,
-                    download_root=download_root_path
+                    download_root=download_root_path,
+                    dq=load_key("whisper.stable_ts_dq", True) # Enable dynamic quantization for faster CPU inference
                 )
             using_mlx_whisper = False
 
@@ -144,23 +144,26 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         transcribe_options = {
             'word_timestamps': True,
             'vad': True,
-            'vad_threshold': 0.25,  # More sensitive VAD for better voice detection
-            'only_voice_freq': True,  # Filter to 200-5000 Hz (human speech range)
-            'min_word_dur': 0.1,  # Prevent overly short word durations
-            'nonspeech_error': 0.3,  # 30% tolerance for non-speech detection
-            'use_word_position': True,  # Use word position for timestamp adjustments
+            'vad_threshold': load_key("whisper.vad_threshold", 0.3),  # Load from config
+            'min_word_dur': load_key("whisper.min_word_dur", 0.1),    # Load from config
+            'regroup': False,      # Disable default regrouping
+            'suppress_silence': True, # Enable silence suppression
+            'suppress_word_ts': True, # Enable word timestamp suppression based on silence
+            'use_word_position': True,
             'verbose': True,
         }
 
         if not using_mlx_whisper:
             rprint("[green]Applying advanced options for non-MLX models[/green]")
-            transcribe_options.update({
-                'suppress_silence': False, # Let VAD handle silence
-                'regroup': False # We will regroup manually after refining
-            })
+            # dynamic_heads optimization
+            transcribe_options['dynamic_heads'] = True 
         else:
-            rprint("[yellow]MLX Whisper does not support some advanced features, but enabling regroup.[/yellow]")
-            transcribe_options['regroup'] = True
+            rprint("[yellow]MLX Whisper does not support some advanced features.[/yellow]")
+            # For MLX, we might want to enable regrouping if the manual logic is removed/changed
+            # transcribe_options['regroup'] = True 
+            
+            # Also ensure MLX uses the configured VAD threshold if possible (MLX support varies)
+            # transcribe_options['vad_threshold'] = load_key("whisper.vad_threshold", 0.3)
 
         if WHISPER_LANGUAGE != 'auto':
             transcribe_options['language'] = WHISPER_LANGUAGE

@@ -56,54 +56,92 @@ def time_diff_seconds(t1: datetime.time, t2: datetime.time, base_date: datetime.
     return (dt2 - dt1).total_seconds()
 
 def process_srt():
-    """Process srt file, generate audio tasks"""
-
-    with open(TRANS_SRT, 'r', encoding='utf-8') as file:
-        content = file.read()
-
-    with open(SRC_SRT, 'r', encoding='utf-8') as src_file:
-        src_content = src_file.read()
-
-    subtitles = []
-    src_subtitles = {}
-
-    for block in src_content.strip().split('\n\n'):
-        lines = [line.strip() for line in block.split('\n') if line.strip()]
-        if len(lines) < 3:
-            continue
-
-        number = int(lines[0])
-        src_text = ' '.join(lines[2:])
-        src_subtitles[number] = src_text
-
-    for block in content.strip().split('\n\n'):
-        lines = [line.strip() for line in block.split('\n') if line.strip()]
-        if len(lines) < 3:
-            continue
-
-        try:
-            number = int(lines[0])
-            start_time, end_time = lines[1].split(' --> ')
-            start_time = datetime.datetime.strptime(start_time, '%H:%M:%S,%f').time()
-            end_time = datetime.datetime.strptime(end_time, '%H:%M:%S,%f').time()
-            duration = time_diff_seconds(start_time, end_time, datetime.date.today())
-            text = ' '.join(lines[2:])
-            # Remove content within parentheses (including English and Chinese parentheses)
+    """Process srt file or excel timeline, generate audio tasks"""
+    
+    excel_path = 'output/audio/final_timeline.xlsx'
+    if os.path.exists(excel_path):
+        rprint(Panel(f"Found {excel_path}, loading tasks from Excel...", title="Info", border_style="cyan"))
+        df_excel = pd.read_excel(excel_path)
+        
+        subtitles = []
+        for i, row in df_excel.iterrows():
+            # Parse timestamp "00:00:00,000 --> 00:00:00,000"
+            time_str = row['timestamp']
+            start_str, end_str = time_str.split(' --> ')
+            start_time = datetime.datetime.strptime(start_str, '%H:%M:%S,%f').time()
+            end_time = datetime.datetime.strptime(end_str, '%H:%M:%S,%f').time()
+            
+            # Calculate duration if not present or valid
+            duration = row.get('duration', 0)
+            if duration <= 0:
+                duration = time_diff_seconds(start_time, end_time, datetime.date.today())
+            
+            text = str(row['Translation'])
+            # Remove content within parentheses
             text = re.sub(r'\([^)]*\)', '', text).strip()
             text = re.sub(r'（[^）]*）', '', text).strip()
-            # Remove only '-' character, keep other punctuation
             text = text.replace('-', '')
+            
+            subtitles.append({
+                'number': i + 1,
+                'start_time': start_time,
+                'end_time': end_time,
+                'duration': duration,
+                'text': text,
+                'origin': str(row['Source']),
+                'speaker': row.get('speaker', None)
+            })
+        
+        df = pd.DataFrame(subtitles)
+        
+    else:
+        rprint(Panel("Excel timeline not found, falling back to SRT parsing...", title="Info", border_style="yellow"))
+        with open(TRANS_SRT, 'r', encoding='utf-8') as file:
+            content = file.read()
 
-            # Add the original text from src_subs_for_audio.srt
-            origin = src_subtitles.get(number, '')
+        with open(SRC_SRT, 'r', encoding='utf-8') as src_file:
+            src_content = src_file.read()
 
-        except ValueError as e:
-            rprint(Panel(f"Unable to parse subtitle block '{block}', error: {str(e)}, skipping this subtitle block.", title="Error", border_style="red"))
-            continue
+        subtitles = []
+        src_subtitles = {}
 
-        subtitles.append({'number': number, 'start_time': start_time, 'end_time': end_time, 'duration': duration, 'text': text, 'origin': origin})
+        for block in src_content.strip().split('\n\n'):
+            lines = [line.strip() for line in block.split('\n') if line.strip()]
+            if len(lines) < 3:
+                continue
 
-    df = pd.DataFrame(subtitles)
+            number = int(lines[0])
+            src_text = ' '.join(lines[2:])
+            src_subtitles[number] = src_text
+
+        for block in content.strip().split('\n\n'):
+            lines = [line.strip() for line in block.split('\n') if line.strip()]
+            if len(lines) < 3:
+                continue
+
+            try:
+                number = int(lines[0])
+                start_time, end_time = lines[1].split(' --> ')
+                start_time = datetime.datetime.strptime(start_time, '%H:%M:%S,%f').time()
+                end_time = datetime.datetime.strptime(end_time, '%H:%M:%S,%f').time()
+                duration = time_diff_seconds(start_time, end_time, datetime.date.today())
+                text = ' '.join(lines[2:])
+                # Remove content within parentheses (including English and Chinese parentheses)
+                text = re.sub(r'\([^)]*\)', '', text).strip()
+                text = re.sub(r'（[^）]*）', '', text).strip()
+                # Remove only '-' character, keep other punctuation
+                text = text.replace('-', '')
+
+                # Add the original text from src_subs_for_audio.srt
+                origin = src_subtitles.get(number, '')
+
+            except ValueError as e:
+                rprint(Panel(f"Unable to parse subtitle block '{block}', error: {str(e)}, skipping this subtitle block.", title="Error", border_style="red"))
+                continue
+
+            subtitles.append({'number': number, 'start_time': start_time, 'end_time': end_time, 'duration': duration, 'text': text, 'origin': origin, 'speaker': None})
+
+        df = pd.DataFrame(subtitles)
 
     # Add sub_times column
     df['sub_times'] = df.apply(lambda row: [

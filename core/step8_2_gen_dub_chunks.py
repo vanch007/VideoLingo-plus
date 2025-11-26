@@ -36,8 +36,20 @@ def merge_rows(df, start_idx, merge_count):
         'duration': df.iloc[start_idx]['duration']
     }
 
+    has_speaker = 'speaker' in df.columns
+
     while merge_count < MAX_MERGE_COUNT and (start_idx + merge_count) < len(df):
         next_row = df.iloc[start_idx + merge_count]
+
+        # Check speaker consistency
+        if has_speaker:
+            curr_spk = df.iloc[start_idx]['speaker']
+            next_spk = next_row['speaker']
+            # If speakers are different, break merge
+            if curr_spk != next_spk:
+                df.at[start_idx + merge_count - 1, 'cut_off'] = 1
+                return merge_count
+
         merged['est_dur'] += next_row['est_dur']
         merged['tol_dur'] += next_row['tol_dur']
         merged['duration'] += next_row['duration']

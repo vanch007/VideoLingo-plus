@@ -120,6 +120,9 @@ def split_audio(audio_file: str, target_len: int = 30*60, win: int = 60) -> List
 def process_transcription(result: Dict) -> pd.DataFrame:
     all_words = []
     for segment in result['segments']:
+        # Get speaker for the segment if available
+        segment_speaker = segment.get('speaker', None)
+        
         if 'words' in segment and segment['words']:
             for word in segment['words']:
                 # Check word length
@@ -129,6 +132,9 @@ def process_transcription(result: Dict) -> pd.DataFrame:
 
                 # ! For French, we need to convert guillemets to empty strings
                 word["word"] = word["word"].replace('»', '').replace('«', '').strip()
+                
+                # Use word-level speaker if available, otherwise fallback to segment speaker
+                current_speaker = word.get('speaker', segment_speaker)
 
                 if 'start' not in word and 'end' not in word:
                     if all_words:
@@ -137,6 +143,7 @@ def process_transcription(result: Dict) -> pd.DataFrame:
                             'text': word["word"].strip(),
                             'start': all_words[-1]['end'],
                             'end': all_words[-1]['end'],
+                            'speaker': current_speaker
                         }
                         all_words.append(word_dict)
                     else:
@@ -147,6 +154,7 @@ def process_transcription(result: Dict) -> pd.DataFrame:
                                 'text': word["word"].strip(),
                                 'start': next_word["start"],
                                 'end': next_word["end"],
+                                'speaker': current_speaker
                             }
                             all_words.append(word_dict)
                         else:
@@ -157,6 +165,7 @@ def process_transcription(result: Dict) -> pd.DataFrame:
                         'text': f'{word["word"].strip()}',
                         'start': word.get('start', all_words[-1]['end'] if all_words else 0),
                         'end': word['end'],
+                        'speaker': current_speaker
                     }
 
                     all_words.append(word_dict)
@@ -165,6 +174,7 @@ def process_transcription(result: Dict) -> pd.DataFrame:
                 'text': segment['text'].strip(),
                 'start': segment['start'],
                 'end': segment['end'],
+                'speaker': segment_speaker
             }
             all_words.append(word_dict)
 
@@ -190,6 +200,11 @@ def save_results(df: pd.DataFrame):
         df = df[df['text'].str.len() <= 20]
 
     df['text'] = df['text'].apply(lambda x: f'"{x}"')
+    
+    # Ensure speaker column exists if not present
+    if 'speaker' not in df.columns:
+        df['speaker'] = None
+        
     df.to_excel(CLEANED_CHUNKS_EXCEL_PATH, index=False)
     print(f"📊 Excel file saved to {CLEANED_CHUNKS_EXCEL_PATH}")
 

@@ -63,11 +63,17 @@ def show_difference(str1, str2):
     print("Position markers: " + "".join("^" if i in diff_positions else " " for i in range(max(len(str1), len(str2)))))
     print(f"Difference indices: {diff_positions}")
 
+    
+    return time_stamp_list
+
 def get_sentence_timestamps(df_words, df_sentences):
     """Original text-matching alignment logic for ASR workflow (Mode 1)."""
     time_stamp_list = []
     full_words_str = ''
     position_to_word_idx = {}
+    
+    # Check if speaker column exists
+    has_speaker = 'speaker' in df_words.columns
     
     for idx, word in enumerate(df_words['text']):
         clean_word = remove_punctuation(str(word).lower())
@@ -108,9 +114,12 @@ def get_sentence_timestamps(df_words, df_sentences):
             start_word_idx = position_to_word_idx[best_match_pos]
             end_word_idx = position_to_word_idx[best_match_pos + sentence_len - 1]
             
+            speaker = df_words.iloc[start_word_idx]['speaker'] if has_speaker else None
+
             time_stamp_list.append((
                 float(df_words['start'][start_word_idx]),
-                float(df_words['end'][end_word_idx])
+                float(df_words['end'][end_word_idx]),
+                speaker
             ))
             
             current_pos = best_match_pos + sentence_len
@@ -131,16 +140,20 @@ def get_sentence_timestamps_by_index(df_words, df_sentences):
         raise Exception(f"FATAL ERROR in step6: Row count mismatch. Word file has {len(df_words)} rows, Sentence file has {len(df_sentences)} rows. Cannot align.")
 
     time_stamp_list = []
+    has_speaker = 'speaker' in df_words.columns
+    
     for i in range(len(df_words)):
         try:
             start_time = float(df_words.iloc[i]['start'])
             end_time = float(df_words.iloc[i]['end'])
-            time_stamp_list.append((start_time, end_time))
+            speaker = df_words.iloc[i]['speaker'] if has_speaker else None
+            time_stamp_list.append((start_time, end_time, speaker))
         except (ValueError, TypeError) as e:
             # Fallback for non-convertible timestamp data
             console.print(f"\n❌ WARNING: Could not convert timestamp to float at row {i}. Data: start='{df_words.iloc[i]['start']}', end='{df_words.iloc[i]['end']}'. Error: {e}")
             last_valid_end = time_stamp_list[-1][1] if time_stamp_list else 0
-            time_stamp_list.append((last_valid_end, last_valid_end))
+            # Use None for speaker in fallback
+            time_stamp_list.append((last_valid_end, last_valid_end, None))
             continue
     return time_stamp_list
 
@@ -154,7 +167,8 @@ def align_timestamp(df_text, df_translate, subtitle_output_configs: list, output
     else:
         time_stamp_list = get_sentence_timestamps(df_text, df_translate)
 
-    df_trans_time['timestamp'] = time_stamp_list
+    df_trans_time['timestamp'] = [t[:2] for t in time_stamp_list]
+    df_trans_time['speaker'] = [t[2] for t in time_stamp_list]
     df_trans_time['duration'] = df_trans_time['timestamp'].apply(lambda x: x[1] - x[0])
 
     for i in range(len(df_trans_time)-1):
@@ -172,6 +186,12 @@ def align_timestamp(df_text, df_translate, subtitle_output_configs: list, output
 
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
+        
+        # Save Excel with speaker info for internal use
+        excel_path = os.path.join(output_dir, "final_timeline.xlsx")
+        df_trans_time.to_excel(excel_path, index=False)
+        console.print(f"[green]💾 Saved timeline with speaker info to {excel_path}[/green]")
+        
         for filename, columns in subtitle_output_configs:
             subtitle_str = generate_subtitle_string(df_trans_time, columns)
             with open(os.path.join(output_dir, filename), 'w', encoding='utf-8') as f:
