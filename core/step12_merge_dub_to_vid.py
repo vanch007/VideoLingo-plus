@@ -99,13 +99,23 @@ def merge_video_audio():
     # 获取背景音量调节参数，默认为1.5（增加50%音量）
     background_volume = load_key("background_volume", 1.5)
     
-    # 构建音频处理滤镜，调节背景音量
-    if background_volume != 1.0:
-        # 如果需要调节背景音量，则使用volume滤镜
-        audio_filter = f"[1:a]volume={background_volume}[bg];[bg][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]"
-    else:
-        # 如果不需要调节音量，使用默认的混合方式
-        audio_filter = "[1:a][2:a]amix=inputs=2:duration=first:dropout_transition=3[a]"
+    # 构建音频处理滤镜，调节背景音量并使用sidechaincompress进行自动闪避
+    # [1:a]是背景音，[2:a]是人声
+    # 1. 调节背景音量
+    # 2. 将人声(dub)分为两路：一路用于控制闪避(dub_sc)，一路用于最终混合(dub_mix)
+    # 3. 使用sidechaincompress：当人声出现时，压低背景音
+    #    threshold: 触发阈值 (越小越灵敏)
+    #    ratio: 压缩比 (越大压得越狠)
+    #    attack: 启动时间 (ms)
+    #    release: 释放时间 (ms)
+    # 4. 将处理后的背景音(docked_bg)与原人声(dub_mix)混合
+    audio_filter = (
+        f"[1:a]volume={background_volume}[bg];"
+        f"[2:a]aformat=channel_layouts=stereo[dub];"
+        f"[dub]asplit[dub_sc][dub_mix];"
+        f"[bg][dub_sc]sidechaincompress=threshold=0.05:ratio=4:attack=50:release=300[docked_bg];"
+        f"[docked_bg][dub_mix]amix=inputs=2:duration=first:dropout_transition=3[a]"
+    )
 
     cmd = [
         'ffmpeg', '-y',

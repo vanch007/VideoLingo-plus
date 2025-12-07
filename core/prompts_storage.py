@@ -396,6 +396,53 @@ Please follow these steps and provide the results in the JSON output:
         rule=rule
     )
 
+def get_batch_subtitle_trim_prompt(subtitles_list):
+    """
+    subtitles_list: list of dict, e.g.,
+    [
+        {"index": 1, "text": "...", "duration": 2.5},
+        ...
+    ]
+    """
+    
+    rule = '''Consider a. Reducing filler words without modifying meaningful content. b. Omitting unnecessary modifiers or pronouns, for example:
+    - "Please explain your thought process" can be shortened to "Please explain thought process"
+    - "We need to carefully analyze this complex problem" can be shortened to "We need to analyze this problem"
+    '''
+
+    subtitles_text = json.dumps(subtitles_list, ensure_ascii=False, indent=2)
+    
+    trim_prompt = f'''
+## Role
+You are a professional subtitle editor, editing and optimizing lengthy subtitles that exceed voiceover time before handing them to voice actors.
+Your expertise lies in cleverly shortening subtitles slightly while ensuring the original meaning and structure remain unchanged.
+
+## INPUT
+<subtitles>
+{subtitles_text}
+</subtitles>
+
+## Processing Rules
+{rule}
+
+## Task
+For each item in the input list, optimize the "text" to fit within the "duration" (or make it shorter).
+Keep the "index" unchanged.
+
+## Output in only JSON format
+{{
+    "results": [
+        {{
+            "index": <original_index>,
+            "analysis": "Brief analysis...",
+            "shortened_text": "Optimized subtitle"
+        }},
+        ...
+    ]
+}}
+'''.strip()
+    return trim_prompt
+
 ## ================================================================
 # @ tts_main
 def get_correct_text_prompt(text):

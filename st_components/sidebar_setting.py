@@ -238,6 +238,12 @@ def page_setting():
         if select_tts != load_key("tts_method"):
             update_key("tts_method", select_tts)
             st.rerun()
+            
+        # Add rewrite toggle
+        rewrite_text = st.toggle(t("Rewrite Text for Dubbing"), value=load_key("rewrite_text_for_dubbing", True), help=t("Use LLM to shorten text if it's too long for the audio slot."))
+        if rewrite_text != load_key("rewrite_text_for_dubbing", True):
+            update_key("rewrite_text_for_dubbing", rewrite_text)
+            st.rerun()
 
         # sub settings for each tts method
         if select_tts == "sf_fish_tts":

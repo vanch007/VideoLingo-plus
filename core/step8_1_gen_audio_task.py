@@ -4,7 +4,7 @@ import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import re
 from core.ask_gpt import ask_gpt
-from core.prompts_storage import get_subtitle_trim_prompt
+from core.prompts_storage import get_subtitle_trim_prompt, get_batch_subtitle_trim_prompt
 from rich import print as rprint
 from rich.panel import Panel
 from rich.console import Console
@@ -21,33 +21,82 @@ SRC_SRT = 'output/src.srt'
 TRANS_SRT = 'output/trans.srt'
 ESTIMATOR = None
 
-def check_len_then_trim(text, duration):
+def batch_check_and_trim(df):
     global ESTIMATOR
     if ESTIMATOR is None:
         ESTIMATOR = init_estimator()
-    estimated_duration = estimate_duration(text, ESTIMATOR) / speed_factor['max']
+    
+    # Use a stricter speed limit (1.25x) to trigger rewrite more often
+    limit_speed_factor = 1.25
+    
+    batch_input = []
+    
+    # 1. Identify subtitles that need trimming
+    for index, row in df.iterrows():
+        text = row['text']
+        # Skip empty text
+        if not text or not str(text).strip():
+            continue
+            
+        duration = row['duration']
+        estimated_duration = estimate_duration(text, ESTIMATOR) / limit_speed_factor
 
-    console.print(f"Subtitle text: {text}, "
-                  f"[bold green]Estimated reading duration: {estimated_duration:.2f} seconds[/bold green]")
+        if estimated_duration > duration:
+            rprint(f"[yellow]⚠️ Text too long for {duration}s slot: '{text}' (Est: {estimated_duration:.2f}s at {limit_speed_factor}x speed)[/yellow]")
+            batch_input.append({
+                'index': index,
+                'text': text,
+                'duration': duration
+            })
 
-    if estimated_duration > duration:
-        rprint(Panel(f"Estimated reading duration {estimated_duration:.2f} seconds exceeds given duration {duration:.2f} seconds, shortening...", title="Processing", border_style="yellow"))
-        original_text = text
-        prompt = get_subtitle_trim_prompt(text, duration)
-        def valid_trim(response):
-            if 'result' not in response:
-                return {'status': 'error', 'message': 'No result in response'}
+    if not batch_input:
+        return df
+
+    rprint(Panel(f"Found {len(batch_input)} subtitles to trim. Processing in batches...", title="Batch Trimming", border_style="yellow"))
+
+    # 2. Process in batches of 10
+    batch_size = 10
+    for i in range(0, len(batch_input), batch_size):
+        current_batch = batch_input[i:i+batch_size]
+        
+        prompt = get_batch_subtitle_trim_prompt(current_batch)
+        
+        def valid_batch_trim(response):
+            if 'results' not in response or not isinstance(response['results'], list):
+                return {'status': 'error', 'message': 'No results list in response'}
             return {'status': 'success', 'message': ''}
+        
         try:
-            response = ask_gpt(prompt, response_json=True, log_title='subtitle_trim', valid_def=valid_trim)
-            shortened_text = response['result']
-        except Exception:
-            rprint("[bold red]🚫 AI refused to answer due to sensitivity, so manually remove punctuation[/bold red]")
-            shortened_text = re.sub(r'[,.!?;:，。！？；：]', ' ', text).strip()
-        rprint(Panel(f"Subtitle before shortening: {original_text}\nSubtitle after shortening: {shortened_text}", title="Subtitle Shortening Result", border_style="green"))
-        return shortened_text
-    else:
-        return text
+            response = ask_gpt(prompt, response_json=True, log_title='subtitle_trim_batch', valid_def=valid_batch_trim)
+            results = response['results']
+            
+            # Create a map for easy lookup
+            results_map = {res['index']: res.get('shortened_text', '') for res in results}
+            
+            for item in current_batch:
+                idx = item['index']
+                original_text = item['text']
+                shortened_text = results_map.get(idx)
+                
+                if shortened_text:
+                    rprint(f"[green]Trimmed #{idx}: {original_text} -> {shortened_text}[/green]")
+                    df.at[idx, 'text'] = shortened_text
+                else:
+                     # Critical fix: if LLM fails to return a specific item, keep the original text
+                     # Do NOT leave it empty or just print error without handling
+                     rprint(f"[yellow]⚠️ LLM missed item #{idx}, keeping original: {original_text}[/yellow]")
+
+        except Exception as e:
+            rprint(f"[red]Batch processing failed for batch starting at index {current_batch[0]['index']}: {e}[/red]")
+            # Fallback: remove punctuation for the entire batch if the API call fails completely
+            for item in current_batch:
+                idx = item['index']
+                text = item['text']
+                shortened_text = re.sub(r'[,.!?;:，。！？；：]', ' ', text).strip()
+                df.at[idx, 'text'] = shortened_text
+                rprint(f"[yellow]Fallback trim #{idx}: {shortened_text}[/yellow]")
+                
+    return df
 
 def time_diff_seconds(t1: datetime.time, t2: datetime.time, base_date: datetime.date) -> float:
     """Calculate the difference in seconds between two time objects"""
@@ -76,7 +125,13 @@ def process_srt():
             if duration <= 0:
                 duration = time_diff_seconds(start_time, end_time, datetime.date.today())
             
-            text = str(row['Translation'])
+            # Handle potential NaN/float values in Translation column
+            raw_text = row['Translation']
+            if pd.isna(raw_text):
+                text = ""
+            else:
+                text = str(raw_text)
+                
             # Remove content within parentheses
             text = re.sub(r'\([^)]*\)', '', text).strip()
             text = re.sub(r'（[^）]*）', '', text).strip()
@@ -152,10 +207,35 @@ def process_srt():
     df['start_time'] = df['start_time'].apply(lambda x: x.strftime('%H:%M:%S.%f')[:-3])
     df['end_time'] = df['end_time'].apply(lambda x: x.strftime('%H:%M:%S.%f')[:-3])
 
-    # check and trim subtitle length, for twice to ensure the subtitle length is within the limit
-    # df['text'] = df.apply(lambda x: check_len_then_trim(x['text'], x['duration']), axis=1)
+    # Check and trim subtitle length in batch if enabled
+    if load_key("rewrite_text_for_dubbing", True):
+        df = batch_check_and_trim(df)
+    else:
+        rprint(Panel("Skipping subtitle rewriting as per configuration.", title="Info", border_style="blue"))
 
     return df
+
+def save_to_srt(df, srt_path):
+    """Save DataFrame to SRT file"""
+    with open(srt_path, 'w', encoding='utf-8') as f:
+        for index, row in df.iterrows():
+            # Convert time format from 00:00:00.000 to 00:00:00,000 for SRT
+            start = row['start_time'].replace('.', ',')
+            end = row['end_time'].replace('.', ',')
+            
+            # Ensure text is string and handle NaN
+            text = row['text']
+            if pd.isna(text):
+                text = " "
+            else:
+                text = str(text)
+                if not text.strip():
+                    text = " "
+            
+            f.write(f"{row['number']}\n")
+            f.write(f"{start} --> {end}\n")
+            f.write(f"{text}\n\n")
+    rprint(f"[bold green]✅ Synced rewritten subtitles to {srt_path}[/bold green]")
 
 def gen_audio_task_main():
     if os.path.exists(SOVITS_TASKS_FILE):
@@ -165,6 +245,9 @@ def gen_audio_task_main():
         console.print(df)
         df.to_excel(SOVITS_TASKS_FILE, index=False)
         rprint(Panel(f"Successfully generated {SOVITS_TASKS_FILE}", title="Success", border_style="green"))
+        
+        # Sync the potentially rewritten text back to trans.srt to avoid mismatch in Step 8.2
+        save_to_srt(df, TRANS_SRT)
 
 if __name__ == '__main__':
     gen_audio_task_main()

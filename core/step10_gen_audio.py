@@ -8,6 +8,7 @@ from typing import Tuple
 
 import pandas as pd
 from pydub import AudioSegment
+from pydub.silence import split_on_silence
 from rich import print as rprint
 from rich.console import Console
 from rich.progress import Progress
@@ -89,6 +90,38 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
                 rprint(f"[red]❌ Audio speed adjustment failed, max retries reached ({max_retries})[/red]")
                 raise e
 
+def remove_silence_from_file(file_path: str, min_silence_len: int = 200, silence_thresh: int = -45) -> None:
+    """Remove silence from audio file to optimize duration"""
+    if not os.path.exists(file_path):
+        return
+    try:
+        audio = AudioSegment.from_wav(file_path)
+        # split_on_silence returns a list of audio chunks (non-silent parts)
+        # min_silence_len: Minimum length of silence to be considered (ms)
+        # silence_thresh: Threshold for silence (dBFS)
+        # keep_silence: Amount of silence to leave at beginning/end of chunks (ms)
+        chunks = split_on_silence(
+            audio, 
+            min_silence_len=min_silence_len, 
+            silence_thresh=silence_thresh,
+            keep_silence=50 
+        )
+        
+        if chunks:
+            # Recombine chunks
+            output = chunks[0]
+            for chunk in chunks[1:]:
+                output += chunk
+            output.export(file_path, format="wav")
+            
+            # Log if significant reduction
+            original_len = len(audio) / 1000
+            new_len = len(output) / 1000
+            if original_len - new_len > 0.2:
+                 rprint(f"[dim]  ✂️ Silence removed: {original_len:.2f}s -> {new_len:.2f}s[/dim]")
+    except Exception as e:
+        rprint(f"[yellow]⚠️ Silence removal failed for {file_path}: {e}[/yellow]")
+
 def check_audio(file_path: str) -> None:
     """Check and fix audio file: apply fade-out to prevent popping"""
     if not os.path.exists(file_path):
@@ -113,6 +146,7 @@ def process_row(row: dict, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     for line_index, line in enumerate(lines):
         temp_file = TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}")
         tts_main(line, temp_file, number, tasks_df)
+        remove_silence_from_file(temp_file)
         check_audio(temp_file)
         real_dur += get_audio_duration(temp_file)
     return number, real_dur

@@ -202,6 +202,28 @@ def gen_dub_chunks():
         current = ''
         match_indices = []  # Store indices for matching lines
 
+        # Special handle for empty target (e.g. pure punctuation/space)
+        if not target:
+            # Try to consume one line from content_lines if it's also empty/negligible
+            if last_idx < len(content_lines):
+                line = content_lines[last_idx]
+                if not clean_text(line):
+                    df.at[idx, 'lines'] = [line]
+                    df.at[idx, 'src_lines'] = [ori_content_lines[last_idx]]
+                    last_idx += 1
+                    continue
+                else:
+                     # If SRT has content but Excel says empty, we might have a sync issue
+                     # But we can just set empty for this row and NOT advance last_idx
+                     # to let the next Excel row match this SRT line.
+                     df.at[idx, 'lines'] = [""]
+                     df.at[idx, 'src_lines'] = [""]
+                     continue
+            else:
+                df.at[idx, 'lines'] = [""]
+                df.at[idx, 'src_lines'] = [""]
+                continue
+
         for i in range(last_idx, len(content_lines)):
             line = content_lines[i]
             cleaned_line = clean_text(line)
