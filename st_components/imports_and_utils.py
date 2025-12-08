@@ -85,6 +85,15 @@ give_star_button = """
 
 button_style = """
 <style>
+/* Increase sidebar width for better display */
+[data-testid="stSidebar"] {
+    min-width: 350px;
+    max-width: 400px;
+}
+[data-testid="stSidebar"] > div:first-child {
+    width: 350px;
+}
+
 div.stButton > button:first-child {
     display: block;
     padding: 0.5em 1em;

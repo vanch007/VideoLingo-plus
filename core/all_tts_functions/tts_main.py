@@ -41,24 +41,15 @@ def tts_main(text, save_as, number, task_df):
                 text = correct_text['text']
             
             # Conditional imports based on TTS method to avoid import errors
-            if TTS_METHOD == 'openai_tts':
-                from core.all_tts_functions.openai_tts import openai_tts
-                openai_tts(text, save_as)
-            elif TTS_METHOD == 'gpt_sovits':
+            if TTS_METHOD == 'gpt_sovits':
                 from core.all_tts_functions.gpt_sovits_tts import gpt_sovits_tts_for_videolingo
                 gpt_sovits_tts_for_videolingo(text, save_as, number, task_df)
-            elif TTS_METHOD == 'fish_tts':
-                from core.all_tts_functions.fish_tts import fish_tts
-                fish_tts(text, save_as)
-            elif TTS_METHOD == 'azure_tts':
-                from core.all_tts_functions.azure_tts import azure_tts
-                azure_tts(text, save_as)
-            elif TTS_METHOD == 'sf_fish_tts':
-                from core.all_tts_functions.sf_fishtts import siliconflow_fish_tts_for_videolingo
-                siliconflow_fish_tts_for_videolingo(text, save_as, number, task_df)
             elif TTS_METHOD == 'edge_tts':
                 from core.all_tts_functions.edge_tts import edge_tts
                 edge_tts(text, save_as)
+            elif TTS_METHOD == 'piper_tts':
+                from core.all_tts_functions.piper_tts import piper_tts
+                piper_tts(text, save_as)
             elif TTS_METHOD == 'custom_tts':
                 from core.all_tts_functions.custom_tts import custom_tts
                 custom_tts(text, save_as, number, task_df, attempt)
@@ -77,13 +68,13 @@ def tts_main(text, save_as, number, task_df):
                     try:
                         fixed_voice_name = load_key("sf_indextts2.fixed_voice")
                     except KeyError:
-                        # 如果没有在config中指定，可能需要一个默认或错误处理
-                        pass # 或者可以设置一个默认的固定声音名称
+                        pass
 
                 indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode=clone_mode, fixed_voice_name=fixed_voice_name)
-            elif TTS_METHOD == 'f5tts':
-                from core.all_tts_functions._302_f5tts import f5_tts_for_videolingo
-                f5_tts_for_videolingo(text, save_as, number, task_df)
+            elif TTS_METHOD == 'indonesian_tts':
+                from core.all_tts_functions.indonesian_tts import indonesian_tts_for_videolingo
+                speaker = load_key("indonesian_tts.speaker", "wibowo")
+                indonesian_tts_for_videolingo(text, save_as, number, task_df, fixed_voice_name=speaker)
             else:
                 raise ValueError(f"Unknown TTS method: {TTS_METHOD}")
                 

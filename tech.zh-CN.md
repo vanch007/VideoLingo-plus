@@ -267,7 +267,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
    - `load_nlp_model.py`: 加载和初始化所需的 NLP 模型。
 
 8. **文本转语音（TTS）模块 (core/all_tts_functions/)**:
-   - `fish_tts.py`, `openai_tts.py`, `gpt_sovits_tts.py`, `azure_tts.py`, `edge_tts.py`, `sf_indextts2.py`: 各种TTS实现的封装。
+   - `fish_tts.py`, `openai_tts.py`, `gpt_sovits_tts.py`, `azure_tts.py`, `edge_tts.py`, `sf_indextts2.py`, `piper_tts.py`: 各种TTS实现的封装。
    - `tts_main.py`: TTS主入口，统一调用各种TTS方法。
    - `estimate_duration.py`: 音频时长估计工具。
 

@@ -93,17 +93,17 @@ def display_timing_statistics_component(key_suffix="main"):
                 
                 if summary_data:
                     st.markdown("#### 📈 阶段汇总")
-                    st.dataframe(pd.DataFrame(summary_data), hide_index=True, use_container_width=True)
+                    st.dataframe(pd.DataFrame(summary_data), hide_index=True, width="stretch")
 
                 if categories['download']:
                     st.markdown("#### 📥 下载/上传")
                     df_download = pd.DataFrame(categories['download'])
-                    st.dataframe(df_download, hide_index=True, use_container_width=True)
+                    st.dataframe(df_download, hide_index=True, width="stretch")
                 
                 if categories['other']:
                     st.markdown("#### 📋 其他")
                     df_other = pd.DataFrame(categories['other'])
-                    st.dataframe(df_other, hide_index=True, use_container_width=True)
+                    st.dataframe(df_other, hide_index=True, width="stretch")
                     
                 if not summary_data and not categories['download'] and not categories['other']:
                     st.info("暂无概览数据")
@@ -116,7 +116,7 @@ def display_timing_statistics_component(key_suffix="main"):
                     categories['text'].sort(key=lambda x: text_step_order.get(x['步骤'], 100))
                     
                     df_text = pd.DataFrame(categories['text'])
-                    st.dataframe(df_text, hide_index=True, use_container_width=True)
+                    st.dataframe(df_text, hide_index=True, width="stretch")
                     
                     # Chart
                     try:
@@ -136,7 +136,7 @@ def display_timing_statistics_component(key_suffix="main"):
                     categories['audio'].sort(key=lambda x: audio_step_order.get(x['步骤'], 100))
                     
                     df_audio = pd.DataFrame(categories['audio'])
-                    st.dataframe(df_audio, hide_index=True, use_container_width=True)
+                    st.dataframe(df_audio, hide_index=True, width="stretch")
                     
                     # Chart
                     try:

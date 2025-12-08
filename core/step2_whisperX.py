@@ -98,8 +98,7 @@ def transcribe():
             rprint("[yellow]Alternatively, you can change the whisper.runtime to 'local' or 'cloud' in config.yaml.[/yellow]")
             raise ImportError("stable-whisper is not installed. Please run 'python install_stable_ts.py' to install it.")
     else:
-        from core.all_whisper_methods.whisperX_302 import transcribe_audio_302 as ts
-        rprint("[cyan]🎤 Transcribing audio with 302 API...[/cyan]")
+        raise ValueError(f"Unknown whisper runtime: {runtime}. Supported: 'local', 'stable-ts'")
 
     for i, (start, end) in enumerate(segments):
         rprint(f"[cyan]📊 Processing segment {i+1}/{len(segments)}: {start:.2f}s to {end:.2f}s[/cyan]")

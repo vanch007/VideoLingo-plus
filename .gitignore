@@ -154,6 +154,7 @@ cython_debug/
 /output/
 /history/
 _model_cache/
+models/
 
 batch/input/
 batch/output/
@@ -172,7 +173,3 @@ config.backup.yaml
 runtime/
 dev/
 installer_files/
-config.yaml
-config.yaml
-config.yaml
-config.yaml

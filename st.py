@@ -29,6 +29,7 @@ import core.step12_merge_dub_to_vid as step12_merge_dub_to_vid
 # 导入新功能模块
 import core.step2_extract_subtitles as step2_extract_subtitles
 import core.step3_3_process_extracted_subs as step3_3_process_extracted_subs
+from core.step_checker import is_step_completed
 
 # 确保set_page_config()只在主脚本中调用一次
 if not hasattr(st, '_page_config_set'):
@@ -101,7 +102,7 @@ def text_processing_section():
             col1, col2 = st.columns(2)
             with col1:
                 if st.button(t("Translate and Dub"), key="translate_and_dub_button"):
-                    cleanup_intermediate_files() # 在处理前清理
+                    # cleanup_intermediate_files() # 移除自动清理以支持断点续传
                     project_start_time = time.time()
                     save_timing("项目开始时间", project_start_time)
                     with st.spinner(t("Processing translation and dubbing...")):
@@ -116,7 +117,7 @@ def text_processing_section():
                             st.info("Please make sure a video is available before processing.")
             with col2:
                 if st.button(t("Start Processing Subtitles"), key="text_processing_button"):
-                    cleanup_intermediate_files() # 在处理前清理
+                    # cleanup_intermediate_files() # 移除自动清理以支持断点续传
                     project_start_time = time.time()
                     save_timing("项目开始时间", project_start_time)
                     try:
@@ -198,29 +199,34 @@ def run_text_processing_pipeline(processing_mode, uploaded_srt_file, timing_plac
     return False
 
 def run_translation_pipeline(perform_splitting: bool, timing_placeholder):
-    """运行共享的翻译和字幕生成流程。"""
+    """运行共享的翻译和字幕生成流程，支持断点续传。"""
     total_start_time = time.time()
-    # timing_placeholder = st.empty() # Removed local placeholder creation
     with timing_placeholder.container():
         display_timing_statistics_component(key_suffix="text_init")
 
     try:
         # Step 3: Conditional Sentence Splitting
         if perform_splitting:
-            with st.spinner(t("Splitting long sentences...")):
-                start_time = time.time()
-                step3_1_spacy_split.split_by_spacy()
-                elapsed = time.time() - start_time
-                save_timing("NLP分句", elapsed)
-                with timing_placeholder.container():
-                    display_timing_statistics_component(key_suffix="text_step2")
+            if not is_step_completed("split_meaning"):
+                with st.spinner(t("Splitting long sentences...")):
+                    if not is_step_completed("split_spacy"):
+                        start_time = time.time()
+                        step3_1_spacy_split.split_by_spacy()
+                        elapsed = time.time() - start_time
+                        save_timing("NLP分句", elapsed)
+                    else:
+                        st.info("✓ NLP分句已完成，跳过")
+                    with timing_placeholder.container():
+                        display_timing_statistics_component(key_suffix="text_step2")
 
-                start_time = time.time()
-                step3_2_splitbymeaning.split_sentences_by_meaning()
-                elapsed = time.time() - start_time
-                save_timing("LLM分句", elapsed)
-                with timing_placeholder.container():
-                    display_timing_statistics_component(key_suffix="text_step3")
+                    start_time = time.time()
+                    step3_2_splitbymeaning.split_sentences_by_meaning()
+                    elapsed = time.time() - start_time
+                    save_timing("LLM分句", elapsed)
+                    with timing_placeholder.container():
+                        display_timing_statistics_component(key_suffix="text_step3")
+            else:
+                st.info("✓ 分句已完成，跳过")
         else:
             st.info(t("Skipping sentence splitting, using lines from provided SRT."))
             df_chunks = pd.read_excel('output/log/cleaned_chunks.xlsx')
@@ -231,65 +237,80 @@ def run_translation_pipeline(perform_splitting: bool, timing_placeholder):
             save_timing("LLM分句", 0.01)
 
         # Step 4: Summarize and Translate
-        with st.spinner(t("Summarizing and translating...")):
-            start_time = time.time()
-            step4_1_summarize.get_summary()
-            elapsed = time.time() - start_time
-            save_timing("摘要", elapsed)
-            with timing_placeholder.container():
-                display_timing_statistics_component(key_suffix="text_step4")
+        if not is_step_completed("translate"):
+            with st.spinner(t("Summarizing and translating...")):
+                if not is_step_completed("summarize"):
+                    start_time = time.time()
+                    step4_1_summarize.get_summary()
+                    elapsed = time.time() - start_time
+                    save_timing("摘要", elapsed)
+                else:
+                    st.info("✓ 摘要已完成，跳过")
+                with timing_placeholder.container():
+                    display_timing_statistics_component(key_suffix="text_step4")
 
-            if load_key("pause_before_translate"):
-                input(t("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue..."))
+                if load_key("pause_before_translate"):
+                    input(t("⚠️ PAUSE_BEFORE_TRANSLATE. Go to `output/log/terminology.json` to edit terminology. Then press ENTER to continue..."))
 
-            start_time = time.time()
-            step4_2_translate_all.translate_all()
-            elapsed = time.time() - start_time
-            save_timing("翻译", elapsed)
-            with timing_placeholder.container():
-                display_timing_statistics_component(key_suffix="text_step5")
+                start_time = time.time()
+                step4_2_translate_all.translate_all()
+                elapsed = time.time() - start_time
+                save_timing("翻译", elapsed)
+                with timing_placeholder.container():
+                    display_timing_statistics_component(key_suffix="text_step5")
+        else:
+            st.info("✓ 翻译已完成，跳过")
 
         # Step 5: Conditional Subtitle Splitting
-        if perform_splitting:
-            with st.spinner(t("Processing and aligning subtitles...")):
-                start_time = time.time()
-                step5_splitforsub.split_for_sub_main()
-                elapsed = time.time() - start_time
-                save_timing("字幕分割", elapsed)
-                with timing_placeholder.container():
-                    display_timing_statistics_component(key_suffix="text_step6")
+        if not is_step_completed("split_subtitle"):
+            if perform_splitting:
+                with st.spinner(t("Processing and aligning subtitles...")):
+                    start_time = time.time()
+                    step5_splitforsub.split_for_sub_main()
+                    elapsed = time.time() - start_time
+                    save_timing("字幕分割", elapsed)
+                    with timing_placeholder.container():
+                        display_timing_statistics_component(key_suffix="text_step6")
+            else:
+                shutil.copy('output/log/translation_results.xlsx', 'output/log/translation_results_for_subtitles.xlsx')
+                shutil.copy('output/log/translation_results.xlsx', 'output/log/translation_results_remerged.xlsx')
+                st.info(t("Skipping subtitle line splitting."))
+                save_timing("字幕分割", 0.01)
         else:
-            shutil.copy('output/log/translation_results.xlsx', 'output/log/translation_results_for_subtitles.xlsx')
-            shutil.copy('output/log/translation_results.xlsx', 'output/log/translation_results_remerged.xlsx')
-            st.info(t("Skipping subtitle line splitting."))
-            save_timing("字幕分割", 0.01)
+            st.info("✓ 字幕分割已完成，跳过")
 
         # --- Step 6: Generate Final Timeline (In-Memory) ---
-        with st.spinner(t("Generating final timeline...")):
-            start_time = time.time()
-            # Load the necessary data into memory, with isolated paths
-            if perform_splitting: # Mode 1
-                df_text = pd.read_excel('output/log/cleaned_chunks.xlsx')
-            else: # Mode 3
-                df_text = pd.read_excel('output/log/srt_chunks.xlsx')
+        if not is_step_completed("timeline"):
+            with st.spinner(t("Generating final timeline...")):
+                start_time = time.time()
+                # Load the necessary data into memory, with isolated paths
+                if perform_splitting: # Mode 1
+                    df_text = pd.read_excel('output/log/cleaned_chunks.xlsx')
+                else: # Mode 3
+                    df_text = pd.read_excel('output/log/srt_chunks.xlsx')
 
-            df_text['text'] = df_text['text'].str.strip('"').str.strip()
-            df_translate = pd.read_excel('output/log/translation_results_for_subtitles.xlsx')
-            # Call the refactored function with DataFrames
-            step6_generate_final_timeline.align_timestamp_main(df_text, df_translate)
-            elapsed = time.time() - start_time
-            save_timing("时间轴对齐", elapsed)
-            with timing_placeholder.container():
-                display_timing_statistics_component(key_suffix="text_step7")
+                df_text['text'] = df_text['text'].str.strip('"').str.strip()
+                df_translate = pd.read_excel('output/log/translation_results_for_subtitles.xlsx')
+                # Call the refactored function with DataFrames
+                step6_generate_final_timeline.align_timestamp_main(df_text, df_translate)
+                elapsed = time.time() - start_time
+                save_timing("时间轴对齐", elapsed)
+                with timing_placeholder.container():
+                    display_timing_statistics_component(key_suffix="text_step7")
+        else:
+            st.info("✓ 时间轴对齐已完成，跳过")
 
         # Step 7: Merge Subtitles to Video
-        with st.spinner(t("Merging subtitles to video...")):
-            start_time = time.time()
-            step7_merge_sub_to_vid.merge_subtitles_to_video()
-            elapsed = time.time() - start_time
-            save_timing("字幕合并到视频", elapsed)
-            with timing_placeholder.container():
-                display_timing_statistics_component(key_suffix="text_step8")
+        if not is_step_completed("merge_subtitle"):
+            with st.spinner(t("Merging subtitles to video...")):
+                start_time = time.time()
+                step7_merge_sub_to_vid.merge_subtitles_to_video()
+                elapsed = time.time() - start_time
+                save_timing("字幕合并到视频", elapsed)
+                with timing_placeholder.container():
+                    display_timing_statistics_component(key_suffix="text_step8")
+        else:
+            st.info("✓ 字幕视频已生成，跳过")
 
         save_timing("整体字幕处理", time.time() - total_start_time)
         st.success(t("Subtitle processing complete! 🎉"))
@@ -404,69 +425,85 @@ def audio_processing_section():
                 st.rerun()
 
 def process_audio(timing_placeholder):
-    # 记录整体配音处理开始时间
+    """处理配音流程，支持断点续传。"""
     total_start_time = time.time()
-
-    # 创建一个占位符来显示实时耗时统计
-    # timing_placeholder = st.empty() # Removed local placeholder creation
 
     # 显示初始耗时统计
     with timing_placeholder.container():
         display_timing_statistics_component(key_suffix="audio_init")
 
     try:
-        with st.spinner(t("Generate audio tasks")):
-            start_time = time.time()
-            step8_1_gen_audio_task.gen_audio_task_main()
-            elapsed = time.time() - start_time
-            save_timing("生成配音任务", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics_component(key_suffix="audio_step1")
+        # Step 8.1: Generate audio tasks
+        if not is_step_completed("gen_audio_task"):
+            with st.spinner(t("Generate audio tasks")):
+                start_time = time.time()
+                step8_1_gen_audio_task.gen_audio_task_main()
+                elapsed = time.time() - start_time
+                save_timing("生成配音任务", elapsed)
+                with timing_placeholder.container():
+                    display_timing_statistics_component(key_suffix="audio_step1")
+        else:
+            st.info("✓ 配音任务已生成，跳过")
 
-            start_time = time.time()
-            step8_2_gen_dub_chunks.gen_dub_chunks()
-            elapsed = time.time() - start_time
-            save_timing("生成配音分块", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics_component(key_suffix="audio_step2")
+        # Step 8.2: Generate dub chunks
+        if not is_step_completed("gen_dub_chunks"):
+            with st.spinner(t("Generate dub chunks")):
+                start_time = time.time()
+                step8_2_gen_dub_chunks.gen_dub_chunks()
+                elapsed = time.time() - start_time
+                save_timing("生成配音分块", elapsed)
+                with timing_placeholder.container():
+                    display_timing_statistics_component(key_suffix="audio_step2")
+        else:
+            st.info("✓ 配音分块已生成，跳过")
 
-        with st.spinner(t("Extract refer audio")):
-            start_time = time.time()
-            step9_extract_refer_audio.extract_refer_audio_main()
-            elapsed = time.time() - start_time
-            save_timing("提取参考音频", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics_component(key_suffix="audio_step3")
+        # Step 9: Extract reference audio
+        if not is_step_completed("extract_refer"):
+            with st.spinner(t("Extract refer audio")):
+                start_time = time.time()
+                step9_extract_refer_audio.extract_refer_audio_main()
+                elapsed = time.time() - start_time
+                save_timing("提取参考音频", elapsed)
+                with timing_placeholder.container():
+                    display_timing_statistics_component(key_suffix="audio_step3")
+        else:
+            st.info("✓ 参考音频已提取，跳过")
 
-        with st.spinner(t("Generate all audio")):
-            start_time = time.time()
-            step10_gen_audio.gen_audio()
-            elapsed = time.time() - start_time
-            save_timing("生成配音", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics_component(key_suffix="audio_step4")
+        # Step 10: Generate all audio
+        if not is_step_completed("gen_audio"):
+            with st.spinner(t("Generate all audio")):
+                start_time = time.time()
+                step10_gen_audio.gen_audio()
+                elapsed = time.time() - start_time
+                save_timing("生成配音", elapsed)
+                with timing_placeholder.container():
+                    display_timing_statistics_component(key_suffix="audio_step4")
+        else:
+            st.info("✓ 配音已生成，跳过")
 
-        with st.spinner(t("Merge full audio")):
-            start_time = time.time()
-            step11_merge_full_audio.merge_full_audio()
-            elapsed = time.time() - start_time
-            save_timing("合并配音", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics_component(key_suffix="audio_step5")
+        # Step 11: Merge full audio
+        if not is_step_completed("merge_audio"):
+            with st.spinner(t("Merge full audio")):
+                start_time = time.time()
+                step11_merge_full_audio.merge_full_audio()
+                elapsed = time.time() - start_time
+                save_timing("合并配音", elapsed)
+                with timing_placeholder.container():
+                    display_timing_statistics_component(key_suffix="audio_step5")
+        else:
+            st.info("✓ 配音已合并，跳过")
 
-        with st.spinner(t("Merge dubbing to the video")):
-            start_time = time.time()
-            step12_merge_dub_to_vid.merge_video_audio()
-            elapsed = time.time() - start_time
-            save_timing("配音合并到视频", elapsed)
-            # 更新耗时统计显示
-            with timing_placeholder.container():
-                display_timing_statistics_component(key_suffix="audio_step6")
+        # Step 12: Merge dubbing to video
+        if not is_step_completed("merge_video"):
+            with st.spinner(t("Merge dubbing to the video")):
+                start_time = time.time()
+                step12_merge_dub_to_vid.merge_video_audio()
+                elapsed = time.time() - start_time
+                save_timing("配音合并到视频", elapsed)
+                with timing_placeholder.container():
+                    display_timing_statistics_component(key_suffix="audio_step6")
+        else:
+            st.info("✓ 配音视频已生成，跳过")
 
         # 记录整体配音处理耗时
         save_timing("整体配音处理", time.time() - total_start_time)
@@ -489,7 +526,7 @@ def process_audio(timing_placeholder):
 def main():
     logo_col, _ = st.columns([1,1])
     with logo_col:
-        st.image("docs/logo.png", use_column_width=True)
+        st.image("docs/logo.png", width="stretch")
     st.markdown(button_style, unsafe_allow_html=True)
     welcome_text = t("Hello, welcome to VideoLingo. If you encounter any issues, feel free to get instant answers with our Free QA Agent <a href=\"https://share.fastgpt.in/chat/share?shareId=066w11n3r9aq6879r4z0v9rh\" target=\"_blank\">here</a>! You can also try out our SaaS website at <a href=\"https://videolingo.io\" target=\"_blank\">videolingo.io</a> for free!")
     st.markdown(f"<p style='font-size: 20px; color: #808080;'>{welcome_text}</p>", unsafe_allow_html=True)
@@ -497,60 +534,6 @@ def main():
     with st.sidebar:
         page_setting()
         st.markdown(give_star_button, unsafe_allow_html=True)
-        
-        # 添加TPM限制设置
-        st.divider()
-        st.subheader("API限制设置")
-        with st.expander("LLM配置"):
-            # Function to handle config updates
-            def update_api_limit_config(key, value):
-                try:
-                    if load_key(f"api.{key}") != value:
-                        update_key(f"api.{key}", value)
-                except KeyError:
-                    update_key(f"api.{key}", value)
-
-            # Load or set default values
-            try:
-                tpm_limit_val = load_key("api.tpm_limit")
-            except KeyError:
-                tpm_limit_val = 10000
-
-            try:
-                retry_attempts_val = load_key("api.retry_attempts")
-            except KeyError:
-                retry_attempts_val = 3
-
-            try:
-                retry_interval_val = load_key("api.retry_interval")
-            except KeyError:
-                retry_interval_val = 60
-
-            # UI components
-            tpm_limit = st.number_input(
-                "TPM Limit",
-                value=tpm_limit_val,
-                help="设置每分钟令牌数限制"
-            )
-            update_api_limit_config("tpm_limit", tpm_limit)
-
-            retry_attempts = st.number_input(
-                "最大重试次数",
-                value=retry_attempts_val,
-                min_value=1,
-                max_value=10,
-                help="达到TPM限制时的最大重试次数"
-            )
-            update_api_limit_config("retry_attempts", retry_attempts)
-            
-            retry_interval = st.number_input(
-                "重试间隔秒数",
-                value=retry_interval_val,
-                min_value=1,
-                max_value=60,
-                help="达到TPM限制时的等待间隔时间（秒）"
-            )
-            update_api_limit_config("retry_interval", retry_interval)
         # 在侧边栏添加耗时统计开关
         st.divider()
         st.subheader("耗时统计设置")

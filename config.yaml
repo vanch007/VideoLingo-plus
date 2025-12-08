@@ -9,7 +9,7 @@ hf_token:
 api:
   key: 'sk-gknihqdrqptifmzwrezivnyhtesemusgaletctihienbxmxx'
   base_url: 'https://api.siliconflow.cn'
-  model: 'deepseek-ai/DeepSeek-V3.2-Exp'
+  model: 'deepseek-ai/DeepSeek-V3.2'
 
 # Language settings, written into the prompt, can be described in natural language
   tpm_limit: 10000
@@ -19,7 +19,7 @@ api:
 # Source language for embedded subtitles
 source_language: 'en'
 
-target_language: 'zh'
+target_language: 'id'
 
 # Whether to use Demucs for vocal separation before transcription
 demucs: true
@@ -31,23 +31,22 @@ whisper:
   # ["medium", "large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
   model: 'medium'
   # Whisper specified recognition language [en, zh, ...]
-  language: 'ja'
-  detected_language: 'ja'
-  # Whisper running mode ["local", "stable-ts", "cloud"]. Specifies where to run, cloud uses 302.ai API
+  language: 'zh'
+  detected_language: 'zh'
+  # Whisper running mode ["local", "stable-ts"]. Specifies where to run
   runtime: 'stable-ts'
-  # 302.ai API key
-  whisperX_302_api_key: 'YOUR_302_API_KEY'
+
   # Use MLX acceleration for stable-ts on Apple Silicon
   stable_ts_mlx: true
   # Stable-TS dynamic quantization for CPU
-  stable_ts_dq: true
+  stable_ts_dq: false
   # VAD threshold for stable-ts (0-1)
   vad_threshold: 0.3
   # Minimum word duration for stable-ts
   min_word_dur: 0.1
 
 # Whether to burn subtitles into the video
-burn_subtitles: true
+burn_subtitles: false
 ## ======================== Advanced Settings ======================== ##
 # *Default resolution for downloading YouTube videos [360, 1080, best]
 ytb_resolution: '1080'
@@ -73,46 +72,20 @@ reflect_translate: true
 pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
-# TTS selection [sf_fish_tts, openai_tts, gpt_sovits, azure_tts, fish_tts, edge_tts, custom_tts]
-tts_method: 'sf_indextts2'
+# TTS selection [edge_tts, gpt_sovits, custom_tts, sf_indextts2, index_tts2, piper_tts, indonesian_tts]
+tts_method: 'indonesian_tts'
 
-# SiliconFlow FishTTS
-sf_fish_tts:
-  # SiliconFlow API key
-  api_key: 'YOUR_API_KEY'
-  # only for mode "preset"
-  voice: 'anna'
-  # *only for mode "custom", dont set manually
-  custom_name: ''
-  voice_id: ''
-  # preset, custom, dynamic
-  mode: "preset"
-
-# OpenAI TTS-1 API configuration, 302.ai API only
-openai_tts:
-  api_key: 'YOUR_302_API_KEY'
-  voice: 'alloy'
-
-# Azure configuration, 302.ai API only
-azure_tts:
-  api_key: 'YOUR_302_API_KEY'
-  voice: 'zh-CN-YunfengNeural'
-
-# FishTTS configuration, 302.ai API only
-fish_tts:
-  api_key: 'YOUR_302_API_KEY'
-  character: 'AD学姐'
-  character_id_dict:
-    'AD学姐': '7f92f8afb8ec43bf81429cc1c9199cb1'
-    '丁真': '54a5170264694bfc8e9ad98df7bd89c3'
+# Indonesian TTS configuration (using Wikidepia VITS model)
+indonesian_tts:
+  speaker: 'wibowo'
 
 # SiliconFlow IndexTTS2 Clone
 sf_indextts2:
   api_key: 'sk-gknihqdrqptifmzwrezivnyhtesemusgaletctihienbxmxx'
-
-# Edge TTS configuration
   clone_mode: dynamic
   fixed_voice: 雷军
+
+# Edge TTS configuration
 edge_tts:
   voice: 'zh-CN-XiaoxiaoNeural'
 
@@ -121,8 +94,7 @@ gpt_sovits:
   character: 'Huanyuv2'
   refer_mode: 3
 
-f5tts:
-  302_api: 'YOUR_302_API_KEY'
+
 
 # *Audio speed range
 speed_factor:
@@ -191,3 +163,5 @@ language_split_without_space:
 merge_split_subtitles: false
 merge_subtitles: true
 rewrite_text_for_dubbing: false
+piper_tts:
+  voice: id_ID-news_tts-medium

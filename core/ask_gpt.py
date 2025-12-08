@@ -1,4 +1,4 @@
-import os, sys, json
+import os, sys, json, re
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from threading import Lock
 import json_repair
@@ -105,7 +105,20 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default'):
             
             if response_json:
                 try:
-                    response_data = json_repair.loads(response.choices[0].message.content)
+                    raw_content = response.choices[0].message.content
+                    # Strip markdown code blocks if present (```json ... ``` or ``` ... ```)
+                    content = raw_content.strip()
+                    # Check for markdown code block wrapper
+                    if content.startswith('```'):
+                        # Find the end of the code block
+                        end_marker = content.rfind('```')
+                        if end_marker > 3:  # There is an end marker
+                            # Remove first line (```json or ```) and last ```
+                            first_newline = content.find('\n')
+                            if first_newline != -1:
+                                content = content[first_newline+1:end_marker].strip()
+                    
+                    response_data = json_repair.loads(content)
                     
                     # check if the response is valid, otherwise save the log and raise error and retry
                     if valid_def:
@@ -115,12 +128,24 @@ def ask_gpt(prompt, response_json=True, valid_def=None, log_title='default'):
                             raise ValueError(f"❎ API response error: {valid_response['message']}")
                         
                     break  # Successfully accessed and parsed, break the loop
-                except Exception as e:
+                except json_repair.JSONDecodeError as e:
+                    # Actual JSON parsing failure
                     response_data = response.choices[0].message.content
-                    print(f"❎ json_repair parsing failed. Retrying: '''{response_data}'''")
-                    save_log(api_set["model"], prompt, response_data, log_title="error", message=f"json_repair parsing failed.")
+                    print(f"❎ JSON parsing failed. Retrying: '''{response_data[:200]}...'''")
+                    save_log(api_set["model"], prompt, response_data, log_title="error", message=f"JSON parsing failed: {str(e)}")
                     if attempt == max_retries - 1:
                         raise Exception(f"JSON parsing still failed after {max_retries} attempts: {e}\n Please check your network connection or API key or `output/gpt_log/error.json` to debug.")
+                except ValueError as e:
+                    # Validation failure (e.g., translation too long)
+                    print(f"❎ Validation failed: {e}. Retrying...")
+                    if attempt == max_retries - 1:
+                        raise Exception(f"Validation still failed after {max_retries} attempts: {e}")
+                except Exception as e:
+                    response_data = response.choices[0].message.content
+                    print(f"❎ Error processing response: {e}. Retrying...")
+                    save_log(api_set["model"], prompt, response_data, log_title="error", message=f"Error: {str(e)}")
+                    if attempt == max_retries - 1:
+                        raise Exception(f"Still failed after {max_retries} attempts: {e}\n Please check `output/gpt_log/error.json` to debug.")
             else:
                 response_data = response.choices[0].message.content
                 break  # Non-JSON format, break the loop directly

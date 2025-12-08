@@ -163,6 +163,40 @@ def main():
     
     console.print(Panel(t("Installing requirements using `pip install -r requirements.txt`"), style="cyan"))
     install_requirements()
+    
+    # Install stable-ts and its dependencies
+    def install_stable_ts():
+        console.print(Panel("[bold cyan]Installing stable-ts and dependencies...[/bold cyan]", style="cyan"))
+        
+        # Install stable-whisper from GitHub
+        console.print("[cyan]Installing stable-whisper from GitHub...[/cyan]")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "git+https://github.com/jianfch/stable-ts.git"])
+            console.print("[green]✓ Successfully installed stable-whisper from GitHub![/green]")
+        except subprocess.CalledProcessError:
+            console.print("[yellow]⚠️ Failed to install stable-whisper from GitHub. You can install it manually later.[/yellow]")
+        
+        # Install additional dependencies
+        stable_ts_deps = ["librosa", "ffmpeg-python"]
+        for dep in stable_ts_deps:
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", dep], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                console.print(f"[green]✓ {dep} installed.[/green]")
+            except subprocess.CalledProcessError:
+                console.print(f"[yellow]⚠️ Failed to install {dep}.[/yellow]")
+        
+        # Check for Apple Silicon and install MLX if needed
+        if platform.system() == "darwin" or (platform.system() == "Darwin"):
+            import os as os_mod
+            if "arm" in os_mod.uname().machine:
+                console.print("[cyan]Detected Apple Silicon. Installing MLX for acceleration...[/cyan]")
+                try:
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", "mlx", "mlx-whisper"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    console.print("[green]✓ MLX installed for Apple Silicon acceleration![/green]")
+                except subprocess.CalledProcessError:
+                    console.print("[yellow]⚠️ Failed to install MLX. stable-ts will still work without acceleration.[/yellow]")
+    
+    install_stable_ts()
     check_ffmpeg()
     
     # First panel with installation complete and startup command
