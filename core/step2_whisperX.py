@@ -97,8 +97,19 @@ def transcribe():
             rprint("[yellow]Please run 'python install_stable_ts.py' to install stable-ts and its dependencies.[/yellow]")
             rprint("[yellow]Alternatively, you can change the whisper.runtime to 'local' or 'cloud' in config.yaml.[/yellow]")
             raise ImportError("stable-whisper is not installed. Please run 'python install_stable_ts.py' to install it.")
+    elif runtime == "funasr":
+        try:
+            from funasr import AutoModel
+            from core.all_whisper_methods.funasr_local import transcribe_audio as ts
+            rprint("[cyan]🎤 Transcribing audio with FunASR model...[/cyan]")
+            rprint(f"[cyan]📊 Total segments to process: {len(segments)}[/cyan]")
+        except ImportError:
+            rprint("[bold red]❌ Error: funasr is not installed![/bold red]")
+            rprint("[yellow]Please run 'pip install funasr' to install FunASR.[/yellow]")
+            rprint("[yellow]Alternatively, you can change the whisper.runtime to 'local' or 'stable-ts' in config.yaml.[/yellow]")
+            raise ImportError("funasr is not installed. Please run 'pip install funasr' to install it.")
     else:
-        raise ValueError(f"Unknown whisper runtime: {runtime}. Supported: 'local', 'stable-ts'")
+        raise ValueError(f"Unknown whisper runtime: {runtime}. Supported: 'local', 'stable-ts', 'funasr'")
 
     for i, (start, end) in enumerate(segments):
         rprint(f"[cyan]📊 Processing segment {i+1}/{len(segments)}: {start:.2f}s to {end:.2f}s[/cyan]")

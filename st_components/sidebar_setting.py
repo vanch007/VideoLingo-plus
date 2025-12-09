@@ -98,7 +98,7 @@ def page_setting():
                 st.rerun()
 
         # ASR model selection
-        asr_options = {"WhisperX": "local", "stable-ts": "stable-ts"}
+        asr_options = {"WhisperX": "local", "stable-ts": "stable-ts", "FunASR": "funasr"}
         asr_display = list(asr_options.keys())
         asr_values = list(asr_options.values())
         current_runtime = load_key("whisper.runtime") if load_key("whisper.runtime") in asr_values else "local"
@@ -108,7 +108,7 @@ def page_setting():
             t("ASR Model"),
             options=asr_display,
             index=current_index,
-            help=t("WhisperX requires >8GB GPU, stable-ts provides better timestamps")
+            help=t("WhisperX requires >8GB GPU, stable-ts provides better timestamps, FunASR supports Chinese with speaker diarization")
         )
         runtime = asr_options[selected_asr]
         if runtime != load_key("whisper.runtime"):
@@ -133,6 +133,35 @@ def page_setting():
             if use_dq != load_key("whisper.stable_ts_dq", True):
                 update_key("whisper.stable_ts_dq", use_dq)
                 st.rerun()
+
+        if runtime == "funasr":
+            # FunASR model selection
+            funasr_models = {"SenseVoice": "sensevoice", "Paraformer": "paraformer"}
+            funasr_display = list(funasr_models.keys())
+            funasr_values = list(funasr_models.values())
+            current_funasr_model = load_key("funasr.model", "sensevoice")
+            current_funasr_index = funasr_values.index(current_funasr_model) if current_funasr_model in funasr_values else 0
+            
+            selected_funasr_model = st.selectbox(
+                t("FunASR Model"),
+                options=funasr_display,
+                index=current_funasr_index,
+                help=t("SenseVoice: newer multi-functional model. Paraformer: classic stable model with speaker diarization.")
+            )
+            if funasr_models[selected_funasr_model] != current_funasr_model:
+                update_key("funasr.model", funasr_models[selected_funasr_model])
+                st.rerun()
+            
+            # Speaker diarization toggle (only for Paraformer)
+            if funasr_models[selected_funasr_model] == "paraformer":
+                enable_spk = st.toggle(
+                    t("Enable Speaker Diarization"),
+                    value=load_key("funasr.enable_spk", True),
+                    help=t("Use CAM++ for speaker identification. Requires more memory.")
+                )
+                if enable_spk != load_key("funasr.enable_spk", True):
+                    update_key("funasr.enable_spk", enable_spk)
+                    st.rerun()
 
         # Dynamically determine the list of models based on the runtime and MLX setting
         help_text = ""

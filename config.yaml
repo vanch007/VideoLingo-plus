@@ -33,8 +33,8 @@ whisper:
   # Whisper specified recognition language [en, zh, ...]
   language: 'zh'
   detected_language: 'zh'
-  # Whisper running mode ["local", "stable-ts"]. Specifies where to run
-  runtime: 'stable-ts'
+  # Whisper running mode ["local", "stable-ts", "funasr"]. Specifies where to run
+  runtime: 'funasr'
 
   # Use MLX acceleration for stable-ts on Apple Silicon
   stable_ts_mlx: true
@@ -44,6 +44,15 @@ whisper:
   vad_threshold: 0.3
   # Minimum word duration for stable-ts
   min_word_dur: 0.1
+
+# FunASR configuration (used when whisper.runtime is 'funasr')
+funasr:
+  # Model selection: "sensevoice" (faster, no speaker diarization) or "paraformer" (with speaker diarization)
+  model: 'sensevoice'
+  # Enable speaker diarization with CAM++ (requires more memory)
+  enable_spk: true
+  # Maximum audio segment duration for VAD (ms)
+  max_single_segment_time: 30000
 
 # Whether to burn subtitles into the video
 burn_subtitles: false
