@@ -114,9 +114,6 @@ def page_setting():
         if runtime != load_key("whisper.runtime"):
             update_key("whisper.runtime", runtime)
             st.rerun()
-
-        if runtime == "local":
-            config_input(t("HuggingFace Token"), "hf_token", help=t("Required for Diarization (Speaker Identification). Get it from https://huggingface.co/settings/tokens"))
             
         if runtime == "stable-ts":
             c_sts1, c_sts2 = st.columns(2)
@@ -163,70 +160,72 @@ def page_setting():
                     update_key("funasr.enable_spk", enable_spk)
                     st.rerun()
 
-        # Dynamically determine the list of models based on the runtime and MLX setting
-        help_text = ""
-        whisper_models = ["medium", "large-v2", "large-v3"]
+        # Only show Whisper model selection for runtimes that use Whisper (local, stable-ts)
+        if runtime in ["local", "stable-ts"]:
+            # Dynamically determine the list of models based on the runtime and MLX setting
+            help_text = ""
+            whisper_models = ["medium", "large-v2", "large-v3"]
 
-        use_mlx_for_ui = (
-            runtime == "stable-ts" and
-            sys.platform == "darwin" and
-            "arm" in os.uname().machine and
-            load_key("whisper.stable_ts_mlx", True)
-        )
-
-        if use_mlx_for_ui:
-            whisper_models = ["tiny", "tiny.en", "base", "base.en", "small", "small.en", "medium", "medium.en",
-                             "large-v1", "large-v2", "large-v3", "large", "large-v3-turbo", "turbo"]
-            help_text = t("Select a model compatible with MLX. 'turbo' is optimized for Apple Silicon.")
-        
-        elif runtime == 'stable-ts':
-            base_models = ["tiny", "base", "small", "medium", "large-v1", "large-v2", "large-v3",
-                           "Huan69/Belle-whisper-large-v3-zh-punct-fasterwhisper"]
-            custom_option = t("Custom Hugging Face Model...")
-            whisper_models = base_models + [custom_option]
-            help_text = t("Select a model or choose 'Custom' to enter a Hugging Face model ID.")
-
-        # Handle model selection UI and logic
-        current_model = load_key("whisper.model")
-        
-        # Determine the index for the selectbox
-        if current_model in whisper_models:
-            model_index = whisper_models.index(current_model)
-        # If it's a custom model, it won't be in the list of options, so we select the custom option
-        elif runtime == 'stable-ts' and not use_mlx_for_ui:
-             model_index = whisper_models.index(t("Custom Hugging Face Model..."))
-        else:
-            # Fallback for safety: if model is somehow invalid, default to the first option
-            model_index = 0
-            update_key("whisper.model", whisper_models[model_index])
-
-        selected_option = st.selectbox(t("Whisper Model"), options=whisper_models,
-                                       index=model_index,
-                                       help=help_text)
-
-        whisper_model_to_save = selected_option
-        # If the user chose the custom option in the stable-ts non-mlx runtime
-        if runtime == 'stable-ts' and not use_mlx_for_ui and selected_option == t("Custom Hugging Face Model..."):
-            custom_model_id = st.text_input(
-                t("Hugging Face Model ID"), 
-                value=(current_model if current_model not in base_models else "openai/whisper-large-v3")
+            use_mlx_for_ui = (
+                runtime == "stable-ts" and
+                sys.platform == "darwin" and
+                "arm" in os.uname().machine and
+                load_key("whisper.stable_ts_mlx", True)
             )
-            whisper_model_to_save = custom_model_id
-        
-        if whisper_model_to_save != current_model:
-            update_key("whisper.model", whisper_model_to_save)
-            st.rerun()
 
-        # Add MLX toggle for stable-ts on Apple Silicon
-        if runtime == "stable-ts" and sys.platform == "darwin" and "arm" in os.uname().machine:
-            use_mlx = st.toggle(
-                "🚀 " + t("Use MLX Acceleration"),
-                value=load_key("whisper.stable_ts_mlx", True), # Default to True on Apple Silicon
-                help=t("Enable MLX for faster processing on Apple Silicon. Disable if you encounter issues or want to use features not supported by MLX (like refine/regroup post-processing).")
-            )
-            if use_mlx != load_key("whisper.stable_ts_mlx", True):
-                update_key("whisper.stable_ts_mlx", use_mlx)
+            if use_mlx_for_ui:
+                whisper_models = ["tiny", "tiny.en", "base", "base.en", "small", "small.en", "medium", "medium.en",
+                                 "large-v1", "large-v2", "large-v3", "large", "large-v3-turbo", "turbo"]
+                help_text = t("Select a model compatible with MLX. 'turbo' is optimized for Apple Silicon.")
+            
+            elif runtime == 'stable-ts':
+                base_models = ["tiny", "base", "small", "medium", "large-v1", "large-v2", "large-v3",
+                               "Huan69/Belle-whisper-large-v3-zh-punct-fasterwhisper"]
+                custom_option = t("Custom Hugging Face Model...")
+                whisper_models = base_models + [custom_option]
+                help_text = t("Select a model or choose 'Custom' to enter a Hugging Face model ID.")
+
+            # Handle model selection UI and logic
+            current_model = load_key("whisper.model")
+            
+            # Determine the index for the selectbox
+            if current_model in whisper_models:
+                model_index = whisper_models.index(current_model)
+            # If it's a custom model, it won't be in the list of options, so we select the custom option
+            elif runtime == 'stable-ts' and not use_mlx_for_ui:
+                 model_index = whisper_models.index(t("Custom Hugging Face Model..."))
+            else:
+                # Fallback for safety: if model is somehow invalid, default to the first option
+                model_index = 0
+                update_key("whisper.model", whisper_models[model_index])
+
+            selected_option = st.selectbox(t("Whisper Model"), options=whisper_models,
+                                           index=model_index,
+                                           help=help_text)
+
+            whisper_model_to_save = selected_option
+            # If the user chose the custom option in the stable-ts non-mlx runtime
+            if runtime == 'stable-ts' and not use_mlx_for_ui and selected_option == t("Custom Hugging Face Model..."):
+                custom_model_id = st.text_input(
+                    t("Hugging Face Model ID"), 
+                    value=(current_model if current_model not in base_models else "openai/whisper-large-v3")
+                )
+                whisper_model_to_save = custom_model_id
+            
+            if whisper_model_to_save != current_model:
+                update_key("whisper.model", whisper_model_to_save)
                 st.rerun()
+
+            # Add MLX toggle for stable-ts on Apple Silicon
+            if runtime == "stable-ts" and sys.platform == "darwin" and "arm" in os.uname().machine:
+                use_mlx = st.toggle(
+                    "🚀 " + t("Use MLX Acceleration"),
+                    value=load_key("whisper.stable_ts_mlx", True), # Default to True on Apple Silicon
+                    help=t("Enable MLX for faster processing on Apple Silicon. Disable if you encounter issues or want to use features not supported by MLX (like refine/regroup post-processing).")
+                )
+                if use_mlx != load_key("whisper.stable_ts_mlx", True):
+                    update_key("whisper.stable_ts_mlx", use_mlx)
+                    st.rerun()
 
         demucs = st.toggle(t("Vocal separation enhance"), value=load_key("demucs"), help=t("Recommended for videos with loud background noise, but will increase processing time"))
         if demucs != load_key("demucs"):
