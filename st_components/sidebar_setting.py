@@ -246,7 +246,7 @@ def page_setting():
             update_key("merge_subtitles", merge_subtitles)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
-        tts_methods = ["edge_tts", "gpt_sovits", "custom_tts", "sf_indextts2", "index_tts2", "piper_tts", "indonesian_tts"]
+        tts_methods = ["edge_tts", "gpt_sovits", "custom_tts", "sf_indextts2", "index_tts2", "piper_tts", "indonesian_tts", "voxcpm_tts"]
         select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(load_key("tts_method")))
         if select_tts != load_key("tts_method"):
             update_key("tts_method", select_tts)
@@ -393,6 +393,50 @@ def page_setting():
                     st.rerun()
             else:
                 st.warning(t("Indonesian TTS model not found. Please download from https://github.com/Wikidepia/indonesian-tts/releases/tag/v1.2"))
+
+        elif select_tts == "voxcpm_tts":
+            st.info(t("VoxCPM TTS is a tokenizer-free speech synthesis with realistic voice cloning. Requires local VoxCPM service running."))
+            
+            # API URL configuration
+            current_api_url = load_key("voxcpm_tts.api_url", "http://127.0.0.1:7860")
+            new_api_url = st.text_input(
+                t("VoxCPM API URL"),
+                value=current_api_url,
+                help=t("Local VoxCPM Gradio server URL, default: http://127.0.0.1:7860")
+            )
+            if new_api_url != current_api_url:
+                update_key("voxcpm_tts.api_url", new_api_url)
+                st.rerun()
+            
+            # Prompt enhancement toggle
+            use_enhancement = st.toggle(
+                t("Prompt Speech Enhancement"),
+                value=load_key("voxcpm_tts.use_prompt_enhancement", False),
+                help=t("Enable for clearer voice (16kHz). Disable for higher quality cloning (up to 44.1kHz).")
+            )
+            if use_enhancement != load_key("voxcpm_tts.use_prompt_enhancement", False):
+                update_key("voxcpm_tts.use_prompt_enhancement", use_enhancement)
+                st.rerun()
+            
+            # Text normalization toggle
+            normalize = st.toggle(
+                t("Text Normalization"),
+                value=load_key("voxcpm_tts.normalize", False),
+                help=t("Enable for regular text (handles numbers, abbreviations). Disable for phoneme input.")
+            )
+            if normalize != load_key("voxcpm_tts.normalize", False):
+                update_key("voxcpm_tts.normalize", normalize)
+                st.rerun()
+            
+            # Output denoising toggle
+            denoise = st.toggle(
+                t("Output Denoising"),
+                value=load_key("voxcpm_tts.denoise", False),
+                help=t("Enable external denoising (may cause distortion, limits sample rate to 16kHz).")
+            )
+            if denoise != load_key("voxcpm_tts.denoise", False):
+                update_key("voxcpm_tts.denoise", denoise)
+                st.rerun()
 
 def check_api():
     try:

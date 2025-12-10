@@ -75,6 +75,9 @@ def tts_main(text, save_as, number, task_df):
                 from core.all_tts_functions.indonesian_tts import indonesian_tts_for_videolingo
                 speaker = load_key("indonesian_tts.speaker", "wibowo")
                 indonesian_tts_for_videolingo(text, save_as, number, task_df, fixed_voice_name=speaker)
+            elif TTS_METHOD == 'voxcpm_tts':
+                from core.all_tts_functions.voxcpm_tts import voxcpm_tts
+                voxcpm_tts(text, save_as, number, task_df, attempt)
             else:
                 raise ValueError(f"Unknown TTS method: {TTS_METHOD}")
                 

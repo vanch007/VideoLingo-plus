@@ -19,7 +19,7 @@ api:
 # Source language for embedded subtitles
 source_language: 'en'
 
-target_language: 'id'
+target_language: 'en'
 
 # Whether to use Demucs for vocal separation before transcription
 demucs: true
@@ -29,12 +29,12 @@ background_volume: 1.5
 
 whisper:
   # ["medium", "large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
-  model: 'medium'
+  model: 'large-v3-turbo'
   # Whisper specified recognition language [en, zh, ...]
   language: 'zh'
   detected_language: 'zh'
   # Whisper running mode ["local", "stable-ts", "funasr"]. Specifies where to run
-  runtime: 'funasr'
+  runtime: 'stable-ts'
 
   # Use MLX acceleration for stable-ts on Apple Silicon
   stable_ts_mlx: true
@@ -48,14 +48,14 @@ whisper:
 # FunASR configuration (used when whisper.runtime is 'funasr')
 funasr:
   # Model selection: "sensevoice" (faster, no speaker diarization) or "paraformer" (with speaker diarization)
-  model: 'sensevoice'
+  model: 'paraformer'
   # Enable speaker diarization with CAM++ (requires more memory)
-  enable_spk: true
+  enable_spk: false
   # Maximum audio segment duration for VAD (ms)
   max_single_segment_time: 30000
 
 # Whether to burn subtitles into the video
-burn_subtitles: false
+burn_subtitles: true
 ## ======================== Advanced Settings ======================== ##
 # *Default resolution for downloading YouTube videos [360, 1080, best]
 ytb_resolution: '1080'
@@ -81,12 +81,19 @@ reflect_translate: true
 pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
-# TTS selection [edge_tts, gpt_sovits, custom_tts, sf_indextts2, index_tts2, piper_tts, indonesian_tts]
-tts_method: 'indonesian_tts'
+# TTS selection [edge_tts, gpt_sovits, custom_tts, sf_indextts2, index_tts2, piper_tts, indonesian_tts, voxcpm_tts]
+tts_method: 'voxcpm_tts'
 
 # Indonesian TTS configuration (using Wikidepia VITS model)
 indonesian_tts:
   speaker: 'wibowo'
+
+# VoxCPM TTS configuration (local Gradio API with voice cloning)
+voxcpm_tts:
+  api_url: 'http://127.0.0.1:7860'
+  use_prompt_enhancement: false
+  normalize: false
+  denoise: false
 
 # SiliconFlow IndexTTS2 Clone
 sf_indextts2:
@@ -171,6 +178,6 @@ language_split_without_space:
 - 'ja'
 merge_split_subtitles: false
 merge_subtitles: true
-rewrite_text_for_dubbing: false
+rewrite_text_for_dubbing: true
 piper_tts:
   voice: id_ID-news_tts-medium
