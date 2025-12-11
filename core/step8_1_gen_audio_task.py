@@ -78,13 +78,29 @@ def batch_check_and_trim(df):
                 original_text = item['text']
                 shortened_text = results_map.get(idx)
                 
-                if shortened_text:
+                # Validate the shortened text - reject placeholders or invalid responses
+                is_valid = True
+                if not shortened_text:
+                    is_valid = False
+                elif 'merged' in shortened_text.lower() or 'merge' in shortened_text.lower():
+                    # LLM returned a placeholder like "(Merged with 44 & 46)" instead of actual text
+                    rprint(f"[yellow]⚠️ LLM returned merge placeholder for #{idx}, keeping original[/yellow]")
+                    is_valid = False
+                elif shortened_text.startswith('(') and shortened_text.endswith(')'):
+                    # LLM returned a comment in parentheses
+                    rprint(f"[yellow]⚠️ LLM returned comment for #{idx}: '{shortened_text}', keeping original[/yellow]")
+                    is_valid = False
+                elif len(shortened_text) < 3 and len(original_text) > 10:
+                    # Suspiciously short result
+                    rprint(f"[yellow]⚠️ LLM returned too short text for #{idx}, keeping original[/yellow]")
+                    is_valid = False
+                
+                if is_valid:
                     rprint(f"[green]Trimmed #{idx}: {original_text} -> {shortened_text}[/green]")
                     df.at[idx, 'text'] = shortened_text
                 else:
-                     # Critical fix: if LLM fails to return a specific item, keep the original text
-                     # Do NOT leave it empty or just print error without handling
-                     rprint(f"[yellow]⚠️ LLM missed item #{idx}, keeping original: {original_text}[/yellow]")
+                    # Keep original text if validation failed
+                    rprint(f"[yellow]⚠️ Keeping original for #{idx}: {original_text}[/yellow]")
 
         except Exception as e:
             rprint(f"[red]Batch processing failed for batch starting at index {current_batch[0]['index']}: {e}[/red]")

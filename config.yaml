@@ -82,7 +82,7 @@ pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
 # TTS selection [edge_tts, gpt_sovits, custom_tts, sf_indextts2, index_tts2, piper_tts, indonesian_tts, voxcpm_tts]
-tts_method: 'voxcpm_tts'
+tts_method: 'index_tts2'
 
 # Indonesian TTS configuration (using Wikidepia VITS model)
 indonesian_tts:
