@@ -29,7 +29,7 @@ background_volume: 1.5
 
 whisper:
   # ["medium", "large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
-  model: 'large-v3-turbo'
+  model: 'medium'
   # Whisper specified recognition language [en, zh, ...]
   language: 'zh'
   detected_language: 'zh'
@@ -82,7 +82,7 @@ pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
 # TTS selection [edge_tts, gpt_sovits, custom_tts, sf_indextts2, index_tts2, piper_tts, indonesian_tts, voxcpm_tts]
-tts_method: 'index_tts2'
+tts_method: 'sf_indextts2'
 
 # Indonesian TTS configuration (using Wikidepia VITS model)
 indonesian_tts:
@@ -122,9 +122,6 @@ speed_factor:
 min_subtitle_duration: 1 # Minimum subtitle duration, will be forcibly extended
 min_trim_duration: 3.5 # Subtitles shorter than this value won't be split
 tolerance: 1.5 # Allowed extension time to the next subtitle
-
-# TPM (Tokens Per Minute) limit for API requests
-tpm_limit: 10000
 
 ## ======================== Additional settings 请勿修改======================== ##
 # Whisper model directory
@@ -177,7 +174,7 @@ language_split_without_space:
 - 'zh'
 - 'ja'
 merge_split_subtitles: false
-merge_subtitles: true
+merge_subtitles: false
 rewrite_text_for_dubbing: true
 piper_tts:
   voice: id_ID-news_tts-medium

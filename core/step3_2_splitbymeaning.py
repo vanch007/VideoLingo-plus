@@ -176,10 +176,14 @@ def parallel_split_sentences(sentences, max_length, max_workers, nlp, retry_atte
 
     return result_sentences
 
+
+
 def split_sentences_by_meaning():
     """The main function to split sentences by meaning."""
+    output_txt = 'output/log/sentence_splitbymeaning.txt'
+    
     # 检查输出文件是否已存在，如果存在则跳过
-    if os.path.exists('output/log/sentence_splitbymeaning.txt'):
+    if os.path.exists(output_txt):
         console.print("[yellow]File 'sentence_splitbymeaning.txt' already exists. Skipping split_sentences_by_meaning.[/yellow]")
         return
 
@@ -193,13 +197,14 @@ def split_sentences_by_meaning():
         sentences = [line.strip() for line in f.readlines()]
 
     nlp = init_nlp()
-    # 🔄 process sentences multiple times to ensure all are split
-    # 临时降低 max_split_length 值进行测试
-    test_max_length = 10  # 将阈值降低到 10，强制分割更多句子
-    console.print(f"[cyan]测试模式: 使用降低的 max_split_length={test_max_length} 而不是配置文件中的 {load_key('max_split_length')}[/cyan]")
+    
+    # 使用配置文件中的 max_split_length
+    max_length = load_key('max_split_length')
+    console.print(f"[cyan]使用 max_split_length={max_length}[/cyan]")
 
+    # 🔄 process sentences multiple times to ensure all are split
     for retry_attempt in range(3):
-        sentences = parallel_split_sentences(sentences, max_length=test_max_length, max_workers=load_key("max_workers"), nlp=nlp, retry_attempt=retry_attempt)
+        sentences = parallel_split_sentences(sentences, max_length=max_length, max_workers=load_key("max_workers"), nlp=nlp, retry_attempt=retry_attempt)
 
     # 比较分割前后的句子
     with open('output/log/sentence_splitbynlp.txt', 'r', encoding='utf-8') as f:
@@ -215,11 +220,13 @@ def split_sentences_by_meaning():
         diff_count = sum(1 for a, b in zip(original_sentences, sentences) if a != b)
         console.print(f"[green]有 {diff_count} 个句子被分割或修改[/green]")
 
-    # 💾 save results
-    with open('output/log/sentence_splitbymeaning.txt', 'w', encoding='utf-8') as f:
+    # 💾 保存 TXT 格式
+    with open(output_txt, 'w', encoding='utf-8') as f:
         f.write('\n'.join(sentences))
+    console.print(f'[green]✅ 保存到 {output_txt}[/green]')
+    
     console.print('[green]✅ All sentences have been successfully split![/green]')
 
+
 if __name__ == '__main__':
-    # print(split_sentence('Which makes no sense to the... average guy who always pushes the character creation slider all the way to the right.', 2, 22))
     split_sentences_by_meaning()

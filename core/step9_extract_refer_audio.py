@@ -6,66 +6,33 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import pandas as pd
 import soundfile as sf
-console = Console()
+
+from core.timing_utils import srt_time_to_seconds, seconds_to_srt_time, time_to_samples
+from core.constants import REFERS_DIR, TTS_TASKS_FILE
 from core.all_whisper_methods.demucs_vl import demucs_main, VOCAL_AUDIO_FILE
 
-# Simplified path definitions
-REF_DIR = 'output/audio/refers'
-SEG_DIR = 'output/audio/segs'
-TASKS_FILE = 'output/audio/tts_tasks.xlsx'
+console = Console()
 
-# --- Robust Time Helper Functions ---
-def time_str_to_seconds(time_str):
-    """Converts HH:MM:SS.ms or HH:MM:SS,ms string to seconds."""
-    if not isinstance(time_str, str):
-        return 0.0
-    time_str = time_str.replace(',', '.') # Standardize to dot
-    try:
-        main_part, ms_part = time_str.split('.')
-        h, m, s = main_part.split(':')
-        # Pad ms_part to 3 digits for consistent calculation
-        ms = int(ms_part.ljust(3, '0')[:3])
-        return int(h) * 3600 + int(m) * 60 + int(s) + ms / 1000.0
-    except ValueError:
-        try:
-            # Case without milliseconds
-            h, m, s = time_str.split(':')
-            return float(int(h) * 3600 + int(m) * 60 + int(s))
-        except ValueError:
-            return 0.0
-
-def seconds_to_time_str(seconds):
-    """Converts seconds to HH:MM:SS,ms string for FFmpeg compatibility."""
-    seconds = max(0, seconds)
-    h = int(seconds // 3600)
-    m = int((seconds % 3600) // 60)
-    s = int(seconds % 60)
-    ms = int((seconds * 1000) % 1000)
-    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
-
-def time_to_samples(time_str, sr):
-    """Unified time conversion function using the robust helper."""
-    seconds = time_str_to_seconds(time_str)
-    return int(seconds * sr)
-# --- End of Helper Functions ---
 
 def extract_audio(audio_data, sr, start_time, end_time, out_file):
-    """Simplified audio extraction function"""
+    """从音频数据中提取指定时间范围的片段"""
     start = time_to_samples(start_time, sr)
     end = time_to_samples(end_time, sr)
-    # Prevent slicing beyond the audio length or creating an empty slice
+    # 防止切片超出音频长度或创建空切片
     if start >= end:
         rprint(f"[bold red]Warning: Invalid time slice for {out_file}. Start: {start_time}, End: {end_time}. Skipping.[/bold red]")
         return
     end = min(end, len(audio_data))
     sf.write(out_file, audio_data[start:end], sr)
 
-def extract_refer_audio_main():
-    demucs_main() #!!! in case demucs is not run
 
-    os.makedirs(REF_DIR, exist_ok=True)
+def extract_refer_audio_main():
+    """提取参考音频的主函数"""
+    demucs_main()  # 确保 demucs 已运行
+
+    os.makedirs(REFERS_DIR, exist_ok=True)
     
-    df = pd.read_excel(TASKS_FILE)
+    df = pd.read_excel(TTS_TASKS_FILE)
     if not os.path.exists(VOCAL_AUDIO_FILE):
         rprint(Panel(f"[bold red]Error: Vocal audio file not found at {VOCAL_AUDIO_FILE}[/bold red]", title="Error"))
         return
@@ -83,44 +50,45 @@ def extract_refer_audio_main():
         
         for i in range(len(df)):
             current_row = df.iloc[i]
-            current_start_sec = time_str_to_seconds(str(current_row['start_time']))
-            current_end_sec = time_str_to_seconds(str(current_row['end_time']))
+            current_start_sec = srt_time_to_seconds(str(current_row['start_time']))
+            current_end_sec = srt_time_to_seconds(str(current_row['end_time']))
 
-            # --- Calculate new_start_sec ---
+            # --- 计算 new_start_sec ---
             new_start_sec = current_start_sec - 1.0
 
             if i > 0:
                 prev_row = df.iloc[i-1]
-                prev_end_sec = time_str_to_seconds(str(prev_row['end_time']))
+                prev_end_sec = srt_time_to_seconds(str(prev_row['end_time']))
                 if new_start_sec < prev_end_sec:
-                    # Midpoint calculation
+                    # 中点计算
                     new_start_sec = prev_end_sec + (current_start_sec - prev_end_sec) / 2
             
-            # Ensure start time is not negative
+            # 确保开始时间不为负
             new_start_sec = max(0, new_start_sec)
 
-            # --- Calculate new_end_sec ---
+            # --- 计算 new_end_sec ---
             new_end_sec = current_end_sec + 1.0
 
             if i < len(df) - 1:
                 next_row = df.iloc[i+1]
-                next_start_sec = time_str_to_seconds(str(next_row['start_time']))
+                next_start_sec = srt_time_to_seconds(str(next_row['start_time']))
                 if new_end_sec > next_start_sec:
-                    # Midpoint calculation
+                    # 中点计算
                     new_end_sec = current_end_sec + (next_start_sec - current_end_sec) / 2
             
-            # Ensure end time does not exceed total duration
+            # 确保结束时间不超过总时长
             new_end_sec = min(new_end_sec, total_audio_duration_sec)
 
-            # Convert back to time strings
-            final_start_time_str = seconds_to_time_str(new_start_sec)
-            final_end_time_str = seconds_to_time_str(new_end_sec)
+            # 转换回时间字符串
+            final_start_time_str = seconds_to_srt_time(new_start_sec)
+            final_end_time_str = seconds_to_srt_time(new_end_sec)
 
-            out_file = os.path.join(REF_DIR, f"{current_row['number']}.wav")
+            out_file = os.path.join(REFERS_DIR, f"{current_row['number']}.wav")
             extract_audio(data, sr, final_start_time_str, final_end_time_str, out_file)
             progress.update(task, advance=1)
             
-    rprint(Panel(f"Audio segments saved to {REF_DIR} with optimized logic", title="Success", border_style="green"))
+    rprint(Panel(f"Audio segments saved to {REFERS_DIR} with optimized logic", title="Success", border_style="green"))
+
 
 if __name__ == "__main__":
     extract_refer_audio_main()

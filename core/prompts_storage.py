@@ -57,26 +57,48 @@ def get_summary_prompt(source_content, custom_terms_json=None):
 
     summary_prompt = f"""
 ## Role
-You are a video translation expert and terminology consultant, specializing in {src_lang} comprehension and {tgt_lang} expression optimization.
+You are a video translation expert, terminology consultant, and speech-to-text correction specialist.
+You specialize in {src_lang} comprehension and correcting common ASR (Automatic Speech Recognition) errors.
 
 ## Task
-For the provided {src_lang} video text:
-1. Summarize main topic in two sentences
-2. Extract professional terms/names with {tgt_lang} translations (excluding existing terms)
-3. Provide brief explanation for each term{terms_note}
+For the provided {src_lang} video text (transcribed by ASR, may contain errors):
+1. **Correct ASR Errors**: Fix recognition mistakes based on context (wrong characters, homophones, missing punctuation)
+2. Summarize main topic in two sentences
+3. Extract professional terms/names with {tgt_lang} translations (excluding existing terms)
+4. Provide brief explanation for each term{terms_note}
 
-Steps:
-1. Topic Summary:
+## STT Correction Guidelines
+Common ASR errors to check and fix:
+- Homophones (同音字错误): e.g., "一起" vs "一气", "的" vs "地" vs "得"
+- Missing or wrong punctuation
+- Proper nouns misspelled
+- Technical terms incorrectly transcribed
+- Word boundary errors (words merged or split incorrectly)
+- Context-inappropriate words
+
+## Steps
+1. **Text Correction** (CRITICAL):
+   - Read through the entire text
+   - Identify and fix ASR errors based on context
+   - Maintain original meaning while correcting errors
+   - Return the COMPLETE corrected text, line by line
+
+2. Topic Summary:
    - Quick scan for general understanding
    - Write two sentences: first for main topic, second for key point
-2. Term Extraction:
-   - Mark professional terms and names (excluding those listed in Existing Terms)
+
+3. Term Extraction:
+   - Mark professional terms and names
    - Provide {tgt_lang} translation or keep original
    - Add brief explanation
-   - Keep abbreviations and proper nouns unchanged
 
 ## Output in only JSON format
 {{
+    "corrected_lines": [
+        "Corrected line 1",
+        "Corrected line 2",
+        "... one corrected line for each input line, maintaining the same order and count"
+    ],
     "topic": "Two-sentence video summary",
     "terms": [
         {{
@@ -88,22 +110,11 @@ Steps:
     ]
 }}
 
-## Example
-{{
-    "topic": "本视频介绍人工智能在医疗领域的应用现状。重点展示了AI在医学影像诊断和药物研发中的突破性进展。",
-    "terms": [
-        {{
-            "src": "Machine Learning",
-            "tgt": "机器学习",
-            "note": "AI的核心技术，通过数据训练实现智能决策"
-        }},
-        {{
-            "src": "CNN",
-            "tgt": "CNN",
-            "note": "卷积神经网络，用于医学图像识别的深度学习模型"
-        }}
-    ]
-}}
+## IMPORTANT
+- The "corrected_lines" array MUST have the EXACT SAME number of lines as the input
+- Keep the line order unchanged
+- Only fix errors, do not rephrase or summarize the content
+- If a line has no errors, return it unchanged
 
 ## INPUT
 <text>
@@ -111,6 +122,7 @@ Steps:
 </text>
 """.strip()
     return summary_prompt
+
 
 ## ================================================================
 # @ step5_translate.py & translate_lines.py
@@ -272,7 +284,8 @@ Please use a two-step thinking process to handle the text line by line:
    - Check the conciseness of the subtitles, point out where the translation is too wordy, the translation should be close to the original text in length
 
 2. {TARGET_LANGUAGE} Free Translation:
-   - **CRITICAL: Match Spoken Duration.** The length of the translated text MUST be proportional to the original text's spoken duration. This is crucial for TTS dubbing.
+   - **CRITICAL LENGTH LIMIT**: The translated text MUST NOT exceed 1.3x the character count of the original. If the original has 10 characters, the translation must be 13 characters or less. This is MANDATORY for TTS dubbing.
+   - **If translation is too long**: Use shorter synonyms, remove filler words, simplify sentence structure, or rephrase more concisely.
    - **Avoid Unnecessary Expansion.** Do not add filler words or extra explanations unless absolutely necessary for meaning.
    - Aim for contextual smoothness and naturalness, conforming to {TARGET_LANGUAGE} expression habits
    - Ensure it's easy for {TARGET_LANGUAGE} audience to understand and accept

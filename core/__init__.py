@@ -1,7 +1,13 @@
 # use try-except to avoid error when installing
 try:
+    # ========== 工具模块 ==========
+    from . import path_utils
+    from . import constants
     from . import config_utils
     from . import timing_utils
+    from . import step_checker
+    
+    # ========== 处理步骤 ==========
     from . import step1_ytdlp
     from . import step2_whisperX
     from . import step3_1_spacy_split
@@ -17,6 +23,8 @@ try:
     from . import step10_gen_audio
     from . import step11_merge_full_audio
     from . import step12_merge_dub_to_vid
+    
+    # ========== 辅助模块 ==========
     from . import translate_once
     from . import ask_gpt
     from . import prompts_storage

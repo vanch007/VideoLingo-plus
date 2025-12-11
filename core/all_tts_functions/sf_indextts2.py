@@ -3,20 +3,46 @@ from pathlib import Path
 import base64
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-from core.config_utils import load_key
-
-def wav_to_base64(wav_file_path):
-    with open(wav_file_path, 'rb') as audio_file:
-        audio_content = audio_file.read()
-    base64_audio = base64.b64encode(audio_content).decode('utf-8')
-    return base64_audio
-
 import random
 
-def indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dynamic", fixed_voice_name=None, use_emo_text=False, emo_text=None, verbose=True, speed=1.0):
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+from core.config_utils import load_key
+from core.all_tts_functions.tts_utils import (
+    get_reference_audio_path,
+    get_prompt_text_from_df,
+    ensure_output_dir,
+    extract_refer_audio_if_needed
+)
+
+
+
+def wav_to_base64(wav_file_path):
+    """将 WAV 文件转换为 base64 编码"""
+    with open(wav_file_path, 'rb') as audio_file:
+        audio_content = audio_file.read()
+    return base64.b64encode(audio_content).decode('utf-8')
+
+
+def indextts2_tts_for_videolingo(
+    text, save_as, number, task_df, 
+    clone_mode="dynamic", fixed_voice_name=None, 
+    use_emo_text=False, emo_text=None, 
+    verbose=True, speed=1.0
+):
     """
     使用 index-tts2 进行 TTS 转换，支持参考音频、文本情感等高级功能
+    
+    Args:
+        text: 要合成的文本
+        save_as: 保存路径
+        number: 片段编号
+        task_df: 包含原始文本的任务 DataFrame
+        clone_mode: "dynamic" (动态克隆) 或 "fixed" (固定声音)
+        fixed_voice_name: 固定模式下的声音名称
+        use_emo_text: 是否使用文本情感
+        emo_text: 情感文本
+        verbose: 详细输出
+        speed: 语速
     """
     API_KEY = load_key("sf_indextts2.api_key")
 
@@ -35,21 +61,17 @@ def indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dyn
         prompt_text = ref_audio_path.stem  # 文件名（不带扩展名）即为参考文本
         print(f"使用固定克隆声音: {fixed_voice_name}, 参考音频: {ref_audio_path.name}")
     else:
-        # 动态克隆模式（原始逻辑）
-        prompt_text = task_df.loc[task_df['number'] == number, 'origin'].values[0]
-        current_dir = Path.cwd()
-        ref_audio_path = current_dir / f"output/audio/refers/{number}.wav"
+        # 动态克隆模式 - 使用增强版 fallback 逻辑
+        ref_audio_path, fallback_num = get_reference_audio_path(number)
         
-        if not ref_audio_path.exists():
-            ref_audio_path = current_dir / "output/audio/refers/1.wav"
-            if not ref_audio_path.exists():
-                try:
-                    from core.step9_extract_refer_audio import extract_refer_audio_main
-                    print(f"参考音频文件不存在，尝试提取: {ref_audio_path}")
-                    extract_refer_audio_main()
-                except Exception as e:
-                    print(f"提取参考音频失败: {str(e)}")
-                    raise
+        # 获取参考文本（使用实际的参考音频编号）
+        actual_number = fallback_num if fallback_num else number
+        prompt_text = get_prompt_text_from_df(task_df, actual_number, fallback_text=text)
+        
+        if fallback_num:
+            print(f"使用备选参考音频 {fallback_num}.wav (原: {number}.wav)")
+
+
     
     # 转换参考音频为 base64
     reference_base64 = wav_to_base64(ref_audio_path)
@@ -60,7 +82,7 @@ def indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dyn
     )
 
     save_path = Path(save_as)
-    save_path.parent.mkdir(parents=True, exist_ok=True)
+    ensure_output_dir(save_as)
     
     # 将文件扩展名从.wav改为.mp3，因为API实际返回的是MP3格式
     if save_path.suffix.lower() == '.wav':
@@ -115,7 +137,7 @@ def indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode="dyn
         # If not .wav (e.g. .mp3), and we saved to temp_mp3_path which is .mp3
         # If save_path was .mp3, temp_mp3_path is same as save_path
         if temp_mp3_path != save_path:
-             os.rename(temp_mp3_path, save_path)
+            os.rename(temp_mp3_path, save_path)
         print(f"音频已成功保存至: {save_path}")
 
     return True

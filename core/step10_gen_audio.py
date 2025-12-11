@@ -12,12 +12,14 @@ from pydub.silence import split_on_silence
 from rich import print as rprint
 from rich.console import Console
 from rich.progress import Progress
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.config_utils import load_key
 from core.all_whisper_methods.audio_preprocess import get_audio_duration
 from core.all_tts_functions.tts_main import tts_main
+from core.timing_utils import srt_time_to_seconds
+from core.constants import SEGS_DIR, TEMP_DIR, TTS_TASKS_FILE, DEFAULT_WARMUP_SIZE
 
 # Suppress Streamlit warnings
 logging.getLogger('streamlit').setLevel(logging.ERROR)
@@ -29,19 +31,9 @@ warnings.filterwarnings("ignore", message=".*TorchAudio's global backend is now 
 
 console = Console()
 
-TEMP_DIR = 'output/audio/tmp'
-SEGS_DIR = 'output/audio/segs'
-TASKS_FILE = "output/audio/tts_tasks.xlsx"
-OUTPUT_FILE = "output/audio/tts_tasks.xlsx"
+# 文件模板
 TEMP_FILE_TEMPLATE = f"{TEMP_DIR}/{{}}_temp.wav"
 OUTPUT_FILE_TEMPLATE = f"{SEGS_DIR}/{{}}.wav"
-WARMUP_SIZE = 5
-
-def parse_df_srt_time(time_str: str) -> float:
-    """Convert SRT time format to seconds"""
-    hours, minutes, seconds = time_str.strip().split(':')
-    seconds, milliseconds = seconds.split('.')
-    return int(hours) * 3600 + int(minutes) * 60 + int(seconds) + int(milliseconds) / 1000
 
 def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -> None:
     """Adjust audio speed and handle edge cases"""
@@ -160,7 +152,7 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
         task = progress.add_task("[cyan]🔄 Generating TTS audio...", total=len(tasks_df))
 
         # warm up for first 5 rows
-        warmup_size = min(WARMUP_SIZE, len(tasks_df))
+        warmup_size = min(DEFAULT_WARMUP_SIZE, len(tasks_df))
         for _, row in tasks_df.head(warmup_size).iterrows():
             try:
                 number, real_dur = process_row(row.to_dict(), tasks_df)
@@ -206,6 +198,7 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                             tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = real_dur
                             progress.advance(task)
                         except Exception as e:
+
                             rprint(f"[red]❌ Error: {str(e)}[/red]")
                             raise e
 
@@ -260,8 +253,8 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
             speed_factor, keep_gaps = process_chunk(chunk_df, accept, min_speed)
 
             # 🎯 Step1: Start processing new timeline
-            chunk_start_time = parse_df_srt_time(chunk_df.iloc[0]['start_time'])
-            chunk_end_time = parse_df_srt_time(chunk_df.iloc[-1]['end_time']) + chunk_df.iloc[-1]['tolerance'] # 加上tolerance才是这一块的结束
+            chunk_start_time = srt_time_to_seconds(chunk_df.iloc[0]['start_time'])
+            chunk_end_time = srt_time_to_seconds(chunk_df.iloc[-1]['end_time']) + chunk_df.iloc[-1]['tolerance']
             cur_time = chunk_start_time
             for i, row in chunk_df.iterrows():
                 # If i is not 0, which is not the first row of the chunk, cur_time needs to be added with the gap of the previous row, remember to divide by speed_factor
@@ -322,7 +315,7 @@ def gen_audio() -> None:
     os.makedirs(SEGS_DIR, exist_ok=True)
 
     # 📝 Step2: Load task file
-    tasks_df = pd.read_excel(TASKS_FILE)
+    tasks_df = pd.read_excel(TTS_TASKS_FILE)
     rprint("[green]📊 Loaded task file successfully[/green]")
 
     # 🔊 Step3: Generate TTS audio
@@ -332,7 +325,7 @@ def gen_audio() -> None:
     tasks_df = merge_chunks(tasks_df)
 
     # 💾 Step5: Save results
-    tasks_df.to_excel(OUTPUT_FILE, index=False)
+    tasks_df.to_excel(TTS_TASKS_FILE, index=False)
     rprint("[bold green]🎉 Audio generation completed successfully![/bold green]")
 
 if __name__ == "__main__":

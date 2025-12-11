@@ -208,5 +208,35 @@ def save_results(df: pd.DataFrame):
     df.to_excel(CLEANED_CHUNKS_EXCEL_PATH, index=False)
     print(f"📊 Excel file saved to {CLEANED_CHUNKS_EXCEL_PATH}")
 
+
+def save_sentences_from_segments(result: dict, output_file: str = "output/log/sentence_splitbynlp.txt"):
+    """
+    从 ASR 结果的 segments 直接生成分句文件，跳过 spacy 分句步骤。
+    
+    适用于 stable-ts、funasr 等已经能按句子分割的 ASR 引擎。
+    
+    Args:
+        result: ASR 返回的结果字典，包含 segments 列表
+        output_file: 输出的分句文件路径
+    """
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    
+    sentences = []
+    for segment in result.get('segments', []):
+        text = segment.get('text', '').strip()
+        if text:
+            # 清理文本：去除多余空格
+            text = ' '.join(text.split())
+            sentences.append(text)
+    
+    if sentences:
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(sentences))
+        print(f"[green]📝 直接输出分句文件 ({len(sentences)} 句) → {output_file}[/green]")
+        print(f"[cyan]💡 已跳过 spacy 分句步骤，ASR 模型已完成句子分割[/cyan]")
+        return True
+    return False
+
+
 def save_language(language: str):
     update_key("whisper.detected_language", language)

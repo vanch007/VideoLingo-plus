@@ -8,6 +8,93 @@ from functools import wraps
 _DEFAULT_TIMING_FILE = "output/log/step_timings.json"
 TIMING_FILE = _DEFAULT_TIMING_FILE
 
+
+# ========== SRT 时间转换工具函数 ==========
+# 这些函数用于统一处理各模块中的时间转换逻辑
+
+def srt_time_to_seconds(time_str: str) -> float:
+    """
+    将 SRT 时间格式转换为秒数。
+    
+    支持格式：
+    - HH:MM:SS,ms (标准 SRT)
+    - HH:MM:SS.ms (常见变体)
+    - HH:MM:SS (无毫秒)
+    
+    Args:
+        time_str: 时间字符串
+        
+    Returns:
+        float: 秒数
+        
+    Examples:
+        >>> srt_time_to_seconds("00:01:30,500")
+        90.5
+        >>> srt_time_to_seconds("01:00:00.000")
+        3600.0
+    """
+    if not isinstance(time_str, str):
+        return 0.0
+    
+    time_str = time_str.strip().replace(',', '.')
+    
+    try:
+        if '.' in time_str:
+            main_part, ms_part = time_str.rsplit('.', 1)
+            h, m, s = main_part.split(':')
+            # 补齐毫秒部分到3位
+            ms = int(ms_part.ljust(3, '0')[:3])
+            return int(h) * 3600 + int(m) * 60 + int(s) + ms / 1000.0
+        else:
+            # 无毫秒
+            h, m, s = time_str.split(':')
+            return float(int(h) * 3600 + int(m) * 60 + int(s))
+    except (ValueError, AttributeError):
+        return 0.0
+
+
+def seconds_to_srt_time(seconds: float, use_comma: bool = True) -> str:
+    """
+    将秒数转换为 SRT 时间格式。
+    
+    Args:
+        seconds: 秒数
+        use_comma: 是否使用逗号分隔毫秒（SRT标准为逗号）
+        
+    Returns:
+        str: 格式化的时间字符串 (HH:MM:SS,ms 或 HH:MM:SS.ms)
+        
+    Examples:
+        >>> seconds_to_srt_time(90.5)
+        '00:01:30,500'
+        >>> seconds_to_srt_time(90.5, use_comma=False)
+        '00:01:30.500'
+    """
+    seconds = max(0, float(seconds))
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    ms = int((seconds * 1000) % 1000)
+    
+    separator = ',' if use_comma else '.'
+    return f"{h:02d}:{m:02d}:{s:02d}{separator}{ms:03d}"
+
+
+def time_to_samples(time_str: str, sample_rate: int) -> int:
+    """
+    将时间字符串转换为音频采样点位置。
+    
+    Args:
+        time_str: SRT格式时间字符串
+        sample_rate: 音频采样率 (如 44100, 48000)
+        
+    Returns:
+        int: 采样点位置
+    """
+    seconds = srt_time_to_seconds(time_str)
+    return int(seconds * sample_rate)
+
+
 def ensure_timing_file():
     """确保计时文件存在"""
     global TIMING_FILE

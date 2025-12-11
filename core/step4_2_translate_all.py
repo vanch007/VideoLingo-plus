@@ -20,6 +20,7 @@ TRANSLATION_RESULTS_FILE = "output/log/translation_results.xlsx"
 TERMINOLOGY_FILE = "output/log/terminology.json"
 CLEANED_CHUNKS_FILE = "output/log/cleaned_chunks.xlsx"
 
+
 # Function to split text into chunks
 def split_chunks_by_chars(chunk_size=2000, max_i=10):
     """Split text into chunks based on character count, return a list of multi-line text chunks"""
@@ -39,6 +40,7 @@ def split_chunks_by_chars(chunk_size=2000, max_i=10):
             sentence_count += 1
     chunks.append(chunk.strip())
     return chunks
+
 
 # Get context from surrounding chunks
 def get_previous_content(chunks, chunk_index):
@@ -109,7 +111,6 @@ def translate_all():
 
     console.print("[bold green]✅ Translation completed and results saved.[/bold green]")
 
-    console.print("[bold green]✅ Translation completed and results saved.[/bold green]")
 
 if __name__ == '__main__':
     translate_all()

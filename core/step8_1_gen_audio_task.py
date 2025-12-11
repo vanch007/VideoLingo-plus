@@ -3,116 +3,15 @@ import datetime
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import re
-from core.ask_gpt import ask_gpt
-from core.prompts_storage import get_subtitle_trim_prompt, get_batch_subtitle_trim_prompt
+
 from rich import print as rprint
 from rich.panel import Panel
 from rich.console import Console
 from core.config_utils import load_key
-from core.all_tts_functions.estimate_duration import init_estimator, estimate_duration
+from core.constants import TRANS_SRT, SRC_SRT, TTS_TASKS_FILE, TRANS_SUBS_FOR_AUDIO_FILE, SRC_SUBS_FOR_AUDIO_FILE
 
 console = Console()
-speed_factor = load_key("speed_factor")
 
-TRANS_SUBS_FOR_AUDIO_FILE = 'output/audio/trans_subs_for_audio.srt'
-SRC_SUBS_FOR_AUDIO_FILE = 'output/audio/src_subs_for_audio.srt'
-SOVITS_TASKS_FILE = 'output/audio/tts_tasks.xlsx'
-SRC_SRT = 'output/src.srt'
-TRANS_SRT = 'output/trans.srt'
-ESTIMATOR = None
-
-def batch_check_and_trim(df):
-    global ESTIMATOR
-    if ESTIMATOR is None:
-        ESTIMATOR = init_estimator()
-    
-    # Use a stricter speed limit (1.25x) to trigger rewrite more often
-    limit_speed_factor = 1.25
-    
-    batch_input = []
-    
-    # 1. Identify subtitles that need trimming
-    for index, row in df.iterrows():
-        text = row['text']
-        # Skip empty text
-        if not text or not str(text).strip():
-            continue
-            
-        duration = row['duration']
-        estimated_duration = estimate_duration(text, ESTIMATOR) / limit_speed_factor
-
-        if estimated_duration > duration:
-            rprint(f"[yellow]⚠️ Text too long for {duration}s slot: '{text}' (Est: {estimated_duration:.2f}s at {limit_speed_factor}x speed)[/yellow]")
-            batch_input.append({
-                'index': index,
-                'text': text,
-                'duration': duration
-            })
-
-    if not batch_input:
-        return df
-
-    rprint(Panel(f"Found {len(batch_input)} subtitles to trim. Processing in batches...", title="Batch Trimming", border_style="yellow"))
-
-    # 2. Process in batches of 10
-    batch_size = 10
-    for i in range(0, len(batch_input), batch_size):
-        current_batch = batch_input[i:i+batch_size]
-        
-        prompt = get_batch_subtitle_trim_prompt(current_batch)
-        
-        def valid_batch_trim(response):
-            if 'results' not in response or not isinstance(response['results'], list):
-                return {'status': 'error', 'message': 'No results list in response'}
-            return {'status': 'success', 'message': ''}
-        
-        try:
-            response = ask_gpt(prompt, response_json=True, log_title='subtitle_trim_batch', valid_def=valid_batch_trim)
-            results = response['results']
-            
-            # Create a map for easy lookup
-            results_map = {res['index']: res.get('shortened_text', '') for res in results}
-            
-            for item in current_batch:
-                idx = item['index']
-                original_text = item['text']
-                shortened_text = results_map.get(idx)
-                
-                # Validate the shortened text - reject placeholders or invalid responses
-                is_valid = True
-                if not shortened_text:
-                    is_valid = False
-                elif 'merged' in shortened_text.lower() or 'merge' in shortened_text.lower():
-                    # LLM returned a placeholder like "(Merged with 44 & 46)" instead of actual text
-                    rprint(f"[yellow]⚠️ LLM returned merge placeholder for #{idx}, keeping original[/yellow]")
-                    is_valid = False
-                elif shortened_text.startswith('(') and shortened_text.endswith(')'):
-                    # LLM returned a comment in parentheses
-                    rprint(f"[yellow]⚠️ LLM returned comment for #{idx}: '{shortened_text}', keeping original[/yellow]")
-                    is_valid = False
-                elif len(shortened_text) < 3 and len(original_text) > 10:
-                    # Suspiciously short result
-                    rprint(f"[yellow]⚠️ LLM returned too short text for #{idx}, keeping original[/yellow]")
-                    is_valid = False
-                
-                if is_valid:
-                    rprint(f"[green]Trimmed #{idx}: {original_text} -> {shortened_text}[/green]")
-                    df.at[idx, 'text'] = shortened_text
-                else:
-                    # Keep original text if validation failed
-                    rprint(f"[yellow]⚠️ Keeping original for #{idx}: {original_text}[/yellow]")
-
-        except Exception as e:
-            rprint(f"[red]Batch processing failed for batch starting at index {current_batch[0]['index']}: {e}[/red]")
-            # Fallback: remove punctuation for the entire batch if the API call fails completely
-            for item in current_batch:
-                idx = item['index']
-                text = item['text']
-                shortened_text = re.sub(r'[,.!?;:，。！？；：]', ' ', text).strip()
-                df.at[idx, 'text'] = shortened_text
-                rprint(f"[yellow]Fallback trim #{idx}: {shortened_text}[/yellow]")
-                
-    return df
 
 def time_diff_seconds(t1: datetime.time, t2: datetime.time, base_date: datetime.date) -> float:
     """Calculate the difference in seconds between two time objects"""
@@ -223,12 +122,6 @@ def process_srt():
     df['start_time'] = df['start_time'].apply(lambda x: x.strftime('%H:%M:%S.%f')[:-3])
     df['end_time'] = df['end_time'].apply(lambda x: x.strftime('%H:%M:%S.%f')[:-3])
 
-    # Check and trim subtitle length in batch if enabled
-    if load_key("rewrite_text_for_dubbing", True):
-        df = batch_check_and_trim(df)
-    else:
-        rprint(Panel("Skipping subtitle rewriting as per configuration.", title="Info", border_style="blue"))
-
     return df
 
 def save_to_srt(df, srt_path):
@@ -254,13 +147,13 @@ def save_to_srt(df, srt_path):
     rprint(f"[bold green]✅ Synced rewritten subtitles to {srt_path}[/bold green]")
 
 def gen_audio_task_main():
-    if os.path.exists(SOVITS_TASKS_FILE):
-        rprint(Panel(f"{SOVITS_TASKS_FILE} already exists, skip.", title="Info", border_style="blue"))
+    if os.path.exists(TTS_TASKS_FILE):
+        rprint(Panel(f"{TTS_TASKS_FILE} already exists, skip.", title="Info", border_style="blue"))
     else:
         df = process_srt()
         console.print(df)
-        df.to_excel(SOVITS_TASKS_FILE, index=False)
-        rprint(Panel(f"Successfully generated {SOVITS_TASKS_FILE}", title="Success", border_style="green"))
+        df.to_excel(TTS_TASKS_FILE, index=False)
+        rprint(Panel(f"Successfully generated {TTS_TASKS_FILE}", title="Success", border_style="green"))
         
         # Sync the potentially rewritten text back to trans.srt to avoid mismatch in Step 8.2
         save_to_srt(df, TRANS_SRT)

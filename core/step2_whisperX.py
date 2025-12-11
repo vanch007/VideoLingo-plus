@@ -128,6 +128,11 @@ def transcribe():
     # step7 Process df
     df = process_transcription(combined_result)
     save_results(df)
+    
+    # 对于 stable-ts 和 funasr，直接输出分句文件，跳过 spacy 分句步骤
+    if runtime in ("stable-ts", "funasr"):
+        from core.all_whisper_methods.audio_preprocess import save_sentences_from_segments
+        save_sentences_from_segments(combined_result)
 
 if __name__ == "__main__":
     transcribe()

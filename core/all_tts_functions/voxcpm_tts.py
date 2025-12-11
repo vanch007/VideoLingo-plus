@@ -6,13 +6,20 @@ import os
 import sys
 from pathlib import Path
 
+# 使用统一的路径设置（替代 sys.path.append）
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from core.config_utils import load_key
+from core.all_tts_functions.tts_utils import (
+    get_reference_audio_path,
+    get_prompt_text_from_df,
+    ensure_output_dir
+)
 from rich import print as rprint
 
 # Default VoxCPM API endpoint
 DEFAULT_BASE_URL = "http://127.0.0.1:7860"
+
 
 def get_base_url():
     """Get VoxCPM API base URL from config or use default"""
@@ -37,60 +44,22 @@ def voxcpm_tts(text: str, save_as: str, number: int, task_df, attempt: int = 0):
     from gradio_client import Client, handle_file
     import shutil
     
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    refers_dir = os.path.join(project_root, 'output', 'audio', 'refers')
-    spk_audio_prompt = os.path.join(refers_dir, f'{number}.wav')
+    # 使用 tts_utils 获取参考音频（自动处理 fallback）
+    spk_audio_prompt, fallback_number = get_reference_audio_path(number)
     
-    # Minimum valid audio file size (20KB)
-    MIN_AUDIO_SIZE = 20000
-    use_fallback = False
-    fallback_number = None
-
-    # Check if the reference audio is valid, otherwise use fallback
-    if not os.path.exists(spk_audio_prompt) or os.path.getsize(spk_audio_prompt) < MIN_AUDIO_SIZE:
-        rprint(f"[yellow]⚠️ Reference audio for {number} is invalid, searching for fallback...[/yellow]")
-        use_fallback = True
-        
-        # Find the first valid reference audio
-        for i in range(1, 100):  # Check first 100 segments
-            fallback_path = os.path.join(refers_dir, f'{i}.wav')
-            if os.path.exists(fallback_path) and os.path.getsize(fallback_path) >= MIN_AUDIO_SIZE:
-                spk_audio_prompt = fallback_path
-                fallback_number = i
-                rprint(f"[yellow]📌 Using fallback reference audio: {i}.wav[/yellow]")
-                break
-        else:
-            raise FileNotFoundError(f"No valid reference audio found in {refers_dir}")
-
-    # Get prompt_text from task_df (original text corresponding to the reference audio)
-    # This is required for voice cloning - the model needs to know what's being said in the reference
-    # Use fallback_number if we're using a fallback audio, otherwise use the original number
-    ref_number = fallback_number if use_fallback else number
-    try:
-        prompt_text = task_df.loc[task_df['number'] == ref_number, 'origin'].values[0]
-        if not prompt_text or len(prompt_text.strip()) == 0:
-            raise ValueError("Empty prompt_text")
-    except (KeyError, IndexError, ValueError, TypeError) as e:
-        rprint(f"[yellow]⚠️ Could not get original text for number {ref_number}, using synthesized text as fallback[/yellow]")
-        prompt_text = text  # Fallback to the text being synthesized
+    # 确定要用哪个编号获取原始文本
+    ref_number = fallback_number if fallback_number is not None else number
+    
+    # 使用 tts_utils 获取原始文本
+    prompt_text = get_prompt_text_from_df(task_df, ref_number, fallback_text=text)
 
     # Load configuration options
-    try:
-        use_prompt_enhancement = load_key("voxcpm_tts.use_prompt_enhancement")
-    except (KeyError, TypeError):
-        use_prompt_enhancement = False
-    
-    try:
-        normalize = load_key("voxcpm_tts.normalize")
-    except (KeyError, TypeError):
-        normalize = False
-        
-    try:
-        denoise = load_key("voxcpm_tts.denoise")
-    except (KeyError, TypeError):
-        denoise = False
+    use_prompt_enhancement = load_key("voxcpm_tts.use_prompt_enhancement", False)
+    normalize = load_key("voxcpm_tts.normalize", False)
+    denoise = load_key("voxcpm_tts.denoise", False)
 
-    Path(save_as).parent.mkdir(parents=True, exist_ok=True)
+    # 确保输出目录存在
+    ensure_output_dir(save_as)
 
     rprint(f"[cyan]🎙️ VoxCPM: '{text[:40]}...' (ref: '{prompt_text[:30]}...')[/cyan]")
 
@@ -145,4 +114,3 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"Test failed: {e}")
         print("Please ensure VoxCPM service is running and reference audio exists.")
-
