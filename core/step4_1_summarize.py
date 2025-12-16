@@ -141,17 +141,18 @@ def get_summary():
     if len(custom_terms) > 0:
         console.print(f"[cyan]📖 Custom Terms Loaded: {len(custom_terms)} terms[/cyan]")
     
+    # ============ Step 1: Summarize topic and extract terms ============
+    from core.prompts_storage import get_summary_prompt, get_stt_correction_prompt
+    
     summary_prompt = get_summary_prompt(src_content, custom_terms_json)
-    console.print("[cyan]📝 Summarizing, extracting terminology, and correcting STT errors...[/cyan]")
+    console.print("[cyan]📝 Step 1: Summarizing topic and extracting terminology...[/cyan]")
     
     def valid_summary(response_data):
         required_keys = {'src', 'tgt', 'note'}
         if 'terms' not in response_data:
             return {"status": "error", "message": "Missing 'terms' key"}
-        if 'corrected_lines' not in response_data:
-            return {"status": "error", "message": "Missing 'corrected_lines' key"}
-        if not isinstance(response_data['corrected_lines'], list):
-            return {"status": "error", "message": "'corrected_lines' must be a list"}
+        if 'topic' not in response_data:
+            return {"status": "error", "message": "Missing 'topic' key"}
         for term in response_data['terms']:
             if not all(key in term for key in required_keys):
                 return {"status": "error", "message": "Invalid term format"}
@@ -159,9 +160,32 @@ def get_summary():
 
     summary = ask_gpt(summary_prompt, response_json=True, valid_def=valid_summary, log_title='summary')
     
+    topic = summary.get('topic', '')
+    terms = summary.get('terms', [])
+    
+    console.print(f"[green]✅ Topic: {topic[:50]}...[/green]")
+    console.print(f"[green]✅ Extracted {len(terms)} terms[/green]")
+    
+    # ============ Step 2: STT Correction with context ============
+    console.print("[cyan]🔧 Step 2: Correcting STT errors with context...[/cyan]")
+    
+    # Combine custom terms with extracted terms for context
+    all_terms = terms + custom_terms_json['terms']
+    
+    correction_prompt = get_stt_correction_prompt(src_content, topic, all_terms)
+    
+    def valid_correction(response_data):
+        if 'corrected_lines' not in response_data:
+            return {"status": "error", "message": "Missing 'corrected_lines' key"}
+        if not isinstance(response_data['corrected_lines'], list):
+            return {"status": "error", "message": "'corrected_lines' must be a list"}
+        return {"status": "success", "message": "Correction completed"}
+
+    correction_result = ask_gpt(correction_prompt, response_json=True, valid_def=valid_correction, log_title='stt_correction')
+    
     # 处理纠错结果
-    if 'corrected_lines' in summary:
-        corrected_lines = summary['corrected_lines']
+    if 'corrected_lines' in correction_result:
+        corrected_lines = correction_result['corrected_lines']
         
         # 读取原始完整文件
         with open(SENTENCE_TXT_PATH, 'r', encoding='utf-8') as f:
@@ -191,7 +215,7 @@ def get_summary():
     if 'terms' in summary:
         summary['terms'].extend(custom_terms_json['terms'])
     
-    # 移除 corrected_lines，只保存 terminology
+    # 保存 terminology
     save_data = {
         'topic': summary.get('topic', ''),
         'terms': summary.get('terms', [])

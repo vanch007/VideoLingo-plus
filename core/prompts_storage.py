@@ -44,6 +44,7 @@ Split the given subtitle text into {num_parts} parts, each less than {word_limit
 ## ================================================================
 # @ step4_1_summarize.py
 def get_summary_prompt(source_content, custom_terms_json=None):
+    """Step 1: Summarize topic and extract terminology (without correction)"""
     src_lang = load_key("whisper.detected_language")
     tgt_lang = load_key("target_language")
 
@@ -57,55 +58,27 @@ def get_summary_prompt(source_content, custom_terms_json=None):
 
     summary_prompt = f"""
 ## Role
-You are a video translation expert, terminology consultant, and speech-to-text correction specialist.
-You specialize in {src_lang} comprehension and correcting common ASR (Automatic Speech Recognition) errors.
+You are a video translation expert and terminology consultant.
+You specialize in {src_lang} comprehension and professional terminology extraction.
 
 ## Task
 For the provided {src_lang} video text (transcribed by ASR, may contain errors):
-1. **Correct ASR Errors**: Fix recognition mistakes based on context (wrong characters, homophones, missing punctuation)
-2. Summarize main topic in two sentences
-3. Extract professional terms/names with {tgt_lang} translations (excluding existing terms)
-4. Provide brief explanation for each term{terms_note}
-
-## STT Correction Guidelines
-CRITICAL RULE: You must ONLY correct characters that sound similar (homophones). 
-⚠️ DO NOT add or remove any characters. The corrected line MUST have the EXACT SAME character count as the original line.
-
-Only fix these types of errors:
-- Homophones (同音字/谐音错误): Characters that sound the same but are written differently
-  Examples: \"绿\" vs \"微\", \"一起\" vs \"一气\", \"的\" vs \"地\" vs \"得\"
-- Similar pronunciation errors: Characters with similar sounds misrecognized
-  Examples: \"专业\" vs \"专研\", \"成分\" vs \"成份\"
-
-DO NOT fix:
-- Missing or extra characters (字数变化)
-- Word boundary errors (不要合并或拆分词语)
-- Punctuation changes (do not add/remove punctuation)
-- Rephrasing or rewriting sentences
+1. Summarize main topic in two sentences
+2. Extract professional terms/names with {tgt_lang} translations (excluding existing terms)
+3. Provide brief explanation for each term{terms_note}
 
 ## Steps
-1. **Text Correction** (CRITICAL - PRESERVE CHARACTER COUNT):
-   - Read through each line
-   - ONLY replace misrecognized characters with correct homophones
-   - Count characters before and after - they MUST be equal
-   - If unsure, keep the original character
-
-2. Topic Summary:
+1. Topic Summary:
    - Quick scan for general understanding
    - Write two sentences: first for main topic, second for key point
 
-3. Term Extraction:
-   - Mark professional terms and names
+2. Term Extraction:
+   - Mark professional terms, brand names, and proper nouns
    - Provide {tgt_lang} translation or keep original
    - Add brief explanation
 
 ## Output in only JSON format
 {{
-    "corrected_lines": [
-        "Corrected line 1 (SAME character count as input line 1)",
-        "Corrected line 2 (SAME character count as input line 2)",
-        "... one corrected line for each input line, maintaining the same order, count, AND character length"
-    ],
     "topic": "Two-sentence video summary",
     "terms": [
         {{
@@ -114,6 +87,73 @@ DO NOT fix:
             "note": "Brief explanation"
         }},
         ...
+    ]
+}}
+
+## INPUT
+<text>
+{source_content}
+</text>
+""".strip()
+    return summary_prompt
+
+
+def get_stt_correction_prompt(source_content, topic, terms):
+    """Step 2: Correct STT errors based on summary context"""
+    src_lang = load_key("whisper.detected_language")
+    
+    # Build context from summary
+    terms_context = ""
+    if terms:
+        terms_list = [f"- {term['src']}: {term.get('note', '')}" for term in terms[:15]]  # Limit to 15 terms
+        terms_context = "\n".join(terms_list)
+
+    correction_prompt = f"""
+## Role
+You are a speech-to-text correction specialist for {src_lang}.
+You correct ASR (Automatic Speech Recognition) transcription errors.
+
+## Context (Use this to guide corrections)
+### Video Topic
+{topic}
+
+### Key Terms in This Video
+{terms_context}
+
+## Task
+Correct ASR errors in the provided text lines based on the context above.
+
+## CRITICAL RULES
+⚠️ You must ONLY correct characters that sound similar (homophones).
+⚠️ DO NOT add or remove any characters. 
+⚠️ The corrected line MUST have the EXACT SAME character count as the original line.
+
+Only fix these types of errors:
+- Homophones (同音字/谐音错误): Characters that sound the same but are written differently
+  Examples: "绿" vs "微", "一起" vs "一气", "的" vs "地" vs "得"
+- Similar pronunciation errors: Characters with similar sounds misrecognized
+  Examples: "专业" vs "专研", "成分" vs "成份"
+- Context-based corrections: Use the topic and terms above to identify likely misrecognitions
+
+DO NOT fix:
+- Missing or extra characters (字数变化)
+- Word boundary errors (不要合并或拆分词语)
+- Punctuation changes (do not add/remove punctuation)
+- Rephrasing or rewriting sentences
+
+## Steps
+1. Read the topic and key terms to understand the video context
+2. For each line, check if any characters appear to be homophone errors
+3. Use the context to determine the correct character
+4. ONLY replace if you are confident; otherwise keep original
+5. Verify character count matches before and after
+
+## Output in only JSON format
+{{
+    "corrected_lines": [
+        "Corrected line 1 (SAME character count as input line 1)",
+        "Corrected line 2 (SAME character count as input line 2)",
+        "... one corrected line for each input line, maintaining the same order, count, AND character length"
     ]
 }}
 
@@ -129,7 +169,7 @@ DO NOT fix:
 {source_content}
 </text>
 """.strip()
-    return summary_prompt
+    return correction_prompt
 
 
 ## ================================================================

@@ -19,7 +19,7 @@ api:
 # Source language for embedded subtitles
 source_language: 'en'
 
-target_language: 'en'
+target_language: 'id'
 
 # Whether to use Demucs for vocal separation before transcription
 demucs: true
@@ -31,7 +31,7 @@ whisper:
   # ["medium", "large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
   model: 'medium'
   # Whisper specified recognition language [en, zh, ...]
-  language: 'zh'
+  language: 'en'
   detected_language: 'zh'
   # Whisper running mode ["local", "stable-ts", "funasr"]. Specifies where to run
   runtime: 'stable-ts'
