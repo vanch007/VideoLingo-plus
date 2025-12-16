@@ -32,8 +32,8 @@ def demucs_main():
     console = Console()
     os.makedirs(AUDIO_DIR, exist_ok=True)
     
-    console.print("🤖 Loading <htdemucs> model...")
-    model = get_model('htdemucs')
+    console.print("🤖 Loading <htdemucs_ft> fine-tuned model (better quality, 4x slower)...")
+    model = get_model('htdemucs_ft')
     separator = PreloadedSeparator(model=model, shifts=1, overlap=0.25)
     
     console.print("🎵 Separating audio...")
