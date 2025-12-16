@@ -133,17 +133,17 @@ def page_setting():
 
         if runtime == "funasr":
             # FunASR model selection
-            funasr_models = {"SenseVoice": "sensevoice", "Paraformer": "paraformer"}
+            funasr_models = {"FunASR Nano": "nano", "SenseVoice": "sensevoice", "Paraformer": "paraformer"}
             funasr_display = list(funasr_models.keys())
             funasr_values = list(funasr_models.values())
-            current_funasr_model = load_key("funasr.model", "sensevoice")
+            current_funasr_model = load_key("funasr.model", "nano")
             current_funasr_index = funasr_values.index(current_funasr_model) if current_funasr_model in funasr_values else 0
             
             selected_funasr_model = st.selectbox(
                 t("FunASR Model"),
                 options=funasr_display,
                 index=current_funasr_index,
-                help=t("SenseVoice: newer multi-functional model. Paraformer: classic stable model with speaker diarization.")
+                help=t("FunASR Nano: newest efficient model. SenseVoice: fast multi-functional. Paraformer: speaker diarization support.")
             )
             if funasr_models[selected_funasr_model] != current_funasr_model:
                 update_key("funasr.model", funasr_models[selected_funasr_model])

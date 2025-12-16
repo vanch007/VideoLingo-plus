@@ -68,20 +68,27 @@ For the provided {src_lang} video text (transcribed by ASR, may contain errors):
 4. Provide brief explanation for each term{terms_note}
 
 ## STT Correction Guidelines
-Common ASR errors to check and fix:
-- Homophones (同音字错误): e.g., "一起" vs "一气", "的" vs "地" vs "得"
-- Missing or wrong punctuation
-- Proper nouns misspelled
-- Technical terms incorrectly transcribed
-- Word boundary errors (words merged or split incorrectly)
-- Context-inappropriate words
+CRITICAL RULE: You must ONLY correct characters that sound similar (homophones). 
+⚠️ DO NOT add or remove any characters. The corrected line MUST have the EXACT SAME character count as the original line.
+
+Only fix these types of errors:
+- Homophones (同音字/谐音错误): Characters that sound the same but are written differently
+  Examples: \"绿\" vs \"微\", \"一起\" vs \"一气\", \"的\" vs \"地\" vs \"得\"
+- Similar pronunciation errors: Characters with similar sounds misrecognized
+  Examples: \"专业\" vs \"专研\", \"成分\" vs \"成份\"
+
+DO NOT fix:
+- Missing or extra characters (字数变化)
+- Word boundary errors (不要合并或拆分词语)
+- Punctuation changes (do not add/remove punctuation)
+- Rephrasing or rewriting sentences
 
 ## Steps
-1. **Text Correction** (CRITICAL):
-   - Read through the entire text
-   - Identify and fix ASR errors based on context
-   - Maintain original meaning while correcting errors
-   - Return the COMPLETE corrected text, line by line
+1. **Text Correction** (CRITICAL - PRESERVE CHARACTER COUNT):
+   - Read through each line
+   - ONLY replace misrecognized characters with correct homophones
+   - Count characters before and after - they MUST be equal
+   - If unsure, keep the original character
 
 2. Topic Summary:
    - Quick scan for general understanding
@@ -95,9 +102,9 @@ Common ASR errors to check and fix:
 ## Output in only JSON format
 {{
     "corrected_lines": [
-        "Corrected line 1",
-        "Corrected line 2",
-        "... one corrected line for each input line, maintaining the same order and count"
+        "Corrected line 1 (SAME character count as input line 1)",
+        "Corrected line 2 (SAME character count as input line 2)",
+        "... one corrected line for each input line, maintaining the same order, count, AND character length"
     ],
     "topic": "Two-sentence video summary",
     "terms": [
@@ -112,9 +119,10 @@ Common ASR errors to check and fix:
 
 ## IMPORTANT
 - The "corrected_lines" array MUST have the EXACT SAME number of lines as the input
+- Each corrected line MUST have the EXACT SAME character count as the original line
+- ONLY replace homophones/similar-sounding characters, NEVER add or delete characters
 - Keep the line order unchanged
-- Only fix errors, do not rephrase or summarize the content
-- If a line has no errors, return it unchanged
+- If a line has no homophone errors, return it UNCHANGED
 
 ## INPUT
 <text>

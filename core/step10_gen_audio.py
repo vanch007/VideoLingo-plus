@@ -162,14 +162,15 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 rprint(f"[red]❌ Error in warmup: {str(e)}[/red]")
                 raise e
 
-        # for gpt_sovits and custom_tts, do not use parallel to avoid mistakes
+        # Local TTS methods that do not support parallel processing
+        LOCAL_TTS_METHODS = ["custom_tts", "index_tts2", "gpt_sovits", "voxcpm_tts"]
         tts_method = load_key("tts_method")
         
-        # For custom_tts (index_tts2), completely skip parallel processing
-        if tts_method == "custom_tts":
+        # For local TTS methods, completely skip parallel processing
+        if tts_method in LOCAL_TTS_METHODS:
             # Process all remaining tasks sequentially
             if len(tasks_df) > warmup_size:
-                rprint("[yellow]📌 Using sequential processing for custom_tts to avoid audio scrambling[/yellow]")
+                rprint(f"[yellow]📌 Using sequential processing for {tts_method} (local API does not support multi-threading)[/yellow]")
                 for _, row in tasks_df.iloc[warmup_size:].iterrows():
                     try:
                         number, real_dur = process_row(row.to_dict(), tasks_df)
@@ -179,8 +180,8 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                         rprint(f"[red]❌ Error: {str(e)}[/red]")
                         raise e
         else:
-            # For other TTS methods, use parallel processing
-            max_workers = load_key("max_workers") if tts_method != "gpt_sovits" else 1
+            # For cloud TTS methods (edge_tts, piper_tts, sf_indextts2, etc.), use parallel processing
+            max_workers = load_key("max_workers")
             Executor = ThreadPoolExecutor
 
             # parallel processing for remaining tasks
@@ -198,7 +199,6 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                             tasks_df.loc[tasks_df['number'] == number, 'real_dur'] = real_dur
                             progress.advance(task)
                         except Exception as e:
-
                             rprint(f"[red]❌ Error: {str(e)}[/red]")
                             raise e
 

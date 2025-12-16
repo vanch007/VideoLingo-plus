@@ -47,15 +47,15 @@ whisper:
 
 # FunASR configuration (used when whisper.runtime is 'funasr')
 funasr:
-  # Model selection: "sensevoice" (faster, no speaker diarization) or "paraformer" (with speaker diarization)
-  model: 'paraformer'
+  # Model selection: "nano" (newest, recommended), "sensevoice" (faster, no speaker diarization) or "paraformer" (with speaker diarization)
+  model: 'nano'
   # Enable speaker diarization with CAM++ (requires more memory)
   enable_spk: false
   # Maximum audio segment duration for VAD (ms)
   max_single_segment_time: 30000
 
 # Whether to burn subtitles into the video
-burn_subtitles: true
+burn_subtitles: false
 ## ======================== Advanced Settings ======================== ##
 # *Default resolution for downloading YouTube videos [360, 1080, best]
 ytb_resolution: '1080'
@@ -82,7 +82,7 @@ pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
 # TTS selection [edge_tts, gpt_sovits, custom_tts, sf_indextts2, index_tts2, piper_tts, indonesian_tts, voxcpm_tts]
-tts_method: 'sf_indextts2'
+tts_method: 'index_tts2'
 
 # Indonesian TTS configuration (using Wikidepia VITS model)
 indonesian_tts:
@@ -175,6 +175,6 @@ language_split_without_space:
 - 'ja'
 merge_split_subtitles: false
 merge_subtitles: false
-rewrite_text_for_dubbing: true
+rewrite_text_for_dubbing: false
 piper_tts:
   voice: id_ID-news_tts-medium

@@ -1,4 +1,5 @@
 import os, sys, json
+import re
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.ask_gpt import ask_gpt
 from core.prompts_storage import get_summary_prompt
@@ -11,6 +12,7 @@ console = Console()
 TERMINOLOGY_JSON_PATH = 'output/log/terminology.json'
 SENTENCE_TXT_PATH = 'output/log/sentence_splitbymeaning.txt'
 CUSTOM_TERMS_PATH = 'custom_terms.xlsx'
+CLEANED_CHUNKS_PATH = 'output/log/cleaned_chunks.xlsx'
 
 def combine_chunks():
     """Combine the text chunks identified by whisper into a single long text"""
@@ -50,11 +52,78 @@ def search_things_to_note_in_prompt(sentence):
     else:
         return None
 
-def save_corrected_text(corrected_lines):
-    """Save corrected text back to the source file"""
+def update_cleaned_chunks(original_lines, corrected_lines):
+    """Update cleaned_chunks.xlsx with corrected text while preserving timestamps.
+    
+    This function maps the corrected sentence-level text back to word-level timestamps.
+    It works by:
+    1. Joining original lines to get the full original text
+    2. Joining corrected lines to get the full corrected text  
+    3. Matching characters position by position (allowing for length differences)
+    4. Updating the 'text' column in cleaned_chunks.xlsx
+    """
+    if not os.path.exists(CLEANED_CHUNKS_PATH):
+        console.print(f"[yellow]⚠️ {CLEANED_CHUNKS_PATH} not found, skipping cleaned_chunks update[/yellow]")
+        return
+    
+    try:
+        df = pd.read_excel(CLEANED_CHUNKS_PATH)
+        
+        # Remove quotes from text column for comparison
+        df['text_clean'] = df['text'].str.strip('"').str.strip()
+        
+        # Build the original text from cleaned_chunks
+        original_from_chunks = ''.join(df['text_clean'].tolist())
+        
+        # Build original and corrected text from sentence lines (remove punctuation for matching)
+        def remove_punct(text):
+            return re.sub(r'[^\w]', '', text)
+        
+        original_text = remove_punct(''.join(original_lines))
+        corrected_text_full = ''.join(corrected_lines)
+        corrected_text = remove_punct(corrected_text_full)
+        
+        # If lengths match, do character-by-character replacement
+        if len(original_from_chunks) == len(corrected_text):
+            new_texts = []
+            for i, char in enumerate(corrected_text):
+                new_texts.append(f'"{char}"')
+            df['text'] = new_texts
+            df.drop(columns=['text_clean'], inplace=True)
+            df.to_excel(CLEANED_CHUNKS_PATH, index=False)
+            console.print(f'[green]📝 已同步更新词级时间戳 → {CLEANED_CHUNKS_PATH}[/green]')
+        else:
+            # Length mismatch - try fuzzy character mapping
+            console.print(f"[yellow]⚠️ 字符数不匹配 (词级: {len(original_from_chunks)}, 纠错后: {len(corrected_text)})[/yellow]")
+            
+            # Use the shorter length for safe replacement
+            min_len = min(len(original_from_chunks), len(corrected_text))
+            new_texts = []
+            for i in range(len(df)):
+                if i < min_len:
+                    new_texts.append(f'"{corrected_text[i]}"')
+                else:
+                    # Keep original for extra characters
+                    new_texts.append(df.iloc[i]['text'])
+            
+            df['text'] = new_texts
+            df.drop(columns=['text_clean'], inplace=True)
+            df.to_excel(CLEANED_CHUNKS_PATH, index=False)
+            console.print(f'[yellow]⚠️ 部分更新词级时间戳 (前 {min_len} 个字符) → {CLEANED_CHUNKS_PATH}[/yellow]')
+            
+    except Exception as e:
+        console.print(f"[red]❌ 更新 cleaned_chunks.xlsx 失败: {e}[/red]")
+
+def save_corrected_text(corrected_lines, original_lines=None):
+    """Save corrected text back to the source file and update cleaned_chunks.xlsx"""
     with open(SENTENCE_TXT_PATH, 'w', encoding='utf-8') as f:
         f.write('\n'.join(corrected_lines))
     console.print(f'[green]📝 STT 纠错完成，已覆盖 → {SENTENCE_TXT_PATH}[/green]')
+    
+    # Also update cleaned_chunks.xlsx if original_lines provided
+    if original_lines is not None:
+        update_cleaned_chunks(original_lines, corrected_lines)
+
 
 def get_summary():
     src_content, line_count = combine_chunks()
@@ -114,7 +183,7 @@ def get_summary():
                         console.print(f"[yellow]  {i+1}: {original_lines[i]}[/yellow]")
                         console.print(f"[green]  → {corrected_lines[i]}[/green]")
             
-            save_corrected_text(new_lines)
+            save_corrected_text(new_lines, original_lines[:line_count])
         else:
             console.print(f"[yellow]⚠️ 纠错行数不匹配 (期望 {line_count}, 得到 {len(corrected_lines)}), 跳过纠错[/yellow]")
     

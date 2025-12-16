@@ -126,12 +126,83 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
             # Process SenseVoice output with segment duration for timestamp calculation
             result = _process_sensevoice_result(res, start, end - start)
             
-            # Note: Speaker diarization for SenseVoice requires additional setup
-            # CAM++ provides speaker embeddings, not labels. Full diarization would need:
-            # - SOND pipeline or pyannote for segment-based speaker assignment
-            # For now, speaker diarization is only fully supported in Paraformer mode
             if ENABLE_SPK:
                 rprint("[yellow]⚠️ Speaker diarization not yet implemented for SenseVoice model.[/yellow]")
+                rprint("[yellow]   Use Paraformer model or WhisperX for speaker identification.[/yellow]")
+
+        elif FUNASR_MODEL == "nano":
+            model_name = "FunAudioLLM/Fun-ASR-Nano-2512"  # HuggingFace model ID
+            rprint(f"[green]📥 Loading FunASR Nano model from HuggingFace: {model_name}...[/green]")
+            
+            # Get the local path of the downloaded model using huggingface_hub
+            from huggingface_hub import snapshot_download
+            model_path = snapshot_download(repo_id=model_name)
+            
+            rprint(f"[cyan]  📦 Model path: {model_path}[/cyan]")
+            
+            # Add model path to sys.path to allow importing model.py
+            if model_path not in sys.path:
+                sys.path.insert(0, model_path)
+            
+            # Import FunASRNano directly from model.py (as per official docs)
+            from model import FunASRNano
+            
+            # MPS doesn't support mixed precision well, use fp32 for stability
+            # CUDA can use fp16 for acceleration
+            if device.startswith("cuda"):
+                model_dtype = "fp16"  # Use float16 for CUDA acceleration
+                rprint("[cyan]  🚀 Using float16 for CUDA acceleration[/cyan]")
+            else:
+                model_dtype = "fp32"  # Use float32 for MPS/CPU (MPS doesn't support mixed precision)
+                if device == "mps":
+                    rprint("[cyan]  📝 Using float32 for MPS (mixed precision not supported)[/cyan]")
+            
+            # Use direct inference with FunASRNano.from_pretrained
+            nano_model, kwargs = FunASRNano.from_pretrained(
+                model=model_path, 
+                device=device,
+                llm_dtype=model_dtype,  # Pass dtype to model
+            )
+            nano_model.eval()
+            
+            rprint("[cyan]🎤 Transcribing with Fun-ASR-Nano...[/cyan]")
+            res = nano_model.inference(data_in=[temp_audio_path], **kwargs)
+            
+            # Process Nano output - res[0][0] contains {'text': '...'}
+            text = res[0][0]["text"] if res and res[0] else ""
+            
+            # Format result to match expected structure
+            result = {'segments': [], 'language': 'auto'}
+            if text:
+                # Distribute timestamps evenly across characters/words
+                is_cjk = _is_cjk_text(text)
+                words_list = list(text.replace(' ', '')) if is_cjk else text.split()
+                segment_duration = end - start
+                time_per_word = segment_duration / len(words_list) if words_list else 0.1
+                
+                words = []
+                current_time = start
+                for word in words_list:
+                    if word.strip():
+                        words.append({
+                            'word': word.strip(),
+                            'start': current_time,
+                            'end': current_time + time_per_word
+                        })
+                        current_time += time_per_word
+                
+                result['segments'].append({
+                    'start': start,
+                    'end': end,
+                    'text': text,
+                    'words': words
+                })
+            
+            # Clean up
+            del nano_model
+            
+            if ENABLE_SPK:
+                rprint("[yellow]⚠️ Speaker diarization not yet implemented for Fun-ASR-Nano model.[/yellow]")
                 rprint("[yellow]   Use Paraformer model or WhisperX for speaker identification.[/yellow]")
             
         else:  # paraformer

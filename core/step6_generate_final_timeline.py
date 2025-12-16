@@ -67,7 +67,11 @@ def show_difference(str1, str2):
     return time_stamp_list
 
 def get_sentence_timestamps(df_words, df_sentences):
-    """Original text-matching alignment logic for ASR workflow (Mode 1)."""
+    """Original text-matching alignment logic for ASR workflow (Mode 1).
+    
+    Note: This function uses fuzzy matching to handle text differences that may occur
+    due to LLM-based STT error correction in step4_1_summarize.py.
+    """
     time_stamp_list = []
     full_words_str = ''
     position_to_word_idx = {}
@@ -88,25 +92,28 @@ def get_sentence_timestamps(df_words, df_sentences):
         sentence_len = len(clean_sentence)
         
         match_found = False
-        # Allow for some flexibility in matching
-        search_range = min(len(full_words_str) - sentence_len + 1, current_pos + 500) # Search within a reasonable window
+        # Increase search window to handle LLM corrections that may shift positions
+        search_range = min(len(full_words_str) - sentence_len + 1, current_pos + 800)
         
         # Find the best match in the search window
         best_match_pos = -1
-        highest_similarity = 0.8 # Require a high similarity to consider it a match
+        # Lower threshold to accommodate LLM corrections (was 0.8)
+        highest_similarity = 0.6
+        
+        # Import difflib at function level for fuzzy matching
+        from difflib import SequenceMatcher
 
         temp_pos = current_pos
         while temp_pos < search_range:
             substring = full_words_str[temp_pos:temp_pos+sentence_len]
-            # Using difflib for fuzzy matching
-            from difflib import SequenceMatcher
             similarity = SequenceMatcher(None, substring, clean_sentence).ratio()
 
             if similarity > highest_similarity:
                 highest_similarity = similarity
                 best_match_pos = temp_pos
             
-            if similarity > 0.95: # If very high similarity, lock it in
+            # If very high similarity, lock it in
+            if similarity > 0.95:
                 break
             temp_pos += 1
 
@@ -124,6 +131,10 @@ def get_sentence_timestamps(df_words, df_sentences):
             
             current_pos = best_match_pos + sentence_len
             match_found = True
+            
+            # Log low similarity matches for debugging
+            if highest_similarity < 0.8:
+                console.print(f"[yellow]⚠️ Low similarity match ({highest_similarity:.2f}) for: {sentence[:30]}...[/yellow]")
 
         if not match_found:
             console.print(f"\n⚠️ Warning: No exact match found for sentence: {sentence}")
