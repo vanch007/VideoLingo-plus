@@ -125,7 +125,14 @@ def save_corrected_text(corrected_lines, original_lines=None):
         update_cleaned_chunks(original_lines, corrected_lines)
 
 
-def get_summary():
+def get_summary(skip_stt_correction: bool = False):
+    """Get summary and optionally correct STT errors.
+    
+    Args:
+        skip_stt_correction: If True, skip the STT correction step. 
+                            This should be True for Mode 2 (extracted subs) and Mode 3 (provided SRT),
+                            as STT correction is only needed for ASR transcription results (Mode 1).
+    """
     src_content, line_count = combine_chunks()
     custom_terms = pd.read_excel(CUSTOM_TERMS_PATH)
     custom_terms_json = {
@@ -167,49 +174,52 @@ def get_summary():
     console.print(f"[green]✅ Extracted {len(terms)} terms[/green]")
     
     # ============ Step 2: STT Correction with context ============
-    console.print("[cyan]🔧 Step 2: Correcting STT errors with context...[/cyan]")
-    
-    # Combine custom terms with extracted terms for context
-    all_terms = terms + custom_terms_json['terms']
-    
-    correction_prompt = get_stt_correction_prompt(src_content, topic, all_terms)
-    
-    def valid_correction(response_data):
-        if 'corrected_lines' not in response_data:
-            return {"status": "error", "message": "Missing 'corrected_lines' key"}
-        if not isinstance(response_data['corrected_lines'], list):
-            return {"status": "error", "message": "'corrected_lines' must be a list"}
-        return {"status": "success", "message": "Correction completed"}
+    if skip_stt_correction:
+        console.print("[yellow]⏭️ Skipping STT correction (not needed for provided subtitles)[/yellow]")
+    else:
+        console.print("[cyan]🔧 Step 2: Correcting STT errors with context...[/cyan]")
+        
+        # Combine custom terms with extracted terms for context
+        all_terms = terms + custom_terms_json['terms']
+        
+        correction_prompt = get_stt_correction_prompt(src_content, topic, all_terms)
+        
+        def valid_correction(response_data):
+            if 'corrected_lines' not in response_data:
+                return {"status": "error", "message": "Missing 'corrected_lines' key"}
+            if not isinstance(response_data['corrected_lines'], list):
+                return {"status": "error", "message": "'corrected_lines' must be a list"}
+            return {"status": "success", "message": "Correction completed"}
 
-    correction_result = ask_gpt(correction_prompt, response_json=True, valid_def=valid_correction, log_title='stt_correction')
-    
-    # 处理纠错结果
-    if 'corrected_lines' in correction_result:
-        corrected_lines = correction_result['corrected_lines']
+        correction_result = ask_gpt(correction_prompt, response_json=True, valid_def=valid_correction, log_title='stt_correction')
         
-        # 读取原始完整文件
-        with open(SENTENCE_TXT_PATH, 'r', encoding='utf-8') as f:
-            original_lines = [line.strip() for line in f.readlines() if line.strip()]
-        
-        # 如果纠错的行数与发送的行数一致，进行替换
-        if len(corrected_lines) == line_count:
-            # 只替换前 line_count 行
-            new_lines = corrected_lines + original_lines[line_count:]
+        # 处理纠错结果
+        if 'corrected_lines' in correction_result:
+            corrected_lines = correction_result['corrected_lines']
             
-            # 统计纠正了多少行
-            corrections = sum(1 for i in range(line_count) if original_lines[i] != corrected_lines[i])
-            console.print(f"[cyan]🔧 STT 纠错: 共 {line_count} 行，纠正 {corrections} 行[/cyan]")
+            # 读取原始完整文件
+            with open(SENTENCE_TXT_PATH, 'r', encoding='utf-8') as f:
+                original_lines = [line.strip() for line in f.readlines() if line.strip()]
             
-            # 显示纠正的内容
-            if corrections > 0:
-                for i in range(min(line_count, len(corrected_lines))):
-                    if i < len(original_lines) and original_lines[i] != corrected_lines[i]:
-                        console.print(f"[yellow]  {i+1}: {original_lines[i]}[/yellow]")
-                        console.print(f"[green]  → {corrected_lines[i]}[/green]")
-            
-            save_corrected_text(new_lines, original_lines[:line_count])
-        else:
-            console.print(f"[yellow]⚠️ 纠错行数不匹配 (期望 {line_count}, 得到 {len(corrected_lines)}), 跳过纠错[/yellow]")
+            # 如果纠错的行数与发送的行数一致，进行替换
+            if len(corrected_lines) == line_count:
+                # 只替换前 line_count 行
+                new_lines = corrected_lines + original_lines[line_count:]
+                
+                # 统计纠正了多少行
+                corrections = sum(1 for i in range(line_count) if original_lines[i] != corrected_lines[i])
+                console.print(f"[cyan]🔧 STT 纠错: 共 {line_count} 行，纠正 {corrections} 行[/cyan]")
+                
+                # 显示纠正的内容
+                if corrections > 0:
+                    for i in range(min(line_count, len(corrected_lines))):
+                        if i < len(original_lines) and original_lines[i] != corrected_lines[i]:
+                            console.print(f"[yellow]  {i+1}: {original_lines[i]}[/yellow]")
+                            console.print(f"[green]  → {corrected_lines[i]}[/green]")
+                
+                save_corrected_text(new_lines, original_lines[:line_count])
+            else:
+                console.print(f"[yellow]⚠️ 纠错行数不匹配 (期望 {line_count}, 得到 {len(corrected_lines)}), 跳过纠错[/yellow]")
     
     # 保存术语和主题
     if 'terms' in summary:

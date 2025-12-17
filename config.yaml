@@ -55,7 +55,7 @@ funasr:
   max_single_segment_time: 30000
 
 # Whether to burn subtitles into the video
-burn_subtitles: false
+burn_subtitles: true
 ## ======================== Advanced Settings ======================== ##
 # *Default resolution for downloading YouTube videos [360, 1080, best]
 ytb_resolution: '1080'

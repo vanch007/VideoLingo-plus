@@ -79,8 +79,37 @@ def text_processing_section():
                 type=['srt'],
                 help=t("请上传一个UTF-8编码的SRT格式字幕文件")
             )
+            # 模式三：上传文件后显示专门的开始按钮
+            if uploaded_srt_file is not None:
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button(t("开始翻译和配音"), key="mode3_translate_and_dub_button"):
+                        project_start_time = time.time()
+                        save_timing("项目开始时间", project_start_time)
+                        with st.spinner(t("Processing translation and dubbing...")):
+                            try:
+                                find_video_files()
+                                if run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file, timing_placeholder):
+                                    process_audio(timing_placeholder)
+                                save_timing("项目总耗时", time.time() - project_start_time)
+                                timing_placeholder.empty()
+                            except Exception as e:
+                                st.error(f"Error: {str(e)}")
+                                st.info("Please make sure a video is available before processing.")
+                with col2:
+                    if st.button(t("仅处理字幕"), key="mode3_text_processing_button"):
+                        project_start_time = time.time()
+                        save_timing("项目开始时间", project_start_time)
+                        try:
+                            find_video_files()
+                            run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file, timing_placeholder)
+                            save_timing("项目总耗时", time.time() - project_start_time)
+                            timing_placeholder.empty()
+                        except Exception as e:
+                            st.error(f"Error: {str(e)}")
+                            st.info("Please make sure a video is available before processing.")
 
-        if not os.path.exists(SUB_VIDEO) and not os.path.exists(DUB_VIDEO):
+        if not os.path.exists(SUB_VIDEO) and not os.path.exists(DUB_VIDEO) and st.session_state.processing_mode != t("模式三：提供视频和源字幕"):
             # 定义清理函数
             def cleanup_intermediate_files():
                 st.toast("Cleaning up intermediate files from previous run...")
@@ -241,7 +270,9 @@ def run_translation_pipeline(perform_splitting: bool, timing_placeholder):
             with st.spinner(t("Summarizing and translating...")):
                 if not is_step_completed("summarize"):
                     start_time = time.time()
-                    step4_1_summarize.get_summary()
+                    # STT correction is only needed for ASR mode (perform_splitting=True)
+                    # For Mode 2 (extracted subs) and Mode 3 (provided SRT), skip correction
+                    step4_1_summarize.get_summary(skip_stt_correction=not perform_splitting)
                     elapsed = time.time() - start_time
                     save_timing("摘要", elapsed)
                 else:
