@@ -227,7 +227,7 @@ def page_setting():
                     update_key("whisper.stable_ts_mlx", use_mlx)
                     st.rerun()
 
-        demucs = st.toggle(t("Vocal separation enhance"), value=load_key("demucs"), help=t("Recommended for videos with loud background noise, but will increase processing time"))
+        demucs = st.toggle(t("Use Demucs for Vocal Separation"), value=load_key("demucs"), help=t("Separate vocals from background music before transcription for better accuracy"))
         if demucs != load_key("demucs"):
             update_key("demucs", demucs)
             st.rerun()

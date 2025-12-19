@@ -272,7 +272,7 @@ def run_translation_pipeline(perform_splitting: bool, timing_placeholder):
                     start_time = time.time()
                     # STT correction is only needed for ASR mode (perform_splitting=True)
                     # For Mode 2 (extracted subs) and Mode 3 (provided SRT), skip correction
-                    step4_1_summarize.get_summary(skip_stt_correction=not perform_splitting)
+                    step4_1_summarize.get_summary()
                     elapsed = time.time() - start_time
                     save_timing("摘要", elapsed)
                 else:

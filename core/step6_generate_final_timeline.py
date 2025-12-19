@@ -63,9 +63,6 @@ def show_difference(str1, str2):
     print("Position markers: " + "".join("^" if i in diff_positions else " " for i in range(max(len(str1), len(str2)))))
     print(f"Difference indices: {diff_positions}")
 
-    
-    return time_stamp_list
-
 def get_sentence_timestamps(df_words, df_sentences):
     """Original text-matching alignment logic for ASR workflow (Mode 1).
     

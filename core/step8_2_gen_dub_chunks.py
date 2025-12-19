@@ -151,6 +151,7 @@ def process_cutoffs(df):
 def gen_dub_chunks():
     rprint("[🎬 Starting] Generating dubbing chunks...")
     df = pd.read_excel(INPUT_EXCEL)
+    # Note: Filtering is now done in step8_1, so df is already clean
 
     rprint("[📊 Processing] Analyzing timing and speed...")
     df = analyze_subtitle_timing_and_speed(df)

@@ -33,6 +33,8 @@ def extract_refer_audio_main():
     os.makedirs(REFERS_DIR, exist_ok=True)
     
     df = pd.read_excel(TTS_TASKS_FILE)
+    # Note: Filtering is done in step8_1, so df is already clean
+    
     if not os.path.exists(VOCAL_AUDIO_FILE):
         rprint(Panel(f"[bold red]Error: Vocal audio file not found at {VOCAL_AUDIO_FILE}[/bold red]", title="Error"))
         return

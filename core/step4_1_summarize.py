@@ -55,64 +55,13 @@ def search_things_to_note_in_prompt(sentence):
 def update_cleaned_chunks(original_lines, corrected_lines):
     """Update cleaned_chunks.xlsx with corrected text while preserving timestamps.
     
-    This function maps the corrected sentence-level text back to word-level timestamps.
-    It works by:
-    1. Joining original lines to get the full original text
-    2. Joining corrected lines to get the full corrected text  
-    3. Matching characters position by position (allowing for length differences)
-    4. Updating the 'text' column in cleaned_chunks.xlsx
+    Note: Word-level timestamp updates are disabled to preserve data integrity.
+    The sentence-level corrections are saved to sentence_splitbymeaning.txt,
+    and step6's fuzzy matching algorithm will handle the text differences.
     """
-    if not os.path.exists(CLEANED_CHUNKS_PATH):
-        console.print(f"[yellow]⚠️ {CLEANED_CHUNKS_PATH} not found, skipping cleaned_chunks update[/yellow]")
-        return
-    
-    try:
-        df = pd.read_excel(CLEANED_CHUNKS_PATH)
-        
-        # Remove quotes from text column for comparison
-        df['text_clean'] = df['text'].str.strip('"').str.strip()
-        
-        # Build the original text from cleaned_chunks
-        original_from_chunks = ''.join(df['text_clean'].tolist())
-        
-        # Build original and corrected text from sentence lines (remove punctuation for matching)
-        def remove_punct(text):
-            return re.sub(r'[^\w]', '', text)
-        
-        original_text = remove_punct(''.join(original_lines))
-        corrected_text_full = ''.join(corrected_lines)
-        corrected_text = remove_punct(corrected_text_full)
-        
-        # If lengths match, do character-by-character replacement
-        if len(original_from_chunks) == len(corrected_text):
-            new_texts = []
-            for i, char in enumerate(corrected_text):
-                new_texts.append(f'"{char}"')
-            df['text'] = new_texts
-            df.drop(columns=['text_clean'], inplace=True)
-            df.to_excel(CLEANED_CHUNKS_PATH, index=False)
-            console.print(f'[green]📝 已同步更新词级时间戳 → {CLEANED_CHUNKS_PATH}[/green]')
-        else:
-            # Length mismatch - try fuzzy character mapping
-            console.print(f"[yellow]⚠️ 字符数不匹配 (词级: {len(original_from_chunks)}, 纠错后: {len(corrected_text)})[/yellow]")
-            
-            # Use the shorter length for safe replacement
-            min_len = min(len(original_from_chunks), len(corrected_text))
-            new_texts = []
-            for i in range(len(df)):
-                if i < min_len:
-                    new_texts.append(f'"{corrected_text[i]}"')
-                else:
-                    # Keep original for extra characters
-                    new_texts.append(df.iloc[i]['text'])
-            
-            df['text'] = new_texts
-            df.drop(columns=['text_clean'], inplace=True)
-            df.to_excel(CLEANED_CHUNKS_PATH, index=False)
-            console.print(f'[yellow]⚠️ 部分更新词级时间戳 (前 {min_len} 个字符) → {CLEANED_CHUNKS_PATH}[/yellow]')
-            
-    except Exception as e:
-        console.print(f"[red]❌ 更新 cleaned_chunks.xlsx 失败: {e}[/red]")
+    console.print(f"[cyan]💡 句子级纠错已保存到 {SENTENCE_TXT_PATH}[/cyan]")
+    console.print(f"[cyan]💡 词级时间戳保持不变，step6 将使用模糊匹配算法[/cyan]")
+    return
 
 def save_corrected_text(corrected_lines, original_lines=None):
     """Save corrected text back to the source file and update cleaned_chunks.xlsx"""
@@ -125,15 +74,26 @@ def save_corrected_text(corrected_lines, original_lines=None):
         update_cleaned_chunks(original_lines, corrected_lines)
 
 
-def get_summary(skip_stt_correction: bool = False):
+def get_summary():
     """Get summary and optionally correct STT errors.
     
-    Args:
-        skip_stt_correction: If True, skip the STT correction step. 
-                            This should be True for Mode 2 (extracted subs) and Mode 3 (provided SRT),
-                            as STT correction is only needed for ASR transcription results (Mode 1).
+    STT correction is automatically enabled for Chinese (zh) to fix homophones,
+    but disabled for other languages to prevent timestamp matching issues.
     """
     src_content, line_count = combine_chunks()
+    
+    # Auto-detect whether to skip STT correction based on source language
+    whisper_language = load_key("whisper.language")
+    detected_language = load_key("whisper.detected_language") if whisper_language == 'auto' else whisper_language
+    
+    # Only enable STT correction for Chinese
+    skip_stt_correction = (detected_language not in ['zh', 'zh-CN', 'zh-TW'])
+    
+    if skip_stt_correction:
+        console.print(f"[yellow]⏭️ STT纠错已禁用（源语言: {detected_language}，仅中文启用纠错）[/yellow]")
+    else:
+        console.print(f"[cyan]🔧 STT纠错已启用（源语言: {detected_language}）[/cyan]")
+    
     custom_terms = pd.read_excel(CUSTOM_TERMS_PATH)
     custom_terms_json = {
         "terms": [
@@ -182,44 +142,93 @@ def get_summary(skip_stt_correction: bool = False):
         # Combine custom terms with extracted terms for context
         all_terms = terms + custom_terms_json['terms']
         
-        correction_prompt = get_stt_correction_prompt(src_content, topic, all_terms)
+        # 读取原始完整文件
+        with open(SENTENCE_TXT_PATH, 'r', encoding='utf-8') as f:
+            original_lines = [line.strip() for line in f.readlines() if line.strip()]
         
-        def valid_correction(response_data):
-            if 'corrected_lines' not in response_data:
-                return {"status": "error", "message": "Missing 'corrected_lines' key"}
-            if not isinstance(response_data['corrected_lines'], list):
-                return {"status": "error", "message": "'corrected_lines' must be a list"}
-            return {"status": "success", "message": "Correction completed"}
-
-        correction_result = ask_gpt(correction_prompt, response_json=True, valid_def=valid_correction, log_title='stt_correction')
+        # 分批处理配置
+        BATCH_SIZE = 30  # 每批处理的行数
+        total_lines = len(original_lines)
+        all_corrected_lines = []
+        total_corrections = 0
         
-        # 处理纠错结果
-        if 'corrected_lines' in correction_result:
-            corrected_lines = correction_result['corrected_lines']
+        console.print(f"[cyan]📊 总计 {total_lines} 行，将分 {(total_lines + BATCH_SIZE - 1) // BATCH_SIZE} 批处理（每批 {BATCH_SIZE} 行）[/cyan]")
+        
+        # 分批处理
+        for batch_idx in range(0, total_lines, BATCH_SIZE):
+            batch_end = min(batch_idx + BATCH_SIZE, total_lines)
+            batch_lines = original_lines[batch_idx:batch_end]
+            batch_num = batch_idx // BATCH_SIZE + 1
+            total_batches = (total_lines + BATCH_SIZE - 1) // BATCH_SIZE
             
-            # 读取原始完整文件
-            with open(SENTENCE_TXT_PATH, 'r', encoding='utf-8') as f:
-                original_lines = [line.strip() for line in f.readlines() if line.strip()]
+            console.print(f"[cyan]🔄 处理第 {batch_num}/{total_batches} 批 (行 {batch_idx+1}-{batch_end})...[/cyan]")
             
-            # 如果纠错的行数与发送的行数一致，进行替换
-            if len(corrected_lines) == line_count:
-                # 只替换前 line_count 行
-                new_lines = corrected_lines + original_lines[line_count:]
+            # 将批次内容组合成待纠错文本
+            batch_content = '\n'.join(batch_lines)
+            
+            # 生成批次纠错prompt
+            correction_prompt = get_stt_correction_prompt(batch_content, topic, all_terms)
+            
+            def valid_correction(response_data):
+                if 'corrected_lines' not in response_data:
+                    return {"status": "error", "message": "Missing 'corrected_lines' key"}
+                if not isinstance(response_data['corrected_lines'], list):
+                    return {"status": "error", "message": "'corrected_lines' must be a list"}
+                # 验证行数是否匹配
+                expected_lines = len(batch_lines)
+                actual_lines = len(response_data['corrected_lines'])
+                if actual_lines != expected_lines:
+                    return {"status": "error", "message": f"Line count mismatch: expected {expected_lines}, got {actual_lines}"}
+                return {"status": "success", "message": "Correction completed"}
+            
+            try:
+                correction_result = ask_gpt(
+                    correction_prompt, 
+                    response_json=True, 
+                    valid_def=valid_correction, 
+                    log_title=f'stt_correction_batch_{batch_num}'
+                )
                 
-                # 统计纠正了多少行
-                corrections = sum(1 for i in range(line_count) if original_lines[i] != corrected_lines[i])
-                console.print(f"[cyan]🔧 STT 纠错: 共 {line_count} 行，纠正 {corrections} 行[/cyan]")
-                
-                # 显示纠正的内容
-                if corrections > 0:
-                    for i in range(min(line_count, len(corrected_lines))):
-                        if i < len(original_lines) and original_lines[i] != corrected_lines[i]:
-                            console.print(f"[yellow]  {i+1}: {original_lines[i]}[/yellow]")
-                            console.print(f"[green]  → {corrected_lines[i]}[/green]")
-                
-                save_corrected_text(new_lines, original_lines[:line_count])
-            else:
-                console.print(f"[yellow]⚠️ 纠错行数不匹配 (期望 {line_count}, 得到 {len(corrected_lines)}), 跳过纠错[/yellow]")
+                if 'corrected_lines' in correction_result:
+                    batch_corrected = correction_result['corrected_lines']
+                    
+                    # 统计本批次纠正了多少行
+                    batch_corrections = sum(1 for i in range(len(batch_lines)) if batch_lines[i] != batch_corrected[i])
+                    total_corrections += batch_corrections
+                    
+                    if batch_corrections > 0:
+                        console.print(f"[green]✅ 第 {batch_num} 批：纠正 {batch_corrections}/{len(batch_lines)} 行[/green]")
+                        # 显示前3个纠正示例
+                        shown = 0
+                        for i in range(len(batch_lines)):
+                            if batch_lines[i] != batch_corrected[i] and shown < 3:
+                                console.print(f"[yellow]  原文: {batch_lines[i]}[/yellow]")
+                                console.print(f"[green]  纠正: {batch_corrected[i]}[/green]")
+                                shown += 1
+                        if batch_corrections > 3:
+                            console.print(f"[cyan]  ... 还有 {batch_corrections - 3} 处纠正未显示[/cyan]")
+                    else:
+                        console.print(f"[cyan]📝 第 {batch_num} 批：无需纠正[/cyan]")
+                    
+                    all_corrected_lines.extend(batch_corrected)
+                else:
+                    console.print(f"[yellow]⚠️ 第 {batch_num} 批纠错失败，保留原文[/yellow]")
+                    all_corrected_lines.extend(batch_lines)
+                    
+            except Exception as e:
+                console.print(f"[red]❌ 第 {batch_num} 批处理出错: {e}[/red]")
+                console.print(f"[yellow]⚠️ 保留第 {batch_num} 批的原文[/yellow]")
+                all_corrected_lines.extend(batch_lines)
+        
+        # 验证合并后的总行数
+        if len(all_corrected_lines) == total_lines:
+            console.print(f"[green]✅ STT 纠错完成：共 {total_lines} 行，纠正 {total_corrections} 行 ({total_corrections/total_lines*100:.1f}%)[/green]")
+            
+            # 保存纠错结果
+            save_corrected_text(all_corrected_lines, original_lines)
+        else:
+            console.print(f"[red]❌ 批次合并出错：期望 {total_lines} 行，实际 {len(all_corrected_lines)} 行[/red]")
+            console.print(f"[yellow]⚠️ 跳过纠错，保留原文[/yellow]")
     
     # 保存术语和主题
     if 'terms' in summary:

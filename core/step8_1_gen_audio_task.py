@@ -52,6 +52,11 @@ def process_srt():
             text = re.sub(r'（[^）]*）', '', text).strip()
             text = text.replace('-', '')
             
+            # Filter out pure punctuation/whitespace (e.g., "、", "。", ", ", etc.)
+            # Keep only text that contains at least one alphanumeric or CJK character
+            if text and not re.search(r'[\w\u4e00-\u9fff]', text):
+                text = ""
+            
             subtitles.append({
                 'number': i + 1,
                 'start_time': start_time,
@@ -101,6 +106,11 @@ def process_srt():
                 text = re.sub(r'（[^）]*）', '', text).strip()
                 # Remove only '-' character, keep other punctuation
                 text = text.replace('-', '')
+                
+                # Filter out pure punctuation/whitespace (e.g., "、", "。", ", ", etc.)
+                # Keep only text that contains at least one alphanumeric or CJK character
+                if text and not re.search(r'[\w\u4e00-\u9fff]', text):
+                    text = ""
 
                 # Add the original text from src_subs_for_audio.srt
                 origin = src_subtitles.get(number, '')
@@ -151,6 +161,29 @@ def gen_audio_task_main():
         rprint(Panel(f"{TTS_TASKS_FILE} already exists, skip.", title="Info", border_style="blue"))
     else:
         df = process_srt()
+        
+        # Filter out invalid rows before saving
+        # This ensures tts_tasks.xlsx and trans.srt are consistent with each other
+        initial_count = len(df)
+        
+        # Filter empty text rows
+        df = df[df['text'].notna() & (df['text'].astype(str).str.strip() != '')]
+        empty_filtered = initial_count - len(df)
+        
+        # Filter rows with duration <= 0 (invalid timestamps)
+        df = df[df['duration'] > 0]
+        df = df.reset_index(drop=True)
+        duration_filtered = initial_count - empty_filtered - len(df)
+        
+        if empty_filtered > 0:
+            rprint(f"[yellow]🗑️ Filtered out {empty_filtered} empty text rows[/yellow]")
+        if duration_filtered > 0:
+            rprint(f"[yellow]🗑️ Filtered out {duration_filtered} rows with duration <= 0[/yellow]")
+        
+        if len(df) == 0:
+            rprint("[red]❌ No valid rows to generate TTS tasks![/red]")
+            return
+        
         console.print(df)
         df.to_excel(TTS_TASKS_FILE, index=False)
         rprint(Panel(f"Successfully generated {TTS_TASKS_FILE}", title="Success", border_style="green"))

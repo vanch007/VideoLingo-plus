@@ -26,6 +26,7 @@ def delete_dubbing_files():
     folders_to_delete = [
         os.path.join("output", "audio", "segs"),
         os.path.join("output", "audio", "tmp"),
+        os.path.join("output", "audio", "temp"),
         os.path.join("output", "audio", "refers")
     ]
     

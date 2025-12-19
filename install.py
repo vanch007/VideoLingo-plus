@@ -197,6 +197,9 @@ def main():
                     console.print("[yellow]⚠️ Failed to install MLX. stable-ts will still work without acceleration.[/yellow]")
     
     install_stable_ts()
+    
+    
+
     check_ffmpeg()
     
     # First panel with installation complete and startup command

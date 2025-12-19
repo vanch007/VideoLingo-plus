@@ -221,6 +221,12 @@ def process_chunk(chunk_df: pd.DataFrame, accept: float, min_speed: float) -> tu
     speed_var_error = 0.1 if last_gap >= 0.1 else 0
     
     rprint(f"[dim]  └─ Last gap: {last_gap:.3f}s, speed_var_error: {speed_var_error:.3f}s[/dim]")
+    
+    # Only check for division by zero - don't skip small durations
+    # Small duration chunks still need speed adjustment, possibly with high speed factors
+    if (tol_durs - speed_var_error) <= 0.01 or (durations - speed_var_error) <= 0.01:
+        rprint(f"[yellow]⚠️ Invalid duration after speed_var_error adjustment (tol_durs={tol_durs:.3f}s), using speed factor 1.0[/yellow]")
+        return 1.0, True
 
     keep_gaps = True
 
@@ -280,7 +286,9 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
             # 🔄 Step5: Check if the last row exceeds the range
             if cur_time > chunk_end_time:
                 time_diff = cur_time - chunk_end_time
-                if time_diff <= 0.6:  # If exceeding time is within 0.6 seconds, truncate the last audio
+                # Increase tolerance to 2.0s to handle extreme speed factors
+                # (e.g., small duration chunks with long TTS audio)
+                if time_diff <= 2.0:
                     rprint(f"[yellow]⚠️ Chunk {chunk_start} to {index} exceeds by {time_diff:.3f}s, truncating last audio[/yellow]")
                     # Get the last audio file
                     last_number = tasks_df.iloc[index]['number']
@@ -292,8 +300,11 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                     audio = AudioSegment.from_wav(last_file)
                     original_duration = len(audio) / 1000  # Convert to seconds
                     new_duration = original_duration - time_diff
-                    trimmed_audio = audio[:(new_duration * 1000)].fade_out(10)  # pydub uses milliseconds
-                    trimmed_audio.export(last_file, format="wav")
+                    if new_duration > 0:
+                        trimmed_audio = audio[:(new_duration * 1000)].fade_out(10)  # pydub uses milliseconds
+                        trimmed_audio.export(last_file, format="wav")
+                    else:
+                        rprint(f"[red]⚠️ Cannot trim audio: new_duration={new_duration:.3f}s <= 0[/red]")
 
                     # Update the last timestamp
                     last_times = tasks_df.at[index, 'new_sub_times']
@@ -316,6 +327,8 @@ def gen_audio() -> None:
 
     # 📝 Step2: Load task file
     tasks_df = pd.read_excel(TTS_TASKS_FILE)
+    # Note: Filtering is done in step8_1, so tasks_df is already clean
+    
     rprint("[green]📊 Loaded task file successfully[/green]")
 
     # 🔊 Step3: Generate TTS audio
