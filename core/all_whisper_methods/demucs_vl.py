@@ -24,7 +24,7 @@ class PreloadedSeparator(Separator):
         self.update_parameter(device=device, shifts=shifts, overlap=overlap, split=split,
                             segment=segment, jobs=jobs, progress=True, callback=None, callback_arg=None)
 
-def demucs_main():
+def demucs_main(model_name: str = "htdemucs"):
     if os.path.exists(VOCAL_AUDIO_FILE) and os.path.exists(BACKGROUND_AUDIO_FILE):
         rprint(f"[yellow]⚠️ {VOCAL_AUDIO_FILE} and {BACKGROUND_AUDIO_FILE} already exist, skip Demucs processing.[/yellow]")
         return
@@ -32,8 +32,8 @@ def demucs_main():
     console = Console()
     os.makedirs(AUDIO_DIR, exist_ok=True)
     
-    console.print("🤖 Loading <htdemucs_ft> fine-tuned model (better quality, 4x slower)...")
-    model = get_model('htdemucs_ft')
+    console.print(f"🤖 Loading <{model_name}> model...")
+    model = get_model(model_name)
     separator = PreloadedSeparator(model=model, shifts=1, overlap=0.25)
     
     console.print("🎵 Separating audio...")

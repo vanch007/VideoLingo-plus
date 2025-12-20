@@ -231,6 +231,23 @@ def page_setting():
         if demucs != load_key("demucs"):
             update_key("demucs", demucs)
             st.rerun()
+            
+        if demucs:
+            demucs_models = {
+                "htdemucs": t("htdemucs (Fast, Default)"),
+                "htdemucs_ft": t("htdemucs_ft (Better quality, 4x slower)")
+            }
+            current_demucs_model = load_key("demucs_model", "htdemucs")
+            selected_demucs_model = st.selectbox(
+                t("Demucs Model"),
+                options=list(demucs_models.keys()),
+                format_func=lambda x: demucs_models[x],
+                index=list(demucs_models.keys()).index(current_demucs_model) if current_demucs_model in demucs_models else 0,
+                help=t("Select the Demucs model for vocal separation.")
+            )
+            if selected_demucs_model != current_demucs_model:
+                update_key("demucs_model", selected_demucs_model)
+                st.rerun()
 
         burn_subtitles = st.toggle(t("Burn-in Subtitles"), value=load_key("burn_subtitles"), help=t("Whether to burn subtitles into the video, will increase processing time"))
         if burn_subtitles != load_key("burn_subtitles"):

@@ -20,7 +20,8 @@ def prepare_audio_and_vocals():
 
     # step1 Demucs vocal separation:
     if load_key("demucs"):
-        demucs_main()
+        demucs_model = load_key("demucs_model", "htdemucs")
+        demucs_main(demucs_model)
 
     # step2 Enhance vocals if needed
     choose_audio = enhance_vocals() if load_key("demucs") else RAW_AUDIO_FILE

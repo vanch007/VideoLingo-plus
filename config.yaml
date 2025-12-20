@@ -23,6 +23,7 @@ target_language: 'zh'
 
 # Whether to use Demucs for vocal separation before transcription
 demucs: true
+demucs_model: 'htdemucs'
 
 # 背景音量调节 (1.0为原始音量，大于1.0增加音量，小于1.0降低音量)
 background_volume: 1.5
