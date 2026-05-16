@@ -31,6 +31,11 @@ class PipelineRun:
     source: str
     target: str
     steps: list[str]
+    input: str = ""
+    subtitle_only: bool = False
+    no_subtitles: bool = False
+    llm: str | None = None
+    tts: str | None = None
     status: str = "created"
     started_at: float = field(default_factory=time.time)
     completed_steps: list[str] = field(default_factory=list)
@@ -42,6 +47,11 @@ class PipelineRun:
             "profile": self.profile,
             "source": self.source,
             "target": self.target,
+            "input": self.input,
+            "subtitle_only": self.subtitle_only,
+            "no_subtitles": self.no_subtitles,
+            "llm": self.llm,
+            "tts": self.tts,
             "steps": self.steps,
             "status": self.status,
             "started_at": self.started_at,
@@ -61,6 +71,12 @@ def load_state() -> dict:
     return json.loads(STATE_FILE.read_text(encoding="utf-8"))
 
 
+def load_state_or_none() -> dict | None:
+    if not STATE_FILE.exists():
+        return None
+    return load_state()
+
+
 def _run_module(module: str) -> None:
     subprocess.run([sys.executable, "-m", module], check=True)
 
@@ -69,14 +85,14 @@ def run_pipeline(run: PipelineRun, steps: list[PipelineStep], *, resume: bool = 
     step_keys = [step.key for step in steps]
     todo = pending_steps(step_keys) if resume else step_keys
     run.steps = step_keys
-    run.status = "running"
-    save_state(run)
 
     if dry_run:
         run.status = "dry_run"
         run.completed_steps = [key for key in step_keys if key not in todo]
-        save_state(run)
         return run
+
+    run.status = "running"
+    save_state(run)
 
     for step in steps:
         if step.key not in todo:

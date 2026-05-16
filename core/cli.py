@@ -5,9 +5,10 @@ import json
 import time
 
 from core.config_utils import update_key
-from core.dubbing_quality import write_dubbing_eval
+from core.dubbing_quality import evaluate_dubbing, write_dubbing_eval
 from core.pipeline.profiles import apply_profile
-from core.pipeline.runner import PipelineRun, build_steps_for_input, load_state, run_pipeline
+from core.pipeline.artifacts import list_artifacts, pending_steps
+from core.pipeline.runner import PipelineRun, build_steps_for_input, load_state, load_state_or_none, run_pipeline
 from core.providers.mlx_tts import list_backend_status
 from core.providers.omlx import list_omlx_models, smoke_chat
 
@@ -29,6 +30,20 @@ def _cmd_models(args: argparse.Namespace) -> int:
             payload["omlx_smoke"] = smoke_chat()
         except Exception as exc:
             payload["omlx_smoke_error"] = f"{type(exc).__name__}: {exc}"
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_status(args: argparse.Namespace) -> int:
+    artifact_status = [item.__dict__ for item in list_artifacts()]
+    step_order = [item["step"] for item in artifact_status]
+    payload = {
+        "pipeline_state": load_state_or_none(),
+        "artifacts": artifact_status,
+        "pending_steps": pending_steps(step_order),
+    }
+    if args.include_dubbing_eval:
+        _, payload["dubbing_eval"] = evaluate_dubbing()
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     return 0
 
@@ -149,6 +164,17 @@ def _cmd_translation(args: argparse.Namespace) -> int:
     raise SystemExit(f"Unknown translation command: {args.translation_command}")
 
 
+def _planned_run_config(args: argparse.Namespace) -> dict[str, str | None]:
+    planned = {
+        "profile": args.profile,
+        "source_language": args.source,
+        "target_language": args.target,
+        "llm.provider": "openai_compatible" if args.llm == "config" else args.llm,
+        "tts_method": "mlx_router" if args.tts == "auto" else args.tts,
+    }
+    return {key: value for key, value in planned.items() if value is not None}
+
+
 def _apply_run_config(args: argparse.Namespace) -> None:
     if args.source:
         update_key("source_language", args.source)
@@ -162,9 +188,25 @@ def _apply_run_config(args: argparse.Namespace) -> None:
     apply_profile(args.profile)
 
 
+def _build_run(args: argparse.Namespace, steps: list) -> PipelineRun:
+    return PipelineRun(
+        run_id=args.run_id or time.strftime("%Y%m%d-%H%M%S"),
+        profile=args.profile or "default",
+        source=args.source or "auto",
+        target=args.target or "auto",
+        input=args.input,
+        subtitle_only=bool(args.subtitle_only),
+        no_subtitles=bool(args.no_subtitles),
+        llm=args.llm,
+        tts=args.tts,
+        steps=[step.key for step in steps],
+    )
+
+
 def _cmd_run(args: argparse.Namespace) -> int:
-    _apply_run_config(args)
     steps = build_steps_for_input(args.input, dubbing=not args.subtitle_only, subtitles=not args.no_subtitles)
+    if not args.dry_run:
+        _apply_run_config(args)
     from core.translation_state import guard_translation_artifacts_for_steps
 
     translation_guard = guard_translation_artifacts_for_steps(
@@ -174,24 +216,39 @@ def _cmd_run(args: argparse.Namespace) -> int:
     if not translation_guard["ok"]:
         print(json.dumps({"translation_guard": translation_guard}, ensure_ascii=False, indent=2))
         return 2
-    run = PipelineRun(
-        run_id=args.run_id or time.strftime("%Y%m%d-%H%M%S"),
-        profile=args.profile or "default",
-        source=args.source or "auto",
-        target=args.target or "auto",
-        steps=[],
-    )
+    run = _build_run(args, steps)
     result = run_pipeline(run, steps, resume=not args.no_resume, dry_run=args.dry_run)
-    print(json.dumps({"run": result.to_dict(), "translation_guard": translation_guard}, ensure_ascii=False, indent=2))
+    payload = {"run": result.to_dict(), "translation_guard": translation_guard}
+    if args.dry_run:
+        payload["planned_config"] = _planned_run_config(args)
+        payload["pending_steps"] = [step.key for step in steps if step.key not in result.completed_steps]
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
     return 0
+
+
+def _fill_resume_args(args: argparse.Namespace, state: dict) -> None:
+    for key, default in {
+        "input": None,
+        "source": None,
+        "target": None,
+        "profile": "cinematic",
+        "llm": None,
+        "tts": "auto",
+    }.items():
+        if getattr(args, key) == default and state.get(key) not in (None, ""):
+            setattr(args, key, state[key])
+    for key in ("subtitle_only", "no_subtitles"):
+        if not getattr(args, key) and state.get(key):
+            setattr(args, key, bool(state[key]))
 
 
 def _cmd_resume(args: argparse.Namespace) -> int:
     state = load_state()
     if args.run_id and state.get("run_id") != args.run_id:
         raise SystemExit(f"Last run id is {state.get('run_id')}, not {args.run_id}")
+    _fill_resume_args(args, state)
     if not args.input:
-        print(json.dumps(state, ensure_ascii=False, indent=2))
+        print(json.dumps({"pipeline_state": state, "hint": "No input was stored; pass --input to resume execution."}, ensure_ascii=False, indent=2))
         return 0
     return _cmd_run(args)
 
@@ -202,6 +259,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     doctor = sub.add_parser("doctor", help="Run environment and service checks")
     doctor.set_defaults(func=_cmd_doctor)
+
+    status = sub.add_parser("status", help="Show pipeline state, artifact checkpoints, and pending steps")
+    status.add_argument("--include-dubbing-eval", action="store_true", help="Include current dubbing quality summary")
+    status.set_defaults(func=_cmd_status)
 
     models = sub.add_parser("models", help="Inspect local model providers")
     models_sub = models.add_subparsers(dest="models_command", required=True)
