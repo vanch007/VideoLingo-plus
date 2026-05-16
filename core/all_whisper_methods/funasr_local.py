@@ -20,6 +20,7 @@ from rich import print as rprint
 import tempfile
 from core.config_utils import load_key
 from core.all_whisper_methods.audio_preprocess import save_language
+from core.asr_schema import normalize_asr_result
 
 MODEL_DIR = load_key("model_dir")
 
@@ -273,7 +274,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         
-        return result
+        return normalize_asr_result(result, f"funasr:{FUNASR_MODEL}")
         
     finally:
         # Clean up temp file

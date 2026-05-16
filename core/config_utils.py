@@ -2,6 +2,7 @@ from ruamel.yaml import YAML
 from typing import Any
 import os, sys
 import threading
+import tempfile
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -10,6 +11,38 @@ config_lock = threading.Lock()
 
 yaml = YAML()
 yaml.preserve_quotes = True
+
+ENV_OVERRIDES = {
+    "hf_token": ("VIDEOLINGO_HF_TOKEN", "HF_TOKEN"),
+    "api.key": ("VIDEOLINGO_API_KEY", "OPENAI_API_KEY"),
+    "api.base_url": ("VIDEOLINGO_API_BASE_URL",),
+    "api.model": ("VIDEOLINGO_API_MODEL",),
+    "llm.providers.omlx.api_key": ("OMLX_API_KEY", "VIDEOLINGO_OMLX_API_KEY"),
+    "llm.providers.omlx.base_url": ("OMLX_BASE_URL", "VIDEOLINGO_OMLX_BASE_URL"),
+    "llm.providers.omlx.model": ("OMLX_MODEL", "VIDEOLINGO_OMLX_MODEL"),
+    "sf_indextts2.api_key": ("VIDEOLINGO_SILICONFLOW_API_KEY", "SILICONFLOW_API_KEY"),
+    "openai_tts.api_key": ("VIDEOLINGO_OPENAI_API_KEY", "OPENAI_API_KEY"),
+    "elevenlabs_tts.api_key": ("VIDEOLINGO_ELEVENLABS_API_KEY", "ELEVENLABS_API_KEY"),
+    "elevenlabs.api_key": ("VIDEOLINGO_ELEVENLABS_API_KEY", "ELEVENLABS_API_KEY"),
+}
+
+SENSITIVE_KEYS = {
+    "hf_token",
+    "api.key",
+    "llm.providers.omlx.api_key",
+    "sf_indextts2.api_key",
+    "openai_tts.api_key",
+    "elevenlabs_tts.api_key",
+    "elevenlabs.api_key",
+}
+
+
+def _env_value(key_path: str):
+    for env_name in ENV_OVERRIDES.get(key_path, ()):
+        value = os.environ.get(env_name)
+        if value:
+            return value
+    return None
 
 def load_config():
     """Load the config.yaml file into a dictionary."""
@@ -27,6 +60,10 @@ def load_key(key_path: str, default=None):
     Returns:
         The value of the key or default if not found
     """
+    env_override = _env_value(key_path)
+    if env_override is not None:
+        return env_override
+
     config = load_config()
     keys = key_path.split('.')
     value = config
@@ -38,6 +75,14 @@ def load_key(key_path: str, default=None):
         if default is not None:
             return default
         raise KeyError(f"Key '{key_path}' not found in config")
+
+
+def get_env_names(key_path: str) -> tuple[str, ...]:
+    return ENV_OVERRIDES.get(key_path, ())
+
+
+def is_sensitive_key(key_path: str) -> bool:
+    return key_path in SENSITIVE_KEYS
 
 def update_key(key: str, new_value: Any) -> bool:
     with config_lock:
@@ -52,9 +97,26 @@ def update_key(key: str, new_value: Any) -> bool:
             current = current[k]
 
         current[keys[-1]] = new_value
-        
-        with open(CONFIG_PATH, 'w', encoding='utf-8') as file:
-            yaml.dump(data, file)
+
+        config_dir = os.path.dirname(os.path.abspath(CONFIG_PATH)) or "."
+        temp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                'w',
+                encoding='utf-8',
+                dir=config_dir,
+                prefix='.config.',
+                suffix='.tmp',
+                delete=False,
+            ) as file:
+                temp_path = file.name
+                yaml.dump(data, file)
+                file.flush()
+                os.fsync(file.fileno())
+            os.replace(temp_path, CONFIG_PATH)
+        finally:
+            if temp_path and os.path.exists(temp_path):
+                os.unlink(temp_path)
         return True
         
 # basic utils

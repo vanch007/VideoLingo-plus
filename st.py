@@ -29,7 +29,7 @@ import core.step12_merge_dub_to_vid as step12_merge_dub_to_vid
 # 导入新功能模块
 import core.step2_extract_subtitles as step2_extract_subtitles
 import core.step3_3_process_extracted_subs as step3_3_process_extracted_subs
-from core.step_checker import is_step_completed
+from core.step_checker import get_completed_steps, get_pending_steps, is_step_completed
 
 # 确保set_page_config()只在主脚本中调用一次
 if not hasattr(st, '_page_config_set'):
@@ -564,6 +564,14 @@ def main():
     # add settings
     with st.sidebar:
         page_setting()
+        with st.expander("Workflow Status", expanded=False):
+            completed_steps = get_completed_steps()
+            pending_steps = get_pending_steps()
+            st.caption(f"Completed: {len(completed_steps)} | Pending: {len(pending_steps)}")
+            if completed_steps:
+                st.write("✅ " + ", ".join(completed_steps))
+            if pending_steps:
+                st.write("⏳ " + ", ".join(pending_steps[:8]))
         st.markdown(give_star_button, unsafe_allow_html=True)
         # 在侧边栏添加耗时统计开关
         st.divider()

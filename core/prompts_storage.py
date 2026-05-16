@@ -332,7 +332,7 @@ Please use a two-step thinking process to handle the text line by line:
    - Check the conciseness of the subtitles, point out where the translation is too wordy, the translation should be close to the original text in length
 
 2. {TARGET_LANGUAGE} Free Translation:
-   - **CRITICAL LENGTH LIMIT**: The translated text MUST NOT exceed 1.3x the character count of the original. If the original has 10 characters, the translation must be 13 characters or less. This is MANDATORY for TTS dubbing.
+   - **DUBBING LENGTH LIMIT**: The translated text must be short enough to speak naturally inside the original subtitle time window. Character count is only a weak proxy; prioritize spoken duration and rhythm.
    - **If translation is too long**: Use shorter synonyms, remove filler words, simplify sentence structure, or rephrase more concisely.
    - **Avoid Unnecessary Expansion.** Do not add filler words or extra explanations unless absolutely necessary for meaning.
    - Aim for contextual smoothness and naturalness, conforming to {TARGET_LANGUAGE} expression habits
@@ -360,6 +360,80 @@ Please use a two-step thinking process to handle the text line by line:
 {json.dumps(json_format, ensure_ascii=False, indent=4)}
 '''
     return prompt_expressiveness.strip()
+
+
+def get_dubbing_rewrite_prompt(
+    original,
+    current_lines,
+    target_duration,
+    available_duration,
+    reason,
+    source_lines=None,
+    direction="shorten",
+    word_budget=None,
+):
+    TARGET_LANGUAGE = load_key("target_language")
+    source_lines = source_lines or []
+    current_text = "\n".join(f"{i + 1}. {line}" for i, line in enumerate(current_lines))
+    source_text = "\n".join(f"{i + 1}. {line}" for i, line in enumerate(source_lines))
+    line_count = max(len(current_lines), 1)
+    if direction == "expand":
+        task = f"Rewrite the current {TARGET_LANGUAGE} dubbing text so it fills the target time window more naturally without sounding padded."
+        duration_rule = (
+            f"The current speech is too short. Make the wording naturally richer so it can be spoken close to "
+            f"{target_duration:.2f}s, while staying within the hard window of {available_duration:.2f}s."
+        )
+        if word_budget:
+            duration_rule += (
+                f" The current text has about {word_budget['current_words']} words; output should total "
+                f"{word_budget['min_words']} to {word_budget['max_words']} words across all lines."
+            )
+        style_rule = (
+            "For Vietnamese, use natural live-commerce phrasing, short connective words, and clear product context; "
+            "do not invent new claims, prices, guarantees, or features."
+        )
+        edit_rule = "Prefer adding only enough natural context to close the timing gap; do not double the script length."
+    else:
+        task = f"Rewrite the current {TARGET_LANGUAGE} dubbing text so it can be spoken naturally within the target time window."
+        duration_rule = f"Make the wording concise enough for natural speech within {target_duration:.2f}s. The available hard window is {available_duration:.2f}s."
+        style_rule = "For Vietnamese, use standard tone marks, natural short phrasing, and avoid unnecessary filler words."
+        edit_rule = "Prefer deleting filler, compressing repeated ideas, and replacing long phrases with shorter natural equivalents."
+
+    return f'''
+## Role
+You are a professional dubbing script editor for high-sync video localization.
+
+## Task
+{task}
+
+## Hard Constraints
+1. Preserve the original meaning, terminology, named entities, numbers, and speaker intent.
+2. Keep the same number of output lines as the current dubbing text: exactly {line_count} line(s).
+3. {duration_rule}
+4. Do not add explanations, comments, brackets, markdown, or extra lines.
+5. {style_rule}
+6. {edit_rule}
+
+## Reason This Needs Rewriting
+{reason}
+
+## Original Source Context
+{original}
+
+## Source Lines
+{source_text}
+
+## Current Dubbing Lines
+{current_text}
+
+## Output JSON Only
+{{
+  "lines": [
+    "rewritten line 1",
+    "rewritten line 2"
+  ]
+}}
+'''.strip()
 
 
 ## ================================================================

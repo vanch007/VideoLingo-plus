@@ -1,8 +1,10 @@
 import os, sys
+import json
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from st_components.imports_and_utils import ask_gpt
 import streamlit as st
-from core.config_utils import update_key, load_key
+from core.config_utils import get_env_names, update_key, load_key
+from core.all_tts_functions.tts_registry import list_tts_methods
 from translations.translations import translate as t
 from translations.translations import DISPLAY_LANGUAGES
 
@@ -21,6 +23,14 @@ def config_number_input(label, key, help=None, min_value=None, max_value=None, s
         update_key(key, val)
     return val
 
+def secret_env_status(label, key):
+    env_names = get_env_names(key)
+    configured = any(os.environ.get(name) for name in env_names)
+    status = "✅" if configured else "⚠️"
+    env_text = ", ".join(env_names) if env_names else "not configured"
+    st.caption(f"{status} {label}: set via env ({env_text})")
+    return configured
+
 def page_setting():
 
     display_language = st.selectbox("Display Language 🌐",
@@ -30,17 +40,61 @@ def page_setting():
         update_key("display_language", DISPLAY_LANGUAGES[display_language])
         st.rerun()
 
-    with st.expander(t("LLM Configuration"), expanded=True):
-        config_input(t("API_KEY"), "api.key")
-        config_input(t("BASE_URL"), "api.base_url", help=t("Openai format, will add /v1/chat/completions automatically"))
+    with st.expander("Doctor", expanded=False):
+        st.caption("Environment and workflow readiness checks.")
+        if st.button("Run Doctor", key="run_doctor"):
+            from core.doctor import run_checks
+            for check in run_checks(include_services=True):
+                icon = "✅" if check.ok else "❌"
+                st.write(f"{icon} **{check.name}**: {check.detail}")
 
-        c1, c2 = st.columns([4, 1])
-        with c1:
-            config_input(t("MODEL"), "api.model", help=t("click to check API validity")+ " 👉")
-        with c2:
-            if st.button("📡", key="api"):
-                st.toast(t("API Key is valid") if check_api() else t("API Key is invalid"),
-                        icon="✅" if check_api() else "❌")
+    with st.expander(t("LLM Configuration"), expanded=True):
+        providers = ["openai_compatible"] + list(load_key("llm.providers", {}).keys())
+        current_provider = load_key("llm.provider", "openai_compatible")
+        if current_provider not in providers:
+            current_provider = "openai_compatible"
+        selected_provider = st.selectbox(
+            "LLM Provider",
+            options=providers,
+            index=providers.index(current_provider),
+            help="openai_compatible uses the api block below; presets use their configured env var."
+        )
+        if selected_provider != current_provider:
+            update_key("llm.provider", selected_provider)
+            st.rerun()
+
+        secret_env_status(t("API_KEY"), "api.key")
+        if selected_provider == "openai_compatible":
+            config_input(t("BASE_URL"), "api.base_url", help=t("Openai format, will add /v1/chat/completions automatically"))
+
+            c1, c2 = st.columns([4, 1])
+            with c1:
+                config_input(t("MODEL"), "api.model", help=t("click to check API validity")+ " 👉")
+            with c2:
+                if st.button("📡", key="api"):
+                    st.toast(t("API Key is valid") if check_api() else t("API Key is invalid"),
+                            icon="✅" if check_api() else "❌")
+        else:
+            provider_cfg = load_key(f"llm.providers.{selected_provider}")
+            st.caption(f"Model: `{provider_cfg['model']}`")
+            st.caption(f"Base URL: `{provider_cfg['base_url']}`")
+            st.caption(f"API key env: `{provider_cfg.get('api_key_env', 'n/a')}`")
+            if selected_provider == "omlx":
+                c_omlx1, c_omlx2 = st.columns(2)
+                with c_omlx1:
+                    if st.button("List oMLX Models", key="list_omlx_models"):
+                        try:
+                            from core.providers.omlx import list_omlx_models
+                            st.json([model.__dict__ for model in list_omlx_models()], expanded=False)
+                        except Exception as e:
+                            st.error(f"oMLX model discovery failed: {e}")
+                with c_omlx2:
+                    if st.button("Smoke oMLX", key="smoke_omlx"):
+                        try:
+                            from core.providers.omlx import smoke_chat
+                            st.json(smoke_chat(), expanded=False)
+                        except Exception as e:
+                            st.error(f"oMLX smoke failed: {e}")
 
     with st.expander(t("Subtitles Settings"), expanded=True):
         # Language codes - use t() for translated display names
@@ -263,10 +317,25 @@ def page_setting():
             update_key("merge_subtitles", merge_subtitles)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
-        tts_methods = ["edge_tts", "gpt_sovits", "custom_tts", "sf_indextts2", "index_tts2", "piper_tts", "indonesian_tts", "voxcpm_tts"]
+        tts_methods = list_tts_methods()
         select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(load_key("tts_method")))
         if select_tts != load_key("tts_method"):
             update_key("tts_method", select_tts)
+            st.rerun()
+
+        quality_modes = ["subtitle", "dubbing", "high_sync"]
+        current_quality_mode = load_key("dubbing_quality.mode", load_key("quality_mode", "high_sync"))
+        if current_quality_mode not in quality_modes:
+            current_quality_mode = "high_sync"
+        selected_quality_mode = st.selectbox(
+            "Quality Mode",
+            options=quality_modes,
+            index=quality_modes.index(current_quality_mode),
+            help="subtitle skips strict dubbing gates; high_sync enables duration budgets, rewrite retry, and eval."
+        )
+        if selected_quality_mode != current_quality_mode:
+            update_key("quality_mode", selected_quality_mode)
+            update_key("dubbing_quality.mode", selected_quality_mode)
             st.rerun()
             
         # Add rewrite toggle
@@ -274,6 +343,34 @@ def page_setting():
         if rewrite_text != load_key("rewrite_text_for_dubbing", True):
             update_key("rewrite_text_for_dubbing", rewrite_text)
             st.rerun()
+
+        smoke_enabled = st.toggle("60s Smoke Run", value=load_key("smoke_test.enabled", False), help="Trim newly downloaded videos to a short sample for pipeline tuning.")
+        if smoke_enabled != load_key("smoke_test.enabled", False):
+            update_key("smoke_test.enabled", smoke_enabled)
+            st.rerun()
+        if smoke_enabled:
+            smoke_seconds = st.number_input("Smoke Seconds", min_value=10, max_value=180, value=int(load_key("smoke_test.cutoff_seconds", 60)), step=10)
+            if smoke_seconds != int(load_key("smoke_test.cutoff_seconds", 60)):
+                update_key("smoke_test.cutoff_seconds", int(smoke_seconds))
+                st.rerun()
+
+        with st.container(border=True):
+            st.caption("Dubbing Eval")
+            if st.button("Run Dubbing Eval", key="run_dubbing_eval"):
+                try:
+                    from core.dubbing_quality import DUBBING_EVAL_JSON, write_dubbing_eval
+                    summary = write_dubbing_eval()
+                    st.success(f"Eval written: {summary}")
+                except Exception as e:
+                    st.error(f"Dubbing eval failed: {e}")
+            eval_json = "output/audio/dubbing_eval.json"
+            if os.path.exists(eval_json):
+                try:
+                    with open(eval_json, "r", encoding="utf-8") as f:
+                        eval_data = json.load(f)
+                    st.json(eval_data.get("summary", eval_data), expanded=False)
+                except Exception as e:
+                    st.caption(f"Eval summary unavailable: {e}")
 
         # sub settings for each tts method
         if select_tts == "gpt_sovits":
@@ -296,7 +393,7 @@ def page_setting():
             config_input(t("Edge TTS Voice"), "edge_tts.voice")
 
         elif select_tts == "sf_indextts2":
-            config_input(t("SiliconFlow API Key"), "sf_indextts2.api_key")
+            secret_env_status(t("SiliconFlow API Key"), "sf_indextts2.api_key")
             config_number_input(t("Max Workers"), "max_workers", help=t("Number of parallel processes for TTS generation."), min_value=1, step=1)
 
             # 获取固定声音列表
@@ -412,48 +509,138 @@ def page_setting():
                 st.warning(t("Indonesian TTS model not found. Please download from https://github.com/Wikidepia/indonesian-tts/releases/tag/v1.2"))
 
         elif select_tts == "voxcpm_tts":
-            st.info(t("VoxCPM TTS is a tokenizer-free speech synthesis with realistic voice cloning. Requires local VoxCPM service running."))
-            
-            # API URL configuration
-            current_api_url = load_key("voxcpm_tts.api_url", "http://127.0.0.1:7860")
+            st.info(t("VoxCPM TTS uses OpenAI-compatible REST API for voice cloning. Start server: python /Users/vanch/VoxCPM/api_server.py --port 8809"))
+
+            # ── API URL ────────────────────────────────────────────────────────
+            current_api_url = load_key("voxcpm_tts.api_url", "http://127.0.0.1:8809")
             new_api_url = st.text_input(
                 t("VoxCPM API URL"),
                 value=current_api_url,
-                help=t("Local VoxCPM Gradio server URL, default: http://127.0.0.1:7860")
+                help=t("VoxCPM REST API URL (api_server.py), default: http://127.0.0.1:8809")
             )
             if new_api_url != current_api_url:
                 update_key("voxcpm_tts.api_url", new_api_url)
                 st.rerun()
-            
-            # Prompt enhancement toggle
-            use_enhancement = st.toggle(
-                t("Prompt Speech Enhancement"),
-                value=load_key("voxcpm_tts.use_prompt_enhancement", False),
-                help=t("Enable for clearer voice (16kHz). Disable for higher quality cloning (up to 44.1kHz).")
+
+            # ── Clone mode ─────────────────────────────────────────────────────
+            clone_mode_options = {
+                "dynamic": t("Dynamic Clone (per-segment reference audio)"),
+                "none":    t("None (use voice preset only)"),
+            }
+            current_clone_mode = load_key("voxcpm_tts.clone_mode", "dynamic")
+            selected_clone_mode = st.radio(
+                t("Clone Mode"),
+                options=list(clone_mode_options.keys()),
+                format_func=lambda x: clone_mode_options[x],
+                index=list(clone_mode_options.keys()).index(current_clone_mode) if current_clone_mode in clone_mode_options else 0,
+                key="voxcpm_clone_mode",
+                help=t("Dynamic: clones voice from the reference audio extracted per segment. None: uses the voice preset below.")
             )
-            if use_enhancement != load_key("voxcpm_tts.use_prompt_enhancement", False):
-                update_key("voxcpm_tts.use_prompt_enhancement", use_enhancement)
+            if selected_clone_mode != current_clone_mode:
+                update_key("voxcpm_tts.clone_mode", selected_clone_mode)
                 st.rerun()
-            
-            # Text normalization toggle
-            normalize = st.toggle(
-                t("Text Normalization"),
-                value=load_key("voxcpm_tts.normalize", False),
-                help=t("Enable for regular text (handles numbers, abbreviations). Disable for phoneme input.")
+
+            # ── Voice preset ───────────────────────────────────────────────────
+            voice_presets = [
+                "alloy", "echo", "fable", "onyx", "nova", "shimmer",
+                "newscast", "livestream", "sad", "angry", "calm", "authority"
+            ]
+            current_voice = load_key("voxcpm_tts.voice", "alloy")
+            selected_voice = st.selectbox(
+                t("Voice Preset"),
+                options=voice_presets,
+                index=voice_presets.index(current_voice) if current_voice in voice_presets else 0,
+                key="voxcpm_voice",
+                help=t("Select a built-in voice style. Overridden by Custom Control Instruction if provided.")
             )
-            if normalize != load_key("voxcpm_tts.normalize", False):
-                update_key("voxcpm_tts.normalize", normalize)
+            if selected_voice != current_voice:
+                update_key("voxcpm_tts.voice", selected_voice)
                 st.rerun()
-            
-            # Output denoising toggle
+
+            # ── Custom control instruction ─────────────────────────────────────
+            current_control = load_key("voxcpm_tts.control", "")
+            new_control = st.text_input(
+                t("Custom Control Instruction"),
+                value=current_control,
+                placeholder=t("e.g. 中年男性，声音沉稳，语速适中"),
+                help=t("Chinese control instruction that overrides the voice preset. Leave empty to use the preset.")
+            )
+            if new_control != current_control:
+                update_key("voxcpm_tts.control", new_control)
+                st.rerun()
+
+            # ── CFG & inference steps ──────────────────────────────────────────
+            c1, c2 = st.columns(2)
+            with c1:
+                current_cfg = float(load_key("voxcpm_tts.cfg_value", 2.0))
+                new_cfg = st.slider(
+                    t("CFG Scale"),
+                    min_value=0.5, max_value=5.0, value=current_cfg, step=0.5,
+                    help=t("Classifier-Free Guidance scale (0.5–5.0). Higher = stronger style adherence.")
+                )
+                if new_cfg != current_cfg:
+                    update_key("voxcpm_tts.cfg_value", new_cfg)
+            with c2:
+                current_steps = int(load_key("voxcpm_tts.inference_timesteps", 10))
+                new_steps = st.slider(
+                    t("Inference Steps"),
+                    min_value=1, max_value=50, value=current_steps, step=1,
+                    help=t("DiT diffusion steps (1–50). More steps = better quality but slower.")
+                )
+                if new_steps != current_steps:
+                    update_key("voxcpm_tts.inference_timesteps", new_steps)
+
+            # ── Denoise toggle ─────────────────────────────────────────────────
+            current_denoise = load_key("voxcpm_tts.denoise", False)
             denoise = st.toggle(
-                t("Output Denoising"),
-                value=load_key("voxcpm_tts.denoise", False),
-                help=t("Enable external denoising (may cause distortion, limits sample rate to 16kHz).")
+                t("Denoise Reference Audio"),
+                value=current_denoise,
+                help=t("Apply ZipEnhancer to the reference audio before voice cloning. Improves clarity but limits sample rate to 16kHz.")
             )
-            if denoise != load_key("voxcpm_tts.denoise", False):
+            if denoise != current_denoise:
                 update_key("voxcpm_tts.denoise", denoise)
                 st.rerun()
+
+        elif select_tts in {"mlx_router", "mlx_indextts2", "mlx_omnivoice", "mlx_qwen3_tts", "mlx_voxcpm2"}:
+            st.info(t("Local MLX TTS router uses IndexTTS2, OmniVoice, Qwen3-TTS, and VoxCPM2 adapters."))
+            router_backends = ["auto", "indextts2", "omnivoice", "qwen3_tts", "voxcpm2"]
+            forced = {
+                "mlx_indextts2": "indextts2",
+                "mlx_omnivoice": "omnivoice",
+                "mlx_qwen3_tts": "qwen3_tts",
+                "mlx_voxcpm2": "voxcpm2",
+            }.get(select_tts, load_key("mlx_tts.default_backend", "auto"))
+            selected_backend = st.selectbox(
+                "MLX TTS Backend",
+                options=router_backends,
+                index=router_backends.index(forced) if forced in router_backends else 0,
+                help=t("Auto routes Vietnamese to IndexTTS2 and Chinese dialogue to OmniVoice by default.")
+            )
+            if select_tts == "mlx_router" and selected_backend != load_key("mlx_tts.default_backend", "auto"):
+                update_key("mlx_tts.default_backend", selected_backend)
+                st.rerun()
+            if st.button("Check MLX TTS Backends", key="check_mlx_tts"):
+                try:
+                    from core.providers.mlx_tts import list_backend_status
+                    st.json(list_backend_status(), expanded=False)
+                except Exception as e:
+                    st.error(f"MLX TTS check failed: {e}")
+
+        elif select_tts == "cosyvoice3_tts":
+            st.info(t("CosyVoice 3 is registered as an optional provider. Configure a local/API adapter before running dubbing."))
+            config_input(t("CosyVoice 3 API URL"), "cosyvoice3_tts.api_url")
+
+        elif select_tts == "elevenlabs_tts":
+            st.info(t("ElevenLabs is a paid optional provider for high-quality dubbing."))
+            secret_env_status("ElevenLabs API Key", "elevenlabs_tts.api_key")
+            config_input("ElevenLabs Voice ID", "elevenlabs_tts.voice_id")
+            config_input("ElevenLabs Model", "elevenlabs_tts.model")
+
+        elif select_tts == "openai_tts":
+            st.info(t("OpenAI TTS is a paid optional provider for quick cloud fallback."))
+            secret_env_status("OpenAI API Key", "openai_tts.api_key")
+            config_input("OpenAI TTS Model", "openai_tts.model")
+            config_input("OpenAI TTS Voice", "openai_tts.voice")
 
 def check_api():
     try:

@@ -7,6 +7,7 @@ from core.translate_once import translate_lines
 from core.step4_1_summarize import search_things_to_note_in_prompt
 from core.step6_generate_final_timeline import align_timestamp
 from core.config_utils import load_key
+from core.translation_state import record_llm_stage
 from core.timing_utils import time_it
 from rich.console import Console
 from rich.panel import Panel
@@ -108,6 +109,7 @@ def translate_all():
 
     df_translate = pd.DataFrame({'Source': src_text, 'Translation': trans_text})
     df_translate.to_excel(TRANSLATION_RESULTS_FILE, index=False)
+    record_llm_stage("translate")
 
     console.print("[bold green]✅ Translation completed and results saved.[/bold green]")
 

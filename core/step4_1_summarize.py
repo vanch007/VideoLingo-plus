@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.ask_gpt import ask_gpt
 from core.prompts_storage import get_summary_prompt
 from core.config_utils import load_key
+from core.translation_state import record_llm_stage
 import pandas as pd
 from rich.console import Console
 
@@ -244,6 +245,7 @@ def get_summary():
         json.dump(save_data, f, ensure_ascii=False, indent=4)
 
     console.print(f'[green]💾 Summary saved to → {TERMINOLOGY_JSON_PATH}[/green]')
+    record_llm_stage("summarize")
 
 if __name__ == '__main__':
     get_summary()

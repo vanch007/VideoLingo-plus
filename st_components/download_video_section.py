@@ -12,6 +12,11 @@ from translations.translations import translate as t
 
 OUTPUT_DIR = "output"
 
+def get_smoke_cutoff():
+    if load_key("smoke_test.enabled", False):
+        return int(load_key("smoke_test.cutoff_seconds", 60))
+    return None
+
 def download_video_section():
     st.header(t("a. Download or Upload Video"))
     with st.container(border=True):
@@ -57,7 +62,7 @@ def download_video_section():
                     # 记录下载开始时间
                     download_start_time = time.time()
                     with st.spinner("Downloading video..."):
-                        download_video_ytdlp(url, resolution=res)
+                        download_video_ytdlp(url, resolution=res, cutoff_time=get_smoke_cutoff())
                     # 记录下载耗时
                     download_elapsed = time.time() - download_start_time
                     save_timing("下载视频", download_elapsed)
@@ -68,7 +73,7 @@ def download_video_section():
                     # 记录下载开始时间
                     download_start_time = time.time()
                     with st.spinner("Downloading video..."):
-                        download_video_ytdlp(url, resolution=res)
+                        download_video_ytdlp(url, resolution=res, cutoff_time=get_smoke_cutoff())
                     # 记录下载耗时
                     download_elapsed = time.time() - download_start_time
                     save_timing("下载视频", download_elapsed)

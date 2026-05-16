@@ -3,11 +3,10 @@
 version: "2.2.2"
 ## ======================== Basic Settings ======================== ##
 display_language: "zh-CN"
-
-hf_token: 
+hf_token: ''
 # API settings
 api:
-  key: 'sk-gknihqdrqptifmzwrezivnyhtesemusgaletctihienbxmxx'
+  key: ''
   base_url: 'https://api.siliconflow.cn'
   model: 'deepseek-ai/DeepSeek-V3.2'
 
@@ -16,10 +15,55 @@ api:
   retry_attempts: 10
   retry_interval: 3
 
-# Source language for embedded subtitles
-source_language: 'en'
+llm:
+  # Provider registry. "openai_compatible" keeps using the api block above.
+  provider: 'openai_compatible'
+  timeout_seconds: 180
+  providers:
+    deepseek_v4_flash:
+      base_url: 'https://api.deepseek.com'
+      model: 'deepseek-v4-flash'
+      api_key_env: 'DEEPSEEK_API_KEY'
+      supports_json_object: true
+    deepseek_v4_pro:
+      base_url: 'https://api.deepseek.com'
+      model: 'deepseek-v4-pro'
+      api_key_env: 'DEEPSEEK_API_KEY'
+      supports_json_object: true
+    openai_gpt_5_2:
+      base_url: 'https://api.openai.com'
+      model: 'gpt-5.2'
+      api_key_env: 'OPENAI_API_KEY'
+      supports_json_object: true
+    openai_gpt_5_1:
+      base_url: 'https://api.openai.com'
+      model: 'gpt-5.1'
+      api_key_env: 'OPENAI_API_KEY'
+      supports_json_object: true
+    gemini_3_pro:
+      base_url: 'https://generativelanguage.googleapis.com/v1beta/openai'
+      model: 'gemini-3-pro-preview'
+      api_key_env: 'GEMINI_API_KEY'
+      supports_json_object: true
+    lm_studio:
+      base_url: 'http://127.0.0.1:1234'
+      model: 'local-model'
+      api_key_env: 'LM_STUDIO_API_KEY'
+      supports_json_object: false
+    omlx:
+      type: 'openai_compatible'
+      base_url: 'http://127.0.0.1:8000/v1'
+      model: 'auto'
+      api_key_env: 'OMLX_API_KEY'
+      default_api_key: ''
+      max_workers: 1
+      supports_json_object: false
+      timeout_seconds: 180
 
-target_language: 'zh'
+# Source language for embedded subtitles
+source_language: 'zh'
+
+target_language: 'vi'
 
 # Whether to use Demucs for vocal separation before transcription
 demucs: true
@@ -31,9 +75,9 @@ background_volume: 1.5
 whisper:
   # ["medium", "large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
   model: 'large-v3-turbo'
-  # Whisper specified recognition language [en, zh, ...]
-  language: 'en'
-  detected_language: 'en'
+  # Whisper specified recognition language [auto, en, zh, ...]
+  language: 'zh'
+  detected_language: 'zh'
   # Whisper running mode ["local", "stable-ts", "funasr"]. Specifies where to run
   runtime: 'stable-ts'
 
@@ -82,29 +126,137 @@ reflect_translate: true
 pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
-# TTS selection [edge_tts, gpt_sovits, custom_tts, sf_indextts2, index_tts2, piper_tts, indonesian_tts, voxcpm_tts]
-tts_method: 'sf_indextts2'
+# TTS selection [edge_tts, gpt_sovits, custom_tts, sf_indextts2, index_tts2, piper_tts, indonesian_tts, voxcpm_tts, mlx_router, mlx_indextts2, mlx_omnivoice, mlx_qwen3_tts, mlx_voxcpm2, cosyvoice3_tts, elevenlabs_tts, openai_tts]
+tts_method: 'mlx_router'
+
+# Quality mode [subtitle, dubbing, high_sync]. high_sync enables duration budgets,
+# LLM shortening for overlong dubbing text, measured retry, and strict eval.
+quality_mode: 'high_sync'
+dubbing_quality:
+  mode: 'high_sync'
+  max_duration_ratio: 1.08
+  min_duration_ratio: 0.895
+  rewrite_estimate_ratio: 1.08
+  rewrite_actual_ratio: 1.08
+  max_speed_factor: 1.35
+  # Natural speech target. Rows above this speed are rewritten before accepting accelerated audio.
+  max_natural_speed_factor: 1.12
+  over_duration_rewrite_ratio_max: 2.0
+  max_rewrite_rounds: 2
+  allow_silence_fallback: false
+  max_start_drift: 0.12
+  max_end_drift: 0.18
+  max_early_end_drift: 0.46
+  slow_fit_min_speed: 0.75
+  under_duration_fit_margin_seconds: 0.06
+  min_audio_size: 1000
+  asr_readback: true
+  # ASR readback backend: builtin uses cached local stable-whisper; command uses the template below.
+  asr_readback_backend: 'builtin'
+  asr_readback_model: 'large-v3-turbo'
+  asr_readback_use_mlx: true
+  # Optional command template for ASR readback backend=command. Leave empty to skip live ASR.
+  # Placeholders: {audio}, {language}, {output_dir}. Command stdout can be raw text
+  # or JSON with text/transcript/segments fields.
+  asr_readback_command: []
+  asr_readback_timeout_seconds: 120
+  content_score_min: 0.55
+  leak_score_max: 0.12
+  loudness_target_lufs: -20.0
+dubbing_repair:
+  llm_timeout_seconds: 60
+  llm_retry_attempts: 1
+  llm_retry_interval: 2
+smoke_test:
+  enabled: false
+  cutoff_seconds: 60
 
 # Indonesian TTS configuration (using Wikidepia VITS model)
 indonesian_tts:
   speaker: 'wibowo'
 
-# VoxCPM TTS configuration (local Gradio API with voice cloning)
+# VoxCPM TTS configuration (OpenAI-compatible REST API, api_server.py --port 8809)
 voxcpm_tts:
-  api_url: 'http://127.0.0.1:7860'
-  use_prompt_enhancement: false
-  normalize: false
+  api_url: 'http://127.0.0.1:8809'
+  # Voice preset: alloy | echo | fable | onyx | nova | shimmer | newscast | livestream | sad | angry | calm | authority
+  voice: 'alloy'
+  # Custom control instruction (overrides voice preset, e.g. "中年男性，声音沉稳")
+  control: ''
+  # CFG guidance scale (0.5–5.0, higher = stronger style adherence)
+  cfg_value: 2.0
+  # DiT diffusion steps (1–50, higher = better quality, slower)
+  inference_timesteps: 10
+  # Apply ZipEnhancer denoising to reference audio before cloning
   denoise: false
+  # Clone mode: "dynamic" (per-segment reference audio) | "none" (preset voice only)
+  clone_mode: 'dynamic'
 
 # SiliconFlow IndexTTS2 Clone
 sf_indextts2:
-  api_key: 'sk-gknihqdrqptifmzwrezivnyhtesemusgaletctihienbxmxx'
+  api_key: ''
   clone_mode: dynamic
   fixed_voice: 雷军
+  # Reserved for duration-aware dubbing adapters. Null means current automatic speed fitting.
+  target_duration:
+
+cosyvoice3_tts:
+  api_url: 'http://127.0.0.1:8810'
+  clone_mode: dynamic
+
+elevenlabs_tts:
+  api_key: ''
+  voice_id: ''
+  model: 'eleven_v3'
+
+openai_tts:
+  api_key: ''
+  model: 'gpt-4o-mini-tts'
+  voice: 'alloy'
+
+mlx_tts:
+  default_backend: 'auto'
+  router:
+    prefer_qwen_with_clean_ref: false
+    allow_voxcpm2_auto: false
+  backends:
+    indextts2:
+      enabled: true
+      root: '/Users/vanch/mlx-indextts2'
+      command_prefix: ['uv', 'run', 'mlx-indextts']
+      profile: 'auto'
+      denoise_ref: true
+      fit_duration: false
+      timeout_seconds: 600
+    omnivoice:
+      enabled: true
+      root: '/Users/vanch/mlx-omnivoice'
+      command_prefix: ['uv', 'run', 'mlx-omnivoice']
+      model: 'omnivoice_8bit'
+      require_ref_text: true
+      timeout_seconds: 600
+    qwen3_tts:
+      enabled: true
+      root: '/Users/vanch/mlx-qwen3-tts'
+      command_prefix: ['uv', 'run', 'mlx-qwen-tts']
+      model: 'qwen3_tts_8bit'
+      require_ref_text: true
+      require_official: false
+      timeout_seconds: 600
+    voxcpm2:
+      enabled: true
+      root: '/Users/vanch/mlx-voxcpm2'
+      command_prefix: ['python3', '-m', 'mlx_voxcpm2.cli']
+      pythonpath: '/Users/vanch/mlx-voxcpm2'
+      model_dir: 'models/VoxCPM2-official-mlx-int8-components'
+      inference_timesteps: 4
+      cfg_value: 2.0
+      retry_badcase: true
+      denoise_ref: false
+      timeout_seconds: 600
 
 # Edge TTS configuration
 edge_tts:
-  voice: 'zh-CN-XiaoxiaoNeural'
+  voice: 'en-US-AvaMultilingualNeural'  # Multilingual voice supporting Vietnamese (vi-VN voices return 502)
 
 # SoVITS configuration
 gpt_sovits:
@@ -115,14 +267,14 @@ gpt_sovits:
 
 # *Audio speed range
 speed_factor:
-  min: 1
-  accept: 1.5 # Maximum acceptable speed (increased from 1.3 to handle longer audio segments)
-  max: 1.6
+  min: 0.8
+  accept: 2.0 # Maximum acceptable speed (widened for Vietnamese text expansion)
+  max: 2.2
 
 # *Merge audio configuration
 min_subtitle_duration: 1 # Minimum subtitle duration, will be forcibly extended
 min_trim_duration: 3.5 # Subtitles shorter than this value won't be split
-tolerance: 1.5 # Allowed extension time to the next subtitle
+tolerance: 2.5 # Allowed extension time to the next subtitle (widened for better alignment)
 
 ## ======================== Additional settings 请勿修改======================== ##
 # Whisper model directory
@@ -149,6 +301,11 @@ llm_support_json:
 - 'gpt-4o'
 - 'gpt-4o-mini'
 - 'gemini-2.0-flash'
+- 'gpt-5.2'
+- 'gpt-5.1'
+- 'deepseek-v4-flash'
+- 'deepseek-v4-pro'
+- 'gemini-3-pro-preview'
 
 # Spacy models
 spacy_model_map:
@@ -169,6 +326,7 @@ language_split_with_space:
 - 'de'
 - 'it'
 - 'ru'
+- 'vi'
 
 # Languages that do not use space as separator
 language_split_without_space:
@@ -176,6 +334,17 @@ language_split_without_space:
 - 'ja'
 merge_split_subtitles: false
 merge_subtitles: true
-rewrite_text_for_dubbing: false
+rewrite_text_for_dubbing: true
+dubbing_profiles:
+  vi:
+    speed_factor:
+      min: 0.8
+      accept: 2.0
+      max: 2.2
+    subtitle:
+      chars_per_line_src_portrait: 22
+      chars_per_line_trans_portrait: 18
+      chars_per_line_src_landscape: 36
+      chars_per_line_trans_landscape: 30
 piper_tts:
   voice: id_ID-news_tts-medium

@@ -27,14 +27,14 @@ SRC_OUTLINE_WIDTH = 1
 SRC_SHADOW_COLOR = '&H80000000'
 TRANS_FONT_COLOR = '&H00FFFF'
 TRANS_OUTLINE_COLOR = '&H000000'
-TRANS_OUTLINE_WIDTH = 1 
+TRANS_OUTLINE_WIDTH = 1
 TRANS_BACK_COLOR = '&H33000000'
 
 OUTPUT_DIR = "output"
 OUTPUT_VIDEO = f"{OUTPUT_DIR}/AI字幕.mp4"
 SRC_SRT = f"{OUTPUT_DIR}/src.srt"
 TRANS_SRT = f"{OUTPUT_DIR}/trans.srt"
-    
+
 def check_gpu_available():
     try:
         result = subprocess.run(['ffmpeg', '-encoders'], capture_output=True, text=True)
@@ -69,18 +69,65 @@ def merge_subtitles_to_video():
     TARGET_HEIGHT = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
     video.release()
     rprint(f"[bold green]Video resolution: {TARGET_WIDTH}x{TARGET_HEIGHT}[/bold green]")
+    # Adaptive subtitle sizing based on video orientation and LibASS default PlayResY=288
+    is_portrait = TARGET_HEIGHT > TARGET_WIDTH
+    aspect_ratio = TARGET_WIDTH / TARGET_HEIGHT
+
+    if is_portrait:
+        # Target 22 Chinese chars and 18 Vietnamese chars per line to fit narrow screens
+        chars_per_line_src = 22
+        chars_per_line_trans = 18
+        bottom_margin_percent = 0.10  # 10% from bottom
+        wrap_lines = 2.5  # Expect up to 2.5 lines of translation
+        src_outline = 1
+        trans_outline = 2
+        rprint("[cyan]📱 Portrait mode: Applying exact aspect-ratio font scaling[/cyan]")
+    else:
+        # Target standard chars per line for landscape
+        chars_per_line_src = 36
+        chars_per_line_trans = 30
+        bottom_margin_percent = 0.08
+        wrap_lines = 1.5
+        src_outline = SRC_OUTLINE_WIDTH
+        trans_outline = TRANS_OUTLINE_WIDTH
+        rprint("[cyan]🖥️ Landscape mode: Applying exact aspect-ratio font scaling[/cyan]")
+
+    # Libass defaults to PlayResY=288, PlayResX=384 for standard SRT styling
+    # Formula: FontSize = (TARGET_WIDTH / TARGET_HEIGHT) * (288 / chars_per_line)
+    src_size = int(aspect_ratio * (288 / max(chars_per_line_src, 1)))
+    trans_size = int(aspect_ratio * (288 / max(chars_per_line_trans, 1)))
+
+    margin_v = int(bottom_margin_percent * 288)
+    src_margin_v = margin_v + int(trans_size * wrap_lines) + 5
+    margin_lr = 20 # 20/384 ≈ 5% horizontal margin to force wrapping
+
+    src_style = (
+        f"FontSize={src_size},FontName={FONT_NAME},"
+        f"PrimaryColour={SRC_FONT_COLOR},OutlineColour={SRC_OUTLINE_COLOR},OutlineWidth={src_outline},"
+        f"ShadowColour={SRC_SHADOW_COLOR},BorderStyle=1,"
+        f"MarginL={margin_lr},MarginR={margin_lr},MarginV={src_margin_v}"
+    )
+    dub_style = (
+        f"FontSize={trans_size},FontName={TRANS_FONT_NAME},"
+        f"PrimaryColour={TRANS_FONT_COLOR},OutlineColour={TRANS_OUTLINE_COLOR},OutlineWidth={trans_outline},"
+        f"BackColour={TRANS_BACK_COLOR},Alignment=2,BorderStyle=4,"
+        f"MarginL={margin_lr},MarginR={margin_lr},MarginV={margin_v}"
+    )
+
+    # Use absolute paths to avoid escaping issues
+    abs_src_srt = os.path.abspath(SRC_SRT).replace("'", "'\\''")
+    abs_trans_srt = os.path.abspath(TRANS_SRT).replace("'", "'\\''")
+
+    vf_str = (
+        f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,"
+        f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,"
+        f"subtitles='{abs_src_srt}':force_style='{src_style}',"
+        f"subtitles='{abs_trans_srt}':force_style='{dub_style}'"
+    )
+
     ffmpeg_cmd = [
         'ffmpeg', '-i', video_file,
-        '-vf', (
-            f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,"
-            f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,"
-            f"subtitles={SRC_SRT}:force_style='FontSize={SRC_FONT_SIZE},FontName={FONT_NAME}," 
-            f"PrimaryColour={SRC_FONT_COLOR},OutlineColour={SRC_OUTLINE_COLOR},OutlineWidth={SRC_OUTLINE_WIDTH},"
-            f"ShadowColour={SRC_SHADOW_COLOR},BorderStyle=1',"
-            f"subtitles={TRANS_SRT}:force_style='FontSize={TRANS_FONT_SIZE},FontName={TRANS_FONT_NAME},"
-            f"PrimaryColour={TRANS_FONT_COLOR},OutlineColour={TRANS_OUTLINE_COLOR},OutlineWidth={TRANS_OUTLINE_WIDTH},"
-            f"BackColour={TRANS_BACK_COLOR},Alignment=2,MarginV=40,BorderStyle=4'"
-        ).encode('utf-8'),
+        '-vf', vf_str,
     ]
 
     gpu_available = check_gpu_available()
@@ -92,23 +139,22 @@ def merge_subtitles_to_video():
         ffmpeg_cmd.extend(['-c:v', 'h264_videotoolbox', '-b:v', '5M'])
     else:
         rprint("[bold yellow]No GPU encoder detected, will use CPU instead.[/bold yellow]")
-    
+
     ffmpeg_cmd.extend(['-y', OUTPUT_VIDEO])
 
     print("🎬 Start merging subtitles to video...")
     start_time = time.time()
-    process = subprocess.Popen(ffmpeg_cmd)
+    result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True)
 
-    try:
-        process.wait()
-        if process.returncode == 0:
-            print(f"\n✅ Done! Time taken: {time.time() - start_time:.2f} seconds")
-        else:
-            print("\n❌ FFmpeg execution error")
-    except Exception as e:
-        print(f"\n❌ Error occurred: {e}")
-        if process.poll() is None:
-            process.kill()
+    if result.returncode == 0:
+        print(f"\n✅ Done! Time taken: {time.time() - start_time:.2f} seconds")
+    else:
+        error_msg = result.stderr[-800:] if result.stderr else "No stderr output"
+        rprint(f"[bold red]❌ FFmpeg subtitle merge failed! stderr:\n{error_msg}[/bold red]")
+        raise RuntimeError(
+            f"FFmpeg subtitle merge failed (exit code {result.returncode}). "
+            f"Error: {error_msg[-200:]}"
+        )
 
 if __name__ == "__main__":
     merge_subtitles_to_video()

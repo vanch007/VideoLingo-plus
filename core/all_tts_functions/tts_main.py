@@ -8,14 +8,17 @@ from core.config_utils import load_key
 from core.all_whisper_methods.audio_preprocess import get_audio_duration
 from core.ask_gpt import ask_gpt
 from core.prompts_storage import get_correct_text_prompt
+from core.all_tts_functions.tts_registry import get_tts_provider
 
 def clean_text_for_tts(text):
-    """Remove problematic characters for TTS"""
-    # A more aggressive cleaning that removes all punctuation.
-    text = re.sub(r"[^\w\s]", "", text)
+    """Normalize text while preserving punctuation that changes spoken meaning."""
+    text = str(text)
+    text = re.sub(r"[\x00-\x1f\x7f]", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"\s+([,.;:!?%])", r"\1", text)
     return text.strip()
 
-def tts_main(text, save_as, number, task_df):
+def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target_duration=None):
     text = clean_text_for_tts(text)
     # Check if text is empty or single character, single character voiceovers are prone to bugs
     cleaned_text = re.sub(r'[^\w\s]', '', text).strip()
@@ -31,14 +34,11 @@ def tts_main(text, save_as, number, task_df):
     
     print(f"Generating <{text}...>")
     TTS_METHOD = load_key("tts_method")
+    get_tts_provider(TTS_METHOD)
     
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            if attempt >= max_retries - 1:
-                print("Asking GPT to correct text...")
-                correct_text = ask_gpt(get_correct_text_prompt(text),log_title='tts_correct_text')
-                text = correct_text['text']
             
             # Conditional imports based on TTS method to avoid import errors
             if TTS_METHOD == 'gpt_sovits':
@@ -70,7 +70,15 @@ def tts_main(text, save_as, number, task_df):
                     except KeyError:
                         pass
 
-                indextts2_tts_for_videolingo(text, save_as, number, task_df, clone_mode=clone_mode, fixed_voice_name=fixed_voice_name)
+                indextts2_tts_for_videolingo(
+                    text,
+                    save_as,
+                    number,
+                    task_df,
+                    clone_mode=clone_mode,
+                    fixed_voice_name=fixed_voice_name,
+                    target_duration=target_duration,
+                )
             elif TTS_METHOD == 'indonesian_tts':
                 from core.all_tts_functions.indonesian_tts import indonesian_tts_for_videolingo
                 speaker = load_key("indonesian_tts.speaker", "wibowo")
@@ -78,6 +86,31 @@ def tts_main(text, save_as, number, task_df):
             elif TTS_METHOD == 'voxcpm_tts':
                 from core.all_tts_functions.voxcpm_tts import voxcpm_tts
                 voxcpm_tts(text, save_as, number, task_df, attempt)
+            elif TTS_METHOD in {'mlx_router', 'mlx_indextts2', 'mlx_omnivoice', 'mlx_qwen3_tts', 'mlx_voxcpm2'}:
+                from core.all_tts_functions.mlx_router import mlx_router_tts
+                backend_map = {
+                    'mlx_indextts2': 'indextts2',
+                    'mlx_omnivoice': 'omnivoice',
+                    'mlx_qwen3_tts': 'qwen3_tts',
+                    'mlx_voxcpm2': 'voxcpm2',
+                }
+                row_payload = dict(task_row or {})
+                if TTS_METHOD in backend_map:
+                    row_payload['tts_backend'] = backend_map[TTS_METHOD]
+                mlx_router_tts(
+                    text,
+                    save_as,
+                    number,
+                    task_df,
+                    task_row=row_payload,
+                    target_duration=target_duration,
+                )
+            elif TTS_METHOD == 'cosyvoice3_tts':
+                raise NotImplementedError("cosyvoice3_tts provider is registered but not implemented yet. Configure its local/API adapter before use.")
+            elif TTS_METHOD == 'elevenlabs_tts':
+                raise NotImplementedError("elevenlabs_tts provider is registered but not implemented yet. Add ELEVENLABS_API_KEY and adapter before use.")
+            elif TTS_METHOD == 'openai_tts':
+                raise NotImplementedError("openai_tts provider is registered but not implemented yet. Add OPENAI_API_KEY and adapter before use.")
             else:
                 raise ValueError(f"Unknown TTS method: {TTS_METHOD}")
                 
@@ -100,7 +133,9 @@ def tts_main(text, save_as, number, task_df):
                     silence.export(save_as, format="wav")
                     return
                 print(f"Attempt {attempt + 1} failed, retrying...")
+                import time; time.sleep(3)
         except Exception as e:
             if attempt == max_retries - 1:
                 raise Exception(f"Failed to generate audio after {max_retries} attempts: {str(e)}")
-            print(f"Attempt {attempt + 1} failed, retrying...")
+            print(f"Attempt {attempt + 1} failed, retrying in 5s...")
+            import time; time.sleep(5)

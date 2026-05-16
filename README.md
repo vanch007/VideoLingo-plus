@@ -127,6 +127,31 @@ VideoLingo supports OpenAI-Like API format and various TTS interfaces:
 
 > **Note:** VideoLingo works with **[302.ai](https://gpt302.saaslink.net/C2oHR9)** - one API key for all services (LLM, WhisperX, TTS). Or run locally with Ollama and Edge-TTS for free, no API needed!
 
+## 2026 Local Upgrade Notes
+
+This fork keeps the original workflow but adds provider-based configuration and environment checks:
+
+- Secrets are no longer expected in `config.yaml`. Set keys through `.env` / shell variables based on `.env.example`.
+- Run `conda run -n videolingo python -m core.doctor` before long jobs to check FFmpeg, Python packages, services, secrets, and recoverable step status.
+- LLM routing is provider-based. Default translation uses `llm.provider: openai_compatible`, which reads the existing `api.base_url` / `api.model` block. oMLX remains an optional provider for local experiments, but it is not the default translation route.
+- ASR routes remain configurable: stable-ts + MLX for Mac, FunASR Nano for Chinese-heavy content, and WhisperX 3.8.5 for alignment/diarization scenarios.
+- TTS routes are registry-based. Current working routes remain Edge/Cloudflare Edge, SiliconFlow IndexTTS2, VoxCPM, GPT-SoVITS, Piper, and Indonesian VITS. `tts_method: mlx_router` adds local MLX routing across `/Users/vanch/mlx-indextts2`, `/Users/vanch/mlx-omnivoice`, `/Users/vanch/mlx-qwen3-tts`, and `/Users/vanch/mlx-voxcpm2`.
+- High-sync dubbing now uses duration budgets, optional LLM shortening/retry, IndexTTS2 `target_duration` passthrough, absolute-timeline audio overlay, ASR/leak score fields when available, and `output/audio/dubbing_eval.json` / `.xlsx` metrics.
+- Shared CLI entrypoint: `conda run -n videolingo python -m core.cli doctor`, `python -m core.cli models list`, `python -m core.cli run --input <video-or-srt> --source zh --target vi --profile cinematic --tts auto`, and `python -m core.cli eval dubbing`.
+- Optional ASR readback can be enabled by setting `dubbing_quality.asr_readback_command` in `config.yaml`, then running `python -m core.cli eval dubbing --readback`. The command receives `{audio}` and `{language}` placeholders and should print raw transcript text or JSON with `text` / `transcript` / `segments`.
+- Dubbing repair loop: `python -m core.cli repair dubbing --limit 20` writes `output/audio/dubbing_repair_plan.json`; add `--reasons missing_audio,over_duration` to target specific failure classes, `--apply` to mutate selected rows, `--batches 3` to repeat several plan/apply batches, and `--full-remap` only when chunk timing should be recomputed globally. Batch runs append summaries to `output/audio/dubbing_repair_history.jsonl`, and over-duration triage writes `output/audio/dubbing_over_duration_report.json`.
+- Timeline rescue loop: `python -m core.cli rescue timeline` writes `output/audio/timeline_rescue_report.json` / `.xlsx`; add `--write-candidate-tasks` to create non-destructive `output/audio/tts_tasks_timeline_rescue.xlsx` before deciding whether to regenerate all dubbing audio.
+- Translation provenance check: `python -m core.cli translation status` reports whether LLM-generated translation artifacts match the current configured model. Use `translation adopt-current --apply` to write a manifest for trusted existing artifacts. `translation archive` is dry-run by default; add `--apply` to move translation-derived artifacts and GPT logs into `output/history/translation_*` before a clean retranslation. CLI `run` / `resume` blocks stale translation artifacts unless `--auto-archive-stale-translation` is explicit.
+- Repair-time LLM rewrite uses `dubbing_repair.llm_timeout_seconds` and `dubbing_repair.llm_retry_attempts`, separate from the longer global translation retry settings.
+
+Common modes:
+
+1. Subtitle-only: download/import video -> ASR or SRT/subtitle extraction -> translation -> SRT/video subtitle output.
+2. Subtitle + dubbing: run subtitle pipeline, then TTS task generation -> reference extraction -> TTS -> audio/video merge.
+3. Existing SRT / embedded subtitles: skip ASR with Mode 2 or Mode 3, then continue from segmentation/translation.
+
+For quick tuning, enable `smoke_test.enabled` in `config.yaml` or the Streamlit sidebar to trim newly downloaded videos to a short sample before running the full dubbing chain.
+
 For detailed installation, API configuration, and batch mode instructions, please refer to the documentation: [English](/docs/pages/docs/start.en-US.md) | [中文](/docs/pages/docs/start.zh-CN.md)
 
 ## Current Limitations

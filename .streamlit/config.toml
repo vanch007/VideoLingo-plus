@@ -1,2 +1,12 @@
 [server]
 maxUploadSize = 4096
+# 禁用文件监视器，避免扫描 torch/torchaudio 等 ML 库导致启动缓慢
+fileWatcherType = "none"
+
+[browser]
+# 禁止遥测上报
+gatherUsageStats = false
+
+[runner]
+# 快速失败模式，不等待模块完全加载
+fastReruns = true

@@ -27,7 +27,7 @@ def indextts2_tts_for_videolingo(
     text, save_as, number, task_df, 
     clone_mode="dynamic", fixed_voice_name=None, 
     use_emo_text=False, emo_text=None, 
-    verbose=True, speed=1.0
+    verbose=True, speed=1.0, target_duration=None
 ):
     """
     使用 index-tts2 进行 TTS 转换，支持参考音频、文本情感等高级功能
@@ -101,6 +101,8 @@ def indextts2_tts_for_videolingo(
         "verbose": verbose,
         "speed": speed
     }
+    if target_duration is not None:
+        extra_body["target_duration"] = target_duration
 
     # 如果启用了文本情感，则添加到请求体
     if use_emo_text and emo_text:

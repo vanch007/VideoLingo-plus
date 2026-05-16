@@ -213,6 +213,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
        —— `gen_dub_chunks()`: 配音切片生成主函数。
        —— `analyze_subtitle_timing_and_speed(df)`: 分析字幕时序和语速，计算间隙和容忍度。
        —— `process_cutoffs(df)`: 根据间隙和语速标记切分点，智能合并行以优化配音节奏。
+       —— `rewrite_estimated_overlong_rows(df)`: 在 TTS 前对预计超时的配音文本进行 LLM 短句改写。
        —— `merge_rows(df, ...)`: 合并多行字幕。
        —— 输入文件: `output/audio/tts_tasks.xlsx`, `output/src.srt`, `output/trans.srt`
        —— 输出文件: `output/audio/tts_tasks.xlsx` (更新后的配音任务文件)
@@ -225,6 +226,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
        —— `gen_audio()`: 生成音频主函数，是整个模块的入口。
        —— `clean_invalid_audio_files()`: 在开始前清理临时目录中所有小于10KB的无效音频文件。
        —— `generate_tts_audio(tasks_df)`: 核心函数，使用 `ThreadPoolExecutor` 或 `ProcessPoolExecutor` 并行生成TTS音频。
+       —— `retry_overlong_rows(tasks_df)`: 根据实测 TTS 时长对超时片段进行改写和重生成。
        —— `process_row(row, tasks_df)`: 处理单个配音任务，包含复杂的重试（3次）、超时（60秒）验证逻辑。
        —— `merge_chunks(tasks_df)`: 根据 `step8_2` 划分的区块，计算统一的语速调整因子，并调用 `adjust_audio_speed` 处理每个音频片段。
        —— `adjust_audio_speed(input_file, output_file, speed_factor)`: 使用 `ffmpeg` 调整音频速度。
@@ -236,6 +238,8 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
        —— `create_srt_subtitle()`: 创建配音对应的SRT字幕文件。
        —— 输入文件: `output/audio/tts_tasks.xlsx` (配音任务文件), `output/audio/segs/[number].wav` (配音片段)
        —— 输出文件: `output/dub.mp3` (合并后的完整配音), `output/dub.srt` (配音字幕)
+     - `core/dubbing_quality.py`: 评估配音质量，输出 `output/audio/dubbing_eval.json` 与 `output/audio/dubbing_eval.xlsx`，包含时长比例、漂移、缺失音频和静音替代等指标。
+     - `core/dubbing_rewrite.py`: 按目标时长调用 LLM 改写过长配音文本，供 Step 8.2 和 Step 10 共用。
      - `core/step12_merge_dub_to_vid.py`: 将配音合并到视频，支持多线程加速和音频标准化处理。
        —— `merge_video_audio()`: 合并视频音频主函数，它会混合原始背景音和新的配音音轨，并根据配置决定是否烧录双语字幕。
        —— `normalize_audio_volume(audio_path, ...)`: 标准化音频音量至-20dB。
@@ -269,6 +273,22 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
 8. **文本转语音（TTS）模块 (core/all_tts_functions/)**:
    - `fish_tts.py`, `openai_tts.py`, `gpt_sovits_tts.py`, `azure_tts.py`, `edge_tts.py`, `sf_indextts2.py`, `piper_tts.py`: 各种TTS实现的封装。
    - `tts_main.py`: TTS主入口，统一调用各种TTS方法。
+
+## 2026 升级说明
+
+本地升级后的维护原则：
+
+- `config.yaml` 只保留非敏感默认值，真实 API Key / HF Token / TTS Key 通过 `.env.example` 中列出的环境变量注入。
+- `core.llm_provider` 负责 LLM provider registry，默认兼容原 OpenAI-compatible `api` 配置，同时预置 DeepSeek V4、OpenAI GPT-5.x、Gemini 3、LM Studio 等路线。
+- `core.asr_schema` 统一 ASR 输出字段：`segments`、`words`、`speaker`、`confidence`、`language`、`timestamp_granularity`。当 MLX stable-ts 无词级时间戳时，明确标记为 `segment` 粒度。
+- `core.all_tts_functions.tts_registry` 统一 TTS 方法注册，旧方法保留，新方法先注册为可选 adapter，避免一次性替换生产可用路线。
+- `core.doctor` 是长任务前的环境检查入口：验证 FFmpeg、Python 包、服务端口、密钥、输出目录和步骤 checkpoint。
+
+三种推荐工作模式：
+
+1. 字幕-only：视频获取 -> ASR/字幕提取 -> 分句 -> 翻译 -> 时间轴 -> 字幕视频。
+2. 字幕 + 配音：字幕流程完成后，继续生成 TTS 任务、提取参考音频、生成配音片段、合并音频和视频。
+3. 已有 SRT / 内嵌字幕：通过 Mode 2/Mode 3 跳过 ASR，直接进入分句和翻译链路。
    - `estimate_duration.py`: 音频时长估计工具。
 
 9. **批量处理模块 (batch/)**:

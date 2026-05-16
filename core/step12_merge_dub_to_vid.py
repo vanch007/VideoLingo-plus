@@ -38,7 +38,7 @@ SRC_OUTLINE_WIDTH = 1
 SRC_SHADOW_COLOR = '&H80000000'
 TRANS_FONT_COLOR = '&H00FFFF'
 TRANS_OUTLINE_COLOR = '&H000000'
-TRANS_OUTLINE_WIDTH = 1 
+TRANS_OUTLINE_WIDTH = 1
 TRANS_BACK_COLOR = '&H33000000'
 # --- End of Styles ---
 
@@ -51,64 +51,119 @@ def normalize_audio_volume(audio_path: str, output_path: str, target_db: float =
     return output_path
 
 def merge_video_audio():
-    """Merge video and audio, and reduce video volume"""
+    """Merge video and audio with subtitle burning (two-pass for FFmpeg 8.x compatibility)."""
     VIDEO_FILE = find_video_files()
     background_file = BACKGROUND_AUDIO_FILE
-    
+
     normalized_dub_audio = 'output/normalized_dub.wav'
     normalize_audio_volume(DUB_AUDIO, normalized_dub_audio)
-    
+
     video = cv2.VideoCapture(VIDEO_FILE)
     TARGET_WIDTH = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
     TARGET_HEIGHT = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
     video.release()
     rprint(f"[bold green]Video resolution: {TARGET_WIDTH}x{TARGET_HEIGHT}[/bold green]")
-    
-    video_filter_parts = [
-        f'[0:v]scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease',
-        f'pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2'
-    ]
 
-    if load_key("burn_subtitles"):
-        if not os.path.exists(SRC_SRT) or not os.path.exists(DUB_SUB_FILE):
-            rprint(f"[bold red]Subtitle Error: One or both subtitle files not found.[/bold red]")
-            rprint(f"Searched for: {SRC_SRT} and {DUB_SUB_FILE}")
-            rprint("[bold yellow]Skipping subtitle burning.[/bold yellow]")
+    # ── Pass 1: Burn subtitles into video using -vf (avoids filter_complex escaping hell) ──
+    burn_subs = load_key("burn_subtitles") and os.path.exists(SRC_SRT) and os.path.exists(DUB_SUB_FILE)
+
+    if burn_subs:
+        rprint("[bold green]Pass 1: Burning bilingual subtitles into video...[/bold green]")
+
+        # Adaptive subtitle sizing based on video orientation and LibASS default PlayResY=288
+        is_portrait = TARGET_HEIGHT > TARGET_WIDTH
+        aspect_ratio = TARGET_WIDTH / TARGET_HEIGHT
+
+        if is_portrait:
+            # Target 22 Chinese chars and 18 Vietnamese chars per line to fit narrow screens
+            chars_per_line_src = 22
+            chars_per_line_trans = 18
+            bottom_margin_percent = 0.10  # 10% from bottom
+            wrap_lines = 2.5  # Expect up to 2.5 lines of translation
+            src_outline = 1
+            trans_outline = 2
+            rprint("[cyan]📱 Portrait mode: Applying exact aspect-ratio font scaling[/cyan]")
         else:
-            rprint("[bold green]Both subtitle files found, burning bilingual subtitles...[/bold green]")
-            escaped_dub_file = DUB_SUB_FILE.replace('\\', '/')
-            escaped_src_file = SRC_SRT.replace('\\', '/')
+            # Target standard chars per line for landscape
+            chars_per_line_src = 36
+            chars_per_line_trans = 30
+            bottom_margin_percent = 0.08
+            wrap_lines = 1.5
+            src_outline = SRC_OUTLINE_WIDTH
+            trans_outline = TRANS_OUTLINE_WIDTH
+            rprint("[cyan]🖥️ Landscape mode: Applying exact aspect-ratio font scaling[/cyan]")
 
-            src_style = (
-                f"subtitles={escaped_src_file}:force_style='FontSize={SRC_FONT_SIZE},FontName={SRC_FONT_NAME},"
-                f"PrimaryColour={SRC_FONT_COLOR},OutlineColour={SRC_OUTLINE_COLOR},OutlineWidth={SRC_OUTLINE_WIDTH},"
-                f"ShadowColour={SRC_SHADOW_COLOR},BorderStyle=1'"
+        # Libass defaults to PlayResY=288, PlayResX=384 for standard SRT styling
+        # Formula: FontSize = (TARGET_WIDTH / TARGET_HEIGHT) * (288 / chars_per_line)
+        src_size = int(aspect_ratio * (288 / max(chars_per_line_src, 1)))
+        trans_size = int(aspect_ratio * (288 / max(chars_per_line_trans, 1)))
+
+        margin_v = int(bottom_margin_percent * 288)
+        src_margin_v = margin_v + int(trans_size * wrap_lines) + 5
+        margin_lr = 20 # 20/384 ≈ 5% horizontal margin to force wrapping
+
+        src_style = (
+            f"FontSize={src_size},FontName={SRC_FONT_NAME},"
+            f"PrimaryColour={SRC_FONT_COLOR},OutlineColour={SRC_OUTLINE_COLOR},OutlineWidth={src_outline},"
+            f"ShadowColour={SRC_SHADOW_COLOR},BorderStyle=1,"
+            f"MarginL={margin_lr},MarginR={margin_lr},MarginV={src_margin_v}"
+        )
+        dub_style = (
+            f"FontSize={trans_size},FontName={TRANS_FONT_NAME},"
+            f"PrimaryColour={TRANS_FONT_COLOR},OutlineColour={TRANS_OUTLINE_COLOR},OutlineWidth={trans_outline},"
+            f"BackColour={TRANS_BACK_COLOR},Alignment=2,BorderStyle=4,"
+            f"MarginL={margin_lr},MarginR={margin_lr},MarginV={margin_v}"
+        )
+
+        # Use absolute paths to avoid escaping issues
+        abs_src_srt = os.path.abspath(SRC_SRT).replace("'", "'\\''")
+        abs_dub_srt = os.path.abspath(DUB_SUB_FILE).replace("'", "'\\''")
+
+        vf = (
+            f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,"
+            f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,"
+            f"subtitles='{abs_src_srt}':force_style='{src_style}',"
+            f"subtitles='{abs_dub_srt}':force_style='{dub_style}'"
+        )
+
+        temp_subbed = 'output/_temp_subbed.mp4'
+
+        # Since we fixed the path quote bug, Homebrew ffmpeg 8.1 natively supports libass.
+        # We can safely use system ffmpeg and hardware acceleration.
+        sub_cmd = ['ffmpeg', '-y', '-i', VIDEO_FILE, '-vf', vf, '-an']
+
+        gpu_available = check_gpu_available()
+        if gpu_available:
+            rprint("[bold green]NVIDIA GPU encoder detected, will use GPU acceleration.[/bold green]")
+            sub_cmd.extend(['-c:v', 'h264_nvenc'])
+        elif platform.system() == 'Darwin':
+            rprint("[bold green]Apple Silicon detected, will use VideoToolbox acceleration.[/bold green]")
+            sub_cmd.extend(['-c:v', 'h264_videotoolbox', '-b:v', '5M'])
+        else:
+            rprint("[bold yellow]No GPU encoder detected, will use CPU instead.[/bold yellow]")
+            sub_cmd.extend(['-c:v', 'libx264', '-preset', 'fast'])
+
+        sub_cmd.append(temp_subbed)
+
+        rprint(f"[dim]Running: {' '.join(sub_cmd[:6])} ...[/dim]")
+        result = subprocess.run(sub_cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            error_msg = result.stderr[-800:] if result.stderr else "No stderr output"
+            rprint(f"[bold red]Pass 1 failed! stderr:\n{error_msg}[/bold red]")
+            raise RuntimeError(
+                f"FFmpeg subtitle burn failed (exit code {result.returncode}). "
+                f"This means the dubbed video would have NO subtitles. "
+                f"FFmpeg error: {error_msg[-200:]}"
             )
+        else:
+            rprint("[green]✅ Pass 1: Subtitles burned successfully[/green]")
+            VIDEO_FILE = temp_subbed
 
-            dub_style = (
-                f"subtitles={escaped_dub_file}:force_style='FontSize={TRANS_FONT_SIZE},FontName={TRANS_FONT_NAME},"
-                f"PrimaryColour={TRANS_FONT_COLOR},OutlineColour={TRANS_OUTLINE_COLOR},OutlineWidth={TRANS_OUTLINE_WIDTH},"
-                f"BackColour={TRANS_BACK_COLOR},Alignment=2,MarginV=40,BorderStyle=4'"
-            )
+    # ── Pass 2: Mix audio streams with filter_complex (no subtitle filters here) ──
+    rprint("[bold green]Pass 2: Mixing audio and merging...[/bold green]")
 
-            video_filter_parts.append(src_style)
-            video_filter_parts.append(dub_style)
-
-    video_filter = ",".join(video_filter_parts) + "[v]"
-
-    # 获取背景音量调节参数，默认为1.5（增加50%音量）
     background_volume = load_key("background_volume", 1.5)
-    
-    # 构建音频处理滤镜，调节背景音量并使用sidechaincompress进行自动闪避
-    # [1:a]是背景音，[2:a]是人声
-    # 1. 调节背景音量
-    # 2. 将人声(dub)分为两路：一路用于控制闪避(dub_sc)，一路用于最终混合(dub_mix)
-    # 3. 使用sidechaincompress：当人声出现时，压低背景音
-    #    threshold: 触发阈值 (越小越灵敏)
-    #    ratio: 压缩比 (越大压得越狠)
-    #    attack: 启动时间 (ms)
-    #    release: 释放时间 (ms)
-    # 4. 将处理后的背景音(docked_bg)与原人声(dub_mix)混合
+
     audio_filter = (
         f"[1:a]volume={background_volume}[bg];"
         f"[2:a]aformat=channel_layouts=stereo[dub];"
@@ -123,45 +178,22 @@ def merge_video_audio():
         '-i', VIDEO_FILE,
         '-i', background_file,
         '-i', normalized_dub_audio,
-        '-filter_complex',
-        f'{video_filter};{audio_filter}'
-    ]
-
-    if check_gpu_available():
-        rprint("[bold green]Using NVIDIA GPU acceleration...[/bold green]")
-        cmd.extend([
-            '-map', '[v]', 
-            '-map', '[a]', 
-            '-c:v', 'h264_nvenc',
-            '-preset', 'fast'
-        ])
-    elif platform.system() == 'Darwin':
-        rprint("[bold green]Using Apple Silicon VideoToolbox acceleration...[/bold green]")
-        cmd.extend([
-            '-map', '[v]', 
-            '-map', '[a]', 
-            '-c:v', 'h264_videotoolbox',
-            '-q:v', '70',
-            '-profile:v', 'high',
-            '-allow_sw', '1'
-        ])
-    else:
-        cmd.extend([
-            '-map', '[v]', 
-            '-map', '[a]',
-            '-c:v', 'libx264',
-            '-preset', 'fast'
-        ])
-    
-    cmd.extend([
-        '-c:a', 'aac', 
+        '-filter_complex', audio_filter,
+        '-map', '0:v',
+        '-map', '[a]',
+        '-c:v', 'copy',  # Video already encoded in pass 1
+        '-c:a', 'aac',
         '-b:a', '192k',
         '-movflags', '+faststart',
         DUB_VIDEO
-    ])
-    
+    ]
+
     subprocess.run(cmd)
     rprint(f"[bold green]Video and audio successfully merged into {DUB_VIDEO}[/bold green]")
+
+    # Cleanup temp file
+    if burn_subs and os.path.exists('output/_temp_subbed.mp4'):
+        os.remove('output/_temp_subbed.mp4')
 
 if __name__ == '__main__':
     merge_video_audio()

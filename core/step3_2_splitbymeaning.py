@@ -7,6 +7,7 @@ from difflib import SequenceMatcher
 import math
 from core.spacy_utils.load_nlp_model import init_nlp
 from core.config_utils import load_key, get_joiner
+from core.translation_state import record_llm_stage
 from rich.console import Console
 from rich.table import Table
 
@@ -224,6 +225,7 @@ def split_sentences_by_meaning():
     with open(output_txt, 'w', encoding='utf-8') as f:
         f.write('\n'.join(sentences))
     console.print(f'[green]✅ 保存到 {output_txt}[/green]')
+    record_llm_stage("split_meaning")
     
     console.print('[green]✅ All sentences have been successfully split![/green]')
 

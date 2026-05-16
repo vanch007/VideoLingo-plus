@@ -8,6 +8,7 @@ from core.step3_2_splitbymeaning import split_sentence
 from core.ask_gpt import ask_gpt
 from core.prompts_storage import get_align_prompt
 from core.config_utils import load_key, get_joiner
+from core.translation_state import record_llm_stage
 from rich.panel import Panel
 from rich.console import Console
 from rich.table import Table
@@ -38,6 +39,14 @@ def calc_len(text: str) -> float:
 
     return sum(char_weight(char) for char in text)
 
+def _target_joiner() -> str:
+    """Return the separator for translated text, defaulting to spaces for Latin scripts."""
+    target_language = load_key("target_language", "en")
+    try:
+        return get_joiner(target_language)
+    except ValueError:
+        return " "
+
 def align_subs(src_sub: str, tr_sub: str, src_part: str) -> Tuple[List[str], List[str], str]:
     align_prompt = get_align_prompt(src_sub, tr_sub, src_part)
     
@@ -54,9 +63,7 @@ def align_subs(src_sub: str, tr_sub: str, src_part: str) -> Tuple[List[str], Lis
     src_parts = src_part.split('\n')
     tr_parts = [item[f'target_part_{i+1}'].strip() for i, item in enumerate(align_data)]
     
-    whisper_language = load_key("whisper.language")
-    language = load_key("whisper.detected_language") if whisper_language == 'auto' else whisper_language
-    joiner = get_joiner(language)
+    joiner = _target_joiner()
     tr_remerged = joiner.join(tr_parts)
     
     table = Table(title="🔗 Aligned parts")
@@ -120,8 +127,11 @@ def split_for_sub_main():
     console.print("[bold green]🚀 Processing subtitles...[/bold green]")
     
     df = pd.read_excel(INPUT_FILE)
-    src = df['Source'].tolist()
-    trans = df['Translation'].tolist()
+    original_src = df['Source'].tolist()
+    original_trans = df['Translation'].tolist()
+    src = original_src.copy()
+    trans = original_trans.copy()
+    audio_remerged = None
     
     # Subtitle splitting is now always enabled.
     
@@ -133,6 +143,8 @@ def split_for_sub_main():
         console.print(Panel(f"🔄 Split attempt {attempt + 1}", expand=False))
         try:
             split_src, split_trans, remerged = split_align_subs(src.copy(), trans)
+            if audio_remerged is None and len(src) == len(original_src) and src == original_src:
+                audio_remerged = remerged
         except Exception as e:
             console.print(f"[red]Error in split attempt {attempt + 1}: {e}[/red]")
             if attempt == 4:  # 最后一次尝试
@@ -155,15 +167,12 @@ def split_for_sub_main():
         src = split_src
         trans = split_trans
 
-    # Make sure that the src and the remerged have the same length
-    # 确保二者有相同的长度，防止报错
-    if len(src) > len(remerged):
-        remerged += [None] * (len(src) - len(remerged))
-    elif len(remerged) > len(src):
-        src += [None] * (len(remerged) - len(src))
+    if audio_remerged is None or len(audio_remerged) != len(original_src):
+        audio_remerged = original_trans
     
     pd.DataFrame({'Source': split_src, 'Translation': split_trans}).to_excel(OUTPUT_SPLIT_FILE, index=False)
-    pd.DataFrame({'Source': src, 'Translation': remerged}).to_excel(OUTPUT_REMERGED_FILE, index=False)
+    pd.DataFrame({'Source': original_src, 'Translation': audio_remerged}).to_excel(OUTPUT_REMERGED_FILE, index=False)
+    record_llm_stage("split_subtitle")
 
 if __name__ == '__main__':
     split_for_sub_main()

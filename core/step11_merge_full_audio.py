@@ -1,5 +1,6 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import json
 import pandas as pd
 import numpy as np
 import subprocess
@@ -7,6 +8,8 @@ from pydub import AudioSegment
 from rich import print as rprint
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 from rich.console import Console
+from core.config_utils import load_key
+from core.dubbing_quality import DUBBING_MERGE_ISSUES_JSON, get_quality_config, normalize_lines, parse_list, write_dubbing_eval
 console = Console()
 
 INPUT_EXCEL = 'output/audio/tts_tasks.xlsx'
@@ -22,7 +25,7 @@ def load_and_flatten_data(excel_file):
     
     # Flatten lines (translated text)
     if 'lines' in df.columns:
-        lines = [eval(line) if isinstance(line, str) else line for line in df['lines'].tolist()]
+        lines = [normalize_lines(line) for line in df['lines'].tolist()]
         lines = [item for sublist in lines for item in sublist]
     else:
         # Fallback to 'text' if 'lines' is missing (should not happen with new step8_2)
@@ -30,7 +33,7 @@ def load_and_flatten_data(excel_file):
 
     # Flatten src_lines (original text)
     if 'src_lines' in df.columns:
-        src_lines = [eval(line) if isinstance(line, str) else line for line in df['src_lines'].tolist()]
+        src_lines = [parse_list(line) for line in df['src_lines'].tolist()]
         # Handle potential None values or empty lists if any
         src_lines = [item for sublist in src_lines for item in (sublist if sublist is not None else [])]
     else:
@@ -39,12 +42,12 @@ def load_and_flatten_data(excel_file):
 
     # Flatten timestamps
     if 'new_sub_times' in df.columns:
-        times = [eval(t) if isinstance(t, str) else t for t in df['new_sub_times'].tolist()]
+        times = [parse_list(t) for t in df['new_sub_times'].tolist()]
         # Flatten if it's list of lists (step10 generates list of lists)
         if times and isinstance(times[0], list):
              times = [item for sublist in times for item in sublist]
     else:
-         times = [eval(t) if isinstance(t, str) else t for t in df['sub_times'].tolist()]
+         times = [parse_list(t) for t in df['sub_times'].tolist()]
     
     return df, lines, src_lines, times
 
@@ -54,7 +57,7 @@ def get_audio_files(df):
     for index, row in df.iterrows():
         number = row['number']
         if 'lines' in df.columns:
-            lines_data = eval(row['lines']) if isinstance(row['lines'], str) else row['lines']
+            lines_data = normalize_lines(row.get('lines', row.get('text', '')))
             line_count = len(lines_data)
             for line_index in range(line_count):
                 audio_file = OUTPUT_FILE_TEMPLATE.format(f"{number}_{line_index}")
@@ -64,11 +67,13 @@ def get_audio_files(df):
             audios.append(audio_file)
     return audios
 
-def process_audio_segment(audio_file):
+def process_audio_segment(audio_file, allow_silence_fallback=False):
     """Process a single audio segment with MP3 compression"""
     # 检查文件是否存在且有效
     if not os.path.exists(audio_file):
         console.print(f"[bold red]❌ Audio file does not exist: {audio_file}[/bold red]")
+        if not allow_silence_fallback:
+            raise FileNotFoundError(audio_file)
         # 创建一个100ms的静音文件作为替代
         silence = AudioSegment.silent(duration=100)
         temp_file = f"{audio_file}_temp_silence.wav"
@@ -76,6 +81,8 @@ def process_audio_segment(audio_file):
         audio_file = temp_file
     elif os.path.getsize(audio_file) < 1000:  # 文件太小，可能已损坏
         console.print(f"[bold yellow]⚠️ Audio file too small ({os.path.getsize(audio_file)} bytes): {audio_file}[/bold yellow]")
+        if not allow_silence_fallback:
+            raise ValueError(f"Audio file too small: {audio_file}")
         # 创建一个100ms的静音文件作为替代
         silence = AudioSegment.silent(duration=100)
         temp_file = f"{audio_file}_temp_silence.wav"
@@ -115,8 +122,10 @@ def process_audio_segment(audio_file):
     return audio_segment
 
 def merge_audio_segments(audios, new_sub_times, sample_rate):
-    # Initialize empty audio
-    merged_audio = AudioSegment.silent(duration=0, frame_rate=sample_rate)
+    quality = get_quality_config()
+    total_duration_ms = int(max(end for _, end in new_sub_times) * 1000) if new_sub_times else 0
+    merged_audio = AudioSegment.silent(duration=total_duration_ms, frame_rate=sample_rate)
+    merge_issues = []
     
     with Progress(
         SpinnerColumn(),
@@ -128,42 +137,30 @@ def merge_audio_segments(audios, new_sub_times, sample_rate):
         
         for i, (audio_file, time_range) in enumerate(zip(audios, new_sub_times)):
             try:
-                if not os.path.exists(audio_file):
-                    console.print(f"[bold yellow]⚠️  Warning: File {audio_file} does not exist, creating silent segment...[/bold yellow]")
-                    audio_segment = AudioSegment.silent(duration=100, frame_rate=sample_rate)
-                elif os.path.getsize(audio_file) < 1000:
-                    console.print(f"[bold yellow]⚠️  Warning: File {audio_file} is too small, creating silent segment...[/bold yellow]")
-                    audio_segment = AudioSegment.silent(duration=100, frame_rate=sample_rate)
-                else:
-                    audio_segment = process_audio_segment(audio_file)
-                    
+                audio_segment = process_audio_segment(audio_file, allow_silence_fallback=quality.allow_silence_fallback)
                 start_time, end_time = time_range
-                
-                # Add silence segment if needed
-                if i > 0:
-                    prev_end = new_sub_times[i-1][1]
-                    silence_duration = start_time - prev_end
-                    # Only insert silence if the gap is significant (> 10ms) to avoid accumulation of small errors
-                    if silence_duration > 0.01: 
-                        silence = AudioSegment.silent(duration=int(silence_duration * 1000), frame_rate=sample_rate)
-                        merged_audio += silence
-                    # If overlap (negative duration), we might need to crossfade or just append (current logic appends, which pushes timing)
-                    # Ideally we should strictly adhere to timeline, but pydub concatenates. 
-                    # For now, we assume step10 handled overlaps by adjusting speed/truncating.
-                elif start_time > 0:
-                    silence = AudioSegment.silent(duration=int(start_time * 1000), frame_rate=sample_rate)
-                    merged_audio += silence
-                
-                merged_audio += audio_segment
+                merged_audio = merged_audio.overlay(audio_segment, position=max(0, int(start_time * 1000)))
                 
             except Exception as e:
                 console.print(f"[bold red]❌ Error processing {audio_file}: {str(e)}[/bold red]")
-                console.print(f"[bold yellow]⚠️  Creating silent segment as fallback...[/bold yellow]")
-                silent_segment = AudioSegment.silent(duration=100, frame_rate=sample_rate)
-                merged_audio += silent_segment
+                merge_issues.append({
+                    "audio_file": audio_file,
+                    "time_range": time_range,
+                    "error": str(e),
+                    "silence_fallback": quality.allow_silence_fallback,
+                })
+                if quality.allow_silence_fallback:
+                    silent_segment = AudioSegment.silent(duration=100, frame_rate=sample_rate)
+                    merged_audio = merged_audio.overlay(silent_segment, position=max(0, int(time_range[0] * 1000)))
             
             progress.advance(merge_task)
     
+    if merge_issues:
+        os.makedirs(os.path.dirname(DUBBING_MERGE_ISSUES_JSON), exist_ok=True)
+        with open(DUBBING_MERGE_ISSUES_JSON, "w", encoding="utf-8") as f:
+            json.dump(merge_issues, f, ensure_ascii=False, indent=2)
+    elif os.path.exists(DUBBING_MERGE_ISSUES_JSON):
+        os.remove(DUBBING_MERGE_ISSUES_JSON)
     return merged_audio
 
 def create_srt_subtitle():
@@ -238,8 +235,10 @@ def merge_full_audio():
             format="mp3",
             parameters=["-b:a", "64k"]
         )
+        summary = write_dubbing_eval(df)
     console.print(f"[bold green]✅ Audio file successfully merged![/bold green]")
     console.print(f"[bold green]📁 Output file: {DUB_VOCAL_FILE}[/bold green]")
+    console.print(f"[bold green]📊 Dubbing eval: {summary}[/bold green]")
 
 if __name__ == "__main__":
     merge_full_audio()

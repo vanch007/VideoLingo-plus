@@ -18,6 +18,17 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.config_utils import load_key
 from core.all_whisper_methods.audio_preprocess import get_audio_duration
 from core.all_tts_functions.tts_main import tts_main
+from core.dubbing_quality import (
+    actual_expand_needed,
+    actual_rewrite_needed,
+    apply_dubbing_budget_columns,
+    get_quality_config,
+    normalize_lines,
+    row_available_duration,
+    temp_audio_file_for,
+    write_dubbing_eval,
+)
+from core.dubbing_rewrite import rewrite_task_lines
 from core.timing_utils import srt_time_to_seconds
 from core.constants import SEGS_DIR, TEMP_DIR, TTS_TASKS_FILE, DEFAULT_WARMUP_SIZE
 
@@ -35,6 +46,20 @@ console = Console()
 TEMP_FILE_TEMPLATE = f"{TEMP_DIR}/{{}}_temp.wav"
 OUTPUT_FILE_TEMPLATE = f"{SEGS_DIR}/{{}}.wav"
 
+def build_atempo_filter(speed_factor: float) -> str:
+    """Build a safe ffmpeg atempo chain for factors outside the single-filter range."""
+    factors = []
+    remaining = float(speed_factor)
+    while remaining > 2.0:
+        factors.append(2.0)
+        remaining /= 2.0
+    while remaining < 0.5:
+        factors.append(0.5)
+        remaining /= 0.5
+    factors.append(remaining)
+    return ",".join(f"atempo={factor:.6g}" for factor in factors)
+
+
 def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -> None:
     """Adjust audio speed and handle edge cases"""
     # If the speed factor is close to 1, directly copy the file
@@ -42,8 +67,8 @@ def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -
         shutil.copy2(input_file, output_file)
         return
 
-    atempo = speed_factor
-    cmd = ['ffmpeg', '-i', input_file, '-filter:a', f'atempo={atempo}', '-y', output_file]
+    atempo = build_atempo_filter(speed_factor)
+    cmd = ['ffmpeg', '-i', input_file, '-filter:a', atempo, '-y', output_file]
     input_duration = get_audio_duration(input_file)
     max_retries = 2
     for attempt in range(max_retries):
@@ -133,18 +158,187 @@ def check_audio(file_path: str) -> None:
 def process_row(row: dict, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     """Helper function for processing single row data"""
     number = row['number']
-    lines = eval(row['lines']) if isinstance(row['lines'], str) else row['lines']
+    lines = normalize_lines(row.get('lines', row.get('text', '')))
+    target_duration = row_available_duration(row)
     real_dur = 0
     for line_index, line in enumerate(lines):
         temp_file = TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}")
-        tts_main(line, temp_file, number, tasks_df)
+        tts_main(
+            line,
+            temp_file,
+            number,
+            tasks_df,
+            task_row=row,
+            line_index=line_index,
+            target_duration=target_duration / max(len(lines), 1),
+        )
         remove_silence_from_file(temp_file)
         check_audio(temp_file)
         real_dur += get_audio_duration(temp_file)
     return number, real_dur
 
+
+def _delete_temp_files_for_row(row: dict) -> None:
+    number = int(row["number"])
+    lines = normalize_lines(row.get("lines", row.get("text", "")))
+    for line_index in range(len(lines)):
+        for file_path in (
+            TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}"),
+            temp_audio_file_for(number, line_index),
+            OUTPUT_FILE_TEMPLATE.format(f"{number}_{line_index}"),
+        ):
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+
+def retry_overlong_rows(tasks_df: pd.DataFrame) -> pd.DataFrame:
+    """Regenerate rows whose measured TTS duration is too long for the target slot."""
+    quality = get_quality_config()
+    if not quality.enabled or not load_key("rewrite_text_for_dubbing", True):
+        return tasks_df
+
+    if "dubbing_rewrite_rounds" not in tasks_df.columns:
+        tasks_df["dubbing_rewrite_rounds"] = 0
+    if "rewritten_for_dubbing" not in tasks_df.columns:
+        tasks_df["rewritten_for_dubbing"] = False
+    if "rewrite_reason" not in tasks_df.columns:
+        tasks_df["rewrite_reason"] = ""
+
+    for idx, row in tasks_df.iterrows():
+        row_dict = row.to_dict()
+        rounds = int(row_dict.get("dubbing_rewrite_rounds", 0) or 0)
+        while actual_rewrite_needed(row_dict) and rounds < quality.max_rewrite_rounds:
+            try:
+                reason = (
+                    f"Measured TTS duration {float(row_dict.get('real_dur', 0) or 0):.2f}s exceeds "
+                    f"available window {float(row_dict.get('available_duration', 0) or 0):.2f}s."
+                )
+                rewritten = rewrite_task_lines(row_dict, reason=reason)
+                if not rewritten:
+                    break
+                _delete_temp_files_for_row(row_dict)
+                row_dict["lines"] = rewritten
+                row_dict["text"] = " ".join(rewritten)
+                row_dict["rewritten_for_dubbing"] = True
+                row_dict["rewrite_reason"] = "measured_over_duration"
+                row_dict["dubbing_rewrite_rounds"] = rounds + 1
+                number, real_dur = process_row(row_dict, tasks_df)
+                row_dict["real_dur"] = real_dur
+                for key, value in row_dict.items():
+                    if key in tasks_df.columns:
+                        tasks_df.at[idx, key] = value
+                tasks_df.loc[tasks_df["number"] == number, "real_dur"] = real_dur
+                rounds += 1
+                rprint(f"[green]🔁 Rewrote and regenerated row {number} ({rounds}/{quality.max_rewrite_rounds})[/green]")
+            except Exception as exc:
+                rprint(f"[yellow]⚠️ Measured-duration rewrite skipped for row {row_dict.get('number', idx)}: {exc}[/yellow]")
+                break
+    return tasks_df
+
+
+def retry_underlong_rows(tasks_df: pd.DataFrame) -> pd.DataFrame:
+    """Regenerate rows whose measured TTS duration is too short for the target slot."""
+    quality = get_quality_config()
+    if not quality.enabled or not load_key("rewrite_text_for_dubbing", True):
+        return tasks_df
+
+    if "dubbing_rewrite_rounds" not in tasks_df.columns:
+        tasks_df["dubbing_rewrite_rounds"] = 0
+    if "rewritten_for_dubbing" not in tasks_df.columns:
+        tasks_df["rewritten_for_dubbing"] = False
+    if "rewrite_reason" not in tasks_df.columns:
+        tasks_df["rewrite_reason"] = ""
+
+    min_speed = max(float(load_key("speed_factor.min", 0.8)), 0.1)
+    for idx, row in tasks_df.iterrows():
+        row_dict = row.to_dict()
+        rounds = int(row_dict.get("dubbing_rewrite_rounds", 0) or 0)
+        while actual_expand_needed(row_dict) and rounds < quality.max_rewrite_rounds:
+            try:
+                real_dur = float(row_dict.get("real_dur", 0) or 0)
+                projected = real_dur / min_speed if real_dur > 0 else 0
+                reason = (
+                    f"Measured TTS duration {real_dur:.2f}s is too short; even at min speed "
+                    f"{min_speed:.2f}, projected duration is {projected:.2f}s for "
+                    f"available window {float(row_dict.get('available_duration', 0) or 0):.2f}s."
+                )
+                rewritten = rewrite_task_lines(row_dict, reason=reason, direction="expand")
+                if not rewritten:
+                    break
+                _delete_temp_files_for_row(row_dict)
+                row_dict["lines"] = rewritten
+                row_dict["text"] = " ".join(rewritten)
+                row_dict["rewritten_for_dubbing"] = True
+                row_dict["rewrite_reason"] = "measured_under_duration"
+                row_dict["dubbing_rewrite_rounds"] = rounds + 1
+                number, real_dur = process_row(row_dict, tasks_df)
+                row_dict["real_dur"] = real_dur
+                for key, value in row_dict.items():
+                    if key in tasks_df.columns:
+                        tasks_df.at[idx, key] = value
+                tasks_df.loc[tasks_df["number"] == number, "real_dur"] = real_dur
+                rounds += 1
+                rprint(f"[green]🔁 Expanded and regenerated row {number} ({rounds}/{quality.max_rewrite_rounds})[/green]")
+            except Exception as exc:
+                rprint(f"[yellow]⚠️ Measured-duration expansion skipped for row {row_dict.get('number', idx)}: {exc}[/yellow]")
+                break
+    return tasks_df
+
+
+def retry_fast_speech_rows(tasks_df: pd.DataFrame) -> tuple[pd.DataFrame, bool]:
+    """Shorten and regenerate rows that would require noticeably accelerated speech."""
+    quality = get_quality_config()
+    if not quality.enabled or not load_key("rewrite_text_for_dubbing", True):
+        return tasks_df, False
+
+    if "dubbing_rewrite_rounds" not in tasks_df.columns:
+        tasks_df["dubbing_rewrite_rounds"] = 0
+    if "rewritten_for_dubbing" not in tasks_df.columns:
+        tasks_df["rewritten_for_dubbing"] = False
+    if "rewrite_reason" not in tasks_df.columns:
+        tasks_df["rewrite_reason"] = ""
+
+    changed = False
+    for idx, row in tasks_df.iterrows():
+        row_dict = row.to_dict()
+        speed_factor = float(row_dict.get("speed_factor", 1.0) or 1.0)
+        rounds = int(row_dict.get("dubbing_rewrite_rounds", 0) or 0)
+        while speed_factor > quality.max_natural_speed_factor and rounds < quality.max_rewrite_rounds:
+            try:
+                reason = (
+                    f"Generated audio requires speed factor {speed_factor:.2f}, above the natural speech "
+                    f"limit {quality.max_natural_speed_factor:.2f}. Shorten the target-language text so the "
+                    "dub can stay close to the original speaking speed."
+                )
+                rewritten = rewrite_task_lines(row_dict, reason=reason, direction="shorten")
+                if not rewritten:
+                    break
+                _delete_temp_files_for_row(row_dict)
+                row_dict["lines"] = rewritten
+                row_dict["text"] = " ".join(rewritten)
+                row_dict["rewritten_for_dubbing"] = True
+                row_dict["rewrite_reason"] = "speech_rate_fast"
+                row_dict["dubbing_rewrite_rounds"] = rounds + 1
+                number, real_dur = process_row(row_dict, tasks_df)
+                row_dict["real_dur"] = real_dur
+                row_dict["speed_factor"] = 1.0
+                row_dict["new_sub_times"] = None
+                for key, value in row_dict.items():
+                    if key in tasks_df.columns:
+                        tasks_df.at[idx, key] = value
+                tasks_df.loc[tasks_df["number"] == number, "real_dur"] = real_dur
+                rounds += 1
+                changed = True
+                rprint(f"[green]🎚️ Rewrote row {number} to preserve natural speech rate ({rounds}/{quality.max_rewrite_rounds})[/green]")
+                break
+            except Exception as exc:
+                rprint(f"[yellow]⚠️ Natural-speed rewrite skipped for row {row_dict.get('number', idx)}: {exc}[/yellow]")
+                break
+    return tasks_df, changed
+
 def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
     """Generate TTS audio sequentially and calculate actual duration"""
+    tasks_df = apply_dubbing_budget_columns(tasks_df)
     tasks_df['real_dur'] = 0
     rprint("[bold green]🎯 Starting TTS audio generation...[/bold green]")
 
@@ -163,7 +357,17 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 raise e
 
         # Local TTS methods that do not support parallel processing
-        LOCAL_TTS_METHODS = ["custom_tts", "index_tts2", "gpt_sovits", "voxcpm_tts"]
+        LOCAL_TTS_METHODS = [
+            "custom_tts",
+            "index_tts2",
+            "gpt_sovits",
+            "voxcpm_tts",
+            "mlx_router",
+            "mlx_indextts2",
+            "mlx_omnivoice",
+            "mlx_qwen3_tts",
+            "mlx_voxcpm2",
+        ]
         tts_method = load_key("tts_method")
         
         # For local TTS methods, completely skip parallel processing
@@ -203,6 +407,9 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                             raise e
 
     rprint("[bold green]✨ TTS audio generation completed![/bold green]")
+    tasks_df = retry_overlong_rows(tasks_df)
+    tasks_df = retry_underlong_rows(tasks_df)
+    tasks_df = retry_overlong_rows(tasks_df)
     return tasks_df
 
 def process_chunk(chunk_df: pd.DataFrame, accept: float, min_speed: float) -> tuple[float, bool]:
@@ -252,6 +459,8 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
     chunk_start = 0
 
     tasks_df['new_sub_times'] = None
+    tasks_df['speed_factor'] = 1.0
+    tasks_df['keep_gaps'] = True
 
     for index, row in tasks_df.iterrows():
         if row['cut_off'] == 1:
@@ -268,7 +477,7 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                     cur_time += chunk_df.iloc[i-1]['gap']/speed_factor
                 new_sub_times = []
                 number = row['number']
-                lines = eval(row['lines']) if isinstance(row['lines'], str) else row['lines']
+                lines = normalize_lines(row.get('lines', row.get('text', '')))
                 for line_index, line in enumerate(lines):
                     # 🔄 Step2: Start speed change and save as OUTPUT_FILE_TEMPLATE
                     temp_file = TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}")
@@ -280,19 +489,21 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 # 🔄 Step3: Find corresponding main DataFrame index and update new_sub_times
                 main_df_idx = tasks_df[tasks_df['number'] == row['number']].index[0]
                 tasks_df.at[main_df_idx, 'new_sub_times'] = new_sub_times
+                tasks_df.at[main_df_idx, 'speed_factor'] = speed_factor
+                tasks_df.at[main_df_idx, 'keep_gaps'] = keep_gaps
                 # 🎯 Step4: Choose emoji based on speed_factor and accept comparison
                 emoji = "⚡" if speed_factor <= accept else "⚠️"
                 rprint(f"[cyan]{emoji} Processed chunk {chunk_start} to {index} with speed factor {speed_factor}[/cyan]")
             # 🔄 Step5: Check if the last row exceeds the range
             if cur_time > chunk_end_time:
                 time_diff = cur_time - chunk_end_time
-                # Increase tolerance to 2.0s to handle extreme speed factors
-                # (e.g., small duration chunks with long TTS audio)
-                if time_diff <= 2.0:
+                # Increase tolerance to handle accumulated speed variation errors
+                # especially when short chunks follow long-gap chunks
+                if time_diff <= 5.0:
                     rprint(f"[yellow]⚠️ Chunk {chunk_start} to {index} exceeds by {time_diff:.3f}s, truncating last audio[/yellow]")
                     # Get the last audio file
                     last_number = tasks_df.iloc[index]['number']
-                    last_lines = eval(tasks_df.iloc[index]['lines']) if isinstance(tasks_df.iloc[index]['lines'], str) else tasks_df.iloc[index]['lines']
+                    last_lines = normalize_lines(tasks_df.iloc[index].get('lines', tasks_df.iloc[index].get('text', '')))
                     last_line_index = len(last_lines) - 1
                     last_file = OUTPUT_FILE_TEMPLATE.format(f"{last_number}_{last_line_index}")
 
@@ -336,9 +547,14 @@ def gen_audio() -> None:
 
     # 🔄 Step4: Merge audio chunks
     tasks_df = merge_chunks(tasks_df)
+    tasks_df, natural_speed_changed = retry_fast_speech_rows(tasks_df)
+    if natural_speed_changed:
+        tasks_df = merge_chunks(tasks_df)
 
     # 💾 Step5: Save results
     tasks_df.to_excel(TTS_TASKS_FILE, index=False)
+    summary = write_dubbing_eval(tasks_df)
+    rprint(f"[bold green]📊 Dubbing eval written: {summary}[/bold green]")
     rprint("[bold green]🎉 Audio generation completed successfully![/bold green]")
 
 if __name__ == "__main__":

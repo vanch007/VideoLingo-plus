@@ -13,6 +13,7 @@ import tempfile
 import platform
 from core.config_utils import load_key, get_joiner
 from core.all_whisper_methods.audio_preprocess import save_language
+from core.asr_schema import normalize_asr_result
 from huggingface_hub import snapshot_download
 
 # 过滤torchaudio相关警告
@@ -157,6 +158,8 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
             rprint("[green]Applying advanced options for non-MLX models[/green]")
             # dynamic_heads optimization
             transcribe_options['dynamic_heads'] = True 
+            transcribe_options['aligner'] = 'new'  # 最新论文级对齐算法
+            transcribe_options['resume'] = True    # 开启断点续传保护
         else:
             rprint("[yellow]MLX Whisper does not support some advanced features.[/yellow]")
             # For MLX, we might want to enable regrouping if the manual logic is removed/changed
@@ -278,7 +281,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
 
 
 
-        return whisperx_result
+        return normalize_asr_result(whisperx_result, "stable-ts-mlx" if using_mlx_whisper else "stable-ts")
 
     except Exception as e:
         rprint(f"[red]stable-ts processing error:[/red] {e}")

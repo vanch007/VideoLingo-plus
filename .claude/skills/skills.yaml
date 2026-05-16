@@ -1,0 +1,75 @@
+version: "1.0"
+
+skills:
+  # 完整的视频翻译和配音流程
+  - name: video-translate
+    description: "下载视频、语音识别、翻译并生成配音的完整工作流程"
+    trigger:
+      - "翻译视频"
+      - "translate video"
+      - "视频配音"
+      - "video dubbing"
+      - "完整翻译流程"
+    prompt_file: video-translate.md
+
+  # 仅生成字幕（不配音）
+  - name: subtitle-only
+    description: "为视频生成翻译字幕，不进行配音处理"
+    trigger:
+      - "生成字幕"
+      - "generate subtitles"
+      - "只要字幕"
+      - "subtitle only"
+    prompt_file: subtitle-only.md
+
+  # 配置助手
+  - name: config-helper
+    description: "帮助配置 VideoLingo 系统参数、API keys 和处理选项"
+    trigger:
+      - "配置系统"
+      - "configure"
+      - "设置参数"
+      - "setup"
+      - "配置助手"
+    prompt_file: config-helper.md
+
+  # 视频分析和状态检查
+  - name: video-analyzer
+    description: "分析视频处理状态、检查输出文件、查看处理日志"
+    trigger:
+      - "分析视频"
+      - "analyze video"
+      - "检查状态"
+      - "check status"
+      - "查看进度"
+    prompt_file: video-analyzer.md
+
+  # 批量处理
+  - name: batch-process
+    description: "批量处理多个视频文件，适合大规模翻译任务"
+    trigger:
+      - "批量处理"
+      - "batch process"
+      - "批量翻译"
+      - "多个视频"
+    prompt_file: batch-process.md
+
+  # 字幕提取和处理
+  - name: subtitle-extract
+    description: "提取视频内嵌字幕或处理外部 SRT 文件"
+    trigger:
+      - "提取字幕"
+      - "extract subtitles"
+      - "内嵌字幕"
+      - "embedded subtitles"
+    prompt_file: subtitle-extract.md
+
+  # 配音生成
+  - name: dubbing-only
+    description: "为已有字幕生成配音音频"
+    trigger:
+      - "生成配音"
+      - "generate dubbing"
+      - "只配音"
+      - "dubbing only"
+    prompt_file: dubbing-only.md

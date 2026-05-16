@@ -35,10 +35,8 @@ def process_srt():
             start_time = datetime.datetime.strptime(start_str, '%H:%M:%S,%f').time()
             end_time = datetime.datetime.strptime(end_str, '%H:%M:%S,%f').time()
             
-            # Calculate duration if not present or valid
-            duration = row.get('duration', 0)
-            if duration <= 0:
-                duration = time_diff_seconds(start_time, end_time, datetime.date.today())
+            # Final timeline timestamps are the source of truth for dubbing budgets.
+            duration = time_diff_seconds(start_time, end_time, datetime.date.today())
             
             # Handle potential NaN/float values in Translation column
             raw_text = row['Translation']
@@ -71,10 +69,10 @@ def process_srt():
         
     else:
         rprint(Panel("Excel timeline not found, falling back to SRT parsing...", title="Info", border_style="yellow"))
-        with open(TRANS_SRT, 'r', encoding='utf-8') as file:
+        with open(TRANS_SUBS_FOR_AUDIO_FILE, 'r', encoding='utf-8') as file:
             content = file.read()
 
-        with open(SRC_SRT, 'r', encoding='utf-8') as src_file:
+        with open(SRC_SUBS_FOR_AUDIO_FILE, 'r', encoding='utf-8') as src_file:
             src_content = src_file.read()
 
         subtitles = []
@@ -188,8 +186,8 @@ def gen_audio_task_main():
         df.to_excel(TTS_TASKS_FILE, index=False)
         rprint(Panel(f"Successfully generated {TTS_TASKS_FILE}", title="Success", border_style="green"))
         
-        # Sync the potentially rewritten text back to trans.srt to avoid mismatch in Step 8.2
-        save_to_srt(df, TRANS_SRT)
+        # Note: Disabled auto-sync to trans.srt when using pre-merged translations (Plan C)
+        # save_to_srt(df, TRANS_SRT)
 
 if __name__ == '__main__':
     gen_audio_task_main()

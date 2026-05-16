@@ -13,6 +13,7 @@ import librosa
 import tempfile
 from core.config_utils import load_key
 from core.all_whisper_methods.audio_preprocess import save_language
+from core.asr_schema import normalize_asr_result
 
 # 过滤torchaudio相关警告
 warnings.filterwarnings("ignore", message=".*torchaudio.*backend.*")
@@ -168,7 +169,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
                     word['start'] += start
                 if 'end' in word:
                     word['end'] += start
-        return result
+        return normalize_asr_result(result, "whisperx")
     except Exception as e:
         rprint(f"[red]WhisperX processing error:[/red] {e}")
         raise

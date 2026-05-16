@@ -8,11 +8,14 @@ import datetime
 import re
 from core.all_tts_functions.estimate_duration import init_estimator, estimate_duration
 from rich import print as rprint
+from core.constants import SRC_SUBS_FOR_AUDIO_FILE, TRANS_SUBS_FOR_AUDIO_FILE
+from core.dubbing_quality import apply_dubbing_budget_columns, estimated_rewrite_needed
+from core.dubbing_rewrite import rewrite_task_lines
 
 INPUT_EXCEL = "output/audio/tts_tasks.xlsx"
 OUTPUT_EXCEL = "output/audio/tts_tasks.xlsx"
-SRC_SRT = "output/src.srt"
-TRANS_SRT = "output/trans.srt"
+SRC_SRT = SRC_SUBS_FOR_AUDIO_FILE
+TRANS_SRT = TRANS_SUBS_FOR_AUDIO_FILE
 MAX_MERGE_COUNT = 5
 AUDIO_FILE = 'output/audio/raw.mp3'
 ESTIMATOR = None
@@ -80,18 +83,23 @@ def analyze_subtitle_timing_and_speed(df):
     TOLERANCE = load_key("tolerance")
     whole_dur = get_audio_duration(AUDIO_FILE)
     df['gap'] = 0.0  # Initialize gap column
+    df['raw_gap'] = 0.0
     for i in range(len(df) - 1):
         current_end = datetime.datetime.strptime(df.loc[i, 'end_time'], '%H:%M:%S.%f').time()
         next_start = datetime.datetime.strptime(df.loc[i + 1, 'start_time'], '%H:%M:%S.%f').time()
-        df.loc[i, 'gap'] = time_diff_seconds(current_end, next_start, datetime.date.today())
+        raw_gap = time_diff_seconds(current_end, next_start, datetime.date.today())
+        df.loc[i, 'raw_gap'] = raw_gap
+        df.loc[i, 'gap'] = max(0.0, raw_gap)
 
     # Set the gap for the last line
     last_end = datetime.datetime.strptime(df.iloc[-1]['end_time'], '%H:%M:%S.%f').time()
     last_end_seconds = (last_end.hour * 3600 + last_end.minute * 60 +
                        last_end.second + last_end.microsecond / 1000000)
-    df.iloc[-1, df.columns.get_loc('gap')] = whole_dur - last_end_seconds
+    last_gap = whole_dur - last_end_seconds
+    df.iloc[-1, df.columns.get_loc('raw_gap')] = last_gap
+    df.iloc[-1, df.columns.get_loc('gap')] = max(0.0, last_gap)
 
-    df['tolerance'] = df['gap'].apply(lambda x: TOLERANCE if x > TOLERANCE else x)
+    df['tolerance'] = df['gap'].apply(lambda x: max(0.0, TOLERANCE if x > TOLERANCE else x))
     df['tol_dur'] = df['duration'] + df['tolerance']
     df['est_dur'] = df.apply(lambda x: estimate_duration(x['text'], ESTIMATOR), axis=1)
 
@@ -148,16 +156,138 @@ def process_cutoffs(df):
 
     return df
 
+
+def rewrite_estimated_overlong_rows(df):
+    """Shorten rows that are already predicted to exceed their dubbing window."""
+    if not load_key("rewrite_text_for_dubbing", True):
+        return df
+    df = apply_dubbing_budget_columns(df)
+    if "rewritten_for_dubbing" not in df.columns:
+        df["rewritten_for_dubbing"] = False
+    if "dubbing_rewrite_rounds" not in df.columns:
+        df["dubbing_rewrite_rounds"] = 0
+    if "rewrite_reason" not in df.columns:
+        df["rewrite_reason"] = ""
+
+    for idx, row in df.iterrows():
+        if not estimated_rewrite_needed(row):
+            continue
+        try:
+            reason = (
+                f"Estimated speech duration {float(row.get('est_dur', 0) or 0):.2f}s exceeds "
+                f"available window {float(row.get('available_duration', 0) or 0):.2f}s."
+            )
+            rewritten = rewrite_task_lines(row, reason=reason)
+            if rewritten:
+                new_text = " ".join(rewritten)
+                df.at[idx, "lines"] = rewritten
+                df.at[idx, "text"] = new_text
+                df.at[idx, "est_dur"] = estimate_duration(new_text, ESTIMATOR)
+                df.at[idx, "rewritten_for_dubbing"] = True
+                df.at[idx, "dubbing_rewrite_rounds"] = int(row.get("dubbing_rewrite_rounds", 0) or 0) + 1
+                df.at[idx, "rewrite_reason"] = "estimated_over_duration"
+                rprint(f"[green]✍️ Rewrote overlong dubbing row {row['number']} before TTS[/green]")
+        except Exception as exc:
+            rprint(f"[yellow]⚠️ Dubbing rewrite skipped for row {row.get('number', idx)}: {exc}[/yellow]")
+    df['if_too_fast'] = df.apply(
+        lambda x: calc_if_too_fast(x['est_dur'], x['tol_dur'], x['duration'], x['tolerance']),
+        axis=1,
+    )
+    return df
+
+
+MIN_CHUNK_DURATION = 2.0  # Minimum merged chunk duration in seconds
+
+def pre_merge_short_chunks(df):
+    """Pre-merge consecutive ultra-short chunks (gap=0) into groups of >= MIN_CHUNK_DURATION.
+
+    Root fix for alignment: WhisperX produces many sub-0.3s fragments for dense speech.
+    When each fragment gets its own TTS (min ~1s), the dubbing drifts massively.
+    Merging them into reasonable groups (~2-4s) gives the speed system enough room.
+    """
+    rprint(f"[🔗 Pre-merge] Merging ultra-short chunks (target >= {MIN_CHUNK_DURATION}s per group)...")
+
+    # First calculate gaps between consecutive rows
+    for i in range(len(df) - 1):
+        current_end = datetime.datetime.strptime(df.loc[i, 'end_time'], '%H:%M:%S.%f').time()
+        next_start = datetime.datetime.strptime(df.loc[i + 1, 'start_time'], '%H:%M:%S.%f').time()
+        gap = time_diff_seconds(current_end, next_start, datetime.date.today())
+        df.loc[i, '_raw_gap'] = gap
+        df.loc[i, '_gap'] = max(0.0, gap)
+    df.loc[len(df) - 1, '_gap'] = 999.0  # Last row always breaks
+
+    # Identify merge groups: consecutive rows with gap=0 (or very small gap < 0.05s)
+    groups = []
+    current_group = [0]
+    cumulative_dur = df.loc[0, 'duration']
+
+    for i in range(1, len(df)):
+        gap = df.loc[i - 1, '_gap']
+
+        # Check if speaker changes (if speaker column exists)
+        # Note: NaN != NaN is True in Python, so we must handle NaN explicitly
+        speaker_change = False
+        if 'speaker' in df.columns:
+            curr_spk = df.loc[current_group[0], 'speaker']
+            next_spk = df.loc[i, 'speaker']
+            if pd.notna(curr_spk) and pd.notna(next_spk) and curr_spk != next_spk:
+                speaker_change = True
+
+        # Merge conditions: small gap, same speaker, and cumulative duration < target
+        if gap < 0.05 and not speaker_change and cumulative_dur < MIN_CHUNK_DURATION:
+            current_group.append(i)
+            cumulative_dur += df.loc[i, 'duration']
+        else:
+            groups.append(current_group)
+            current_group = [i]
+            cumulative_dur = df.loc[i, 'duration']
+    groups.append(current_group)
+
+    # Build merged DataFrame
+    merged_rows = []
+    for group in groups:
+        if len(group) == 1:
+            idx = group[0]
+            merged_rows.append(df.loc[idx].to_dict())
+        else:
+            first = df.loc[group[0]]
+            last = df.loc[group[-1]]
+
+            # Merge text with space separator
+            merged_text = ' '.join(str(df.loc[i, 'text']) for i in group if pd.notna(df.loc[i, 'text']) and str(df.loc[i, 'text']).strip())
+            merged_origin = ' '.join(str(df.loc[i, 'origin']) for i in group if pd.notna(df.loc[i, 'origin']) and str(df.loc[i, 'origin']).strip())
+
+            merged_row = first.to_dict()
+            merged_row['end_time'] = last['end_time']
+            merged_row['duration'] = sum(df.loc[i, 'duration'] for i in group)
+            merged_row['text'] = merged_text
+            merged_row['origin'] = merged_origin
+            merged_row['sub_times'] = [eval(first['sub_times'])[0] if isinstance(first['sub_times'], str) else first['sub_times'][0],
+                                        eval(last['sub_times'])[1] if isinstance(last['sub_times'], str) else last['sub_times'][1]]
+            merged_rows.append(merged_row)
+
+    new_df = pd.DataFrame(merged_rows).reset_index(drop=True)
+    new_df['number'] = range(1, len(new_df) + 1)
+
+    # Remove temp column
+    if '_gap' in new_df.columns:
+        new_df = new_df.drop(columns=['_gap'])
+    if '_raw_gap' in new_df.columns:
+        new_df = new_df.drop(columns=['_raw_gap'])
+
+    rprint(f"[🔗 Pre-merge] {len(df)} chunks → {len(new_df)} chunks (merged {len(df) - len(new_df)} ultra-short fragments)")
+    return new_df
+
 def gen_dub_chunks():
     rprint("[🎬 Starting] Generating dubbing chunks...")
     df = pd.read_excel(INPUT_EXCEL)
     # Note: Filtering is now done in step8_1, so df is already clean
 
+    # Pre-merge ultra-short chunks before timing analysis
+    df = pre_merge_short_chunks(df)
+
     rprint("[📊 Processing] Analyzing timing and speed...")
     df = analyze_subtitle_timing_and_speed(df)
-
-    rprint("[✂️ Processing] Processing cutoffs...")
-    df = process_cutoffs(df)
 
     rprint("[📝 Reading] Loading transcript files...")
     content = open(TRANS_SRT, "r", encoding="utf-8").read()
@@ -242,6 +372,11 @@ def gen_dub_chunks():
             rprint(f"Target: '{target}'")
             rprint(f"Current: '{current}'")
             raise ValueError("Matching failed")
+
+    df = apply_dubbing_budget_columns(df)
+    df = rewrite_estimated_overlong_rows(df)
+    rprint("[✂️ Processing] Processing cutoffs...")
+    df = process_cutoffs(df)
 
     # Save results
     df.to_excel(OUTPUT_EXCEL, index=False)

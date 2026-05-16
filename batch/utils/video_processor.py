@@ -3,6 +3,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from st_components.imports_and_utils import *
 from core.onekeycleanup import cleanup
 from core.config_utils import load_key
+from core.pipeline_orchestrator import PipelineStep, run_pipeline
 import shutil
 from functools import partial
 from rich.panel import Panel
@@ -43,32 +44,25 @@ def process_video(file, dubbing=False, is_retry=False):
         text_steps.extend(dubbing_steps)
 
     current_step = ""
-    for step_name, step_func in text_steps:
+    def on_step(step_name, attempt, attempts):
+        nonlocal current_step
         current_step = step_name
-        for attempt in range(3):
-            try:
-                console.print(Panel(
-                    f"[bold green]{step_name}[/]",
-                    subtitle=f"Attempt {attempt + 1}/3" if attempt > 0 else None,
-                    border_style="blue"
-                ))
-                result = step_func()
-                if result is not None:
-                    globals().update(result)
-                break
-            except Exception as e:
-                if attempt == 2:
-                    error_panel = Panel(
-                        f"[bold red]Error in step '{current_step}':[/]\n{str(e)}",
-                        border_style="red"
-                    )
-                    console.print(error_panel)
-                    cleanup(ERROR_OUTPUT_DIR)
-                    return False, current_step, str(e)
-                console.print(Panel(
-                    f"[yellow]Attempt {attempt + 1} failed. Retrying...[/]",
-                    border_style="yellow"
-                ))
+        console.print(Panel(
+            f"[bold green]{step_name}[/]",
+            subtitle=f"Attempt {attempt}/{attempts}" if attempt > 1 else None,
+            border_style="blue"
+        ))
+
+    try:
+        run_pipeline([PipelineStep(name, func) for name, func in text_steps], attempts=3, on_step=on_step)
+    except Exception as e:
+        error_panel = Panel(
+            f"[bold red]Error in step '{current_step}':[/]\n{str(e)}",
+            border_style="red"
+        )
+        console.print(error_panel)
+        cleanup(ERROR_OUTPUT_DIR)
+        return False, current_step, str(e)
 
     console.print(Panel("[bold green]All steps completed successfully! 🎉[/]", border_style="green"))
     cleanup(SAVE_DIR)
