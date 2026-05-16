@@ -1,18 +1,15 @@
 from __future__ import annotations
 
-import json
-import math
 import os
 import shutil
 import time
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
 from core.config_utils import load_key
-from core.constants import AUDIO_DIR, SEGS_DIR, TEMP_DIR, TTS_TASKS_FILE
+from core.constants import SEGS_DIR, TEMP_DIR, TTS_TASKS_FILE
 from core.dubbing_quality import (
     actual_expand_needed,
     actual_rewrite_needed,
@@ -25,254 +22,60 @@ from core.dubbing_quality import (
     temp_audio_file_for,
     write_dubbing_eval,
 )
+from core.providers.dubbing_repair_io import (
+    append_repair_history,
+    compact_summary as _compact_summary,
+    load_repair_plan,
+    write_over_duration_report,
+    write_repair_plan,
+)
+from core.providers.dubbing_repair_rules import (
+    classify_over_duration,
+    classify_under_duration,
+    summarize_over_duration,
+    under_duration_target as _under_duration_target,
+)
+from core.providers.dubbing_repair_types import (
+    ASR_RESULT_COLUMNS,
+    DUBBING_REPAIR_HISTORY_JSONL,
+    DUBBING_REPAIR_PLAN_JSON,
+    KNOWN_BACKENDS,
+    OVER_DURATION_MANUAL,
+    OVER_DURATION_REWRITE,
+    OVER_DURATION_SPEED_FIT,
+    REGENERATE_REASONS,
+    TIMELINE_REASONS,
+    UNDER_DURATION_SLOW_FIT,
+    RepairAction,
+    RepairApplySummary,
+    RepairBatchSummary,
+    blank as _blank,
+    parse_filter as _action_filter,
+    parse_filter as _reason_filter,
+    split_reasons as _split_reasons,
+)
 
-
-DUBBING_REPAIR_PLAN_JSON = os.path.join(AUDIO_DIR, "dubbing_repair_plan.json")
-DUBBING_REPAIR_HISTORY_JSONL = os.path.join(AUDIO_DIR, "dubbing_repair_history.jsonl")
-DUBBING_OVERDURATION_REPORT_JSON = os.path.join(AUDIO_DIR, "dubbing_over_duration_report.json")
-KNOWN_BACKENDS = {"indextts2", "omnivoice", "qwen3_tts", "voxcpm2"}
-ASR_RESULT_COLUMNS = ("asr_transcript", "asr_content_score", "asr_leakage_score", "asr_status", "asr_line_results")
-REGENERATE_REASONS = {
-    "missing_audio",
-    "silent_or_tiny_audio",
-    "low_content_score",
-    "reference_leak",
-    "over_duration",
-    "under_duration",
-    "speech_rate_fast",
-}
-TIMELINE_REASONS = {"start_drift", "end_drift"}
-OVER_DURATION_SPEED_FIT = "speed_fit_possible"
-OVER_DURATION_REWRITE = "rewrite_needed"
-OVER_DURATION_MANUAL = "timeline_or_manual_needed"
-OVER_DURATION_UNKNOWN = "unknown"
-UNDER_DURATION_SLOW_FIT = "slow_fit_possible"
-UNDER_DURATION_REWRITE = "expand_rewrite_needed"
-
-
-@dataclass(frozen=True)
-class RepairAction:
-    number: int
-    status: str
-    reasons: list[str]
-    action: str
-    backend: str | None = None
-    rewrite: bool = False
-    delete_audio: bool = False
-    full_remap_recommended: bool = False
-    text: str = ""
-    notes: list[str] = field(default_factory=list)
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "number": self.number,
-            "status": self.status,
-            "reasons": self.reasons,
-            "action": self.action,
-            "backend": self.backend,
-            "rewrite": self.rewrite,
-            "delete_audio": self.delete_audio,
-            "full_remap_recommended": self.full_remap_recommended,
-            "text": self.text,
-            "notes": self.notes,
-        }
-
-
-@dataclass(frozen=True)
-class RepairApplySummary:
-    planned: int
-    applied: int
-    skipped: int
-    dry_run: bool
-    full_remap: bool
-    plan_path: str
-    eval_summary: dict[str, Any] | None = None
-
-
-@dataclass(frozen=True)
-class RepairBatchSummary:
-    batches: int
-    batch_limit: int | None
-    applied: int
-    skipped: int
-    stopped_reason: str
-    history_path: str
-    final_eval_summary: dict[str, Any] | None
-    runs: list[dict[str, Any]]
-
-
-def _blank(value: Any) -> bool:
-    if value is None:
-        return True
-    if isinstance(value, float) and math.isnan(value):
-        return True
-    if isinstance(value, str):
-        return not value.strip()
-    return False
-
-
-def _safe(value: Any) -> Any:
-    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
-        return None
-    if isinstance(value, dict):
-        return {key: _safe(item) for key, item in value.items()}
-    if isinstance(value, list):
-        return [_safe(item) for item in value]
-    return value
-
-
-def _split_reasons(value: Any) -> list[str]:
-    if _blank(value):
-        return []
-    if isinstance(value, list):
-        return [str(item).strip() for item in value if str(item).strip()]
-    return [item.strip() for item in str(value).split(",") if item.strip()]
-
-
-def _reason_filter(reasons: str | list[str] | set[str] | tuple[str, ...] | None) -> set[str] | None:
-    if reasons is None:
-        return None
-    if isinstance(reasons, str):
-        parsed = {item.strip() for item in reasons.split(",") if item.strip()}
-    else:
-        parsed = {str(item).strip() for item in reasons if str(item).strip()}
-    return parsed or None
-
-
-def _action_filter(actions: str | list[str] | set[str] | tuple[str, ...] | None) -> set[str] | None:
-    if actions is None:
-        return None
-    if isinstance(actions, str):
-        parsed = {item.strip() for item in actions.split(",") if item.strip()}
-    else:
-        parsed = {str(item).strip() for item in actions if str(item).strip()}
-    return parsed or None
-
-
-def _float_or_none(value: Any) -> float | None:
-    try:
-        if value is None or (isinstance(value, float) and math.isnan(value)):
-            return None
-        return float(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def classify_over_duration(eval_row: pd.Series | dict[str, Any]) -> str:
-    ratio = _float_or_none(eval_row.get("duration_ratio"))
-    if ratio is None or ratio <= 0:
-        return OVER_DURATION_UNKNOWN
-
-    from core.dubbing_quality import get_quality_config
-
-    quality = get_quality_config()
-    if ratio <= quality.max_speed_factor:
-        return OVER_DURATION_SPEED_FIT
-
-    rewrite_ratio_max = float(load_key("dubbing_quality.over_duration_rewrite_ratio_max", 2.0))
-    if ratio <= rewrite_ratio_max:
-        return OVER_DURATION_REWRITE
-    return OVER_DURATION_MANUAL
-
-
-def _under_duration_target(eval_row: pd.Series | dict[str, Any]) -> float:
-    from core.dubbing_quality import get_quality_config
-
-    quality = get_quality_config()
-    available = _float_or_none(eval_row.get("available_duration"))
-    if available is None or available <= 0:
-        available = row_available_duration(eval_row)
-    ratio_target = available * quality.min_duration_ratio
-    fit_margin = max(0.0, float(load_key("dubbing_quality.under_duration_fit_margin_seconds", 0.06)))
-    early_end_target = available - quality.max_early_end_drift + fit_margin
-    target_ratio = min(1.0, float(load_key("dubbing_quality.slow_fit_target_ratio", quality.min_duration_ratio)))
-    preferred = available * target_ratio
-    return max(0.05, min(available, max(ratio_target, early_end_target, preferred)))
-
-
-def classify_under_duration(eval_row: pd.Series | dict[str, Any], task_row: pd.Series | dict[str, Any] | None = None) -> str:
-    current_duration = _float_or_none(eval_row.get("final_audio_dur"))
-    if current_duration is None or current_duration <= 0:
-        current_duration = _float_or_none(eval_row.get("real_dur"))
-    if current_duration is None or current_duration <= 0:
-        return UNDER_DURATION_REWRITE
-
-    target_duration = _under_duration_target(eval_row)
-    if current_duration >= target_duration:
-        return UNDER_DURATION_SLOW_FIT
-
-    current_speed = _float_or_none(eval_row.get("speed_factor"))
-    if current_speed is None and task_row is not None:
-        current_speed = _float_or_none(task_row.get("speed_factor"))
-    current_speed = current_speed if current_speed and current_speed > 0 else 1.0
-
-    slow_factor = current_duration / target_duration
-    composite_speed = current_speed * slow_factor
-    min_speed = float(load_key("dubbing_quality.slow_fit_min_speed", load_key("speed_factor.min", 0.8)))
-    return UNDER_DURATION_SLOW_FIT if slow_factor < 1.0 and composite_speed >= min_speed else UNDER_DURATION_REWRITE
-
-
-def summarize_over_duration(
-    tasks_df: pd.DataFrame | None = None,
-    eval_df: pd.DataFrame | None = None,
-) -> dict[str, Any]:
-    if tasks_df is None:
-        tasks_df = pd.read_excel(TTS_TASKS_FILE)
-    if eval_df is None:
-        eval_df, summary = evaluate_dubbing(tasks_df)
-    else:
-        _, summary = evaluate_dubbing(tasks_df)
-
-    rows: list[dict[str, Any]] = []
-    counts = {
-        OVER_DURATION_SPEED_FIT: 0,
-        OVER_DURATION_REWRITE: 0,
-        OVER_DURATION_MANUAL: 0,
-        OVER_DURATION_UNKNOWN: 0,
-    }
-    failing = eval_df[eval_df["reason"].fillna("").str.contains("over_duration", na=False)].copy()
-    for _, row in failing.sort_values("duration_ratio", ascending=False, kind="stable").iterrows():
-        bucket = classify_over_duration(row)
-        counts[bucket] = counts.get(bucket, 0) + 1
-        rows.append(
-            {
-                "number": int(row["number"]),
-                "bucket": bucket,
-                "available_duration": _float_or_none(row.get("available_duration")),
-                "final_audio_dur": _float_or_none(row.get("final_audio_dur")),
-                "duration_ratio": _float_or_none(row.get("duration_ratio")),
-                "text": str(row.get("text", "")),
-                "suggested_action": {
-                    OVER_DURATION_SPEED_FIT: "speed_fit_existing_audio",
-                    OVER_DURATION_REWRITE: "rewrite_and_regenerate",
-                    OVER_DURATION_MANUAL: "timeline_or_manual_review",
-                    OVER_DURATION_UNKNOWN: "manual_review",
-                }.get(bucket, "manual_review"),
-            }
-        )
-
-    return {
-        "created_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-        "source": TTS_TASKS_FILE,
-        "summary": summary,
-        "thresholds": {
-            "max_duration_ratio": float(load_key("dubbing_quality.max_duration_ratio", 1.08)),
-            "max_speed_factor": float(load_key("dubbing_quality.max_speed_factor", 1.35)),
-            "rewrite_ratio_max": float(load_key("dubbing_quality.over_duration_rewrite_ratio_max", 2.0)),
-        },
-        "counts": counts,
-        "rows": rows,
-    }
-
-
-def write_over_duration_report(
-    report: dict[str, Any] | None = None,
-    path: str = DUBBING_OVERDURATION_REPORT_JSON,
-) -> str:
-    report = report or summarize_over_duration()
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Path(path).write_text(json.dumps(_safe(report), ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
-    return path
+__all__ = [
+    "OVER_DURATION_MANUAL",
+    "OVER_DURATION_REWRITE",
+    "OVER_DURATION_SPEED_FIT",
+    "UNDER_DURATION_SLOW_FIT",
+    "RepairAction",
+    "RepairApplySummary",
+    "RepairBatchSummary",
+    "_under_duration_target",
+    "append_repair_history",
+    "apply_repair_plan",
+    "build_repair_plan",
+    "choose_repair_action",
+    "classify_over_duration",
+    "classify_under_duration",
+    "load_repair_plan",
+    "run_repair_batches",
+    "summarize_over_duration",
+    "write_over_duration_report",
+    "write_repair_plan",
+]
 
 
 def _has_ref_text(row: pd.Series | dict[str, Any]) -> bool:
@@ -480,23 +283,6 @@ def _repair_priority(eval_row: pd.Series | dict[str, Any]) -> int:
     if "start_drift" in reasons or "end_drift" in reasons:
         return 7
     return 9
-
-
-def write_repair_plan(plan: dict[str, Any], path: str = DUBBING_REPAIR_PLAN_JSON) -> str:
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Path(path).write_text(json.dumps(_safe(plan), ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8")
-    return path
-
-
-def load_repair_plan(path: str = DUBBING_REPAIR_PLAN_JSON) -> dict[str, Any]:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
-
-
-def append_repair_history(record: dict[str, Any], path: str = DUBBING_REPAIR_HISTORY_JSONL) -> str:
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(_safe(record), ensure_ascii=False, allow_nan=False) + "\n")
-    return path
 
 
 def _audio_paths_for_row(row: pd.Series | dict[str, Any]) -> list[str]:
@@ -843,29 +629,6 @@ def apply_repair_plan(
         plan_path=str(plan.get("plan_path", DUBBING_REPAIR_PLAN_JSON)),
         eval_summary=eval_summary,
     )
-
-
-def _compact_summary(summary: dict[str, Any] | None) -> dict[str, Any] | None:
-    if not summary:
-        return None
-    keys = [
-        "total",
-        "ok",
-        "warn",
-        "fail",
-        "missing_audio_count",
-        "silent_fallback_count",
-        "max_duration_ratio",
-        "avg_duration_ratio",
-    ]
-    out = {key: summary.get(key) for key in keys if key in summary}
-    gate = summary.get("quality_gate")
-    if isinstance(gate, dict):
-        out["quality_gate"] = {
-            "passed": gate.get("passed"),
-            "reasons": gate.get("reasons", {}),
-        }
-    return out
 
 
 def run_repair_batches(

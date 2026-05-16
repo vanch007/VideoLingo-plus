@@ -1,14 +1,15 @@
-import os, sys
+import os
 import re
+import sys
+import time
+
 from rich import print as rprint
 from pydub import AudioSegment
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from core.config_utils import load_key
 from core.all_whisper_methods.audio_preprocess import get_audio_duration
-from core.ask_gpt import ask_gpt
-from core.prompts_storage import get_correct_text_prompt
-from core.all_tts_functions.tts_registry import get_tts_provider
+from core.all_tts_functions.tts_registry import MLX_ROUTER_BACKENDS, get_tts_provider
 
 def clean_text_for_tts(text):
     """Normalize text while preserving punctuation that changes spoken meaning."""
@@ -86,17 +87,11 @@ def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target
             elif TTS_METHOD == 'voxcpm_tts':
                 from core.all_tts_functions.voxcpm_tts import voxcpm_tts
                 voxcpm_tts(text, save_as, number, task_df, attempt)
-            elif TTS_METHOD in {'mlx_router', 'mlx_indextts2', 'mlx_omnivoice', 'mlx_qwen3_tts', 'mlx_voxcpm2'}:
+            elif TTS_METHOD == 'mlx_router' or TTS_METHOD in MLX_ROUTER_BACKENDS:
                 from core.all_tts_functions.mlx_router import mlx_router_tts
-                backend_map = {
-                    'mlx_indextts2': 'indextts2',
-                    'mlx_omnivoice': 'omnivoice',
-                    'mlx_qwen3_tts': 'qwen3_tts',
-                    'mlx_voxcpm2': 'voxcpm2',
-                }
                 row_payload = dict(task_row or {})
-                if TTS_METHOD in backend_map:
-                    row_payload['tts_backend'] = backend_map[TTS_METHOD]
+                if TTS_METHOD in MLX_ROUTER_BACKENDS:
+                    row_payload['tts_backend'] = MLX_ROUTER_BACKENDS[TTS_METHOD]
                 mlx_router_tts(
                     text,
                     save_as,
@@ -128,14 +123,13 @@ def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target
                     os.remove(save_as)
                 if attempt == max_retries - 1:
                     print(f"Warning: Generated audio duration is 0 for text: {text}")
-                    # Create silent audio file
                     silence = AudioSegment.silent(duration=100)  # 100ms silence
                     silence.export(save_as, format="wav")
                     return
                 print(f"Attempt {attempt + 1} failed, retrying...")
-                import time; time.sleep(3)
+                time.sleep(3)
         except Exception as e:
             if attempt == max_retries - 1:
                 raise Exception(f"Failed to generate audio after {max_retries} attempts: {str(e)}")
             print(f"Attempt {attempt + 1} failed, retrying in 5s...")
-            import time; time.sleep(5)
+            time.sleep(5)

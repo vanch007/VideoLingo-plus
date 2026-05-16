@@ -1,9 +1,7 @@
 import os
 import sys
-import time
-import shutil
-import subprocess
 import logging
+import warnings
 from typing import Tuple
 
 import pandas as pd
@@ -18,6 +16,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.config_utils import load_key
 from core.all_whisper_methods.audio_preprocess import get_audio_duration
 from core.all_tts_functions.tts_main import tts_main
+from core.all_tts_functions.tts_registry import is_local_tts_method
+from core.audio_speed import adjust_audio_speed as _adjust_audio_speed
+from core.audio_speed import build_atempo_filter as _build_atempo_filter
 from core.dubbing_quality import (
     actual_expand_needed,
     actual_rewrite_needed,
@@ -35,77 +36,21 @@ from core.constants import SEGS_DIR, TEMP_DIR, TTS_TASKS_FILE, DEFAULT_WARMUP_SI
 # Suppress Streamlit warnings
 logging.getLogger('streamlit').setLevel(logging.ERROR)
 
-# Suppress TorchAudio warnings
 os.environ['TORCHAUDIO_USE_BACKEND_DISPATCHER'] = '1'
-import warnings
 warnings.filterwarnings("ignore", message=".*TorchAudio's global backend is now deprecated.*")
 
 console = Console()
 
-# 文件模板
 TEMP_FILE_TEMPLATE = f"{TEMP_DIR}/{{}}_temp.wav"
 OUTPUT_FILE_TEMPLATE = f"{SEGS_DIR}/{{}}.wav"
 
+
 def build_atempo_filter(speed_factor: float) -> str:
-    """Build a safe ffmpeg atempo chain for factors outside the single-filter range."""
-    factors = []
-    remaining = float(speed_factor)
-    while remaining > 2.0:
-        factors.append(2.0)
-        remaining /= 2.0
-    while remaining < 0.5:
-        factors.append(0.5)
-        remaining /= 0.5
-    factors.append(remaining)
-    return ",".join(f"atempo={factor:.6g}" for factor in factors)
+    return _build_atempo_filter(speed_factor)
 
 
 def adjust_audio_speed(input_file: str, output_file: str, speed_factor: float) -> None:
-    """Adjust audio speed and handle edge cases"""
-    # If the speed factor is close to 1, directly copy the file
-    if abs(speed_factor - 1.0) < 0.001:
-        shutil.copy2(input_file, output_file)
-        return
-
-    atempo = build_atempo_filter(speed_factor)
-    cmd = ['ffmpeg', '-i', input_file, '-filter:a', atempo, '-y', output_file]
-    input_duration = get_audio_duration(input_file)
-    max_retries = 2
-    for attempt in range(max_retries):
-        try:
-            subprocess.run(cmd, check=True, stderr=subprocess.PIPE)
-            output_duration = get_audio_duration(output_file)
-            expected_duration = input_duration / speed_factor
-            diff = output_duration - expected_duration
-            
-            # Allow a slightly larger margin of error (0.05s) for floating point inaccuracies
-            if abs(diff) < 0.05:
-                return
-                
-            # If the output duration exceeds the expected duration significantly
-            if output_duration > expected_duration + 0.05:
-                # If input audio is short (< 3s) and error is small (< 0.1s), truncate
-                if input_duration < 3 and diff <= 0.1:
-                    audio = AudioSegment.from_wav(output_file)
-                    trimmed_audio = audio[:(expected_duration * 1000)].fade_out(10)
-                    trimmed_audio.export(output_file, format="wav")
-                    rprint(f"[yellow]✂️ Trimmed to expected duration: {expected_duration:.2f}s (was {output_duration:.2f}s)[/yellow]")
-                    return
-                else:
-                    # Log warning but accept if it's not too far off (within 5%)
-                    if output_duration <= expected_duration * 1.05:
-                         rprint(f"[yellow]⚠️ Duration mismatch accepted: {output_duration:.2f}s (expected {expected_duration:.2f}s)[/yellow]")
-                         return
-                    
-                    raise Exception(f"Audio duration abnormal: input={input_duration:.2f}s, output={output_duration:.2f}s, expected={expected_duration:.2f}s")
-            return
-        except subprocess.CalledProcessError as e:
-            if attempt < max_retries - 1:
-                rprint(f"[yellow]⚠️ Audio speed adjustment failed, retrying in 1s ({attempt + 1}/{max_retries})[/yellow]")
-                time.sleep(1)
-            else:
-                rprint(f"[red]❌ Audio speed adjustment failed, max retries reached ({max_retries})[/red]")
-                raise e
+    _adjust_audio_speed(input_file, output_file, speed_factor)
 
 def remove_silence_from_file(file_path: str, min_silence_len: int = 200, silence_thresh: int = -45) -> None:
     """Remove silence from audio file to optimize duration"""
@@ -191,19 +136,51 @@ def _delete_temp_files_for_row(row: dict) -> None:
                 os.remove(file_path)
 
 
+def _ensure_rewrite_columns(tasks_df: pd.DataFrame) -> None:
+    defaults = {
+        "dubbing_rewrite_rounds": 0,
+        "rewritten_for_dubbing": False,
+        "rewrite_reason": "",
+    }
+    for column, default in defaults.items():
+        if column not in tasks_df.columns:
+            tasks_df[column] = default
+
+
+def _write_row_values(tasks_df: pd.DataFrame, idx: int, row: dict) -> None:
+    for key, value in row.items():
+        if key in tasks_df.columns:
+            tasks_df.at[idx, key] = value
+
+
+def _regenerate_rewritten_row(
+    tasks_df: pd.DataFrame,
+    idx: int,
+    row: dict,
+    lines: list[str],
+    *,
+    rewrite_reason: str,
+) -> int:
+    _delete_temp_files_for_row(row)
+    row["lines"] = lines
+    row["text"] = " ".join(lines)
+    row["rewritten_for_dubbing"] = True
+    row["rewrite_reason"] = rewrite_reason
+    row["dubbing_rewrite_rounds"] = int(row.get("dubbing_rewrite_rounds", 0) or 0) + 1
+    number, real_dur = process_row(row, tasks_df)
+    row["real_dur"] = real_dur
+    _write_row_values(tasks_df, idx, row)
+    tasks_df.loc[tasks_df["number"] == number, "real_dur"] = real_dur
+    return number
+
+
 def retry_overlong_rows(tasks_df: pd.DataFrame) -> pd.DataFrame:
     """Regenerate rows whose measured TTS duration is too long for the target slot."""
     quality = get_quality_config()
     if not quality.enabled or not load_key("rewrite_text_for_dubbing", True):
         return tasks_df
 
-    if "dubbing_rewrite_rounds" not in tasks_df.columns:
-        tasks_df["dubbing_rewrite_rounds"] = 0
-    if "rewritten_for_dubbing" not in tasks_df.columns:
-        tasks_df["rewritten_for_dubbing"] = False
-    if "rewrite_reason" not in tasks_df.columns:
-        tasks_df["rewrite_reason"] = ""
-
+    _ensure_rewrite_columns(tasks_df)
     for idx, row in tasks_df.iterrows():
         row_dict = row.to_dict()
         rounds = int(row_dict.get("dubbing_rewrite_rounds", 0) or 0)
@@ -216,18 +193,13 @@ def retry_overlong_rows(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 rewritten = rewrite_task_lines(row_dict, reason=reason)
                 if not rewritten:
                     break
-                _delete_temp_files_for_row(row_dict)
-                row_dict["lines"] = rewritten
-                row_dict["text"] = " ".join(rewritten)
-                row_dict["rewritten_for_dubbing"] = True
-                row_dict["rewrite_reason"] = "measured_over_duration"
-                row_dict["dubbing_rewrite_rounds"] = rounds + 1
-                number, real_dur = process_row(row_dict, tasks_df)
-                row_dict["real_dur"] = real_dur
-                for key, value in row_dict.items():
-                    if key in tasks_df.columns:
-                        tasks_df.at[idx, key] = value
-                tasks_df.loc[tasks_df["number"] == number, "real_dur"] = real_dur
+                number = _regenerate_rewritten_row(
+                    tasks_df,
+                    idx,
+                    row_dict,
+                    rewritten,
+                    rewrite_reason="measured_over_duration",
+                )
                 rounds += 1
                 rprint(f"[green]🔁 Rewrote and regenerated row {number} ({rounds}/{quality.max_rewrite_rounds})[/green]")
             except Exception as exc:
@@ -242,13 +214,7 @@ def retry_underlong_rows(tasks_df: pd.DataFrame) -> pd.DataFrame:
     if not quality.enabled or not load_key("rewrite_text_for_dubbing", True):
         return tasks_df
 
-    if "dubbing_rewrite_rounds" not in tasks_df.columns:
-        tasks_df["dubbing_rewrite_rounds"] = 0
-    if "rewritten_for_dubbing" not in tasks_df.columns:
-        tasks_df["rewritten_for_dubbing"] = False
-    if "rewrite_reason" not in tasks_df.columns:
-        tasks_df["rewrite_reason"] = ""
-
+    _ensure_rewrite_columns(tasks_df)
     min_speed = max(float(load_key("speed_factor.min", 0.8)), 0.1)
     for idx, row in tasks_df.iterrows():
         row_dict = row.to_dict()
@@ -265,18 +231,13 @@ def retry_underlong_rows(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 rewritten = rewrite_task_lines(row_dict, reason=reason, direction="expand")
                 if not rewritten:
                     break
-                _delete_temp_files_for_row(row_dict)
-                row_dict["lines"] = rewritten
-                row_dict["text"] = " ".join(rewritten)
-                row_dict["rewritten_for_dubbing"] = True
-                row_dict["rewrite_reason"] = "measured_under_duration"
-                row_dict["dubbing_rewrite_rounds"] = rounds + 1
-                number, real_dur = process_row(row_dict, tasks_df)
-                row_dict["real_dur"] = real_dur
-                for key, value in row_dict.items():
-                    if key in tasks_df.columns:
-                        tasks_df.at[idx, key] = value
-                tasks_df.loc[tasks_df["number"] == number, "real_dur"] = real_dur
+                number = _regenerate_rewritten_row(
+                    tasks_df,
+                    idx,
+                    row_dict,
+                    rewritten,
+                    rewrite_reason="measured_under_duration",
+                )
                 rounds += 1
                 rprint(f"[green]🔁 Expanded and regenerated row {number} ({rounds}/{quality.max_rewrite_rounds})[/green]")
             except Exception as exc:
@@ -291,13 +252,7 @@ def retry_fast_speech_rows(tasks_df: pd.DataFrame) -> tuple[pd.DataFrame, bool]:
     if not quality.enabled or not load_key("rewrite_text_for_dubbing", True):
         return tasks_df, False
 
-    if "dubbing_rewrite_rounds" not in tasks_df.columns:
-        tasks_df["dubbing_rewrite_rounds"] = 0
-    if "rewritten_for_dubbing" not in tasks_df.columns:
-        tasks_df["rewritten_for_dubbing"] = False
-    if "rewrite_reason" not in tasks_df.columns:
-        tasks_df["rewrite_reason"] = ""
-
+    _ensure_rewrite_columns(tasks_df)
     changed = False
     for idx, row in tasks_df.iterrows():
         row_dict = row.to_dict()
@@ -313,20 +268,16 @@ def retry_fast_speech_rows(tasks_df: pd.DataFrame) -> tuple[pd.DataFrame, bool]:
                 rewritten = rewrite_task_lines(row_dict, reason=reason, direction="shorten")
                 if not rewritten:
                     break
-                _delete_temp_files_for_row(row_dict)
-                row_dict["lines"] = rewritten
-                row_dict["text"] = " ".join(rewritten)
-                row_dict["rewritten_for_dubbing"] = True
-                row_dict["rewrite_reason"] = "speech_rate_fast"
-                row_dict["dubbing_rewrite_rounds"] = rounds + 1
-                number, real_dur = process_row(row_dict, tasks_df)
-                row_dict["real_dur"] = real_dur
+                number = _regenerate_rewritten_row(
+                    tasks_df,
+                    idx,
+                    row_dict,
+                    rewritten,
+                    rewrite_reason="speech_rate_fast",
+                )
                 row_dict["speed_factor"] = 1.0
                 row_dict["new_sub_times"] = None
-                for key, value in row_dict.items():
-                    if key in tasks_df.columns:
-                        tasks_df.at[idx, key] = value
-                tasks_df.loc[tasks_df["number"] == number, "real_dur"] = real_dur
+                _write_row_values(tasks_df, idx, row_dict)
                 rounds += 1
                 changed = True
                 rprint(f"[green]🎚️ Rewrote row {number} to preserve natural speech rate ({rounds}/{quality.max_rewrite_rounds})[/green]")
@@ -356,23 +307,9 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 rprint(f"[red]❌ Error in warmup: {str(e)}[/red]")
                 raise e
 
-        # Local TTS methods that do not support parallel processing
-        LOCAL_TTS_METHODS = [
-            "custom_tts",
-            "index_tts2",
-            "gpt_sovits",
-            "voxcpm_tts",
-            "mlx_router",
-            "mlx_indextts2",
-            "mlx_omnivoice",
-            "mlx_qwen3_tts",
-            "mlx_voxcpm2",
-        ]
         tts_method = load_key("tts_method")
-        
-        # For local TTS methods, completely skip parallel processing
-        if tts_method in LOCAL_TTS_METHODS:
-            # Process all remaining tasks sequentially
+
+        if is_local_tts_method(tts_method):
             if len(tasks_df) > warmup_size:
                 rprint(f"[yellow]📌 Using sequential processing for {tts_method} (local API does not support multi-threading)[/yellow]")
                 for _, row in tasks_df.iloc[warmup_size:].iterrows():
@@ -384,11 +321,9 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
                         rprint(f"[red]❌ Error: {str(e)}[/red]")
                         raise e
         else:
-            # For cloud TTS methods (edge_tts, piper_tts, sf_indextts2, etc.), use parallel processing
             max_workers = load_key("max_workers")
             Executor = ThreadPoolExecutor
 
-            # parallel processing for remaining tasks
             if len(tasks_df) > warmup_size:
                 remaining_tasks = tasks_df.iloc[warmup_size:].copy()
                 with Executor(max_workers=max_workers) as executor:

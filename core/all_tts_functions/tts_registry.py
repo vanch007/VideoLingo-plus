@@ -29,6 +29,25 @@ TTS_PROVIDERS = {
     "mlx_voxcpm2": TTSProvider("mlx_voxcpm2", "MLX VoxCPM2 via router", requires_service=True),
 }
 
+LOCAL_TTS_METHODS = {
+    "custom_tts",
+    "index_tts2",
+    "gpt_sovits",
+    "voxcpm_tts",
+    "mlx_router",
+    "mlx_indextts2",
+    "mlx_omnivoice",
+    "mlx_qwen3_tts",
+    "mlx_voxcpm2",
+}
+
+MLX_ROUTER_BACKENDS = {
+    "mlx_indextts2": "indextts2",
+    "mlx_omnivoice": "omnivoice",
+    "mlx_qwen3_tts": "qwen3_tts",
+    "mlx_voxcpm2": "voxcpm2",
+}
+
 
 def get_tts_provider(name: str) -> TTSProvider:
     if name not in TTS_PROVIDERS:
@@ -38,3 +57,7 @@ def get_tts_provider(name: str) -> TTSProvider:
 
 def list_tts_methods() -> list[str]:
     return list(TTS_PROVIDERS.keys())
+
+
+def is_local_tts_method(name: str) -> bool:
+    return name in LOCAL_TTS_METHODS
