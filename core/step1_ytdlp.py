@@ -2,6 +2,7 @@ import os,sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import glob
 import re
+import shutil
 import subprocess
 from core.config_utils import load_key
 
@@ -13,7 +14,13 @@ def sanitize_filename(filename):
     # Use default name if filename is empty
     return filename if filename else 'video'
 
-def download_video_ytdlp(url, save_path='output', resolution='1080', cutoff_time=None):
+def _browser_cookie_tuple(value):
+    if not value:
+        return None
+    browser, _, profile = value.partition(":")
+    return (browser, profile or None, None, None)
+
+def download_video_ytdlp(url, save_path='output', resolution='1080', cutoff_time=None, cookies_from_browser=None):
     allowed_resolutions = ['360', '1080', 'best']
     if resolution not in allowed_resolutions:
         resolution = '360'
@@ -29,6 +36,13 @@ def download_video_ytdlp(url, save_path='output', resolution='1080', cutoff_time
             'format': 'jpg',
         }],
     }
+    if shutil.which("node"):
+        ydl_opts['js_runtimes'] = {'node': {}}
+        ydl_opts['remote_components'] = ['ejs:github']
+
+    cookies_from_browser = cookies_from_browser or os.environ.get("VIDEOLINGO_YTDLP_COOKIES_FROM_BROWSER")
+    if cookies_from_browser:
+        ydl_opts['cookiesfrombrowser'] = _browser_cookie_tuple(cookies_from_browser)
 
     # Update yt-dlp to avoid download failure due to API changes
     try:
@@ -39,8 +53,19 @@ def download_video_ytdlp(url, save_path='output', resolution='1080', cutoff_time
     if 'yt_dlp' in sys.modules:
         del sys.modules['yt_dlp']
     from yt_dlp import YoutubeDL
-    with YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+    try:
+        with YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+    except Exception as e:
+        message = str(e)
+        if "Sign in to confirm" in message or "not a bot" in message:
+            raise RuntimeError(
+                "YouTube requires authenticated cookies for this request. "
+                "Log in to YouTube in Chrome, then rerun with "
+                "VIDEOLINGO_YTDLP_COOKIES_FROM_BROWSER='chrome:Profile 1' or pass "
+                "cookies_from_browser='chrome:Profile 1'."
+            ) from e
+        raise
     
     # Check and rename files after download
     for file in os.listdir(save_path):

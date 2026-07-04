@@ -76,6 +76,16 @@ def _cmd_repair(args: argparse.Namespace) -> int:
         write_repair_plan,
     )
 
+    def rebuild_output_if_needed(applied: int) -> bool:
+        if not args.apply or not args.rebuild_output or applied <= 0:
+            return False
+        from core.step11_merge_full_audio import merge_full_audio
+        from core.step12_merge_dub_to_vid import merge_video_audio
+
+        merge_full_audio()
+        merge_video_audio()
+        return True
+
     if args.apply and args.batches > 1:
         summary = run_repair_batches(
             batch_limit=args.limit,
@@ -86,6 +96,7 @@ def _cmd_repair(args: argparse.Namespace) -> int:
             full_remap=args.full_remap,
         )
         payload = summary.__dict__
+        payload["rebuilt_output"] = rebuild_output_if_needed(summary.applied)
         payload["over_duration_report_path"] = write_over_duration_report()
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
@@ -108,8 +119,10 @@ def _cmd_repair(args: argparse.Namespace) -> int:
     if args.apply:
         summary = apply_repair_plan(plan, dry_run=False, full_remap=args.full_remap)
         payload["apply"] = summary.__dict__
+        payload["rebuilt_output"] = rebuild_output_if_needed(summary.applied)
     else:
         payload["apply"] = {"dry_run": True, "hint": "pass --apply to regenerate selected rows"}
+        payload["rebuilt_output"] = False
     payload["over_duration_report_path"] = write_over_duration_report()
     print(json.dumps(payload, ensure_ascii=False, indent=2))
     return 0
@@ -164,18 +177,20 @@ def _cmd_translation(args: argparse.Namespace) -> int:
     raise SystemExit(f"Unknown translation command: {args.translation_command}")
 
 
-def _planned_run_config(args: argparse.Namespace) -> dict[str, str | None]:
+def _planned_run_config(args: argparse.Namespace) -> dict[str, str | int | None]:
     planned = {
         "profile": args.profile,
         "source_language": args.source,
         "target_language": args.target,
         "llm.provider": "openai_compatible" if args.llm == "config" else args.llm,
-        "tts_method": "mlx_router" if args.tts == "auto" else args.tts,
+        "tts_method": "mlx_indextts2" if args.tts == "auto" else args.tts,
+        "smoke_seconds": args.smoke_seconds,
     }
     return {key: value for key, value in planned.items() if value is not None}
 
 
 def _apply_run_config(args: argparse.Namespace) -> None:
+    apply_profile(args.profile)
     if args.source:
         update_key("source_language", args.source)
         update_key("whisper.language", args.source)
@@ -184,8 +199,7 @@ def _apply_run_config(args: argparse.Namespace) -> None:
     if args.llm:
         update_key("llm.provider", "openai_compatible" if args.llm == "config" else args.llm)
     if args.tts:
-        update_key("tts_method", "mlx_router" if args.tts == "auto" else args.tts)
-    apply_profile(args.profile)
+        update_key("tts_method", "mlx_indextts2" if args.tts == "auto" else args.tts)
 
 
 def _build_run(args: argparse.Namespace, steps: list) -> PipelineRun:
@@ -199,12 +213,18 @@ def _build_run(args: argparse.Namespace, steps: list) -> PipelineRun:
         no_subtitles=bool(args.no_subtitles),
         llm=args.llm,
         tts=args.tts,
+        smoke_seconds=args.smoke_seconds,
         steps=[step.key for step in steps],
     )
 
 
 def _cmd_run(args: argparse.Namespace) -> int:
-    steps = build_steps_for_input(args.input, dubbing=not args.subtitle_only, subtitles=not args.no_subtitles)
+    steps = build_steps_for_input(
+        args.input,
+        dubbing=not args.subtitle_only,
+        subtitles=not args.no_subtitles,
+        smoke_seconds=args.smoke_seconds,
+    )
     if not args.dry_run:
         _apply_run_config(args)
     from core.translation_state import guard_translation_artifacts_for_steps
@@ -234,6 +254,7 @@ def _fill_resume_args(args: argparse.Namespace, state: dict) -> None:
         "profile": "cinematic",
         "llm": None,
         "tts": "auto",
+        "smoke_seconds": None,
     }.items():
         if getattr(args, key) == default and state.get(key) not in (None, ""):
             setattr(args, key, state[key])
@@ -277,6 +298,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--profile", default="cinematic")
     run.add_argument("--llm", default=None, help="LLM provider. Use 'config' for config.yaml api.base_url/api.model.")
     run.add_argument("--tts", default="auto")
+    run.add_argument("--smoke-seconds", type=int, default=None, help="Trim local video input to N seconds for smoke runs")
     run.add_argument("--run-id", default=None)
     run.add_argument("--subtitle-only", action="store_true")
     run.add_argument("--no-subtitles", action="store_true")
@@ -293,6 +315,7 @@ def build_parser() -> argparse.ArgumentParser:
     resume.add_argument("--profile", default="cinematic")
     resume.add_argument("--llm", default=None, help="LLM provider. Use 'config' for config.yaml api.base_url/api.model.")
     resume.add_argument("--tts", default="auto")
+    resume.add_argument("--smoke-seconds", type=int, default=None, help="Trim local video input to N seconds for smoke runs")
     resume.add_argument("--subtitle-only", action="store_true")
     resume.add_argument("--no-subtitles", action="store_true")
     resume.add_argument("--no-resume", action="store_true")
@@ -312,7 +335,7 @@ def build_parser() -> argparse.ArgumentParser:
     repair.add_argument("--limit", type=int, default=None, help="Limit repaired segment count")
     repair.add_argument(
         "--backend-fallback",
-        choices=["auto", "indextts2", "omnivoice", "qwen3_tts", "voxcpm2"],
+        choices=["auto", "indextts2", "omnivoice", "qwen3_tts", "voxcpm2", "edge_tts"],
         default="auto",
         help="Force a backend for regenerated rows or let the repair planner choose",
     )
@@ -323,6 +346,13 @@ def build_parser() -> argparse.ArgumentParser:
     repair.add_argument("--apply", action="store_true", help="Regenerate selected rows instead of writing plan only")
     repair.add_argument("--batches", type=int, default=1, help="Repeat plan/apply for N batches when --apply is set")
     repair.add_argument("--full-remap", action="store_true", help="Recompute all chunk timings after repair")
+    repair.add_argument(
+        "--no-rebuild-output",
+        dest="rebuild_output",
+        action="store_false",
+        help="Do not rebuild output/dub.mp3 and output/AI配音.mp4 after applying repairs",
+    )
+    repair.set_defaults(rebuild_output=True)
     repair.set_defaults(func=_cmd_repair)
 
     rescue = sub.add_parser("rescue", help="Plan non-destructive rescue actions for broken artifacts")

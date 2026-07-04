@@ -36,6 +36,7 @@ class PipelineRun:
     no_subtitles: bool = False
     llm: str | None = None
     tts: str | None = None
+    smoke_seconds: int | None = None
     status: str = "created"
     started_at: float = field(default_factory=time.time)
     completed_steps: list[str] = field(default_factory=list)
@@ -52,6 +53,7 @@ class PipelineRun:
             "no_subtitles": self.no_subtitles,
             "llm": self.llm,
             "tts": self.tts,
+            "smoke_seconds": self.smoke_seconds,
             "steps": self.steps,
             "status": self.status,
             "started_at": self.started_at,
@@ -119,14 +121,55 @@ def run_pipeline(run: PipelineRun, steps: list[PipelineStep], *, resume: bool = 
     return run
 
 
-def prepare_local_video(input_path: str) -> str:
+def prepare_local_video(input_path: str, *, smoke_seconds: int | None = None) -> str:
     src = Path(input_path).expanduser()
     if not src.exists():
         raise FileNotFoundError(input_path)
     output = Path("output")
     output.mkdir(exist_ok=True)
     target = output / f"source{src.suffix.lower()}"
-    if src.resolve() != target.resolve():
+    if src.resolve() == target.resolve():
+        return str(target)
+    if smoke_seconds and smoke_seconds > 0:
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "warning",
+            "-i",
+            str(src),
+            "-t",
+            str(smoke_seconds),
+            "-map",
+            "0",
+            "-c",
+            "copy",
+            str(target),
+        ]
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError:
+            fallback_cmd = [
+                "ffmpeg",
+                "-y",
+                "-hide_banner",
+                "-loglevel",
+                "warning",
+                "-i",
+                str(src),
+                "-t",
+                str(smoke_seconds),
+                "-c:v",
+                "libx264",
+                "-preset",
+                "veryfast",
+                "-c:a",
+                "aac",
+                str(target),
+            ]
+            subprocess.run(fallback_cmd, check=True)
+    else:
         shutil.copy2(src, target)
     return str(target)
 
@@ -152,7 +195,13 @@ DUBBING_STEPS = [
 ]
 
 
-def build_steps_for_input(input_value: str, *, dubbing: bool = True, subtitles: bool = True) -> list[PipelineStep]:
+def build_steps_for_input(
+    input_value: str,
+    *,
+    dubbing: bool = True,
+    subtitles: bool = True,
+    smoke_seconds: int | None = None,
+) -> list[PipelineStep]:
     suffix = Path(input_value).suffix.lower()
     steps: list[PipelineStep] = []
     if suffix == ".srt":
@@ -176,7 +225,13 @@ def build_steps_for_input(input_value: str, *, dubbing: bool = True, subtitles: 
         )
         steps.append(PipelineStep("transcribe", "Transcribe", "core.step2_whisperX"))
     else:
-        steps.append(PipelineStep("import_video", "Import local video", action=lambda: prepare_local_video(input_value)))
+        steps.append(
+            PipelineStep(
+                "import_video",
+                "Import local video",
+                action=lambda: prepare_local_video(input_value, smoke_seconds=smoke_seconds),
+            )
+        )
         steps.append(PipelineStep("transcribe", "Transcribe", "core.step2_whisperX"))
 
     steps.extend(TEXT_STEPS)
