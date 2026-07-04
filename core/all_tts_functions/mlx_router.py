@@ -8,6 +8,7 @@ from core.config_utils import load_key
 from core.all_tts_functions.tts_utils import get_prompt_text_from_df, get_reference_audio_path
 from core.providers.contracts import TTSRequest
 from core.providers.mlx_tts import synthesize_with_mlx_router
+from core.runtime_context import effective_source_language, effective_target_language
 
 
 def _clean_optional(value):
@@ -37,8 +38,9 @@ def mlx_router_tts(
         ref_audio, fallback_number = get_reference_audio_path(number, task_df=task_df, speaker=speaker)
     ref_number = fallback_number if fallback_number is not None else number
     ref_text = task_row.get("ref_text") or get_prompt_text_from_df(task_df, ref_number, fallback_text="")
-    language = task_row.get("language") or load_key("target_language", "auto")
-    source_language = load_key("source_language", "auto")
+    target_language = effective_target_language(load_key("target_language", "auto"))
+    language = task_row.get("language") or target_language
+    source_language = effective_source_language(load_key("source_language", "auto"))
     forced_backend = _clean_optional(task_row.get("tts_backend")) or _clean_optional(task_row.get("backend"))
 
     result = synthesize_with_mlx_router(
@@ -48,7 +50,7 @@ def mlx_router_tts(
             number=number,
             language=language,
             source_language=source_language,
-            target_language=load_key("target_language", "auto"),
+            target_language=target_language,
             ref_audio=ref_audio,
             ref_text=ref_text,
             speaker_id=str(speaker) if speaker else None,

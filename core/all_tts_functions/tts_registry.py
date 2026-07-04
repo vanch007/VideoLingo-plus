@@ -12,7 +12,6 @@ class TTSProvider:
 
 TTS_PROVIDERS = {
     "edge_tts": TTSProvider("edge_tts", "Cloudflare Edge TTS / Microsoft Edge", requires_service=True),
-    "sf_indextts2": TTSProvider("sf_indextts2", "SiliconFlow IndexTTS2", requires_api_key=True),
     "voxcpm_tts": TTSProvider("voxcpm_tts", "VoxCPM local REST API", requires_service=True),
     "gpt_sovits": TTSProvider("gpt_sovits", "GPT-SoVITS local server", requires_service=True),
     "index_tts2": TTSProvider("index_tts2", "IndexTTS2 local server", requires_service=True),

@@ -126,8 +126,8 @@ reflect_translate: true
 pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
-# TTS selection [edge_tts, gpt_sovits, custom_tts, sf_indextts2, index_tts2, piper_tts, indonesian_tts, voxcpm_tts, mlx_router, mlx_indextts2, mlx_omnivoice, mlx_qwen3_tts, mlx_voxcpm2, cosyvoice3_tts, elevenlabs_tts, openai_tts]
-tts_method: 'mlx_router'
+# TTS selection [edge_tts, gpt_sovits, custom_tts, index_tts2, piper_tts, indonesian_tts, voxcpm_tts, mlx_router, mlx_indextts2, mlx_omnivoice, mlx_qwen3_tts, mlx_voxcpm2, cosyvoice3_tts, elevenlabs_tts, openai_tts]
+tts_method: 'mlx_indextts2'
 
 # Quality mode [subtitle, dubbing, high_sync]. high_sync enables duration budgets,
 # LLM shortening for overlong dubbing text, measured retry, and strict eval.
@@ -148,7 +148,11 @@ dubbing_quality:
   max_end_drift: 0.18
   max_early_end_drift: 0.46
   slow_fit_min_speed: 0.75
+  slow_fit_target_ratio: 0.92
   under_duration_fit_margin_seconds: 0.06
+  # Keep generated pauses by default. Trimming local clone output caused under-duration
+  # warnings in English smoke runs.
+  trim_generated_silence: false
   min_audio_size: 1000
   asr_readback: true
   # ASR readback backend: builtin uses cached local stable-whisper; command uses the template below.
@@ -167,6 +171,9 @@ dubbing_repair:
   llm_timeout_seconds: 60
   llm_retry_attempts: 1
   llm_retry_interval: 2
+  max_rewrite_rounds: 2
+  low_content_fallback_backend: 'edge_tts'
+  max_auto_regeneration_attempts: 2
 smoke_test:
   enabled: false
   cutoff_seconds: 60
@@ -190,14 +197,6 @@ voxcpm_tts:
   denoise: false
   # Clone mode: "dynamic" (per-segment reference audio) | "none" (preset voice only)
   clone_mode: 'dynamic'
-
-# SiliconFlow IndexTTS2 Clone
-sf_indextts2:
-  api_key: ''
-  clone_mode: dynamic
-  fixed_voice: 雷军
-  # Reserved for duration-aware dubbing adapters. Null means current automatic speed fitting.
-  target_duration:
 
 cosyvoice3_tts:
   api_url: 'http://127.0.0.1:8810'

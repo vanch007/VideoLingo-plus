@@ -1,5 +1,6 @@
 from pathlib import Path
-import os, sys, time
+import os, socket, sys, time
+from urllib.parse import urlparse
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 from core.config_utils import load_key
 
@@ -10,6 +11,7 @@ from core.config_utils import load_key
 
 CLOUDFLARE_EDGE_TTS_URL = os.environ.get("CLOUDFLARE_EDGE_TTS_URL", "http://127.0.0.1:5566/tts")
 MAX_RETRIES = int(os.environ.get("CLOUDFLARE_EDGE_TTS_RETRIES", "1"))
+_WORKER_AVAILABLE = None
 
 def _convert_mp3_to_wav(mp3_path, wav_path):
     import subprocess
@@ -38,8 +40,29 @@ def _native_edge_tts(text, voice, save_path):
     asyncio.run(synthesize())
 
 
+def _cloudflare_worker_available():
+    global _WORKER_AVAILABLE
+    if _WORKER_AVAILABLE is not None:
+        return _WORKER_AVAILABLE
+    if os.environ.get("CLOUDFLARE_EDGE_TTS_DISABLE", "").lower() in {"1", "true", "yes"}:
+        _WORKER_AVAILABLE = False
+        return False
+    parsed = urlparse(CLOUDFLARE_EDGE_TTS_URL)
+    if not parsed.hostname:
+        _WORKER_AVAILABLE = True
+        return True
+    port = parsed.port or (443 if parsed.scheme == "https" else 80)
+    try:
+        with socket.create_connection((parsed.hostname, port), timeout=0.5):
+            _WORKER_AVAILABLE = True
+    except OSError:
+        _WORKER_AVAILABLE = False
+    return _WORKER_AVAILABLE
+
+
 def edge_tts(text, save_path):
     """Synthesize speech via cloudflare-edge-tts Worker, fallback to native edge-tts, and save as WAV."""
+    global _WORKER_AVAILABLE
     import requests
     import tempfile
 
@@ -50,6 +73,12 @@ def edge_tts(text, save_path):
     # Create output directory
     speech_file_path = Path(save_path)
     speech_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if not _cloudflare_worker_available():
+        print("cloudflare-edge-tts unavailable; using native edge-tts package.")
+        _native_edge_tts(text, voice, speech_file_path)
+        print(f"Audio saved to {speech_file_path}")
+        return
 
     # Call cloudflare-edge-tts Worker with retry
     last_err = None
@@ -74,6 +103,7 @@ def edge_tts(text, save_path):
             return
         except Exception as e:
             last_err = e
+            _WORKER_AVAILABLE = False
             print(f"⚠️ edge_tts attempt {attempt}/{MAX_RETRIES} failed: {e}")
             if attempt < MAX_RETRIES:
                 time.sleep(5 * attempt)

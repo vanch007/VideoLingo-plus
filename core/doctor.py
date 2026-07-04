@@ -95,7 +95,6 @@ def run_checks(include_services: bool = True) -> list[CheckResult]:
         "api.key": llm_provider == "openai_compatible",
         "llm.providers.omlx.api_key": False,
         "hf_token": False,
-        "sf_indextts2.api_key": tts_method == "sf_indextts2",
         "openai_tts.api_key": tts_method == "openai_tts",
         "elevenlabs_tts.api_key": tts_method == "elevenlabs_tts",
     }

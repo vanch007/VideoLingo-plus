@@ -392,65 +392,6 @@ def page_setting():
         elif select_tts == "edge_tts":
             config_input(t("Edge TTS Voice"), "edge_tts.voice")
 
-        elif select_tts == "sf_indextts2":
-            secret_env_status(t("SiliconFlow API Key"), "sf_indextts2.api_key")
-            config_number_input(t("Max Workers"), "max_workers", help=t("Number of parallel processes for TTS generation."), min_value=1, step=1)
-
-            # 获取固定声音列表
-            voice_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "core", "all_tts_functions", "voice")
-            if os.path.exists(voice_dir):
-                # 过滤掉 .DS_Store 等隐藏文件
-                fixed_voices = [d for d in os.listdir(voice_dir) if os.path.isdir(os.path.join(voice_dir, d)) and not d.startswith('.')]
-            else:
-                fixed_voices = []
-
-            # 添加克隆模式选择
-            clone_mode_options = {
-                "dynamic": t("Dynamic Clone"),
-                "fixed": t("Fixed Clone")
-            }
-            
-            try:
-                default_clone_mode = load_key("sf_indextts2.clone_mode")
-            except KeyError:
-                default_clone_mode = "dynamic"
-
-            selected_clone_mode = st.radio(
-                t("Clone Mode"),
-                options=list(clone_mode_options.keys()),
-                format_func=lambda x: clone_mode_options[x],
-                index=list(clone_mode_options.keys()).index(default_clone_mode),
-                key="cosyvoice_clone_mode"
-            )
-            if selected_clone_mode != default_clone_mode:
-                update_key("sf_indextts2.clone_mode", selected_clone_mode)
-                st.rerun()
-
-            if selected_clone_mode == "fixed":
-                if fixed_voices:
-                    try:
-                        default_fixed_voice = load_key("sf_indextts2.fixed_voice")
-                        if default_fixed_voice not in fixed_voices:
-                            default_fixed_voice = fixed_voices[0]
-                            update_key("sf_indextts2.fixed_voice", default_fixed_voice)
-                    except KeyError:
-                        default_fixed_voice = fixed_voices[0] if fixed_voices else None
-                        if default_fixed_voice:
-                            update_key("sf_indextts2.fixed_voice", default_fixed_voice)
-
-                    if default_fixed_voice:
-                        selected_fixed_voice = st.selectbox(
-                            t("Fixed Voice"),
-                            options=fixed_voices,
-                            index=fixed_voices.index(default_fixed_voice),
-                            key="cosyvoice_fixed_voice"
-                        )
-                        if selected_fixed_voice != default_fixed_voice:
-                            update_key("sf_indextts2.fixed_voice", selected_fixed_voice)
-                            st.rerun()
-                else:
-                    st.warning(t("No fixed voices found. Please add voices in 'core/all_tts_functions/voice/' directory."))
-
         elif select_tts == "f5tts":
             config_input("302ai API", "f5tts.302_api")
 

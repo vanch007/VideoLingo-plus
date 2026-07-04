@@ -1,4 +1,5 @@
 from core.llm_provider import LLMProviderConfig, build_completion_args, create_chat_client, fix_base_url
+from core.all_tts_functions.tts_registry import list_tts_methods
 from core.providers.contracts import TTSRequest
 from core.providers.mlx_tts import MlxTTSRouter, looks_vietnamese
 from core.providers.quality import content_similarity, reference_leak_score
@@ -31,6 +32,11 @@ def test_chat_client_receives_provider_timeout():
     )
     client = create_chat_client(cfg)
     assert client.timeout == 12
+
+
+def test_siliconflow_indextts2_provider_is_removed():
+    assert "sf_indextts2" not in list_tts_methods()
+    assert "mlx_indextts2" in list_tts_methods()
 
 
 def test_mlx_router_routes_vietnamese_to_indextts2():

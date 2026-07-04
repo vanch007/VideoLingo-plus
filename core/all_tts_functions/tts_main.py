@@ -34,7 +34,16 @@ def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target
         return
     
     print(f"Generating <{text}...>")
-    TTS_METHOD = load_key("tts_method")
+    task_row = task_row or {}
+    row_tts_method = task_row.get("tts_method")
+    row_tts_method = str(row_tts_method).strip() if row_tts_method is not None else ""
+    if row_tts_method.lower() in {"", "nan", "<na>", "none"}:
+        row_tts_method = ""
+    backend_override = task_row.get("tts_backend")
+    backend_override = str(backend_override).strip() if backend_override is not None else ""
+    if not row_tts_method and backend_override == "edge_tts":
+        row_tts_method = backend_override
+    TTS_METHOD = row_tts_method or load_key("tts_method")
     get_tts_provider(TTS_METHOD)
     
     max_retries = 3
@@ -57,29 +66,6 @@ def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target
             elif TTS_METHOD == 'index_tts2':
                 from core.all_tts_functions.index_tts2 import custom_tts
                 custom_tts(text, save_as, number, task_df, attempt)
-            elif TTS_METHOD == 'sf_indextts2':
-                from core.all_tts_functions.sf_indextts2 import indextts2_tts_for_videolingo
-                try:
-                    clone_mode = load_key("sf_indextts2.clone_mode")
-                except KeyError:
-                    clone_mode = "dynamic"
-                
-                fixed_voice_name = None
-                if clone_mode == "fixed":
-                    try:
-                        fixed_voice_name = load_key("sf_indextts2.fixed_voice")
-                    except KeyError:
-                        pass
-
-                indextts2_tts_for_videolingo(
-                    text,
-                    save_as,
-                    number,
-                    task_df,
-                    clone_mode=clone_mode,
-                    fixed_voice_name=fixed_voice_name,
-                    target_duration=target_duration,
-                )
             elif TTS_METHOD == 'indonesian_tts':
                 from core.all_tts_functions.indonesian_tts import indonesian_tts_for_videolingo
                 speaker = load_key("indonesian_tts.speaker", "wibowo")
@@ -89,7 +75,7 @@ def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target
                 voxcpm_tts(text, save_as, number, task_df, attempt)
             elif TTS_METHOD == 'mlx_router' or TTS_METHOD in MLX_ROUTER_BACKENDS:
                 from core.all_tts_functions.mlx_router import mlx_router_tts
-                row_payload = dict(task_row or {})
+                row_payload = dict(task_row)
                 if TTS_METHOD in MLX_ROUTER_BACKENDS:
                     row_payload['tts_backend'] = MLX_ROUTER_BACKENDS[TTS_METHOD]
                 mlx_router_tts(
