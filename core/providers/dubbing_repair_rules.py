@@ -46,7 +46,8 @@ def under_duration_target(eval_row: pd.Series | dict[str, Any]) -> float:
     ratio_target = available * quality.min_duration_ratio
     fit_margin = max(0.0, float(load_key("dubbing_quality.under_duration_fit_margin_seconds", 0.06)))
     early_end_target = available - quality.max_early_end_drift + fit_margin
-    target_ratio = min(1.0, float(load_key("dubbing_quality.slow_fit_target_ratio", quality.min_duration_ratio)))
+    default_target_ratio = min(1.0, quality.min_duration_ratio + 0.02)
+    target_ratio = min(1.0, float(load_key("dubbing_quality.slow_fit_target_ratio", default_target_ratio)))
     preferred = available * target_ratio
     return max(0.05, min(available, max(ratio_target, early_end_target, preferred)))
 

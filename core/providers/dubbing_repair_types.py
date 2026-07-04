@@ -11,8 +11,17 @@ from core.constants import AUDIO_DIR
 DUBBING_REPAIR_PLAN_JSON = os.path.join(AUDIO_DIR, "dubbing_repair_plan.json")
 DUBBING_REPAIR_HISTORY_JSONL = os.path.join(AUDIO_DIR, "dubbing_repair_history.jsonl")
 DUBBING_OVERDURATION_REPORT_JSON = os.path.join(AUDIO_DIR, "dubbing_over_duration_report.json")
-KNOWN_BACKENDS = {"indextts2", "omnivoice", "qwen3_tts", "voxcpm2"}
-ASR_RESULT_COLUMNS = ("asr_transcript", "asr_content_score", "asr_leakage_score", "asr_status", "asr_line_results")
+KNOWN_BACKENDS = {"indextts2", "omnivoice", "qwen3_tts", "voxcpm2", "edge_tts"}
+ASR_RESULT_COLUMNS = (
+    "asr_transcript",
+    "asr_content_score",
+    "asr_leakage_score",
+    "asr_status",
+    "asr_line_results",
+    "asr_fingerprint",
+    "asr_language",
+    "asr_backend",
+)
 REGENERATE_REASONS = {
     "missing_audio",
     "silent_or_tiny_audio",

@@ -1,6 +1,7 @@
 import os,sys,json
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.config_utils import load_key
+from core.runtime_context import effective_target_language
 
 ## ================================================================
 # @ step4_splitbymeaning.py
@@ -191,7 +192,7 @@ def generate_shared_prompt(previous_content_prompt, after_content_prompt, summar
 {things_to_note_prompt}'''
 
 def get_prompt_faithfulness(lines, shared_prompt):
-    TARGET_LANGUAGE = load_key("target_language")
+    TARGET_LANGUAGE = effective_target_language("auto")
     # Split lines by \n
     line_splits = lines.split('\n')
 
@@ -372,12 +373,14 @@ def get_dubbing_rewrite_prompt(
     direction="shorten",
     word_budget=None,
 ):
-    TARGET_LANGUAGE = load_key("target_language")
+    TARGET_LANGUAGE = effective_target_language("auto")
+    target_code = str(TARGET_LANGUAGE).lower()
     source_lines = source_lines or []
     current_text = "\n".join(f"{i + 1}. {line}" for i, line in enumerate(current_lines))
     source_text = "\n".join(f"{i + 1}. {line}" for i, line in enumerate(source_lines))
     line_count = max(len(current_lines), 1)
     if direction == "expand":
+        line_rule = f"Keep the same number of output lines as the current dubbing text: exactly {line_count} line(s)."
         task = f"Rewrite the current {TARGET_LANGUAGE} dubbing text so it fills the target time window more naturally without sounding padded."
         duration_rule = (
             f"The current speech is too short. Make the wording naturally richer so it can be spoken close to "
@@ -388,15 +391,33 @@ def get_dubbing_rewrite_prompt(
                 f" The current text has about {word_budget['current_words']} words; output should total "
                 f"{word_budget['min_words']} to {word_budget['max_words']} words across all lines."
             )
-        style_rule = (
-            "For Vietnamese, use natural live-commerce phrasing, short connective words, and clear product context; "
-            "do not invent new claims, prices, guarantees, or features."
-        )
+        if target_code.startswith("vi"):
+            style_rule = (
+                "For Vietnamese, use natural live-commerce phrasing, short connective words, and clear product context; "
+                "do not invent new claims, prices, guarantees, or features."
+            )
+        elif target_code.startswith("en"):
+            style_rule = "For English, use plain spoken wording, short common words, and natural contractions."
+        else:
+            style_rule = "Use natural spoken wording for the target language without adding new claims."
         edit_rule = "Prefer adding only enough natural context to close the timing gap; do not double the script length."
     else:
+        line_rule = (
+            f"Use no more than {line_count} output line(s). Fewer lines are allowed when the time window is very short."
+        )
         task = f"Rewrite the current {TARGET_LANGUAGE} dubbing text so it can be spoken naturally within the target time window."
         duration_rule = f"Make the wording concise enough for natural speech within {target_duration:.2f}s. The available hard window is {available_duration:.2f}s."
-        style_rule = "For Vietnamese, use standard tone marks, natural short phrasing, and avoid unnecessary filler words."
+        if word_budget:
+            duration_rule += (
+                f" The current text has about {word_budget['current_words']} words; output must total "
+                f"at most {word_budget['max_words']} words across all lines."
+            )
+        if target_code.startswith("vi"):
+            style_rule = "For Vietnamese, use standard tone marks, natural short phrasing, and avoid unnecessary filler words."
+        elif target_code.startswith("en"):
+            style_rule = "For English, use plain spoken wording, short common words, and natural contractions."
+        else:
+            style_rule = "Use natural short phrasing in the target language and avoid unnecessary filler words."
         edit_rule = "Prefer deleting filler, compressing repeated ideas, and replacing long phrases with shorter natural equivalents."
 
     return f'''
@@ -408,7 +429,7 @@ You are a professional dubbing script editor for high-sync video localization.
 
 ## Hard Constraints
 1. Preserve the original meaning, terminology, named entities, numbers, and speaker intent.
-2. Keep the same number of output lines as the current dubbing text: exactly {line_count} line(s).
+2. {line_rule}
 3. {duration_rule}
 4. Do not add explanations, comments, brackets, markdown, or extra lines.
 5. {style_rule}

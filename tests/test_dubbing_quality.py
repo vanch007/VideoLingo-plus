@@ -1,6 +1,6 @@
 import pandas as pd
 
-from core import dubbing_quality
+from core import dubbing_quality, dubbing_rewrite
 from core.dubbing_quality import actual_expand_needed, apply_dubbing_budget_columns, evaluate_dubbing, natural_speed_rewrite_needed, parse_list
 from core.step10_gen_audio import build_atempo_filter, retry_fast_speech_rows
 
@@ -198,6 +198,54 @@ def test_evaluate_dubbing_warns_on_fast_speech_factor(monkeypatch, tmp_path):
     assert summary["max_speed_factor"] == 1.2
 
 
+def test_evaluate_dubbing_keeps_manual_review_as_explicit_warning(monkeypatch, tmp_path):
+    audio_dir = tmp_path / "segs"
+    audio_dir.mkdir()
+    wav = audio_dir / "1_0.wav"
+    wav.write_bytes(b"fake")
+
+    monkeypatch.setattr(dubbing_quality, "SEGS_DIR", str(audio_dir))
+    monkeypatch.setattr(dubbing_quality, "get_audio_duration", lambda _: 2.0)
+
+    def fake_load_key(key, default=None):
+        if key == "dubbing_quality.mode":
+            return "high_sync"
+        if key == "dubbing_quality.min_duration_ratio":
+            return 0.9
+        if key == "dubbing_quality.content_score_min":
+            return 0.88
+        if key == "dubbing_quality.min_audio_size":
+            return 1
+        return default
+
+    monkeypatch.setattr(dubbing_quality, "load_key", fake_load_key)
+    tasks = pd.DataFrame(
+        [
+            {
+                "number": 1,
+                "start_time": "00:00:00.000",
+                "end_time": "00:00:04.000",
+                "duration": 4.0,
+                "available_duration": 4.0,
+                "tolerance": 0.0,
+                "text": "needs review",
+                "lines": ["needs review"],
+                "new_sub_times": [[0.0, 2.0]],
+                "real_dur": 2.0,
+                "asr_content_score": 0.2,
+                "repair_action": "manual_review",
+                "repair_status": "rewrite_failed",
+            }
+        ]
+    )
+
+    eval_df, summary = evaluate_dubbing(tasks)
+
+    assert eval_df.loc[0, "reason"] == "manual_review"
+    assert eval_df.loc[0, "manual_review_reason"] == "under_duration,low_content_score"
+    assert summary["quality_gate"]["reasons"]["manual_review"] == 1
+
+
 def test_retry_fast_speech_rows_rewrites_and_regenerates(monkeypatch):
     class Quality:
         enabled = True
@@ -237,3 +285,146 @@ def test_retry_fast_speech_rows_rewrites_and_regenerates(monkeypatch):
     assert calls["text"] == "short text"
     assert out.loc[0, "rewrite_reason"] == "speech_rate_fast"
     assert out.loc[0, "real_dur"] == 1.8
+
+
+def test_english_shorten_rewrite_enforces_word_budget(monkeypatch):
+    class Quality:
+        max_natural_speed_factor = 1.12
+
+    calls = []
+
+    def fake_ask_gpt(prompt, **kwargs):
+        calls.append(prompt)
+        if len(calls) == 1:
+            return {"lines": ["Right? I only knew about digital avatars for voiceovers."]}
+        return {"lines": ["I only knew voiceover avatars."]}
+
+    def fake_load_key(key, default=None):
+        if key == "target_language":
+            return "en"
+        return default
+
+    monkeypatch.setattr(dubbing_rewrite, "ask_gpt", fake_ask_gpt)
+    monkeypatch.setattr(dubbing_rewrite, "load_key", fake_load_key)
+    monkeypatch.setattr(dubbing_rewrite, "get_quality_config", lambda: Quality())
+
+    rewritten = dubbing_rewrite.rewrite_task_lines(
+        {
+            "text": "Right? I only knew about digital avatars for voiceovers.",
+            "lines": ["Right? I only knew about digital avatars for voiceovers."],
+            "real_dur": 5.0,
+            "available_duration": 2.5,
+        },
+        reason="speech_rate_fast",
+        direction="shorten",
+    )
+
+    assert rewritten == ["I only knew voiceover avatars."]
+    assert len(calls) == 2
+    assert "at most" in calls[0]
+
+
+def test_english_shorten_budget_counts_contractions_as_one_word(monkeypatch):
+    class Quality:
+        max_natural_speed_factor = 1.12
+
+    def fake_ask_gpt(prompt, **kwargs):
+        return {"lines": ["Versus rookie anchors,", "it's already there."]}
+
+    monkeypatch.setattr(dubbing_rewrite, "ask_gpt", fake_ask_gpt)
+    monkeypatch.setattr(dubbing_rewrite, "load_key", lambda key, default=None: "en" if key == "target_language" else default)
+    monkeypatch.setattr(dubbing_rewrite, "get_quality_config", lambda: Quality())
+
+    rewritten = dubbing_rewrite.rewrite_task_lines(
+        {
+            "text": "So, compared to your average rookie anchor, ...it's already there.",
+            "lines": ["So, compared to your average rookie anchor,", "...it's already there."],
+            "real_dur": 3.72,
+            "available_duration": 1.944,
+        },
+        reason="speech_rate_fast",
+        direction="shorten",
+    )
+
+    assert rewritten == ["Versus rookie anchors,", "it's already there."]
+
+
+def test_english_shorten_allows_fewer_lines_for_tight_window(monkeypatch):
+    class Quality:
+        max_natural_speed_factor = 1.12
+
+    def fake_ask_gpt(prompt, **kwargs):
+        return {"lines": ["Ahead of most rookies."]}
+
+    monkeypatch.setattr(dubbing_rewrite, "ask_gpt", fake_ask_gpt)
+    monkeypatch.setattr(dubbing_rewrite, "load_key", lambda key, default=None: "en" if key == "target_language" else default)
+    monkeypatch.setattr(dubbing_rewrite, "get_quality_config", lambda: Quality())
+
+    rewritten = dubbing_rewrite.rewrite_task_lines(
+        {
+            "text": "So, compared to your average rookie anchor, ...it's already there.",
+            "lines": ["So, compared to your average rookie anchor,", "...it's already there."],
+            "real_dur": 3.72,
+            "available_duration": 1.944,
+        },
+        reason="speech_rate_fast",
+        direction="shorten",
+    )
+
+    assert rewritten == ["Ahead of most rookies."]
+
+
+def test_english_shorten_uses_compact_fallback_after_invalid_llm(monkeypatch, tmp_path):
+    class Quality:
+        max_natural_speed_factor = 1.12
+
+    def fake_ask_gpt(prompt, **kwargs):
+        return {"lines": ["Compared to most rookies,", "he's already got it."]}
+
+    monkeypatch.setattr(dubbing_rewrite, "ask_gpt", fake_ask_gpt)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(dubbing_rewrite, "load_key", lambda key, default=None: "en" if key == "target_language" else default)
+    monkeypatch.setattr(dubbing_rewrite, "get_quality_config", lambda: Quality())
+
+    rewritten = dubbing_rewrite.rewrite_task_lines(
+        {
+            "text": "So, compared to your average rookie anchor, ...it's already there.",
+            "lines": ["So, compared to your average rookie anchor,", "...it's already there."],
+            "real_dur": 3.72,
+            "available_duration": 1.944,
+        },
+        reason="speech_rate_fast",
+        direction="shorten",
+    )
+
+    assert rewritten == ["Versus rookies, it's there."]
+
+
+def test_english_rewrite_rejects_vietnamese_language_drift(monkeypatch, tmp_path):
+    class Quality:
+        max_natural_speed_factor = 1.12
+
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+    (output_dir / "pipeline_state.json").write_text('{"target": "en"}', encoding="utf-8")
+
+    def fake_ask_gpt(prompt, **kwargs):
+        return {"lines": ["Một phần mười tới một phần ba."]}
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(dubbing_rewrite, "ask_gpt", fake_ask_gpt)
+    monkeypatch.setattr(dubbing_rewrite, "load_key", lambda key, default=None: "vi" if key == "target_language" else default)
+    monkeypatch.setattr(dubbing_rewrite, "get_quality_config", lambda: Quality())
+
+    rewritten = dubbing_rewrite.rewrite_task_lines(
+        {
+            "text": "A tenth to a fifth, now a third.",
+            "lines": ["A tenth to a fifth, now a third."],
+            "real_dur": 2.81,
+            "available_duration": 2.46,
+        },
+        reason="speech_rate_fast",
+        direction="shorten",
+    )
+
+    assert rewritten == ["A tenth to a third."]

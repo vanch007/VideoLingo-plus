@@ -271,6 +271,12 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
             status = "warn" if status == "ok" else status
             reasons.append("reference_leak")
 
+        repair_action = str(row.get("repair_action", "") or "")
+        repair_status = str(row.get("repair_status", "") or "")
+        manual_review_reason = ",".join(reasons)
+        if status == "warn" and reasons and repair_action == "manual_review":
+            reasons = ["manual_review"]
+
         rows.append({
             "number": number,
             "status": status,
@@ -296,6 +302,9 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
             "line_durations": line_durations,
             "content_score": None if content_score is None or pd.isna(content_score) else float(content_score),
             "leakage_score": None if leakage_score is None or pd.isna(leakage_score) else float(leakage_score),
+            "repair_action": repair_action,
+            "repair_status": repair_status,
+            "manual_review_reason": manual_review_reason if reasons == ["manual_review"] else "",
         })
 
     eval_df = pd.DataFrame(rows)

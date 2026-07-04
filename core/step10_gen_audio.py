@@ -117,7 +117,8 @@ def process_row(row: dict, tasks_df: pd.DataFrame) -> Tuple[int, float]:
             line_index=line_index,
             target_duration=target_duration / max(len(lines), 1),
         )
-        remove_silence_from_file(temp_file)
+        if bool(load_key("dubbing_quality.trim_generated_silence", False)):
+            remove_silence_from_file(temp_file)
         check_audio(temp_file)
         real_dur += get_audio_duration(temp_file)
     return number, real_dur

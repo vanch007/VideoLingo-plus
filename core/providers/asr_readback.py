@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import os
 import shlex
@@ -14,6 +15,7 @@ import pandas as pd
 from core.config_utils import load_key
 from core.constants import SEGS_DIR, TTS_TASKS_FILE
 from core.dubbing_quality import normalize_lines
+from core.runtime_context import effective_target_language
 from core.providers.contracts import ASRVerificationResult
 from core.providers.quality import content_similarity, reference_leak_score
 
@@ -24,6 +26,7 @@ class ReadbackSummary:
     checked: int
     skipped: int
     failed: int
+    cached: int
     min_content_score: float | None
     max_leakage_score: float | None
     output_file: str
@@ -79,6 +82,13 @@ def _command_template() -> list[str]:
     return []
 
 
+def _safe_load_key(key: str, default: Any = None) -> Any:
+    try:
+        return load_key(key, default)
+    except (FileNotFoundError, KeyError):
+        return default
+
+
 def _format_command(template: list[str], *, audio_path: str, language: str) -> list[str]:
     return [
         part.format(audio=audio_path, language=language, output_dir=str(Path(audio_path).parent))
@@ -90,7 +100,7 @@ _BUILTIN_MODEL_CACHE: dict[tuple[str, bool], Any] = {}
 
 
 def _readback_backend() -> str:
-    backend = str(load_key("dubbing_quality.asr_readback_backend", "command") or "command").strip().lower()
+    backend = str(_safe_load_key("dubbing_quality.asr_readback_backend", "command") or "command").strip().lower()
     return backend or "command"
 
 
@@ -186,30 +196,118 @@ def _audio_file_for(number: int, line_index: int) -> str:
     return os.path.join(SEGS_DIR, f"{number}_{line_index}.wav")
 
 
+def _audio_signature(path: str) -> dict[str, Any]:
+    try:
+        stat = os.stat(path)
+    except OSError:
+        return {"path": path, "exists": False}
+    return {
+        "path": path,
+        "exists": True,
+        "size": stat.st_size,
+        "mtime_ns": stat.st_mtime_ns,
+    }
+
+
+def _asr_config_signature(language: str) -> dict[str, Any]:
+    backend = _readback_backend()
+    signature: dict[str, Any] = {
+        "language": language,
+        "backend": backend,
+    }
+    if backend in {"builtin", "stable_ts", "stable_ts_mlx"} or _command_template() == ["builtin"]:
+        signature["model"] = str(_safe_load_key("dubbing_quality.asr_readback_model", _safe_load_key("whisper.model", "large-v3-turbo")))
+        signature["use_mlx"] = bool(_safe_load_key("dubbing_quality.asr_readback_use_mlx", True))
+    else:
+        signature["command"] = _command_template()
+    return signature
+
+
+def _readback_fingerprint(
+    *,
+    number: int,
+    lines: list[str],
+    src_lines: list[str],
+    language: str,
+) -> str:
+    payload = {
+        "version": 1,
+        "number": number,
+        "lines": lines,
+        "src_lines": src_lines,
+        "audio": [_audio_signature(_audio_file_for(number, line_index)) for line_index in range(len(lines))],
+        "asr": _asr_config_signature(language),
+    }
+    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha1(encoded).hexdigest()
+
+
+def _is_cached_row(row: pd.Series, fingerprint: str) -> bool:
+    if pd.isna(row.get("asr_content_score")):
+        return False
+    stored = row.get("asr_fingerprint")
+    return isinstance(stored, str) and stored == fingerprint
+
+
+def _update_score_summary(
+    *,
+    content_score: Any,
+    leakage_score: Any,
+    min_content_score: float | None,
+    max_leakage_score: float | None,
+) -> tuple[float | None, float | None]:
+    if pd.notna(content_score):
+        content = float(content_score)
+        min_content_score = content if min_content_score is None else min(min_content_score, content)
+    if pd.notna(leakage_score):
+        leakage = float(leakage_score)
+        max_leakage_score = leakage if max_leakage_score is None else max(max_leakage_score, leakage)
+    return min_content_score, max_leakage_score
+
+
 def verify_tasks_df(tasks_df: pd.DataFrame, *, limit: int | None = None, force: bool = False) -> tuple[pd.DataFrame, ReadbackSummary]:
-    language = load_key("target_language", "auto")
+    language = effective_target_language(_safe_load_key("target_language", "auto"))
     checked = 0
     skipped = 0
     failed = 0
     verified = 0
+    cached = 0
     min_content_score: float | None = None
     max_leakage_score: float | None = None
     out = tasks_df.copy()
 
-    for column in ("asr_transcript", "asr_content_score", "asr_leakage_score", "asr_status", "asr_line_results"):
+    for column in (
+        "asr_transcript",
+        "asr_content_score",
+        "asr_leakage_score",
+        "asr_status",
+        "asr_line_results",
+        "asr_fingerprint",
+        "asr_language",
+        "asr_backend",
+    ):
         if column not in out.columns:
             out[column] = None
 
     for idx, row in out.iterrows():
         if limit is not None and checked >= limit:
             break
-        if not force and pd.notna(row.get("asr_content_score")):
-            skipped += 1
-            continue
 
         number = int(row["number"])
         lines = normalize_lines(row.get("lines", row.get("text", ""))) or [str(row.get("text", ""))]
         src_lines = normalize_lines(row.get("src_lines", row.get("origin", "")))
+        fingerprint = _readback_fingerprint(number=number, lines=lines, src_lines=src_lines, language=language)
+        if not force and _is_cached_row(row, fingerprint):
+            cached += 1
+            skipped += 1
+            min_content_score, max_leakage_score = _update_score_summary(
+                content_score=row.get("asr_content_score"),
+                leakage_score=row.get("asr_leakage_score"),
+                min_content_score=min_content_score,
+                max_leakage_score=max_leakage_score,
+            )
+            continue
+
         line_results = []
         transcripts = []
         content_scores = []
@@ -273,21 +371,26 @@ def verify_tasks_df(tasks_df: pd.DataFrame, *, limit: int | None = None, force: 
             out.at[idx, "asr_leakage_score"] = max(leak_scores) if leak_scores else 0.0
             out.at[idx, "asr_transcript"] = " ".join(transcripts)
             out.at[idx, "asr_status"] = "ok"
+            out.at[idx, "asr_fingerprint"] = fingerprint
+            out.at[idx, "asr_language"] = language
+            out.at[idx, "asr_backend"] = _readback_backend()
         elif line_results:
             statuses = {item.get("status") for item in line_results}
             out.at[idx, "asr_status"] = "skipped" if statuses == {"skipped"} else "fail"
+            out.at[idx, "asr_fingerprint"] = None
         out.at[idx, "asr_line_results"] = json.dumps(line_results, ensure_ascii=False)
 
     status = "ok"
     if failed:
         status = "fail"
-    elif verified == 0:
+    elif verified == 0 and cached == 0:
         status = "skipped"
     return out, ReadbackSummary(
         status=status,
         checked=checked,
         skipped=skipped,
         failed=failed,
+        cached=cached,
         min_content_score=min_content_score,
         max_leakage_score=max_leakage_score,
         output_file=TTS_TASKS_FILE,

@@ -22,6 +22,7 @@ from core.dubbing_quality import (
     temp_audio_file_for,
     write_dubbing_eval,
 )
+from core.runtime_context import effective_target_language
 from core.providers.dubbing_repair_io import (
     append_repair_history,
     compact_summary as _compact_summary,
@@ -95,17 +96,21 @@ def _resolve_backend(row: pd.Series | dict[str, Any], reasons: set[str], backend
             raise ValueError(f"Unknown backend fallback: {backend_fallback}")
         return backend_fallback
 
-    current = row.get("tts_backend") or row.get("backend")
+    current = row.get("tts_method") or row.get("tts_backend") or row.get("backend")
     current = str(current).strip() if not _blank(current) else ""
+    if current == "edge_tts" and "reference_leak" not in reasons:
+        return "edge_tts"
     if current in KNOWN_BACKENDS and reasons <= {"missing_audio", "silent_or_tiny_audio"}:
         return current
 
     if "reference_leak" in reasons:
         return "qwen3_tts" if _has_ref_text(row) else "indextts2"
     if "low_content_score" in reasons:
-        target_language = str(load_key("target_language", "") or "").lower()
-        if target_language.startswith("vi"):
+        if effective_target_language("").lower().startswith("vi"):
             return "indextts2"
+        fallback = str(load_key("dubbing_repair.low_content_fallback_backend", "edge_tts") or "edge_tts").strip()
+        if fallback in KNOWN_BACKENDS:
+            return fallback
         return "qwen3_tts" if _has_ref_text(row) else "indextts2"
     if "over_duration" in reasons or "under_duration" in reasons or "speech_rate_fast" in reasons:
         return "indextts2"
@@ -144,11 +149,52 @@ def choose_repair_action(
     )
     backend = _resolve_backend(task_row, reason_set, backend_fallback) if needs_regen else None
     notes: list[str] = []
+    if rewrite:
+        max_repair_rounds = max(
+            0,
+            int(load_key("dubbing_repair.max_rewrite_rounds", load_key("dubbing_quality.max_rewrite_rounds", 2))),
+        )
+        if _repair_rounds(dict(task_row)) >= max_repair_rounds:
+            return RepairAction(
+                number=number,
+                status=str(eval_row.get("status", "")),
+                reasons=reasons,
+                action="manual_review",
+                backend=None,
+                rewrite=False,
+                delete_audio=False,
+                text=str(task_row.get("text") or eval_row.get("text") or ""),
+                notes=["Repair rewrite rounds are exhausted; manual script edit is required."],
+            )
+    max_auto_attempts = max(1, int(load_key("dubbing_repair.max_auto_regeneration_attempts", 2)))
+    repair_attempts = int(task_row.get("repair_attempts", 0) or 0)
+    terminal_status = str(task_row.get("repair_status", "") or "")
+    if (
+        reason_set & {"low_content_score", "reference_leak"}
+        and repair_attempts >= max_auto_attempts
+        and terminal_status in {"rewrite_failed", "rewrite_limit_reached", "asr_quality_unstable", "manual_review"}
+    ):
+        return RepairAction(
+            number=number,
+            status=str(eval_row.get("status", "")),
+            reasons=reasons,
+            action="manual_review",
+            backend=None,
+            rewrite=False,
+            delete_audio=False,
+            text=str(task_row.get("text") or eval_row.get("text") or ""),
+            notes=[
+                "Automatic ASR-quality repair already hit the retry limit; manual listening or script/reference change is required."
+            ],
+        )
 
     if "reference_leak" in reason_set and backend == "voxcpm2":
         notes.append("voxcpm2 is not recommended for automatic leak repair; verify with ASR before accepting.")
     if "low_content_score" in reason_set:
-        notes.append("ASR content score is below threshold; regenerate with cleaner backend/reference first.")
+        if backend == "edge_tts":
+            notes.append("ASR content score is below threshold; non-Vietnamese rows fall back to Edge TTS instead of repeating unstable local voice cloning.")
+        else:
+            notes.append("ASR content score is below threshold; regenerate with cleaner backend/reference first.")
     if rewrite:
         if "over_duration" in reason_set or "speech_rate_fast" in reason_set:
             notes.append("Text will be shortened before regeneration.")
@@ -312,6 +358,8 @@ def _ensure_columns(tasks_df: pd.DataFrame) -> pd.DataFrame:
         "repair_reason": "",
         "repair_backend": "",
         "repair_attempts": 0,
+        "repair_rewrite_rounds": 0,
+        "repair_status": "",
         "rewritten_for_dubbing": False,
         "rewrite_reason": "",
         "dubbing_rewrite_rounds": 0,
@@ -334,6 +382,18 @@ def _clear_asr_results(row_dict: dict[str, Any]) -> None:
     for column in ASR_RESULT_COLUMNS:
         if column in row_dict:
             row_dict[column] = None
+
+
+def _same_lines(left: list[str], right: list[str]) -> bool:
+    return [line.strip() for line in left] == [line.strip() for line in right]
+
+
+def _repair_max_rewrite_rounds(quality) -> int:
+    return max(0, int(load_key("dubbing_repair.max_rewrite_rounds", quality.max_rewrite_rounds)))
+
+
+def _repair_rounds(row_dict: dict[str, Any]) -> int:
+    return int(row_dict.get("repair_rewrite_rounds", 0) or 0)
 
 
 def _finalize_selected_row(row: dict[str, Any]) -> list[list[float]]:
@@ -489,6 +549,7 @@ def _duration_rewrite_reason(row: dict[str, Any], base_reason: str, direction: s
 
 
 def _rewrite_row(row_dict: dict[str, Any], rewrite_task_lines) -> bool:
+    original_lines = normalize_lines(row_dict.get("lines", row_dict.get("text", "")))
     direction = _duration_rewrite_direction(row_dict)
     reason = _duration_rewrite_reason(
         row_dict,
@@ -503,13 +564,16 @@ def _rewrite_row(row_dict: dict[str, Any], rewrite_task_lines) -> bool:
         retry_interval=int(load_key("dubbing_repair.llm_retry_interval", 2)),
         timeout_seconds=float(load_key("dubbing_repair.llm_timeout_seconds", load_key("llm.timeout_seconds", 180))),
     )
-    if not rewritten:
+    if not rewritten or _same_lines(original_lines, rewritten):
+        row_dict["repair_status"] = "rewrite_failed"
         return False
     row_dict["lines"] = rewritten
     row_dict["text"] = " ".join(rewritten)
     row_dict["rewritten_for_dubbing"] = True
     row_dict["rewrite_reason"] = reason
     row_dict["dubbing_rewrite_rounds"] = int(row_dict.get("dubbing_rewrite_rounds", 0) or 0) + 1
+    row_dict["repair_rewrite_rounds"] = _repair_rounds(row_dict) + 1
+    row_dict["repair_status"] = "rewritten"
     return True
 
 
@@ -557,24 +621,46 @@ def apply_repair_plan(
         row_dict["repair_attempts"] = int(row_dict.get("repair_attempts", 0) or 0) + 1
 
         if item.get("backend"):
-            row_dict["tts_backend"] = item["backend"]
             if "tts_backend" not in tasks_df.columns:
                 tasks_df["tts_backend"] = ""
+            if item["backend"] == "edge_tts":
+                if "tts_method" not in tasks_df.columns:
+                    tasks_df["tts_method"] = ""
+                row_dict["tts_method"] = "edge_tts"
+                row_dict["tts_backend"] = ""
+            else:
+                row_dict["tts_backend"] = item["backend"]
+                if "tts_method" in tasks_df.columns:
+                    row_dict["tts_method"] = ""
 
         quality = get_quality_config()
-        if item.get("rewrite") and int(row_dict.get("dubbing_rewrite_rounds", 0) or 0) < quality.max_rewrite_rounds:
-            _rewrite_row(row_dict, rewrite_task_lines)
+        max_repair_rounds = _repair_max_rewrite_rounds(quality)
+        if item.get("rewrite"):
+            if _repair_rounds(row_dict) >= max_repair_rounds:
+                row_dict["repair_action"] = "manual_review"
+                row_dict["repair_status"] = "rewrite_limit_reached"
+                _write_row(tasks_df, idx, row_dict)
+                skipped += 1
+                continue
+            if not _rewrite_row(row_dict, rewrite_task_lines):
+                row_dict["repair_action"] = "manual_review"
+                _write_row(tasks_df, idx, row_dict)
+                skipped += 1
+                continue
 
         if item.get("delete_audio"):
             _delete_audio_for_row(row_dict)
 
         if item.get("action") in {"regenerate", "regenerate_with_backend", "rewrite_and_regenerate", "expand_and_regenerate"}:
             _clear_asr_results(row_dict)
+            row_dict["speed_factor"] = 1.0
+            row_dict["new_sub_times"] = None
+            _write_row(tasks_df, idx, row_dict)
             number, real_dur = process_row(row_dict, tasks_df)
             row_dict["real_dur"] = real_dur
             while (
                 item.get("rewrite")
-                and int(row_dict.get("dubbing_rewrite_rounds", 0) or 0) < quality.max_rewrite_rounds
+                and _repair_rounds(row_dict) < max_repair_rounds
             ):
                 if actual_rewrite_needed(row_dict):
                     row_dict["repair_action"] = "rewrite_and_regenerate"
@@ -585,8 +671,12 @@ def apply_repair_plan(
                 else:
                     break
                 if not _rewrite_row(row_dict, rewrite_task_lines):
+                    row_dict["repair_action"] = "manual_review"
                     break
                 _delete_audio_for_row(row_dict)
+                row_dict["speed_factor"] = 1.0
+                row_dict["new_sub_times"] = None
+                _write_row(tasks_df, idx, row_dict)
                 number, real_dur = process_row(row_dict, tasks_df)
                 row_dict["real_dur"] = real_dur
             if full_remap:

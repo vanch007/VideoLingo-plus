@@ -109,6 +109,8 @@ def process_audio_segment(audio_file, allow_silence_fallback=False):
             audio_segment.export(temp_file, format="mp3", parameters=["-ar", "16000", "-ac", "1", "-b:a", "64k"])
         except Exception as pydub_error:
             console.print(f"[bold red]❌ Pydub处理也失败了: {str(pydub_error)}[/bold red]")
+            if not allow_silence_fallback:
+                raise
             # 创建一个100ms的静音文件作为最终替代
             silence = AudioSegment.silent(duration=100)
             silence.export(temp_file, format="mp3", parameters=["-ar", "16000", "-ac", "1", "-b:a", "64k"])
@@ -120,6 +122,16 @@ def process_audio_segment(audio_file, allow_silence_fallback=False):
         os.remove(audio_file)
         
     return audio_segment
+
+
+def _write_merge_issues(merge_issues):
+    if not merge_issues:
+        if os.path.exists(DUBBING_MERGE_ISSUES_JSON):
+            os.remove(DUBBING_MERGE_ISSUES_JSON)
+        return
+    os.makedirs(os.path.dirname(DUBBING_MERGE_ISSUES_JSON), exist_ok=True)
+    with open(DUBBING_MERGE_ISSUES_JSON, "w", encoding="utf-8") as f:
+        json.dump(merge_issues, f, ensure_ascii=False, indent=2)
 
 def merge_audio_segments(audios, new_sub_times, sample_rate):
     quality = get_quality_config()
@@ -152,15 +164,13 @@ def merge_audio_segments(audios, new_sub_times, sample_rate):
                 if quality.allow_silence_fallback:
                     silent_segment = AudioSegment.silent(duration=100, frame_rate=sample_rate)
                     merged_audio = merged_audio.overlay(silent_segment, position=max(0, int(time_range[0] * 1000)))
-            
+                else:
+                    _write_merge_issues(merge_issues)
+                    raise
+
             progress.advance(merge_task)
-    
-    if merge_issues:
-        os.makedirs(os.path.dirname(DUBBING_MERGE_ISSUES_JSON), exist_ok=True)
-        with open(DUBBING_MERGE_ISSUES_JSON, "w", encoding="utf-8") as f:
-            json.dump(merge_issues, f, ensure_ascii=False, indent=2)
-    elif os.path.exists(DUBBING_MERGE_ISSUES_JSON):
-        os.remove(DUBBING_MERGE_ISSUES_JSON)
+
+    _write_merge_issues(merge_issues)
     return merged_audio
 
 def create_srt_subtitle():
@@ -213,7 +223,7 @@ def merge_full_audio():
     
     if not os.path.exists(audios[0]):
         console.print(f"[bold red]❌ Error: First audio file {audios[0]} does not exist![/bold red]")
-        return
+        raise FileNotFoundError(audios[0])
     
     sample_rate = 16000
     console.print(f"[bold green]✅ Sample rate: {sample_rate}Hz[/bold green]")
@@ -223,6 +233,8 @@ def merge_full_audio():
         merged_audio = merge_audio_segments(audios, new_sub_times, sample_rate)
     except Exception as e:
         console.print(f"[bold red]❌ Error during audio merging: {str(e)}[/bold red]")
+        if not get_quality_config().allow_silence_fallback:
+            raise
         console.print("[bold yellow]⚠️  Creating a merged audio with silence as fallback...[/bold yellow]")
         # 计算总时长并创建静音音频作为后备方案
         total_duration_ms = int(new_sub_times[-1][1] * 1000)

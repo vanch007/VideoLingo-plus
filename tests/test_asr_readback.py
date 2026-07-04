@@ -62,6 +62,68 @@ def test_verify_tasks_df_scores_builtin_readback(monkeypatch, tmp_path):
     assert out.loc[0, "asr_status"] == "ok"
     assert out.loc[0, "asr_content_score"] >= 0.99
     assert out.loc[0, "asr_leakage_score"] == 0.0
+    assert isinstance(out.loc[0, "asr_fingerprint"], str)
+    assert out.loc[0, "asr_language"] == "vi"
+
+
+def test_verify_tasks_df_reuses_matching_fingerprint_cache(monkeypatch, tmp_path):
+    segs = tmp_path / "segs"
+    segs.mkdir()
+    (segs / "1_0.wav").write_bytes(b"fake wav")
+    monkeypatch.setattr(asr_readback, "SEGS_DIR", str(segs))
+    monkeypatch.setattr(asr_readback, "load_key", lambda key, default=None: "vi" if key == "target_language" else default)
+    monkeypatch.setattr(
+        asr_readback,
+        "_run_asr",
+        lambda audio_path, language: ASRVerificationResult(status="ok", transcript="xin chao"),
+    )
+
+    df = pd.DataFrame([{"number": 1, "text": "xin chao", "lines": ["xin chao"], "origin": "你好"}])
+    out, first = verify_tasks_df(df, limit=1, force=True)
+    assert first.checked == 1
+
+    def fail_if_called(audio_path, language):
+        raise AssertionError("matching ASR fingerprint should reuse cached scores")
+
+    monkeypatch.setattr(asr_readback, "_run_asr", fail_if_called)
+    cached_out, summary = verify_tasks_df(out, limit=1, force=False)
+
+    assert summary.status == "ok"
+    assert summary.checked == 0
+    assert summary.cached == 1
+    assert summary.skipped == 1
+    assert cached_out.loc[0, "asr_content_score"] == out.loc[0, "asr_content_score"]
+
+
+def test_verify_tasks_df_reruns_when_fingerprint_changes(monkeypatch, tmp_path):
+    segs = tmp_path / "segs"
+    segs.mkdir()
+    (segs / "1_0.wav").write_bytes(b"fake wav")
+    monkeypatch.setattr(asr_readback, "SEGS_DIR", str(segs))
+    monkeypatch.setattr(asr_readback, "load_key", lambda key, default=None: "vi" if key == "target_language" else default)
+    monkeypatch.setattr(
+        asr_readback,
+        "_run_asr",
+        lambda audio_path, language: ASRVerificationResult(status="ok", transcript="xin chao"),
+    )
+
+    df = pd.DataFrame([{"number": 1, "text": "xin chao", "lines": ["xin chao"], "origin": "你好"}])
+    out, _ = verify_tasks_df(df, limit=1, force=True)
+    out.at[0, "text"] = "xin chao moi"
+    out.at[0, "lines"] = ["xin chao moi"]
+    calls = {"count": 0}
+
+    def rerun(audio_path, language):
+        calls["count"] += 1
+        return ASRVerificationResult(status="ok", transcript="xin chao moi")
+
+    monkeypatch.setattr(asr_readback, "_run_asr", rerun)
+    refreshed, summary = verify_tasks_df(out, limit=1, force=False)
+
+    assert calls["count"] == 1
+    assert summary.checked == 1
+    assert summary.cached == 0
+    assert refreshed.loc[0, "asr_transcript"] == "xin chao moi"
 
 
 def test_run_asr_uses_builtin_backend(monkeypatch):
