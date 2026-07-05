@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from st_components.imports_and_utils import ask_gpt
 import streamlit as st
 from core.config_utils import get_env_names, update_key, load_key
-from core.all_tts_functions.tts_registry import list_tts_methods
+from core.all_tts_functions.tts_registry import list_selectable_tts_methods
 from translations.translations import translate as t
 from translations.translations import DISPLAY_LANGUAGES
 
@@ -317,8 +317,12 @@ def page_setting():
             update_key("merge_subtitles", merge_subtitles)
             st.rerun()
     with st.expander(t("Dubbing Settings"), expanded=True):
-        tts_methods = list_tts_methods()
-        select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(load_key("tts_method")))
+        configured_tts = load_key("tts_method")
+        tts_methods = list_selectable_tts_methods()
+        if configured_tts not in tts_methods:
+            tts_methods = [configured_tts] + tts_methods
+            st.warning(t("Configured TTS method is not a normal selectable route. Verify provider lifecycle before running."))
+        select_tts = st.selectbox(t("TTS Method"), options=tts_methods, index=tts_methods.index(configured_tts))
         if select_tts != load_key("tts_method"):
             update_key("tts_method", select_tts)
             st.rerun()

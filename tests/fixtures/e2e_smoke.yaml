@@ -1,0 +1,13 @@
+version: 1
+status: seed_schema_only
+items:
+  - id: zh_vi_60s_placeholder_001
+    input: null
+    source_language: zh
+    target_language: vi
+    profile: cinematic
+    expected_gates:
+      pending_steps: []
+      max_duration_ratio: 1.08
+      content_score_min: 0.55
+    notes: "Schema seed only; replace null input with a small local fixture or documented external path before real E2E smoke."

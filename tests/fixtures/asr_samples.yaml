@@ -1,0 +1,11 @@
+version: 1
+status: seed_schema_only
+items:
+  - id: zh_reference_placeholder_001
+    language: zh
+    audio: null
+    expected_transcript: "欢迎来到本期节目。"
+    expected_time_window:
+      start: 0.0
+      end: 3.0
+    notes: "Schema seed only; replace null audio with a small committed clip or documented external path before real ASR benchmark."

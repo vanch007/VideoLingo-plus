@@ -1,0 +1,11 @@
+version: 1
+status: seed_fixture
+items:
+  - id: vi_short_sync_001
+    language: vi
+    text: "Xin chào, hôm nay chúng ta nói về quy trình làm việc AI."
+    target_duration: 4.0
+    reference_audio: null
+    expectations:
+      max_duration_ratio: 1.08
+      min_content_score: 0.55

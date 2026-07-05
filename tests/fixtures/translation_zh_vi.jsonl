@@ -1,0 +1,1 @@
+{"id":"zh_vi_term_line_count_001","source_language":"zh","target_language":"vi","source_lines":["欢迎来到本期节目。","今天我们讨论人工智能工作流。"],"expected_line_count":2,"terms":[{"src":"人工智能工作流","tgt":"quy trình làm việc AI"}],"notes":"Seed fixture for LLM line-count and terminology checks."}

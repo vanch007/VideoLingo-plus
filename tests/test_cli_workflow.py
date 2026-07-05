@@ -85,11 +85,23 @@ def test_resume_reuses_stored_input_when_not_passed(tmp_path, monkeypatch):
 def test_status_reports_artifacts_without_existing_state(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
 
-    assert cli._cmd_status(argparse.Namespace(include_dubbing_eval=False)) == 0
+    assert cli._cmd_status(argparse.Namespace(include_dubbing_eval=False, include_manifests=False)) == 0
 
     payload = json.loads(capsys.readouterr().out)
     assert payload["pipeline_state"] is None
     assert payload["pending_steps"]
+    assert payload["artifacts"][0]["manifest"] is None
+
+
+def test_status_can_include_manifest_audit(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+
+    assert cli._cmd_status(argparse.Namespace(include_dubbing_eval=False, include_manifests=True)) == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    first = payload["artifacts"][0]
+    assert first["manifest"]["status"] == "pending"
+    assert "artifact_missing" in first["manifest"]["reasons"]
 
 
 def test_status_include_dubbing_eval_does_not_write_eval(tmp_path, monkeypatch, capsys):
@@ -101,7 +113,7 @@ def test_status_include_dubbing_eval_does_not_write_eval(tmp_path, monkeypatch, 
 
     monkeypatch.setattr(cli, "write_dubbing_eval", fail_if_written)
 
-    assert cli._cmd_status(argparse.Namespace(include_dubbing_eval=True)) == 0
+    assert cli._cmd_status(argparse.Namespace(include_dubbing_eval=True, include_manifests=False)) == 0
 
     payload = json.loads(capsys.readouterr().out)
     assert payload["dubbing_eval"] == {"ok": 1}
@@ -158,3 +170,56 @@ def test_local_video_step_uses_smoke_seconds(monkeypatch):
     steps[0].action()
 
     assert seen == {"input": "sample.mp4", "smoke_seconds": 60}
+
+
+def test_models_verify_can_fail_on_provider_errors(capsys):
+    args = argparse.Namespace(include_experimental=False, fail_on_error=True)
+
+    assert cli._cmd_models_verify(args) == 2
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["ok"] is False
+    assert payload["error_count"] >= 1
+
+
+def test_benchmark_plan_reports_missing_dataset(capsys):
+    args = argparse.Namespace(
+        target="llm",
+        dataset="tests/fixtures/missing.jsonl",
+        providers="deepseek_v4_pro,gpt_5_5",
+        output=None,
+        fail_on_missing=True,
+    )
+
+    assert cli._cmd_benchmark(args) == 2
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["target"] == "llm"
+    assert payload["status"] == "missing_dataset"
+    assert payload["dataset_status"] == "missing_dataset"
+    assert "json_validity" in payload["metrics"]
+
+
+def test_benchmark_plan_ready_writes_json_and_markdown(tmp_path, capsys):
+    dataset = tmp_path / "translation_zh_vi.jsonl"
+    dataset.write_text(
+        '{"id":"case-1","source_language":"zh","target_language":"vi","source_lines":["你好"],"expected_line_count":1}\n',
+        encoding="utf-8",
+    )
+    output = tmp_path / "reports" / "llm-plan.json"
+    args = argparse.Namespace(
+        target="llm",
+        dataset=str(dataset),
+        providers="deepseek_v4_pro,gpt_5_5",
+        output=str(output),
+        fail_on_missing=True,
+    )
+
+    assert cli._cmd_benchmark(args) == 0
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "ready"
+    assert payload["dataset_status"] == "valid"
+    assert Path(payload["output_file"]).exists()
+    assert Path(payload["summary_file"]).exists()
+    assert "# Benchmark Plan" in Path(payload["summary_file"]).read_text(encoding="utf-8")

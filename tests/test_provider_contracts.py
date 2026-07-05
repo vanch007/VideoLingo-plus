@@ -1,8 +1,10 @@
 from core.llm_provider import LLMProviderConfig, build_completion_args, create_chat_client, fix_base_url
-from core.all_tts_functions.tts_registry import list_tts_methods
+from core.all_tts_functions.tts_registry import list_selectable_tts_methods, list_tts_methods
+from core.providers.provider_governance import list_provider_records, verify_provider_records
 from core.providers.contracts import TTSRequest
 from core.providers.mlx_tts import MlxTTSRouter, looks_vietnamese
 from core.providers.quality import content_similarity, reference_leak_score
+from core.providers.benchmarking import build_benchmark_plan
 
 
 def test_fix_base_url_adds_v1_for_openai_compatible_roots():
@@ -37,6 +39,31 @@ def test_chat_client_receives_provider_timeout():
 def test_siliconflow_indextts2_provider_is_removed():
     assert "sf_indextts2" not in list_tts_methods()
     assert "mlx_indextts2" in list_tts_methods()
+
+
+def test_unimplemented_tts_routes_are_not_selectable():
+    selectable = list_selectable_tts_methods()
+    assert "mlx_indextts2" in selectable
+    assert "openai_tts" not in selectable
+    assert "elevenlabs_tts" not in selectable
+    assert "cosyvoice3_tts" not in selectable
+
+
+def test_provider_governance_marks_unavailable_tts_routes():
+    records = list_provider_records()
+    tts = {item["name"]: item for item in records["tts"]}
+    assert tts["openai_tts"]["implemented"] is False
+    assert tts["openai_tts"]["status"] == "unavailable"
+    assert tts["mlx_indextts2"]["recommended"] is True
+
+
+def test_provider_verify_reports_unimplemented_and_deprecated_routes(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    report = verify_provider_records()
+    findings = {(item["provider"], item["message"]) for item in report["findings"]}
+    assert report["ok"] is False
+    assert any(provider == "openai_tts" and "adapter is not implemented" in message for provider, message in findings)
+    assert any(provider == "gemini_3_pro" and "eligible" in message for provider, message in findings)
 
 
 def test_mlx_router_routes_vietnamese_to_indextts2():
@@ -81,3 +108,65 @@ def test_reference_leak_ignores_shared_numbers_for_chinese_source():
 def test_content_similarity_normalizes_vietnamese_number_words():
     assert content_similarity("mười chín, mười tám, mười bảy", "19, 18, 17") == 1.0
     assert content_similarity("Mười hai, mười một, mười", "12, 11, 10") == 1.0
+
+
+def test_benchmark_plan_contract_for_tts(tmp_path):
+    dataset = tmp_path / "tts_lines.yaml"
+    dataset.write_text(
+        """
+version: 1
+items:
+  - id: vi_short_sync_001
+    language: vi
+    text: Xin chao
+    target_duration: 2.0
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    plan = build_benchmark_plan("tts", str(dataset), "mlx_indextts2,edge_tts")
+
+    assert plan.status == "ready"
+    assert plan.dataset_status == "valid"
+    assert plan.dataset_exists is True
+    assert plan.providers == ["mlx_indextts2", "edge_tts"]
+    assert "duration_ratio" in plan.metrics
+
+
+def test_benchmark_plan_marks_seed_schema_only_media_fixtures(tmp_path):
+    dataset = tmp_path / "asr_samples.yaml"
+    dataset.write_text(
+        """
+version: 1
+status: seed_schema_only
+items:
+  - id: zh_reference_placeholder_001
+    language: zh
+    audio: null
+    expected_transcript: 欢迎来到本期节目。
+    expected_time_window:
+      start: 0.0
+      end: 3.0
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    plan = build_benchmark_plan("asr", str(dataset), "stable_ts_mlx")
+
+    assert plan.status == "seed_schema_only"
+    assert plan.dataset_status == "seed_schema_only"
+    assert "audio is empty" in plan.validation_warnings[0]
+
+
+def test_benchmark_plan_validates_llm_jsonl(tmp_path):
+    dataset = tmp_path / "translation_zh_vi.jsonl"
+    dataset.write_text(
+        '{"id":"case-1","source_language":"zh","target_language":"vi","source_lines":["你好"],"expected_line_count":1}\n',
+        encoding="utf-8",
+    )
+
+    plan = build_benchmark_plan("llm", str(dataset), "deepseek_v4_pro")
+
+    assert plan.status == "ready"
+    assert plan.dataset_status == "valid"
+    assert plan.validation_errors == []

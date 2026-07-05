@@ -20,7 +20,9 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
 
 
 def _cmd_models(args: argparse.Namespace) -> int:
-    payload = {"omlx": [], "mlx_tts": list_backend_status()}
+    from core.providers.provider_governance import list_provider_records
+
+    payload = {"omlx": [], "mlx_tts": list_backend_status(), "governance": list_provider_records()}
     try:
         payload["omlx"] = [model.__dict__ for model in list_omlx_models()]
     except Exception as exc:
@@ -34,8 +36,18 @@ def _cmd_models(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_models_verify(args: argparse.Namespace) -> int:
+    from core.providers.provider_governance import verify_provider_records
+
+    payload = verify_provider_records(include_experimental=args.include_experimental)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    if args.fail_on_error and not payload["ok"]:
+        return 2
+    return 0
+
+
 def _cmd_status(args: argparse.Namespace) -> int:
-    artifact_status = [item.__dict__ for item in list_artifacts()]
+    artifact_status = [item.__dict__ for item in list_artifacts(include_manifests=args.include_manifests)]
     step_order = [item["step"] for item in artifact_status]
     payload = {
         "pipeline_state": load_state_or_none(),
@@ -177,6 +189,25 @@ def _cmd_translation(args: argparse.Namespace) -> int:
     raise SystemExit(f"Unknown translation command: {args.translation_command}")
 
 
+def _cmd_benchmark(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from core.providers.benchmarking import benchmark_plan_payload, write_benchmark_plan, write_benchmark_summary
+
+    payload = benchmark_plan_payload(args.target, args.dataset, args.providers)
+    if args.output:
+        output_file = str(Path(args.output))
+        summary_file = str(Path(args.output).with_suffix(".md"))
+        payload["output_file"] = output_file
+        payload["summary_file"] = summary_file
+        write_benchmark_plan(output_file, payload)
+        write_benchmark_summary(summary_file, payload)
+    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    if args.fail_on_missing and payload["status"] != "ready":
+        return 2
+    return 0
+
+
 def _planned_run_config(args: argparse.Namespace) -> dict[str, str | int | None]:
     planned = {
         "profile": args.profile,
@@ -283,6 +314,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     status = sub.add_parser("status", help="Show pipeline state, artifact checkpoints, and pending steps")
     status.add_argument("--include-dubbing-eval", action="store_true", help="Include current dubbing quality summary")
+    status.add_argument("--include-manifests", action="store_true", help="Include non-mutating artifact sidecar manifest audit")
     status.set_defaults(func=_cmd_status)
 
     models = sub.add_parser("models", help="Inspect local model providers")
@@ -290,6 +322,10 @@ def build_parser() -> argparse.ArgumentParser:
     models_list = models_sub.add_parser("list", help="List oMLX and MLX TTS backends")
     models_list.add_argument("--smoke", action="store_true", help="Run a short oMLX chat smoke")
     models_list.set_defaults(func=_cmd_models)
+    models_verify = models_sub.add_parser("verify", help="Verify provider lifecycle and adapter readiness")
+    models_verify.add_argument("--include-experimental", action="store_true", help="Do not warn solely because a provider is experimental")
+    models_verify.add_argument("--fail-on-error", action="store_true", help="Exit 2 when deprecated/unavailable/unimplemented providers are found")
+    models_verify.set_defaults(func=_cmd_models_verify)
 
     run = sub.add_parser("run", help="Run the shared VideoLingo pipeline")
     run.add_argument("--input", required=True, help="Video URL, local video path, or SRT path")
@@ -375,6 +411,14 @@ def build_parser() -> argparse.ArgumentParser:
     translation_adopt = translation_sub.add_parser("adopt-current", help="Write a manifest for current artifacts when logs match the current model")
     translation_adopt.add_argument("--apply", action="store_true", help="Write output/log/llm_artifacts_manifest.json")
     translation_adopt.set_defaults(func=_cmd_translation)
+
+    benchmark = sub.add_parser("benchmark", help="Plan benchmark runs without calling external models by default")
+    benchmark.add_argument("target", choices=["llm", "asr", "tts", "e2e"])
+    benchmark.add_argument("--dataset", required=True, help="Fixture path to use for this benchmark target")
+    benchmark.add_argument("--providers", default="", help="Comma-separated provider route names")
+    benchmark.add_argument("--output", default=None, help="Optional JSON file to write the benchmark plan")
+    benchmark.add_argument("--fail-on-missing", action="store_true", help="Exit 2 when dataset/providers are missing")
+    benchmark.set_defaults(func=_cmd_benchmark)
     return parser
 
 
