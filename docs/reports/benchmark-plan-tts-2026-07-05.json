@@ -1,0 +1,26 @@
+{
+  "target": "tts",
+  "dataset": "tests/fixtures/tts_lines.yaml",
+  "providers": [
+    "mlx_indextts2",
+    "edge_tts"
+  ],
+  "status": "ready",
+  "metrics": [
+    "duration_ratio",
+    "asr_content_score",
+    "reference_leak_score",
+    "natural_speed_factor",
+    "rtf",
+    "missing_or_tiny_audio_rate"
+  ],
+  "created_at": "2026-07-05T21:43:06+0700",
+  "notes": [],
+  "dataset_exists": true,
+  "dataset_status": "valid",
+  "validation_errors": [],
+  "validation_warnings": [],
+  "planned_only": true,
+  "output_file": "docs/reports/benchmark-plan-tts-2026-07-05.json",
+  "summary_file": "docs/reports/benchmark-plan-tts-2026-07-05.md"
+}
