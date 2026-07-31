@@ -43,7 +43,7 @@ def test_run_dry_run_does_not_mutate_config_or_state(tmp_path, monkeypatch, caps
 
     payload = json.loads(capsys.readouterr().out)
     assert payload["run"]["status"] == "dry_run"
-    assert payload["planned_config"]["tts_method"] == "mlx_indextts2"
+    assert payload["planned_config"]["tts_method"] == "mlx_router"
     assert calls == []
     assert not Path("output/pipeline_state.json").exists()
 
@@ -124,10 +124,10 @@ def test_apply_run_config_keeps_explicit_tts_after_profile(monkeypatch):
     monkeypatch.setattr(cli, "apply_profile", lambda name: calls.append(("profile", name)))
     monkeypatch.setattr(cli, "update_key", lambda key, value: calls.append((key, value)))
 
-    cli._apply_run_config(_run_args(tts="edge_tts", dry_run=False))
+    cli._apply_run_config(_run_args(tts="mlx_moss_tts", dry_run=False))
 
     assert calls[0] == ("profile", "cinematic")
-    assert calls[-1] == ("tts_method", "edge_tts")
+    assert calls[-1] == ("tts_method", "mlx_moss_tts")
 
 
 def test_run_passes_smoke_seconds_to_step_builder(tmp_path, monkeypatch, capsys):

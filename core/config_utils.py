@@ -1,10 +1,34 @@
 from ruamel.yaml import YAML
 from typing import Any
 import os, sys
+from pathlib import Path
 import threading
 import tempfile
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+def _load_project_env(path: Path | None = None) -> None:
+    """Load simple project-local .env values without exposing or overriding secrets."""
+    env_path = path or (Path(__file__).resolve().parent.parent / ".env")
+    if not env_path.is_file():
+        return
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, value = line.split("=", 1)
+        name = name.strip()
+        value = value.strip()
+        if not name or not name.replace("_", "a").isalnum() or name[0].isdigit():
+            continue
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+        if value:
+            os.environ.setdefault(name, value)
+
+
+_load_project_env()
 
 CONFIG_PATH = 'config.yaml'
 config_lock = threading.Lock()
@@ -20,18 +44,12 @@ ENV_OVERRIDES = {
     "llm.providers.omlx.api_key": ("OMLX_API_KEY", "VIDEOLINGO_OMLX_API_KEY"),
     "llm.providers.omlx.base_url": ("OMLX_BASE_URL", "VIDEOLINGO_OMLX_BASE_URL"),
     "llm.providers.omlx.model": ("OMLX_MODEL", "VIDEOLINGO_OMLX_MODEL"),
-    "openai_tts.api_key": ("VIDEOLINGO_OPENAI_API_KEY", "OPENAI_API_KEY"),
-    "elevenlabs_tts.api_key": ("VIDEOLINGO_ELEVENLABS_API_KEY", "ELEVENLABS_API_KEY"),
-    "elevenlabs.api_key": ("VIDEOLINGO_ELEVENLABS_API_KEY", "ELEVENLABS_API_KEY"),
 }
 
 SENSITIVE_KEYS = {
     "hf_token",
     "api.key",
     "llm.providers.omlx.api_key",
-    "openai_tts.api_key",
-    "elevenlabs_tts.api_key",
-    "elevenlabs.api_key",
 }
 
 

@@ -98,12 +98,12 @@ def page_setting():
 
     with st.expander(t("Subtitles Settings"), expanded=True):
         # Language codes - use t() for translated display names
-        lang_codes = ["ar", "hy", "az", "be", "bs", "bg", "my", "ca", "zh", "hr", "cs", "da", 
+        lang_codes = ["ar", "hy", "az", "be", "bs", "bg", "my", "ca", "zh", "hr", "cs", "da",
                       "nl", "en", "et", "fi", "fr", "gl", "de", "el", "gu", "he", "hi", "hu",
                       "is", "id", "it", "ja", "kn", "kk", "km", "ko", "lo", "lv", "lt", "mk",
                       "ms", "mr", "mn", "ne", "no", "fa", "pl", "pt", "ro", "ru", "sr", "sk",
                       "sl", "es", "sv", "ta", "te", "th", "tr", "uk", "ur", "vi", "cy"]
-        
+
         # English names for translation keys
         lang_names = ["Arabic", "Armenian", "Azerbaijani", "Belarusian", "Bosnian", "Bulgarian",
                       "Burmese", "Catalan", "Chinese", "Croatian", "Czech", "Danish", "Dutch",
@@ -114,19 +114,19 @@ def page_setting():
                       "Nepali", "Norwegian", "Persian", "Polish", "Portuguese", "Romanian",
                       "Russian", "Serbian", "Slovak", "Slovenian", "Spanish", "Swedish", "Tamil",
                       "Telugu", "Thai", "Turkish", "Ukrainian", "Urdu", "Vietnamese", "Welsh"]
-        
+
         # Create code-to-name mapping and translated display names
         code_to_name = dict(zip(lang_codes, lang_names))
         translated_names = [t(name) for name in lang_names]
         code_to_translated = dict(zip(lang_codes, translated_names))
         translated_to_code = dict(zip(translated_names, lang_codes))
-        
+
         c1, c2 = st.columns(2)
         with c1:
             # Recognition language dropdown
             current_rec_lang = load_key("whisper.language")
             rec_lang_index = lang_codes.index(current_rec_lang) if current_rec_lang in lang_codes else lang_codes.index("en")
-            
+
             selected_rec = st.selectbox(
                 t("Recog Lang"),
                 options=translated_names,
@@ -135,12 +135,12 @@ def page_setting():
             if translated_to_code[selected_rec] != current_rec_lang:
                 update_key("whisper.language", translated_to_code[selected_rec])
                 st.rerun()
-        
+
         with c2:
             # Target language dropdown (same options as recognition)
             current_target = load_key("target_language")
             target_lang_index = lang_codes.index(current_target) if current_target in lang_codes else lang_codes.index("id")
-            
+
             selected_target = st.selectbox(
                 t("Target Lang"),
                 options=translated_names,
@@ -152,23 +152,26 @@ def page_setting():
                 st.rerun()
 
         # ASR model selection
-        asr_options = {"WhisperX": "local", "stable-ts": "stable-ts", "FunASR": "funasr"}
+        asr_options = {
+            "WhisperX (native word alignment)": "local",
+            "stable-ts (word timestamps)": "stable-ts",
+        }
         asr_display = list(asr_options.keys())
         asr_values = list(asr_options.values())
         current_runtime = load_key("whisper.runtime") if load_key("whisper.runtime") in asr_values else "local"
         current_index = asr_values.index(current_runtime)
-        
+
         selected_asr = st.selectbox(
             t("ASR Model"),
             options=asr_display,
             index=current_index,
-            help=t("WhisperX requires >8GB GPU, stable-ts provides better timestamps, FunASR supports Chinese with speaker diarization")
+            help="Only ASR engines with validated native word timestamps can feed subtitle alignment."
         )
         runtime = asr_options[selected_asr]
         if runtime != load_key("whisper.runtime"):
             update_key("whisper.runtime", runtime)
             st.rerun()
-            
+
         if runtime == "stable-ts":
             c_sts1, c_sts2 = st.columns(2)
             with c_sts1:
@@ -179,40 +182,11 @@ def page_setting():
                 val_min_dur = st.slider(t("Min Word Duration"), min_value=0.0, max_value=0.5, value=float(load_key("whisper.min_word_dur", 0.1)), step=0.01, help=t("Minimum duration for a word to be kept"))
                 if val_min_dur != load_key("whisper.min_word_dur", 0.1):
                     update_key("whisper.min_word_dur", val_min_dur)
-            
+
             use_dq = st.toggle(t("Use Dynamic Quantization (CPU)"), value=load_key("whisper.stable_ts_dq", True), help=t("Speeds up inference on CPU, slightly lower accuracy"))
             if use_dq != load_key("whisper.stable_ts_dq", True):
                 update_key("whisper.stable_ts_dq", use_dq)
                 st.rerun()
-
-        if runtime == "funasr":
-            # FunASR model selection
-            funasr_models = {"FunASR Nano": "nano", "SenseVoice": "sensevoice", "Paraformer": "paraformer"}
-            funasr_display = list(funasr_models.keys())
-            funasr_values = list(funasr_models.values())
-            current_funasr_model = load_key("funasr.model", "nano")
-            current_funasr_index = funasr_values.index(current_funasr_model) if current_funasr_model in funasr_values else 0
-            
-            selected_funasr_model = st.selectbox(
-                t("FunASR Model"),
-                options=funasr_display,
-                index=current_funasr_index,
-                help=t("FunASR Nano: newest efficient model. SenseVoice: fast multi-functional. Paraformer: speaker diarization support.")
-            )
-            if funasr_models[selected_funasr_model] != current_funasr_model:
-                update_key("funasr.model", funasr_models[selected_funasr_model])
-                st.rerun()
-            
-            # Speaker diarization toggle (only for Paraformer)
-            if funasr_models[selected_funasr_model] == "paraformer":
-                enable_spk = st.toggle(
-                    t("Enable Speaker Diarization"),
-                    value=load_key("funasr.enable_spk", True),
-                    help=t("Use CAM++ for speaker identification. Requires more memory.")
-                )
-                if enable_spk != load_key("funasr.enable_spk", True):
-                    update_key("funasr.enable_spk", enable_spk)
-                    st.rerun()
 
         # Only show Whisper model selection for runtimes that use Whisper (local, stable-ts)
         if runtime in ["local", "stable-ts"]:
@@ -231,7 +205,7 @@ def page_setting():
                 whisper_models = ["tiny", "tiny.en", "base", "base.en", "small", "small.en", "medium", "medium.en",
                                  "large-v1", "large-v2", "large-v3", "large", "large-v3-turbo", "turbo"]
                 help_text = t("Select a model compatible with MLX. 'turbo' is optimized for Apple Silicon.")
-            
+
             elif runtime == 'stable-ts':
                 base_models = ["tiny", "base", "small", "medium", "large-v1", "large-v2", "large-v3",
                                "Huan69/Belle-whisper-large-v3-zh-punct-fasterwhisper"]
@@ -241,7 +215,7 @@ def page_setting():
 
             # Handle model selection UI and logic
             current_model = load_key("whisper.model")
-            
+
             # Determine the index for the selectbox
             if current_model in whisper_models:
                 model_index = whisper_models.index(current_model)
@@ -261,11 +235,11 @@ def page_setting():
             # If the user chose the custom option in the stable-ts non-mlx runtime
             if runtime == 'stable-ts' and not use_mlx_for_ui and selected_option == t("Custom Hugging Face Model..."):
                 custom_model_id = st.text_input(
-                    t("Hugging Face Model ID"), 
+                    t("Hugging Face Model ID"),
                     value=(current_model if current_model not in base_models else "openai/whisper-large-v3")
                 )
                 whisper_model_to_save = custom_model_id
-            
+
             if whisper_model_to_save != current_model:
                 update_key("whisper.model", whisper_model_to_save)
                 st.rerun()
@@ -285,7 +259,7 @@ def page_setting():
         if demucs != load_key("demucs"):
             update_key("demucs", demucs)
             st.rerun()
-            
+
         if demucs:
             demucs_models = {
                 "htdemucs": t("htdemucs (Fast, Default)"),
@@ -341,7 +315,7 @@ def page_setting():
             update_key("quality_mode", selected_quality_mode)
             update_key("dubbing_quality.mode", selected_quality_mode)
             st.rerun()
-            
+
         # Add rewrite toggle
         rewrite_text = st.toggle(t("Rewrite Text for Dubbing"), value=load_key("rewrite_text_for_dubbing", True), help=t("Use LLM to shorten text if it's too long for the audio slot."))
         if rewrite_text != load_key("rewrite_text_for_dubbing", True):
@@ -377,183 +351,21 @@ def page_setting():
                     st.caption(f"Eval summary unavailable: {e}")
 
         # sub settings for each tts method
-        if select_tts == "gpt_sovits":
-            st.info(t("Please refer to Github homepage for GPT_SoVITS configuration"))
-            config_input(t("SoVITS Character"), "gpt_sovits.character")
-
-            refer_mode_options = {1: t("Mode 1: Use provided reference audio only"), 2: t("Mode 2: Use first audio from video as reference"), 3: t("Mode 3: Use each audio from video as reference")}
-            selected_refer_mode = st.selectbox(
-                t("Refer Mode"),
-                options=list(refer_mode_options.keys()),
-                format_func=lambda x: refer_mode_options[x],
-                index=list(refer_mode_options.keys()).index(load_key("gpt_sovits.refer_mode")),
-                help=t("Configure reference audio mode for GPT-SoVITS")
-            )
-            if selected_refer_mode != load_key("gpt_sovits.refer_mode"):
-                update_key("gpt_sovits.refer_mode", selected_refer_mode)
-                st.rerun()
-
-        elif select_tts == "edge_tts":
-            config_input(t("Edge TTS Voice"), "edge_tts.voice")
-
-        elif select_tts == "f5tts":
+        if select_tts == "f5tts":
             config_input("302ai API", "f5tts.302_api")
 
-        elif select_tts == "piper_tts":
-            st.info(t("Piper TTS is a fast local TTS engine. First run will download voice models."))
-            # Use load_key with default for new config keys
-            current_voice = load_key("piper_tts.voice", "en_US-lessac-medium")
-            new_voice = st.text_input(t("Piper Voice"), value=current_voice, help=t("Voice name, e.g. en_US-lessac-medium, zh_CN-huayan-medium"))
-            if new_voice != current_voice:
-                update_key("piper_tts.voice", new_voice)
-                st.rerun()
-
-        elif select_tts == "indonesian_tts":
-            st.info(t("Indonesian TTS uses native Indonesian VITS model with 83 speakers (Indonesian, Javanese, Sundanese)."))
-            
-            # Load speaker list from model
-            speakers_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models", "indonesian_tts", "speakers.pth")
-            indonesian_speakers = []
-            
-            if os.path.exists(speakers_path):
-                import torch
-                try:
-                    speakers_dict = torch.load(speakers_path, weights_only=False)
-                    indonesian_speakers = sorted(speakers_dict.keys())
-                except Exception as e:
-                    st.warning(f"Could not load speakers: {e}")
-            
-            if indonesian_speakers:
-                # Group speakers by category
-                id_speakers = [s for s in indonesian_speakers if s in ["wibowo", "ardi", "gadis"]]
-                jv_speakers = [s for s in indonesian_speakers if s.startswith("JV-")]
-                su_speakers = [s for s in indonesian_speakers if s.startswith("SU-")]
-                
-                # Display speaker info
-                st.caption(f"📢 {t('Available speakers')}: {len(id_speakers)} Indonesian, {len(jv_speakers)} Javanese, {len(su_speakers)} Sundanese")
-                
-                # Speaker selection dropdown - prioritize Indonesian speakers
-                all_speakers = id_speakers + jv_speakers + su_speakers
-                
-                default_speaker = load_key("indonesian_tts.speaker", "wibowo")
-                if default_speaker not in all_speakers:
-                    default_speaker = "wibowo" if "wibowo" in all_speakers else all_speakers[0]
-                    update_key("indonesian_tts.speaker", default_speaker)
-                
-                selected_speaker = st.selectbox(
-                    t("Indonesian TTS Speaker"),
-                    options=all_speakers,
-                    index=all_speakers.index(default_speaker),
-                    key="indonesian_tts_speaker",
-                    help=t("Select a speaker voice. Indonesian voices: wibowo, ardi, gadis. JV = Javanese, SU = Sundanese.")
-                )
-                if selected_speaker != default_speaker:
-                    update_key("indonesian_tts.speaker", selected_speaker)
-                    st.rerun()
-            else:
-                st.warning(t("Indonesian TTS model not found. Please download from https://github.com/Wikidepia/indonesian-tts/releases/tag/v1.2"))
-
-        elif select_tts == "voxcpm_tts":
-            st.info(t("VoxCPM TTS uses OpenAI-compatible REST API for voice cloning. Start server: python /Users/vanch/VoxCPM/api_server.py --port 8809"))
-
-            # ── API URL ────────────────────────────────────────────────────────
-            current_api_url = load_key("voxcpm_tts.api_url", "http://127.0.0.1:8809")
-            new_api_url = st.text_input(
-                t("VoxCPM API URL"),
-                value=current_api_url,
-                help=t("VoxCPM REST API URL (api_server.py), default: http://127.0.0.1:8809")
-            )
-            if new_api_url != current_api_url:
-                update_key("voxcpm_tts.api_url", new_api_url)
-                st.rerun()
-
-            # ── Clone mode ─────────────────────────────────────────────────────
-            clone_mode_options = {
-                "dynamic": t("Dynamic Clone (per-segment reference audio)"),
-                "none":    t("None (use voice preset only)"),
-            }
-            current_clone_mode = load_key("voxcpm_tts.clone_mode", "dynamic")
-            selected_clone_mode = st.radio(
-                t("Clone Mode"),
-                options=list(clone_mode_options.keys()),
-                format_func=lambda x: clone_mode_options[x],
-                index=list(clone_mode_options.keys()).index(current_clone_mode) if current_clone_mode in clone_mode_options else 0,
-                key="voxcpm_clone_mode",
-                help=t("Dynamic: clones voice from the reference audio extracted per segment. None: uses the voice preset below.")
-            )
-            if selected_clone_mode != current_clone_mode:
-                update_key("voxcpm_tts.clone_mode", selected_clone_mode)
-                st.rerun()
-
-            # ── Voice preset ───────────────────────────────────────────────────
-            voice_presets = [
-                "alloy", "echo", "fable", "onyx", "nova", "shimmer",
-                "newscast", "livestream", "sad", "angry", "calm", "authority"
-            ]
-            current_voice = load_key("voxcpm_tts.voice", "alloy")
-            selected_voice = st.selectbox(
-                t("Voice Preset"),
-                options=voice_presets,
-                index=voice_presets.index(current_voice) if current_voice in voice_presets else 0,
-                key="voxcpm_voice",
-                help=t("Select a built-in voice style. Overridden by Custom Control Instruction if provided.")
-            )
-            if selected_voice != current_voice:
-                update_key("voxcpm_tts.voice", selected_voice)
-                st.rerun()
-
-            # ── Custom control instruction ─────────────────────────────────────
-            current_control = load_key("voxcpm_tts.control", "")
-            new_control = st.text_input(
-                t("Custom Control Instruction"),
-                value=current_control,
-                placeholder=t("e.g. 中年男性，声音沉稳，语速适中"),
-                help=t("Chinese control instruction that overrides the voice preset. Leave empty to use the preset.")
-            )
-            if new_control != current_control:
-                update_key("voxcpm_tts.control", new_control)
-                st.rerun()
-
-            # ── CFG & inference steps ──────────────────────────────────────────
-            c1, c2 = st.columns(2)
-            with c1:
-                current_cfg = float(load_key("voxcpm_tts.cfg_value", 2.0))
-                new_cfg = st.slider(
-                    t("CFG Scale"),
-                    min_value=0.5, max_value=5.0, value=current_cfg, step=0.5,
-                    help=t("Classifier-Free Guidance scale (0.5–5.0). Higher = stronger style adherence.")
-                )
-                if new_cfg != current_cfg:
-                    update_key("voxcpm_tts.cfg_value", new_cfg)
-            with c2:
-                current_steps = int(load_key("voxcpm_tts.inference_timesteps", 10))
-                new_steps = st.slider(
-                    t("Inference Steps"),
-                    min_value=1, max_value=50, value=current_steps, step=1,
-                    help=t("DiT diffusion steps (1–50). More steps = better quality but slower.")
-                )
-                if new_steps != current_steps:
-                    update_key("voxcpm_tts.inference_timesteps", new_steps)
-
-            # ── Denoise toggle ─────────────────────────────────────────────────
-            current_denoise = load_key("voxcpm_tts.denoise", False)
-            denoise = st.toggle(
-                t("Denoise Reference Audio"),
-                value=current_denoise,
-                help=t("Apply ZipEnhancer to the reference audio before voice cloning. Improves clarity but limits sample rate to 16kHz.")
-            )
-            if denoise != current_denoise:
-                update_key("voxcpm_tts.denoise", denoise)
-                st.rerun()
-
-        elif select_tts in {"mlx_router", "mlx_indextts2", "mlx_omnivoice", "mlx_qwen3_tts", "mlx_voxcpm2"}:
-            st.info(t("Local MLX TTS router uses IndexTTS2, OmniVoice, Qwen3-TTS, and VoxCPM2 adapters."))
-            router_backends = ["auto", "indextts2", "omnivoice", "qwen3_tts", "voxcpm2"]
+        elif select_tts == "mlx_router" or select_tts.startswith("mlx_"):
+            st.info(t("Local MLX TTS router provides nine voice-cloning backends; experimental backends require their local runtime or API service."))
+            router_backends = ["auto", "indextts2", "omnivoice", "qwen3_tts", "voxcpm2", "higgs", "dots", "zonos2", "moss"]
             forced = {
                 "mlx_indextts2": "indextts2",
                 "mlx_omnivoice": "omnivoice",
                 "mlx_qwen3_tts": "qwen3_tts",
                 "mlx_voxcpm2": "voxcpm2",
+                "mlx_higgs_audio": "higgs",
+                "mlx_dots_tts": "dots",
+                "mlx_zonos2": "zonos2",
+                "mlx_moss_tts": "moss",
             }.get(select_tts, load_key("mlx_tts.default_backend", "auto"))
             selected_backend = st.selectbox(
                 "MLX TTS Backend",
@@ -570,22 +382,6 @@ def page_setting():
                     st.json(list_backend_status(), expanded=False)
                 except Exception as e:
                     st.error(f"MLX TTS check failed: {e}")
-
-        elif select_tts == "cosyvoice3_tts":
-            st.info(t("CosyVoice 3 is registered as an optional provider. Configure a local/API adapter before running dubbing."))
-            config_input(t("CosyVoice 3 API URL"), "cosyvoice3_tts.api_url")
-
-        elif select_tts == "elevenlabs_tts":
-            st.info(t("ElevenLabs is a paid optional provider for high-quality dubbing."))
-            secret_env_status("ElevenLabs API Key", "elevenlabs_tts.api_key")
-            config_input("ElevenLabs Voice ID", "elevenlabs_tts.voice_id")
-            config_input("ElevenLabs Model", "elevenlabs_tts.model")
-
-        elif select_tts == "openai_tts":
-            st.info(t("OpenAI TTS is a paid optional provider for quick cloud fallback."))
-            secret_env_status("OpenAI API Key", "openai_tts.api_key")
-            config_input("OpenAI TTS Model", "openai_tts.model")
-            config_input("OpenAI TTS Voice", "openai_tts.voice")
 
 def check_api():
     try:

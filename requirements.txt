@@ -16,23 +16,22 @@ requests>=2.32.3,<3
 resampy>=0.4.3,<0.5
 spacy>=3.8.0,<3.9
 streamlit>=1.56.0,<1.57
-yt-dlp>=2025.12.8
+yt-dlp[default]>=2026.7.4,<2027
 json-repair>=0.54.2,<0.60
 ruamel.yaml>=0.18,<0.19
 InquirerPy>=0.3,<1
-autocorrect-py>=0.1,<1
+# Version 1.x is no longer published for current macOS/Python package indexes.
+autocorrect-py>=2.1,<3
 ctranslate2>=4.4.0,<5
-edge-tts>=7.2.8,<8
 stable-ts==2.19.1
 mlx-whisper>=0.4.3,<0.5
-whisperx==3.8.5
-funasr>=1.2.7,<2
+whisperx==3.8.6
 torch>=2.8.0,<2.9
 torchaudio>=2.8.0,<2.9
 torchvision>=0.23.0,<0.24
 torchcodec>=0.7.0,<0.8
 
-demucs[dev] @ git+https://github.com/adefossez/demucs
+demucs @ git+https://github.com/adefossez/demucs
 
 syllables>=1.1,<2
 pypinyin>=0.55,<1

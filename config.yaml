@@ -8,15 +8,15 @@ hf_token: ''
 api:
   key: ''
   base_url: 'https://api.siliconflow.cn'
-  model: 'deepseek-ai/DeepSeek-V3.2'
+  model: 'zai-org/GLM-4.5-Air'
 
 # Language settings, written into the prompt, can be described in natural language
   tpm_limit: 10000
-  retry_attempts: 10
+  retry_attempts: 3
   retry_interval: 3
 
 llm:
-  # Provider registry. "openai_compatible" keeps using the api block above.
+  # Use SiliconFlow through the OpenAI-compatible API block.
   provider: 'openai_compatible'
   timeout_seconds: 180
   providers:
@@ -53,7 +53,7 @@ llm:
     omlx:
       type: 'openai_compatible'
       base_url: 'http://127.0.0.1:8000/v1'
-      model: 'auto'
+      model: 'Qwen3.6-35B-A3B-Qwable-Holo3-Qwopus-oQ6-mtp'
       api_key_env: 'OMLX_API_KEY'
       default_api_key: ''
       max_workers: 1
@@ -78,7 +78,8 @@ whisper:
   # Whisper specified recognition language [auto, en, zh, ...]
   language: 'zh'
   detected_language: 'zh'
-  # Whisper running mode ["local", "stable-ts", "funasr"]. Specifies where to run
+  # Source ASR must provide validated native word timestamps for Step 6.
+  # Supported: ["local" (WhisperX), "stable-ts"].
   runtime: 'stable-ts'
 
   # Use MLX acceleration for stable-ts on Apple Silicon
@@ -90,17 +91,57 @@ whisper:
   # Minimum word duration for stable-ts
   min_word_dur: 0.1
 
-# FunASR configuration (used when whisper.runtime is 'funasr')
-funasr:
-  # Model selection: "nano" (newest, recommended), "sensevoice" (faster, no speaker diarization) or "paraformer" (with speaker diarization)
-  model: 'nano'
-  # Enable speaker diarization with CAM++ (requires more memory)
-  enable_spk: false
-  # Maximum audio segment duration for VAD (ms)
-  max_single_segment_time: 30000
+# MOSS supplies speaker turns and TTS readback only. Source text/timing still comes
+# exclusively from stable-ts or WhisperX native word timestamps.
+moss_asr:
+  root: '/Users/vanch/mlx-MOSS-Transcribe-Diarize'
+  python: '/Users/vanch/.codex/envs/bluestone-mlx-audio/bin/python'
+  pythonpath: '/Users/vanch/mlx-MOSS-Transcribe-Diarize'
+  model: '/Users/vanch/mlx-MOSS-Transcribe-Diarize/pretrained/mlx-moss-transcribe-diarize-8bit'
+  model_repo: 'vanch007/mlx-MOSS-Transcribe-Diarize-8bit'
+  output_root: 'output/log/moss_asr'
+  max_new_tokens: 2048
+  diarization_max_new_tokens: 8192
+  timeout_seconds: 1800
+
+speaker_diarization:
+  enabled: true
+  # pyannote remains a same-dataset benchmark candidate; only moss-mlx is installed.
+  backend: 'moss-mlx'
+  # Fail closed: producing mixed-speaker subtitle/TTS rows is worse than stopping.
+  required: true
+  min_word_coverage: 0.98
+  max_gap_seconds: 0.35
+  # An isolated filler outside every diarized turn is dropped instead of being
+  # guessed across a speaker boundary.
+  drop_unassigned_fillers: ['嗯', '啊', '哎', '呃']
+  # Optional timestamp-anchored corrections for verified diarization boundary slips.
+  word_speaker_overrides: []
+  report_path: 'output/log/speaker_diarization.json'
+  source_coverage:
+    # MOSS turns are a coverage witness only. Any missing interval is rerun by
+    # stable-ts/WhisperX so every recovered token still has native word timing.
+    enabled: true
+    required: true
+    min_turn_overlap_ratio: 0.20
+    min_text_similarity: 0.20
+    recovery_merge_gap_seconds: 1.50
+    recovery_padding_seconds: 0.50
+    report_path: 'output/log/source_asr_coverage.json'
+
+translation_context:
+  # Fail closed instead of silently discarding diarized identities before LLM translation.
+  require_speakers: true
+  min_line_coverage: 0.98
+  previous_lines: 4
+  next_lines: 3
+  batch_max_lines: 10
+  batch_max_chars: 2000
 
 # Whether to burn subtitles into the video
 burn_subtitles: true
+# Disable when the source already contains hard-coded source-language subtitles.
+burn_source_subtitles: true
 ## ======================== Advanced Settings ======================== ##
 # *Default resolution for downloading YouTube videos [360, 1080, best]
 ytb_resolution: '1080'
@@ -113,6 +154,11 @@ subtitle:
 
 # *Summary length, set low to 2k if using local LLM
 summary_length: 8000
+# Smaller correction batches avoid long-context timeouts on remote LLMs.
+stt_correction_batch_size: 10
+# Optional run-specific, human-verified sentence corrections. Word timestamps
+# are never rewritten; Step 6 fuzzy-aligns the corrected sentence text.
+stt_correction_exact_replacements: {}
 
 # *Number of LLM multi-threaded accesses, set to 1 if using local LLM
 max_workers: 11
@@ -121,13 +167,15 @@ max_split_length: 20
 
 # *Whether to reflect the translation result in the original text
 reflect_translate: true
+# Optional run-specific, source-keyed translations for verified names/terms.
+translation_exact_replacements: {}
 
 # *Whether to pause after extracting professional terms and before translation, allowing users to manually adjust the terminology table output\log\terminology.json
 pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
-# TTS selection [edge_tts, gpt_sovits, custom_tts, index_tts2, piper_tts, indonesian_tts, voxcpm_tts, mlx_router, mlx_indextts2, mlx_omnivoice, mlx_qwen3_tts, mlx_voxcpm2, cosyvoice3_tts, elevenlabs_tts, openai_tts]
-tts_method: 'mlx_indextts2'
+# TTS selection [mlx_router, mlx_indextts2, mlx_omnivoice, mlx_qwen3_tts, mlx_voxcpm2, mlx_higgs_audio, mlx_dots_tts, mlx_zonos2, mlx_moss_tts]
+tts_method: 'mlx_router'
 
 # Quality mode [subtitle, dubbing, high_sync]. high_sync enables duration budgets,
 # LLM shortening for overlong dubbing text, measured retry, and strict eval.
@@ -141,8 +189,10 @@ dubbing_quality:
   max_speed_factor: 1.35
   # Natural speech target. Rows above this speed are rewritten before accepting accelerated audio.
   max_natural_speed_factor: 1.12
+  # Very short replies are unreliable for ASR and tolerate a slightly faster fit.
+  short_utterance_max_speed_factor: 1.35
   over_duration_rewrite_ratio_max: 2.0
-  max_rewrite_rounds: 2
+  max_rewrite_rounds: 3
   allow_silence_fallback: false
   max_start_drift: 0.12
   max_end_drift: 0.18
@@ -154,9 +204,14 @@ dubbing_quality:
   # warnings in English smoke runs.
   trim_generated_silence: false
   min_audio_size: 1000
+  # Encoder rounding margin used for whole-line speed fit; no speech tail is trimmed.
+  timeline_rounding_tolerance_ms: 30
+  # Only inaudible encoder-padding samples within the tolerance may be removed.
+  timeline_rounding_silence_dbfs: -35.0
   asr_readback: true
-  # ASR readback backend: builtin uses cached local stable-whisper; command uses the template below.
-  asr_readback_backend: 'builtin'
+  # ASR readback backend: moss-mlx closes the local TTS content/leakage loop.
+  # builtin uses cached stable-whisper; command uses the template below.
+  asr_readback_backend: 'moss-mlx'
   asr_readback_model: 'large-v3-turbo'
   asr_readback_use_mlx: true
   # Optional command template for ASR readback backend=command. Leave empty to skip live ASR.
@@ -165,6 +220,15 @@ dubbing_quality:
   asr_readback_command: []
   asr_readback_timeout_seconds: 120
   content_score_min: 0.55
+  # Block full-audio/video merge when ASR shows that a generated line lost its tail.
+  # Low scores caused only by homophones or number formatting remain warnings.
+  content_completion_gate: true
+  content_completion_score_min: 0.88
+  content_completion_regenerate_score_min: 0.65
+  content_completion_max_rounds: 2
+  content_completion_fail_on_unverified: true
+  content_completion_fail_on_incomplete: true
+  content_completion_fail_on_unreadable: true
   leak_score_max: 0.12
   loudness_target_lufs: -20.0
 dubbing_repair:
@@ -172,50 +236,19 @@ dubbing_repair:
   llm_retry_attempts: 1
   llm_retry_interval: 2
   max_rewrite_rounds: 2
-  low_content_fallback_backend: 'edge_tts'
+  low_content_fallback_backend: 'dots'
   max_auto_regeneration_attempts: 2
 smoke_test:
   enabled: false
   cutoff_seconds: 60
 
-# Indonesian TTS configuration (using Wikidepia VITS model)
-indonesian_tts:
-  speaker: 'wibowo'
-
-# VoxCPM TTS configuration (OpenAI-compatible REST API, api_server.py --port 8809)
-voxcpm_tts:
-  api_url: 'http://127.0.0.1:8809'
-  # Voice preset: alloy | echo | fable | onyx | nova | shimmer | newscast | livestream | sad | angry | calm | authority
-  voice: 'alloy'
-  # Custom control instruction (overrides voice preset, e.g. "中年男性，声音沉稳")
-  control: ''
-  # CFG guidance scale (0.5–5.0, higher = stronger style adherence)
-  cfg_value: 2.0
-  # DiT diffusion steps (1–50, higher = better quality, slower)
-  inference_timesteps: 10
-  # Apply ZipEnhancer denoising to reference audio before cloning
-  denoise: false
-  # Clone mode: "dynamic" (per-segment reference audio) | "none" (preset voice only)
-  clone_mode: 'dynamic'
-
-cosyvoice3_tts:
-  api_url: 'http://127.0.0.1:8810'
-  clone_mode: dynamic
-
-elevenlabs_tts:
-  api_key: ''
-  voice_id: ''
-  model: 'eleven_v3'
-
-openai_tts:
-  api_key: ''
-  model: 'gpt-4o-mini-tts'
-  voice: 'alloy'
-
 mlx_tts:
   default_backend: 'auto'
+  # speaker_anchor is faster but reduced cross-language content scores on the
+  # 33SjTgWt1gI benchmark; keep it opt-in until a better anchor selector exists.
+  reference_strategy: 'row'
+  speaker_anchor_target_seconds: 5.0
   router:
-    prefer_qwen_with_clean_ref: false
     allow_voxcpm2_auto: false
   backends:
     indextts2:
@@ -223,9 +256,14 @@ mlx_tts:
       root: '/Users/vanch/mlx-indextts2'
       command_prefix: ['uv', 'run', 'mlx-indextts']
       profile: 'auto'
-      denoise_ref: true
-      fit_duration: false
+      # References are already cut from the separated vocal stem; avoid a
+      # redundant per-reference denoise pass in the model-resident batch.
+      denoise_ref: false
+      seed: 42
+      fit_duration: true
+      native_fit_max_estimated_ratio: 1.08
       timeout_seconds: 600
+      batch_timeout_seconds: 7200
     omnivoice:
       enabled: true
       root: '/Users/vanch/mlx-omnivoice'
@@ -244,7 +282,7 @@ mlx_tts:
     voxcpm2:
       enabled: true
       root: '/Users/vanch/mlx-voxcpm2'
-      command_prefix: ['python3', '-m', 'mlx_voxcpm2.cli']
+      command_prefix: ['/Users/vanch/mlx-indextts2/.venv/bin/python', '-m', 'mlx_voxcpm2.cli']
       pythonpath: '/Users/vanch/mlx-voxcpm2'
       model_dir: 'models/VoxCPM2-official-mlx-int8-components'
       inference_timesteps: 4
@@ -252,17 +290,48 @@ mlx_tts:
       retry_badcase: true
       denoise_ref: false
       timeout_seconds: 600
-
-# Edge TTS configuration
-edge_tts:
-  voice: 'en-US-AvaMultilingualNeural'  # Multilingual voice supporting Vietnamese (vi-VN voices return 502)
-
-# SoVITS configuration
-gpt_sovits:
-  character: 'Huanyuv2'
-  refer_mode: 3
-
-
+    higgs:
+      enabled: true
+      root: '/Users/vanch/mlx-higgs-audio'
+      command_prefix: ['/Users/vanch/mlx-higgs-audio/.venv/bin/python', 'scripts/run_tts.py']
+      required_files: ['models/higgs-audio-v3-tts-4b-mlx/model.safetensors', 'models/higgs-audio-v2-tokenizer/model.safetensors']
+      max_new_tokens: 512
+      use_target_duration_token_cap: true
+      tokens_per_second: 36.0
+      token_buffer: 48
+      min_new_tokens: 64
+      timeout_seconds: 1800
+    dots:
+      enabled: true
+      root: '/Users/vanch/mlx-dots.tts'
+      command_prefix: ['/Users/vanch/mlx-dots.tts/.venv/bin/python', '/Users/vanch/VideoLingo-plus/core/providers/dots_clone_runner.py']
+      pythonpath: ['/Users/vanch/mlx-dots.tts', '/Users/vanch/mlx-dots.tts/src']
+      model: 'models/mlx-dots-tts-mf-bf16'
+      use_target_duration_token_cap: false
+      required_files: ['models/mlx-dots-tts-mf-bf16/config.json', 'models/mlx-dots-tts-mf-bf16/core_int8_g64.safetensors']
+      max_audio_tokens: 30
+      num_steps: 3
+      seed: 42
+      timeout_seconds: 1800
+    zonos2:
+      enabled: true
+      root: '/Users/vanch/mlx-ZONOS2'
+      api_url: 'http://127.0.0.1:1920'
+      max_tokens: 1024
+      timeout_seconds: 1800
+    moss:
+      enabled: true
+      root: '/Users/vanch/mlx-MOSS-TTS-Local-Transformer-v1.5'
+      command_prefix: ['/Users/vanch/mlx-audio/.venv/bin/python', '-m', 'mlx_moss_tts_local.cli']
+      pythonpath: ['/Users/vanch/mlx-MOSS-TTS-Local-Transformer-v1.5/src']
+      model: '/Users/vanch/mlx-MOSS-TTS-Local-Transformer-v1.5/models/MOSS-TTS-Local-Transformer-v1.5'
+      required_files: ['models/MOSS-TTS-Local-Transformer-v1.5/model.safetensors']
+      max_tokens: 2048
+      use_target_duration_token_cap: true
+      tokens_per_second: 24.0
+      token_buffer: 32
+      min_tokens: 32
+      timeout_seconds: 1800
 
 # *Audio speed range
 speed_factor:
@@ -297,6 +366,8 @@ allowed_audio_formats:
 
 # LLMs that support returning JSON format
 llm_support_json:
+- 'deepseek-ai/DeepSeek-V4-Flash'
+- 'Qwen/Qwen3.5-397B-A17B'
 - 'gpt-4o'
 - 'gpt-4o-mini'
 - 'gemini-2.0-flash'
@@ -345,5 +416,3 @@ dubbing_profiles:
       chars_per_line_trans_portrait: 18
       chars_per_line_src_landscape: 36
       chars_per_line_trans_landscape: 30
-piper_tts:
-  voice: id_ID-news_tts-medium

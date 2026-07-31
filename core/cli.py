@@ -21,8 +21,14 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
 
 def _cmd_models(args: argparse.Namespace) -> int:
     from core.providers.provider_governance import list_provider_records
+    from core.providers.moss_asr import moss_asr_health
 
-    payload = {"omlx": [], "mlx_tts": list_backend_status(), "governance": list_provider_records()}
+    payload = {
+        "omlx": [],
+        "mlx_asr": moss_asr_health().__dict__,
+        "mlx_tts": list_backend_status(),
+        "governance": list_provider_records(),
+    }
     try:
         payload["omlx"] = [model.__dict__ for model in list_omlx_models()]
     except Exception as exc:
@@ -214,7 +220,7 @@ def _planned_run_config(args: argparse.Namespace) -> dict[str, str | int | None]
         "source_language": args.source,
         "target_language": args.target,
         "llm.provider": "openai_compatible" if args.llm == "config" else args.llm,
-        "tts_method": "mlx_indextts2" if args.tts == "auto" else args.tts,
+        "tts_method": "mlx_router" if args.tts == "auto" else args.tts,
         "smoke_seconds": args.smoke_seconds,
     }
     return {key: value for key, value in planned.items() if value is not None}
@@ -230,7 +236,7 @@ def _apply_run_config(args: argparse.Namespace) -> None:
     if args.llm:
         update_key("llm.provider", "openai_compatible" if args.llm == "config" else args.llm)
     if args.tts:
-        update_key("tts_method", "mlx_indextts2" if args.tts == "auto" else args.tts)
+        update_key("tts_method", "mlx_router" if args.tts == "auto" else args.tts)
 
 
 def _build_run(args: argparse.Namespace, steps: list) -> PipelineRun:
@@ -371,7 +377,7 @@ def build_parser() -> argparse.ArgumentParser:
     repair.add_argument("--limit", type=int, default=None, help="Limit repaired segment count")
     repair.add_argument(
         "--backend-fallback",
-        choices=["auto", "indextts2", "omnivoice", "qwen3_tts", "voxcpm2", "edge_tts"],
+        choices=["auto", "indextts2", "omnivoice", "qwen3_tts", "voxcpm2", "higgs", "dots", "zonos2", "moss"],
         default="auto",
         help="Force a backend for regenerated rows or let the repair planner choose",
     )

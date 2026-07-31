@@ -46,6 +46,7 @@ SRC_SUBS_FOR_AUDIO_FILE = "output/audio/src_subs_for_audio.srt"
 TRANS_SUBS_FOR_AUDIO_FILE = "output/audio/trans_subs_for_audio.srt"
 
 # ========== 输出视频 ==========
+SOURCE_VIDEO = "output/source.mp4"
 SUB_VIDEO = "output/AI字幕.mp4"
 DUB_VIDEO = "output/AI配音.mp4"
 
