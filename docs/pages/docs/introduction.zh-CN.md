@@ -19,7 +19,7 @@ VideoLingo 是一站式视频翻译本地化配音工具，能够一键生成 Ne
 
 - **✅ 按照 Netflix 标准检查单行长度，绝无双行字幕**
 
-- **🗣️ 使用 GPT-SoVITS 等方法对齐克隆配音**
+- **🗣️ 使用本地 MLX 音色克隆路由对齐配音**
 
 - 🚀 整合包一键启动，在 streamlit 中一键出片
 
@@ -40,7 +40,7 @@ https://github.com/user-attachments/assets/25264b5b-6931-4d39-948c-5a1e4ce42fa7
 </td>
 <td width="50%">
 
-### GPT-SoVITS配音
+### MLX 音色克隆配音
 ---
 https://github.com/user-attachments/assets/47d965b2-b4ab-4a0b-9d08-b49a7bf3508c
 
@@ -100,9 +100,9 @@ docker run -d -p 8501:8501 --gpus all videolingo
 ```
 
 ## API
-本项目支持 OpenAI-Like 格式的 api 和多种配音接口：
+本项目支持 OpenAI-Like 格式的 LLM API 和本地 MLX 配音：
 - `claude-3-5-sonnet-20240620`, `gemini-1.5-pro-002`, `gpt-4o`, `qwen2.5-72b-instruct`, `deepseek-coder`, ...（按效果排序）
-- `azure-tts`, `openai-tts`, `siliconflow-fishtts`, `fish-tts`, `GPT-SoVITS`
+- `mlx_router` 及九个 MLX 音色克隆后端
 
 详细的安装、 API 配置、汉化、批量说明可以参见文档：[English](/docs/pages/docs/start.en-US.md) | [简体中文](/docs/pages/docs/start.zh-CN.md)
 

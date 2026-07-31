@@ -123,7 +123,7 @@ docker run -d -p 8501:8501 --gpus all videolingo
 VideoLingo поддерживает формат API, подобный OpenAI, и различные интерфейсы TTS:
 - LLM: `claude-3-5-sonnet-20240620`, `deepseek-chat(v3)`, `gemini-2.0-flash-exp`, `gpt-4o`, ... (отсортировано по производительности)
 - WhisperX: Запускайте whisperX локально или используйте API 302.ai
-- TTS: `azure-tts`, `openai-tts`, `siliconflow-fishtts`, **`fish-tts`**, `GPT-SoVITS`, `edge-tts`, `*custom-tts`(Вы можете модифицировать свой собственный TTS в custom_tts.py!)
+- TTS: Local MLX voice-cloning router with nine selectable backends
 
 > **Примечание:** VideoLingo работает с **[302.ai](https://gpt302.saaslink.net/C2oHR9)** - один API-ключ для всех сервисов (LLM, WhisperX, TTS). Или запускайте локально с Ollama и Edge-TTS бесплатно, без необходимости в API!
 

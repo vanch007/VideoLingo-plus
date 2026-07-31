@@ -1,0 +1,128 @@
+{
+  "generated_at": "2026-07-31T05:01:45.703654+00:00",
+  "model": "Qwen3.6-35B-A3B-Qwable-Holo3-Qwopus-oQ6-mtp",
+  "api_base": "http://127.0.0.1:8000/v1",
+  "workload": {
+    "source_language": "zh",
+    "target_language": "vi",
+    "source_lines": [
+      "RexEntropy的COO当国内的MCN还在卷价格抢达人的时候他们直接把战场搬到了海外做到了美国TikTok带货机构的第一名",
+      "李嘉琪美万姚万交个朋友这种头部的机构他们在海外其实目前做的都是比较一般的为什么偏偏是他们跑出来了这些我们会聊透国内和海外的达人体系到底差在哪",
+      "选中了印尼和美国从选品物流仓储到投放达人带货整条跨境电商的链路怎么跑以及最关键的普通人现在还能抓住哪些TikTok上的赚钱信息差"
+    ]
+  },
+  "translation_benchmark": {
+    "status": "pass",
+    "total_seconds": 24.612,
+    "faithfulness": {
+      "status": "pass",
+      "ttft_seconds": 0.023,
+      "total_seconds": 7.316,
+      "completion_tokens": 360,
+      "estimated_output_tokens_per_second": 49.21,
+      "stream_chunks": 52
+    },
+    "expressiveness": {
+      "status": "pass",
+      "ttft_seconds": 0.01,
+      "total_seconds": 17.296,
+      "completion_tokens": 914,
+      "estimated_output_tokens_per_second": 52.85,
+      "stream_chunks": 127
+    },
+    "final_translations": [
+      "COO của RexEntropy đã đưa cuộc chiến ra nước ngoài, khi các MCN trong nước còn đang đấu giá để săn KOLs, họ đã trở thành đơn vị hàng đầu về bán hàng trên TikTok tại Mỹ.",
+      "Các đại gia như Li Jiaqi, Meiwanyao, Jiao Ge Pengyou... hoạt động ở nước ngoài hiện nay cũng chỉ ở mức trung bình. Vậy tại sao lại là họ nổi bật? Chúng ta sẽ cùng mổ xẻ xem hệ thống KOL trong và ngoài nước khác nhau thế nào.",
+      "Họ chọn Indonesia và Mỹ, từ chọn hàng, logistics, kho bãi đến hợp tác KOL bán hàng – cả chuỗi thương mại điện tử xuyên biên giới vận hành ra sao, và quan trọng nhất, người bình thường còn nắm bắt được những lợi thế thông tin nào để kiếm tiền trên TikTok."
+    ]
+  },
+  "quality": {
+    "score": 92.5,
+    "min_total": 90,
+    "max_total": 95,
+    "valid_judges": 2,
+    "confidence": "preliminary_single_sample_two_judges"
+  },
+  "judges": [
+    {
+      "model": "deepseek-ai/DeepSeek-V3",
+      "status": "pass",
+      "request": {
+        "status": "pass",
+        "ttft_seconds": 8.174,
+        "total_seconds": 19.288,
+        "completion_tokens": 268,
+        "estimated_output_tokens_per_second": 13.89,
+        "stream_chunks": 271
+      },
+      "judgement": {
+        "scores": {
+          "faithfulness": 35,
+          "completeness": 20,
+          "vietnamese_naturalness": 18,
+          "terminology_consistency": 9,
+          "dubbing_conciseness": 8
+        },
+        "total": 90,
+        "line_findings": [
+          {
+            "line": 1,
+            "severity": "minor",
+            "finding": "Minor omission of 'RexEntropy's COO' as the subject in the first clause, but overall meaning preserved."
+          },
+          {
+            "line": 2,
+            "severity": "minor",
+            "finding": "Slight deviation in phrasing ('cũng chỉ ở mức trung bình' vs '做的都是比较一般的'), but intent and key terms maintained."
+          },
+          {
+            "line": 3,
+            "severity": "ok",
+            "finding": "Accurate translation with all key elements (Indonesia/US, e-commerce chain, TikTok opportunities) preserved."
+          }
+        ],
+        "summary": "Highly faithful and complete translation with native Vietnamese fluency. Minor phrasing adjustments could enhance precision in lines 1-2. Terminology and conciseness are strong."
+      }
+    },
+    {
+      "model": "zai-org/GLM-4.5-Air",
+      "status": "pass",
+      "request": {
+        "status": "pass",
+        "ttft_seconds": 0.761,
+        "total_seconds": 6.804,
+        "completion_tokens": 311,
+        "estimated_output_tokens_per_second": 45.71,
+        "stream_chunks": 167
+      },
+      "judgement": {
+        "scores": {
+          "faithfulness": 38,
+          "completeness": 20,
+          "vietnamese_naturalness": 18,
+          "terminology_consistency": 10,
+          "dubbing_conciseness": 9
+        },
+        "total": 95,
+        "line_findings": [
+          {
+            "line": 1,
+            "severity": "minor",
+            "finding": "Slight rephrasing of 'đấu giá để săn KOLs' (bidding to hunt KOLs) instead of 'đấu giá để giành KOLs' (bidding to win KOLs) is a minor deviation but not a factual error."
+          },
+          {
+            "line": 2,
+            "severity": "minor",
+            "finding": "List of names 'Li Jiaqi, Meiwanyao, Jiao Ge Pengyou' is slightly anglicized but recognizable; 'mổ xẻ' (dissect) is a vivid but acceptable metaphor."
+          },
+          {
+            "line": 3,
+            "severity": "minor",
+            "finding": "Lợi thế thông tin (information advantage) is a good translation for '信息差' (information gap), but slightly more verbose than the original's conciseness."
+          }
+        ],
+        "summary": "High-quality translation with strong fidelity and naturalness. Minor deviations in phrasing and slight verbosity in one line do not detract from overall excellence. Terminology is consistent and concise."
+      }
+    }
+  ]
+}

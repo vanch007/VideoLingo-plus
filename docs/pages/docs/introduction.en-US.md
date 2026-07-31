@@ -17,7 +17,7 @@ Key features:
 
 - **✅ Netflix-standard single-line subtitles only**
 
-- **🗣️ Dubbing alignment with GPT-SoVITS and other methods**
+- **🗣️ Dubbing alignment with the local MLX voice-cloning router**
 
 - 🚀 One-click startup and output in Streamlit
 
@@ -38,7 +38,7 @@ https://github.com/user-attachments/assets/25264b5b-6931-4d39-948c-5a1e4ce42fa7
 </td>
 <td width="50%">
 
-### GPT-SoVITS Dubbing
+### MLX Voice-Cloning Dubbing
 ---
 https://github.com/user-attachments/assets/47d965b2-b4ab-4a0b-9d08-b49a7bf3508c
 
@@ -100,7 +100,7 @@ docker run -d -p 8501:8501 --gpus all videolingo
 ## API
 The project supports OpenAI-Like API format and various dubbing interfaces:
 - `claude-3-5-sonnet-20240620`, `gemini-1.5-pro-002`, `gpt-4o`, `qwen2.5-72b-instruct`, `deepseek-coder`, ... (sorted by performance)
-- `azure-tts`, `openai-tts`, `siliconflow-fishtts`, `fish-tts`, `GPT-SoVITS`
+- `mlx_router` and nine MLX voice-cloning backends
 
 For detailed installation, API configuration, and batch mode instructions, please refer to the documentation: [English](/docs/pages/docs/start.en-US.md) | [中文](/docs/pages/docs/start.zh-CN.md)
 

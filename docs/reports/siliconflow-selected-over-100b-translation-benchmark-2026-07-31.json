@@ -1,0 +1,246 @@
+{
+  "generated_at": "2026-07-31T04:10:48.195059+00:00",
+  "api_model_count": 91,
+  "benchmarks": [
+    {
+      "model": "deepseek-ai/DeepSeek-R1",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "671B",
+      "context_tokens": 163840,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 100000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 98.345,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.096,
+          "total_seconds": 34.739,
+          "completion_tokens": 762,
+          "estimated_output_tokens_per_second": 21.93,
+          "stream_chunks": 760
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.269,
+          "total_seconds": 63.606,
+          "completion_tokens": 1524,
+          "estimated_output_tokens_per_second": 23.96,
+          "stream_chunks": 1513
+        },
+        "final_translations": [
+          "COO RexEntropy chia sẻ: Trong khi MCN nội địa còn loay hoay giảm giá tranh giành KOLs, họ đã mở chiến trường ra quốc tế và vươn lên dẫn đầu các công ty bán hàng livestream trên TikTok tại Mỹ.",
+          "Các đại gia như Lý Gia Kỳ, Mỹ Vạn, Diêu Vạn, Giao Bạn Bè... hiện tại hoạt động ở nước ngoài vẫn chưa thực sự nổi bật. Vậy tại sao RexEntropy lại thành công vượt trội? Chúng ta sẽ làm rõ điểm khác biệt then chốt giữa hệ thống người có ảnh hưởng trong nước và quốc tế.",
+          "Quy trình vận hành toàn bộ chuỗi thương mại xuyên biên giới tại Indonesia và Mỹ - từ chọn sản phẩm, logistics, kho bãi đến quảng cáo và livestream bán hàng cùng KOLs. Và quan trọng nhất: Người bình thường hiện có thể nắm bắt cơ hội kiếm tiền nào từ chênh lệch thông tin trên TikTok?"
+        ]
+      }
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V3",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "671B",
+      "context_tokens": 163840,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 100000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 84.871,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.493,
+          "total_seconds": 17.333,
+          "completion_tokens": 426,
+          "estimated_output_tokens_per_second": 24.58,
+          "stream_chunks": 425
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.219,
+          "total_seconds": 67.538,
+          "completion_tokens": 1000,
+          "estimated_output_tokens_per_second": 14.81,
+          "stream_chunks": 991
+        },
+        "final_translations": [
+          "COO của RexEntropy khi các MCN trong nước còn đang giành giật KOLs thì họ đã mở rộng ra thị trường quốc tế và vươn lên vị trí số 1 trong ngành bán hàng trên TikTok tại Mỹ",
+          "Những tên tuổi lớn như Lý Gia Kỳ, Meiwan, Yaowan, Jiao Ge Peng You hiện vẫn chưa gây được tiếng vang ở nước ngoài. Vậy tại sao chỉ có họ thành công? Chúng ta sẽ bàn kỹ về sự khác biệt giữa hệ thống KOL trong nước và quốc tế",
+          "Lựa chọn Indonesia và Mỹ, từ khâu chọn sản phẩm, logistics, kho bãi đến triển khai KOL bán hàng - vận hành chuỗi cung ứng xuyên biên giới ra sao? Và quan trọng nhất: hiện người bình thường có thể tận dụng lợi thế kiếm tiền nào trên TikTok?"
+        ]
+      }
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V3.1-Terminus",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "671B",
+      "context_tokens": 163840,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 100000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "expressiveness_schema",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.031,
+          "total_seconds": 18.836,
+          "completion_tokens": 465,
+          "estimated_output_tokens_per_second": 24.69,
+          "stream_chunks": 463
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.065,
+          "total_seconds": 41.81,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 24.49,
+          "stream_chunks": 1012
+        }
+      }
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "671B",
+      "context_tokens": 163840,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 100000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "expressiveness_schema",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.185,
+          "total_seconds": 20.612,
+          "completion_tokens": 476,
+          "estimated_output_tokens_per_second": 23.09,
+          "stream_chunks": 473
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.212,
+          "total_seconds": 45.701,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 22.41,
+          "stream_chunks": 1012
+        }
+      }
+    },
+    {
+      "model": "zai-org/GLM-4.5-Air",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "106B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 26.267,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.921,
+          "total_seconds": 7.175,
+          "completion_tokens": 385,
+          "estimated_output_tokens_per_second": 53.66,
+          "stream_chunks": 210
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 0.91,
+          "total_seconds": 19.092,
+          "completion_tokens": 807,
+          "estimated_output_tokens_per_second": 42.27,
+          "stream_chunks": 421
+        },
+        "final_translations": [
+          "COO của RexEntropy, trong khi các MCN trong nước vẫn đang cạnh tranh về giá để giành KOL, họ đã chuyển chiến trường ra nước ngoài và trở thành công ty bán hàng số 1 trên TikTok Mỹ.",
+          "Các công ty hàng đầu như Lý Giai Kỳ, Mỹ Vạn, Diệu Vạn, Giao Bạn Thật... thực tế hoạt động ở nước ngoài cũng chỉ ở mức trung bình. Tại sao lại chính họ là người bứt phá? Chúng ta sẽ cùng phân tích sâu về sự khác biệt giữa hệ thống KOL trong nước và quốc tế.",
+          "Tại sao lại chọn Indonesia và Mỹ? Toàn bộ chuỗi thương mại xuyên biên giới từ chọn sản phẩm, logistics, kho bãi đến chạy quảng cáo và KOL bán hàng được vận hành ra sao? Và quan trọng nhất, người bình thường hiện nay còn có thể nắm bắt được những cơ hội kiếm tiền nào trên TikTok?"
+        ]
+      }
+    },
+    {
+      "model": "zai-org/GLM-4.5V",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "106B",
+      "context_tokens": 65536,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 42.715,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.774,
+          "total_seconds": 17.084,
+          "completion_tokens": 884,
+          "estimated_output_tokens_per_second": 51.74,
+          "stream_chunks": 877
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 0.881,
+          "total_seconds": 25.631,
+          "completion_tokens": 1993,
+          "estimated_output_tokens_per_second": 77.76,
+          "stream_chunks": 1991
+        },
+        "final_translations": [
+          "Giám đốc điều hành của RexEntropy, trong khi các MCN trong nước vẫn đang cạnh tranh về giá cả và giành giật người có ảnh hưởng, họ đã trực tiếp mở rộng sang thị trường nước ngoài và trở thành công ty dẫn đầu về bán hàng trên TikTok tại Mỹ.",
+          "Với các tổ chức hàng đầu như Lý Gia Kỳ, Mỹ Vạn, Diêu Vạn và Giao Cái Bạn Bè, thực tế họ đang làm việc ở nước ngoài chỉ ở mức trung bình. Tại sao lại là họ đã thành công? Chúng ta sẽ phân tích kỹ lưỡng sự khác biệt giữa hệ thống người có ảnh hưởng trong nước và nước ngoài.",
+          "Đã chọn Indonesia và Mỹ, từ chọn sản phẩm, logistics, kho bãi đến triển khai người có ảnh hưởng và bán hàng, toàn bộ quy trình thương mại điện tử xuyên biên giới như thế nào, và quan trọng nhất, người bình thường hiện nay vẫn có thể nắm bắt được những thông tin chênh lệch kiếm tiền nào trên TikTok."
+        ]
+      }
+    }
+  ],
+  "not_benchmarked": [],
+  "scope": {
+    "include_model": [
+      "deepseek-ai/DeepSeek-V3.2",
+      "deepseek-ai/DeepSeek-V3.1-Terminus",
+      "deepseek-ai/DeepSeek-R1",
+      "deepseek-ai/DeepSeek-V3",
+      "zai-org/GLM-4.5V",
+      "zai-org/GLM-4.5-Air"
+    ],
+    "min_parameter_b_exclusive": 100.0
+  },
+  "source": {
+    "api_models": "https://api.siliconflow.cn/v1/models",
+    "catalog": "https://www.siliconflow.cn/models"
+  }
+}

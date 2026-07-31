@@ -1,0 +1,88 @@
+{
+  "generated_at": "2026-07-31T04:02:51.220192+00:00",
+  "api_model_count": 91,
+  "benchmarks": [
+    {
+      "model": "Qwen/Qwen3.5-122B-A10B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "122B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "zai-org/GLM-4.5-Air",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "106B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "zai-org/GLM-4.5V",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "106B",
+      "context_tokens": 65536,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    }
+  ],
+  "not_benchmarked": [],
+  "scope": {
+    "include_model": [
+      "Qwen/Qwen3.5-122B-A10B",
+      "zai-org/GLM-4.5V",
+      "zai-org/GLM-4.5-Air"
+    ],
+    "min_parameter_b_exclusive": 0
+  },
+  "source": {
+    "api_models": "https://api.siliconflow.cn/v1/models",
+    "catalog": "https://www.siliconflow.cn/models"
+  }
+}

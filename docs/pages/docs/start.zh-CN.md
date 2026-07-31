@@ -1,7 +1,7 @@
 # 🚀 开始使用
 
 ## 📋 API 配置指南
-本项目需使用大模型和 TTS。追求最佳质量请使用 claude-3-5-sonnet-20240620 与 Azure TTS。也可以选择完全本地化体验，使用 Ollama 作为大模型，Edge TTS 作为配音，无需任何 API key（此时需要在 `config.yaml` 中将 `max_workers` 设为 1，`summary_length` 调低至 2000）。
+本项目翻译需要大模型；配音统一使用本地 MLX 音色克隆路由，无需 TTS API Key。
 
 ### 1. **大模型的 API_KEY**：
 
@@ -14,103 +14,9 @@
 
 注：支持 OpenAI 格式接口，可自行尝试不同模型。但处理过程涉及多步思维链和复杂的json格式，**不建议使用小于 30B 的模型**。
 
-### 2. **TTS 的 API**
-VideoLingo提供了多种 tts 接入方式，以下是对比（如不使用配音可跳过）
+### 2. **本地 MLX TTS**
 
-| TTS 方案 | 提供商 | 优点 | 缺点 | 中文效果 | 非中文效果 |
-|:---------|:---------|:-----|:-----|:---------|:-----------|
-| 🔊 Azure TTS ⭐ | [302AI](https://gpt302.saaslink.net/C2oHR9) | 效果自然 | 情感不够丰富 | 🤩 | 😃 |
-| 🎙️ OpenAI TTS | [302AI](https://gpt302.saaslink.net/C2oHR9) | 情感真实 | 中文听起来像外国人 | 😕 | 🤩 |
-| 🎤 Fish TTS | [302AI](https://gpt302.saaslink.net/C2oHR9) | 真是本地人 | 官方模型有限 | 🤩 | 😂 |
-| 🎙️ SiliconFlow FishTTS | [硅基流动](https://cloud.siliconflow.cn/i/ttKDEsxE) | 语音克隆 | 克隆效果不稳定 | 😃 | 😃 |
-| 🗣 Edge TTS | 本地 | 完全免费 | 效果一般 | 😐 | 😐 |
-| 🗣️ GPT-SoVITS | 本地 | 最强语音克隆 | 只支持中英文，需要本地训练推理，配置麻烦 | 🏆 | 🚫 |
-
-- SiliconFlow FishTTS 请在 [硅基流动](https://cloud.siliconflow.cn/i/ttKDEsxE) 获取key，注意克隆功能需要付费充值积分；
-- OpenAI TTS、Azure TTS 和 Fish TTS，仅支持 [302AI](https://gpt302.saaslink.net/C2oHR9) - 一个 API key 即可使用所有服务
-> 现在还可以在 `core/all_tts_functions/custom_tts.py` 里自定义tts渠道！
-
-<details>
-<summary>SiliconFlow FishTTS 使用教程</summary>
-
-目前支持 3 种模式：
-
-1. `preset`: 使用固定音色，可以在 [官网Playground](https://cloud.siliconflow.cn/playground/text-to-speech/17885302608) 试听，默认 `anna`。
-2. `clone(stable)`: 对应 fishtts api 的 `custom`，使用一段上传音频的音色，会自动采集视频前十秒声音作为音色使用，音色一致性更好。
-3. `clone(dynamic)`: 对应 fishtts api 的 `dynamic`，在 tts 过程使用每一句作为参考音频，可能出现音色不一致，但效果更好。
-
-</details>
-
-<details>
-<summary>OpenAI 声音怎么选？</summary>
-
-声音列表可以在 [官网](https://platform.openai.com/docs/guides/text-to-speech/voice-options) 找到，例如 `alloy`, `echo`, `nova`等，在 `config.yaml` 中修改 `openai_tts.voice` 即可。
-
-</details>
-<details>
-<summary>Azure 声音怎么选？</summary>
-
-建议在 [在线体验](https://speech.microsoft.com/portal/voicegallery) 中试听选择你想要的声音，在右边的代码中可以找到该声音对应的代号，例如 `zh-CN-XiaoxiaoMultilingualNeural`
-
-</details>
-
-<details>
-<summary>Fish TTS 声音怎么选？</summary>
-
-前往 [官网](https://fish.audio/zh-CN/) 中试听选择你想要的声音，在 URL 中可以找到该声音对应的代号，例如丁真是 `54a5170264694bfc8e9ad98df7bd89c3`，热门的几种声音已添加在 `config.yaml` 中。如需使用其他声音，请在 `config.yaml` 中修改 `fish_tts.character_id_dict` 字典。
-
-</details>
-
-<details>
-<summary>GPT-SoVITS-v2 使用教程</summary>
-
-1. 前往 [官方的语雀文档](https://www.yuque.com/baicaigongchang1145haoyuangong/ib3g1e/dkxgpiy9zb96hob4#KTvnO) 查看配置要求并下载整合包。
-
-2. 将 `GPT-SoVITS-v2-xxx` 与 `VideoLingo` 放在同一个目录下。**注意是两文件夹并列。**
-
-3. 选择以下任一方式配置模型：
-
-   a. 自训练模型：
-   - 训练好模型后， `GPT-SoVITS-v2-xxx\GPT_SoVITS\configs` 下的 `tts_infer.yaml` 已自动填写好你的模型地址，将其复制并重命名为 `你喜欢的英文角色名.yaml`
-   - 在和 `yaml` 文件同个目录下，放入后续使用的参考音，命名为 `你喜欢的英文角色名_参考音频的文字内容.wav` 或 `.mp3`，例如 `Huanyuv2_你好，这是一条测试音频.wav`
-   - 在 VideoLingo 网页的侧边栏中，将 `GPT-SoVITS 角色` 配置为 `你喜欢的英文角色名`。
-
-   b. 使用预训练模型：
-   - 从 [这里](https://vip.123pan.cn/1817874751/8137723) 下载我的模型，解压后覆盖到 `GPT-SoVITS-v2-xxx`。
-   - 在 `GPT-SoVITS 角色` 配置为 `Huanyuv2`。
-
-   c. 使用其他训练好的模型：
-   - 将 `xxx.ckpt` 模型文件放在 `GPT_weights_v2` 文件夹下，将 `xxx.pth` 模型文件放在 `SoVITS_weights_v2` 文件夹下。
-   - 参考方法 a，重命名 `tts_infer.yaml` 文件，并修改文件中的 `custom` 部分的 `t2s_weights_path` 和 `vits_weights_path` 指向你的模型，例如：
-  
-      ```yaml
-      # 示例 法 b 的配置：
-      t2s_weights_path: GPT_weights_v2/Huanyu_v2-e10.ckpt
-      version: v2
-      vits_weights_path: SoVITS_weights_v2/Huanyu_v2_e10_s150.pth
-      ```
-   - 参考方法 a，在和 `yaml` 文件同个目录下，放入后续使用的参考音频，命名为 `你喜欢的英文角色名_参考音频的文字内容.wav` 或 `.mp3`，例如 `Huanyuv2_你好，这是一条测试音频.wav`，程序会自动识别并使用。
-   - ⚠️ 警告：**请使用英文命名 `角色名`** ，否则会出现错误。 `参考音频的文字内容` 可以使用中文。目前仍处于测试版，可能产生报错。
-
-
-   ```
-   # 期望的目录结构：
-   .
-   ├── VideoLingo
-   │   └── ...
-   └── GPT-SoVITS-v2-xxx
-       ├── GPT_SoVITS
-       │   └── configs
-       │       ├── tts_infer.yaml
-       │       ├── 你喜欢的英文角色名.yaml
-       │       └── 你喜欢的英文角色名_参考音频的文字内容.wav
-       ├── GPT_weights_v2
-       │   └── [你的GPT模型文件]
-       └── SoVITS_weights_v2
-           └── [你的SoVITS模型文件]
-   ```
-        
-配置完成后，注意在网页侧边栏选择 `参考音频模式`（具体原理可以参考语雀文档），VideoLingo 在配音步骤时会自动在弹出的命令行中打开 GPT-SoVITS 的推理 API 端口，配音完成后可手动关闭。注意，此方法的稳定性取决于选择的底模。</details>
+此分支仅提供 MLX 音色克隆路由：IndexTTS2、OmniVoice、Qwen3-TTS、VoxCPM2、Higgs Audio、dots.tts、ZONOS2 和 MOSS-TTS。配置入口为 `mlx_tts.backends`。
 
 ## 🛠️ 快速上手
 

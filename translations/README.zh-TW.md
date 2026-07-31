@@ -123,7 +123,7 @@ docker run -d -p 8501:8501 --gpus all videolingo
 VideoLingo 支持 OpenAI 格式的 API 和各種 TTS 接口：
 - LLM：`claude-3-5-sonnet-20240620`、`deepseek-chat(v3)`、`gemini-2.0-flash-exp`、`gpt-4o`、...（按性能排序）
 - WhisperX：本地運行 whisperX 或使用 302.ai API
-- TTS：`azure-tts`、`openai-tts`、`siliconflow-fishtts`、**`fish-tts`**、`GPT-SoVITS`、`edge-tts`、`*custom-tts`（您可以在 custom_tts.py 中修改自己的 TTS！）
+- TTS：本機 MLX 音色克隆路由（9 個可選後端）
 
 > **注意：** VideoLingo 與 **[302.ai](https://gpt302.saaslink.net/C2oHR9)** 合作 - 一個 API 密鑰即可使用所有服務（LLM、WhisperX、TTS）。或者使用 Ollama 和 Edge-TTS 在本地免費運行，無需 API！
 
@@ -159,4 +159,4 @@ VideoLingo 支持 OpenAI 格式的 API 和各種 TTS 接口：
 
 ---
 
-<p align="center">如果您覺得 VideoLingo 有幫助，請給我一個 ⭐️！</p> 
+<p align="center">如果您覺得 VideoLingo 有幫助，請給我一個 ⭐️！</p>

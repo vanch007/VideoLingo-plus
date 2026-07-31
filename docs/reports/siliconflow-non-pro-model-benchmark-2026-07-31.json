@@ -1,0 +1,1941 @@
+{
+  "generated_at": "2026-07-30T16:28:04.766387+00:00",
+  "api_model_count": 91,
+  "benchmarks": [
+    {
+      "model": "ByteDance-Seed/Seed-OSS-36B-Instruct",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "36B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 141.429,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.042,
+          "total_seconds": 47.202,
+          "completion_tokens": 2530,
+          "estimated_output_tokens_per_second": 53.6,
+          "stream_chunks": 2533
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.328,
+          "total_seconds": 94.227,
+          "completion_tokens": 4011,
+          "estimated_output_tokens_per_second": 42.57,
+          "stream_chunks": 4009
+        },
+        "final_translations": [
+          "COO của RexEntropy: Khi MCN trong nước vẫn đang cạnh tranh giá cắt throat để tranh đua các influencer, RexEntropy trực tiếp chuyển chiến trường sang nước ngoài và trở thành số một agency bán hàng TikTok ở Mỹ",
+          "Li Jiaqi, Meiwan Yaowan, Giao Một Bạn – các agency hàng đầu như vậy, thực tế hiện tại kết quả hoạt động ở nước ngoài khá bình thường. Tại sao lại là RexEntropy nổi lên? Về những điều này, chúng ta sẽ phân tích kỹ lưỡng điểm khác biệt giữa hệ thống influencer trong nước và overseas",
+          "Chọn Indonesia và Mỹ, từ chọn sản phẩm, vận chuyển, kho hàng đến khai thác influencer bán hàng – toàn bộ chuỗi giá trị e-commerce xuyên biên giới làm thế nào để thực hiện? Và nhất là, những người bình thường hiện nay vẫn có thể tận dụng哪些 thông tin chênh lệch về kiếm tiền trên TikTok"
+        ]
+      }
+    },
+    {
+      "model": "MiniMaxAI/MiniMax-M2.5",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "229B",
+      "context_tokens": 196608,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 100000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.137,
+          "total_seconds": 19.943,
+          "completion_tokens": 1016,
+          "estimated_output_tokens_per_second": 50.94,
+          "stream_chunks": 1001
+        }
+      }
+    },
+    {
+      "model": "PaddlePaddle/PaddleOCR-VL-1.5",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "1B",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 80000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 14.165,
+          "total_seconds": 18.099,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 56.58,
+          "stream_chunks": 922
+        }
+      }
+    },
+    {
+      "model": "Qwen/Qwen2.5-14B-Instruct",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "14B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 28.15,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.855,
+          "total_seconds": 9.019,
+          "completion_tokens": 373,
+          "estimated_output_tokens_per_second": 41.36,
+          "stream_chunks": 376
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 0.917,
+          "total_seconds": 19.131,
+          "completion_tokens": 713,
+          "estimated_output_tokens_per_second": 37.27,
+          "stream_chunks": 716
+        },
+        "final_translations": [
+          "Khi các MCN trong nước vẫn đang cạnh tranh về giá để thu hút người nổi tiếng, COO của RexEntropy đã chuyển chiến trường ra nước ngoài và trở thành tổ chức dẫn đầu về thương mại điện tử trên TikTok tại Mỹ.",
+          "Các tổ chức hàng đầu như Li Jiaqi, Meewan, Yao Wan, Giao bạn bè, khi họ hoạt động ở nước ngoài, thực tế hiện tại đều không đạt được thành công lớn như ở trong nước. Tại sao chỉ có họ mới thành công? Chúng ta sẽ thảo luận về sự khác biệt giữa hệ thống người nổi tiếng trong và ngoài nước.",
+          "Họ đã chọn Indonesia và Mỹ, từ việc lựa chọn sản phẩm, logistics, kho bãi đến việc triển khai người nổi tiếng để bán hàng. Chúng ta sẽ thảo luận về cách họ vận hành và những cơ hội kiếm tiền từ TikTok mà người bình thường vẫn có thể nắm bắt."
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen2.5-32B-Instruct",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "32B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 39.559,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.138,
+          "total_seconds": 12.565,
+          "completion_tokens": 365,
+          "estimated_output_tokens_per_second": 29.05,
+          "stream_chunks": 368
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.433,
+          "total_seconds": 26.994,
+          "completion_tokens": 750,
+          "estimated_output_tokens_per_second": 27.78,
+          "stream_chunks": 753
+        },
+        "final_translations": [
+          "COO của RexEntropy, khi các MCN trong nước vẫn cạnh tranh về giá để thu hút người ảnh hưởng, họ đã chuyển hướng sang thị trường nước ngoài và trở thành công ty hàng đầu về bán hàng trên TikTok tại Mỹ.",
+          "Các tổ chức hàng đầu như Li Jiaqi, Meiwanzhao, Jiaoge Pengyou, thực tế họ đang hoạt động ở nước ngoài không nổi bật, tại sao họ lại nổi lên? Chúng ta sẽ thảo luận về sự khác biệt giữa hệ thống người ảnh hưởng trong nước và nước ngoài.",
+          "Chọn Indonesia và Mỹ, từ việc chọn sản phẩm, logistics, kho bãi đến hợp tác với người ảnh hưởng để bán hàng, làm thế nào để chạy chuỗi cung ứng thương mại điện tử xuyên biên giới, và điều quan trọng nhất là người bình thường hiện nay có thể nắm bắt được những thông tin kiếm tiền nào trên TikTok."
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen2.5-72B-Instruct",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "72B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 40.63,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.981,
+          "total_seconds": 14.48,
+          "completion_tokens": 374,
+          "estimated_output_tokens_per_second": 25.83,
+          "stream_chunks": 377
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.451,
+          "total_seconds": 26.15,
+          "completion_tokens": 786,
+          "estimated_output_tokens_per_second": 30.06,
+          "stream_chunks": 789
+        },
+        "final_translations": [
+          "COO của RexEntropy, khi các MCN trong nước vẫn đang cạnh tranh về giá, họ đã chuyển hướng sang thị trường nước ngoài và trở thành tổ chức bán hàng hàng đầu trên TikTok Mỹ.",
+          "Các tổ chức hàng đầu như Lý Gia Kì, Mỹ Vạn, Diêu Vạn, và Giao Bạn, hiện nay hoạt động ở mức trung bình ở nước ngoài. Tại sao lại là họ vượt lên? Chúng tôi sẽ thảo luận kỹ về sự khác biệt giữa hệ thống influencer trong nước và nước ngoài.",
+          "Chọn Indonesia và Mỹ, từ việc lựa chọn sản phẩm, logistics, kho bãi đến việc sử dụng influencer để bán hàng, chuỗi cung ứng thương mại điện tử xuyên biên giới được vận hành như thế nào? Và quan trọng nhất, người bình thường hiện nay có thể nắm bắt được những cơ hội kiếm tiền nào từ thông tin chênh lệch trên TikTok?"
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen2.5-72B-Instruct-128K",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "72B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 31.575,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.045,
+          "total_seconds": 8.811,
+          "completion_tokens": 377,
+          "estimated_output_tokens_per_second": 42.79,
+          "stream_chunks": 380
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.163,
+          "total_seconds": 22.764,
+          "completion_tokens": 806,
+          "estimated_output_tokens_per_second": 35.41,
+          "stream_chunks": 809
+        },
+        "final_translations": [
+          "COO của RexEntropy, khi các MCN trong nước vẫn đang cạnh tranh về giá và săn đón influencer, họ đã mở rộng hoạt động ra thị trường quốc tế và trở thành tổ chức livestream bán hàng hàng đầu trên TikTok tại Mỹ.",
+          "Các tổ chức hàng đầu như Lý Gia Kì, Mỹ Vạn, Diêu Vạn, và Giao Bạn, hiện tại ở nước ngoài chỉ đạt kết quả trung bình. Vậy tại sao họ lại vượt lên? Chúng ta sẽ tìm hiểu sự khác biệt giữa hệ thống influencer trong nước và nước ngoài.",
+          "Chọn Indonesia và Mỹ, từ việc lựa chọn sản phẩm, logistics, kho bãi đến việc sử dụng influencer để bán hàng, chuỗi cung ứng thương mại điện tử xuyên biên giới được vận hành như thế nào? Và quan trọng hơn, người bình thường hiện nay có thể nắm bắt được những cơ hội kiếm tiền nào từ sự chênh lệch thông tin trên TikTok?"
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen2.5-7B-Instruct",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "7B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 50000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.049,
+          "total_seconds": 32.265,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 31.74,
+          "stream_chunks": 1026
+        }
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-14B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "14B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 18.309,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.871,
+          "total_seconds": 6.816,
+          "completion_tokens": 373,
+          "estimated_output_tokens_per_second": 54.72,
+          "stream_chunks": 376
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 0.859,
+          "total_seconds": 11.493,
+          "completion_tokens": 796,
+          "estimated_output_tokens_per_second": 69.26,
+          "stream_chunks": 799
+        },
+        "final_translations": [
+          "Khi các MCN trong nước vẫn đang tranh giành KOL bằng cách cạnh tranh giá cả, COO của RexEntropy đã nhanh chóng mở rộng ra thị trường quốc tế và trở thành đơn vị bán hàng số một trên TikTok Mỹ.",
+          "Những công ty hàng đầu như Li Jiaqi, Meiwang, YaoWang Jiao You Pengyou thực ra hiện tại ở thị trường quốc tế vẫn chưa thực sự ấn tượng. Vậy tại sao lại là họ thành công? Chúng ta sẽ cùng tìm hiểu rõ sự khác biệt giữa hệ thống KOL trong nước và quốc tế.",
+          "Chọn Indonesia và Mỹ làm thị trường, từ khâu chọn sản phẩm, logistics, kho bãi đến việc hợp tác KOL – toàn bộ chuỗi thương mại điện tử xuyên quốc gia sẽ vận hành như thế nào? Và quan trọng nhất, người bình thường hiện tại còn nắm bắt được cơ hội kiếm tiền nào trên TikTok?"
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "30B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 20.444,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.009,
+          "total_seconds": 4.141,
+          "completion_tokens": 376,
+          "estimated_output_tokens_per_second": 90.8,
+          "stream_chunks": 379
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.267,
+          "total_seconds": 16.303,
+          "completion_tokens": 1020,
+          "estimated_output_tokens_per_second": 62.56,
+          "stream_chunks": 1023
+        },
+        "final_translations": [
+          "COO của RexEntropy, khi các MCN trong nước còn đang tranh nhau giá để giành KOL, họ đã chuyển chiến tuyến sang nước ngoài và vươn lên dẫn đầu lĩnh vực bán hàng qua TikTok tại Mỹ",
+          "Các ông lớn như Li Jiaqi, Meiwang, Yaowang, Jiaoge Pengyou – dù ở nước ngoài vẫn chỉ ở mức trung bình. Vậy tại sao lại là họ lại nổi bật? Chúng ta sẽ cùng làm rõ sự khác biệt giữa hệ thống KOL trong nước và quốc tế",
+          "Chọn Indonesia và Mỹ, chúng ta sẽ cùng xem cách vận hành trọn vẹn chuỗi thương mại điện tử xuyên biên giới – từ chọn hàng, logistics, kho bãi đến chạy quảng cáo và bán hàng qua KOL, và đặc biệt là cơ hội kiếm tiền từ thông tin chênh lệch trên TikTok mà người thường vẫn còn nắm được"
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-32B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "32B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 59.42,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.019,
+          "total_seconds": 26.353,
+          "completion_tokens": 1243,
+          "estimated_output_tokens_per_second": 47.17,
+          "stream_chunks": 1245
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.012,
+          "total_seconds": 33.067,
+          "completion_tokens": 1689,
+          "estimated_output_tokens_per_second": 51.08,
+          "stream_chunks": 1691
+        },
+        "final_translations": [
+          "COO của RexEntropy khi các công ty MCN trong nước vẫn còn đang cạnh tranh giá để giành lấy các influencer, họ đã chuyển hướng chiến lược ra thị trường quốc tế và trở thành đơn vị quảng bá hàng đầu trên TikTok tại Mỹ.",
+          "Các công ty hàng đầu như Li Jiaqi, Meiwang, Yaowang, Jiaogeyou... thực tế hiện tại họ đang làm ở nước ngoài chỉ ở mức trung bình. Tại sao lại là họ? Chúng ta sẽ phân tích kỹ lưỡng sự khác biệt trong cơ chế của các influencer trong nước và quốc tế.",
+          "Chọn thị trường Indonesia và Mỹ, từ khâu chọn sản phẩm, logistics, kho bãi đến chiến dịch influencer, toàn bộ chuỗi cung ứng thương mại điện tử xuyên quốc gia sẽ vận hành như thế nào? Và điều quan trọng nhất là người bình thường hiện tại vẫn có thể tận dụng những khoảng cách thông tin kiếm tiền nào trên TikTok."
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-8B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "8B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 50000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 390.257,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.251,
+          "total_seconds": 30.255,
+          "completion_tokens": 1219,
+          "estimated_output_tokens_per_second": 40.29,
+          "stream_chunks": 1221
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 2.058,
+          "total_seconds": 360.002,
+          "completion_tokens": 2175,
+          "estimated_output_tokens_per_second": 6.04,
+          "stream_chunks": 2177
+        },
+        "final_translations": [
+          "Phó tổng giám đốc RexEntropy chia sẻ: Khi các MCN trong nước vẫn tranh giành达人 bằng giá cả, họ đã chuyển hướng sang thị trường quốc tế và trở thành đơn vị dẫn đầu bán hàng trên TikTok Mỹ",
+          "Li Jiaqi, Mei Wan, Yao Wan, Jiao Geo Peng – những công ty hàng đầu này thực tế đang không mấy ấn tượng ở nước ngoài. Tại sao lại là họ thành công? Chúng tôi sẽ phân tích rõ sự khác biệt giữa hệ thống người ảnh hưởng trong nước và quốc tế",
+          "Chúng tôi sẽ tìm hiểu cách họ chọn Indonesia và Mỹ, từ khâu chọn sản phẩm, vận chuyển, kho hàng đến triển khai chiến dịch người ảnh hưởng bán hàng – toàn bộ quy trình thương mại điện tử xuyên biên giới. Và điều quan trọng nhất là những cơ hội kiếm tiền còn tồn tại trên TikTok mà người bình thường vẫn có thể tận dụng"
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "30B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 14.751,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.918,
+          "total_seconds": 4.94,
+          "completion_tokens": 361,
+          "estimated_output_tokens_per_second": 73.08,
+          "stream_chunks": 364
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.29,
+          "total_seconds": 9.811,
+          "completion_tokens": 803,
+          "estimated_output_tokens_per_second": 81.85,
+          "stream_chunks": 806
+        },
+        "final_translations": [
+          "Khi các MCN trong nước vẫn đang tranh giành tài năng bằng giá cả, Giám đốc điều hành RexEntropy đã chuyển chiến trường ra nước ngoài và trở thành đơn vị bán hàng số 1 trên TikTok tại Mỹ.",
+          "Những tổ chức hàng đầu như Lý Gia Kỳ, Mỹ Vạn, Diêu Vạn... dù hoạt động ở nước ngoài không nổi bật, nhưng tại sao lại là họ thành công? Chúng ta sẽ cùng tìm hiểu sự khác biệt giữa hệ thống tài năng trong và ngoài nước.",
+          "Chọn Indonesia và Mỹ – từ chọn sản phẩm, vận chuyển, kho bãi đến hợp tác với tài năng bán hàng, chúng ta sẽ cùng tìm hiểu cách vận hành chuỗi thương mại điện tử và cơ hội kiếm lời từ khoảng cách thông tin trên TikTok."
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-Omni-30B-A3B-Captioner",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "30B",
+      "context_tokens": 65536,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "expressiveness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.918,
+          "total_seconds": 4.054,
+          "completion_tokens": 376,
+          "estimated_output_tokens_per_second": 92.76,
+          "stream_chunks": 379
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 0.887,
+          "total_seconds": 10.517,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 97.37,
+          "stream_chunks": 1027
+        }
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-Omni-30B-A3B-Instruct",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "30B",
+      "context_tokens": 65536,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 16.024,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.972,
+          "total_seconds": 5.692,
+          "completion_tokens": 363,
+          "estimated_output_tokens_per_second": 63.77,
+          "stream_chunks": 366
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 0.947,
+          "total_seconds": 10.332,
+          "completion_tokens": 849,
+          "estimated_output_tokens_per_second": 82.18,
+          "stream_chunks": 852
+        },
+        "final_translations": [
+          "COO của RexEntropy, khi MCN Trung Quốc còn đang cạnh tranh giá để giành KOL, họ đã chuyển chiến trường ra nước ngoài và trở thành top 1 công ty bán hàng TikTok tại Mỹ",
+          "Các công ty lớn như Li Jiaqi, Meiwàn, Yaowàn, Jiaoge Pengyou hoạt động ở nước ngoài khá tầm thường, vậy tại sao họ lại thành công? Chúng ta sẽ phân tích kỹ sự khác biệt giữa hệ thống KOL Trung Quốc và quốc tế",
+          "Chọn Indonesia và Mỹ, từ chọn sản phẩm, hậu cần, kho bãi đến chạy KOL bán hàng, toàn bộ chuỗi thương mại điện tử xuyên biên giới vận hành thế nào? Và quan trọng nhất, người bình thường hiện giờ còn có thể nắm bắt cơ hội kiếm tiền nào trên TikTok"
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-Omni-30B-A3B-Thinking",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "30B",
+      "context_tokens": 65536,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 78.019,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.747,
+          "total_seconds": 9.368,
+          "completion_tokens": 991,
+          "estimated_output_tokens_per_second": 105.78,
+          "stream_chunks": 994
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 0.766,
+          "total_seconds": 68.651,
+          "completion_tokens": 7068,
+          "estimated_output_tokens_per_second": 102.96,
+          "stream_chunks": 7070
+        },
+        "final_translations": [
+          "COO của RexEntropy cho biết, khi các MCN trong nước đang cạnh tranh giá để giành người nổi tiếng, họ đã chuyển chiến trường ra nước ngoài và trở thành đơn vị bán hàng trên TikTok số 1 tại Mỹ.",
+          "Các công ty hàng đầu như Lý Gia Kỳ, Mỹ Vạn, Diêu Vạn và Giao Bạn hoạt động ở nước ngoài nhưng hiệu quả không cao. Tại sao chỉ có họ thành công vượt trội? Chúng tôi sẽ phân tích sự khác biệt giữa hệ thống creator trong nước và quốc tế.",
+          "Chúng tôi tập trung vào Indonesia và Mỹ, từ chọn sản phẩm, hậu cần, kho bãi đến quảng bá qua creator, cách vận hành chuỗi thương mại điện tử xuyên biên giới. Đặc biệt, chúng tôi sẽ tiết lộ cơ hội kiếm tiền từ thông tin chênh lệch trên TikTok mà người mới vẫn có thể tận dụng."
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "30B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 26.597,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.312,
+          "total_seconds": 8.921,
+          "completion_tokens": 374,
+          "estimated_output_tokens_per_second": 41.92,
+          "stream_chunks": 377
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.085,
+          "total_seconds": 17.676,
+          "completion_tokens": 961,
+          "estimated_output_tokens_per_second": 54.37,
+          "stream_chunks": 964
+        },
+        "final_translations": [
+          "Giám đốc điều hành RexEntropy, khi các MCN trong nước còn đang tranh nhau giá để giành KOL, họ đã chuyển chiến tuyến ra nước ngoài và trở thành đơn vị bán hàng TikTok hàng đầu tại Mỹ.",
+          "Các công ty lớn như Li Jiaqi, Meiwang, Yao Wan, Jiaoge Pengyou... ở nước ngoài hiện tại hoạt động khá bình thường. Tại sao lại chính họ lại nổi bật? Chúng ta sẽ phân tích kỹ sự khác biệt giữa hệ thống KOL trong nước và quốc tế.",
+          "Chọn Indonesia và Mỹ, từ chọn sản phẩm, logistics, kho bãi đến việc triển khai KOL bán hàng, toàn bộ chuỗi thương mại điện tử xuyên biên giới hoạt động thế nào, và quan trọng nhất, người bình thường hiện nay vẫn có thể nắm bắt cơ hội kiếm tiền từ chênh lệch thông tin trên TikTok."
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-VL-30B-A3B-Thinking",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "30B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 124.173,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.909,
+          "total_seconds": 55.441,
+          "completion_tokens": 3948,
+          "estimated_output_tokens_per_second": 71.21,
+          "stream_chunks": 3951
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 0.864,
+          "total_seconds": 68.732,
+          "completion_tokens": 5255,
+          "estimated_output_tokens_per_second": 76.46,
+          "stream_chunks": 5257
+        },
+        "final_translations": [
+          "COO của RexEntropy cho biết, khi các MCN trong nước còn đang tranh giành giá cả để giành lấy người có ảnh hưởng, họ đã dời chiến trường ra nước ngoài và trở thành công ty bán hàng TikTok số 1 tại Mỹ.",
+          "Các công ty hàng đầu như Lý Gia Kỳ, Mỹ Vạn, Yao Vạn và Giao Bạn hiện đang hoạt động chưa thực sự nổi bật ở thị trường nước ngoài. Tại sao chỉ có họ thành công? Chúng tôi sẽ phân tích kỹ sự khác biệt giữa hệ thống người có ảnh hưởng trong nước và quốc tế.",
+          "Chọn Indonesia và Mỹ, từ khâu chọn sản phẩm, vận chuyển, kho bãi đến việc triển khai người có ảnh hưởng bán hàng, chuỗi thương mại điện tử xuyên biên giới hoạt động như thế nào? Và quan trọng nhất, người bình thường vẫn có thể nắm bắt cơ hội kiếm tiền từ những khoảng trống thông tin trên TikTok."
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-VL-32B-Instruct",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "32B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 80000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "expressiveness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.892,
+          "total_seconds": 11.026,
+          "completion_tokens": 382,
+          "estimated_output_tokens_per_second": 34.65,
+          "stream_chunks": 385
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 0.966,
+          "total_seconds": 52.361,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 19.56,
+          "stream_chunks": 1027
+        }
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-VL-32B-Thinking",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "32B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 80000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.891,
+          "total_seconds": 417.538,
+          "completion_tokens": 17994,
+          "estimated_output_tokens_per_second": 43.1,
+          "stream_chunks": 17995
+        }
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-VL-8B-Instruct",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "8B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 80000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 21.936,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.107,
+          "total_seconds": 7.867,
+          "completion_tokens": 368,
+          "estimated_output_tokens_per_second": 46.78,
+          "stream_chunks": 371
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.116,
+          "total_seconds": 14.069,
+          "completion_tokens": 892,
+          "estimated_output_tokens_per_second": 63.4,
+          "stream_chunks": 895
+        },
+        "final_translations": [
+          "COO của RexEntropy — khi các MCN trong nước còn đang đua nhau giảm giá để giành influencer, họ đã chuyển hẳn sang thị trường nước ngoài và vươn lên dẫn đầu các tổ chức bán hàng TikTok tại Mỹ.",
+          "Những cái tên như Li Jiaqi, Mei Wan, Yao Wan hay Giao Ge Peng — hiện tại ở nước ngoài đều chưa thực sự tỏa sáng. Vậy tại sao lại là họ? Chúng tôi sẽ đào sâu phân tích sự khác biệt giữa hệ thống influencer trong nước và quốc tế.",
+          "Chúng tôi sẽ đi sâu vào cách vận hành toàn bộ chuỗi bán hàng xuyên biên giới tại Indonesia và Mỹ — từ chọn hàng, vận chuyển, kho bãi đến quảng bá qua influencer — và đặc biệt, người bình thường hiện nay vẫn có thể bắt được những cơ hội kiếm tiền nào trên TikTok."
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-VL-8B-Thinking",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "8B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 80000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 223.596,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.199,
+          "total_seconds": 116.588,
+          "completion_tokens": 8800,
+          "estimated_output_tokens_per_second": 75.48,
+          "stream_chunks": 8790
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.13,
+          "total_seconds": 107.008,
+          "completion_tokens": 7522,
+          "estimated_output_tokens_per_second": 70.29,
+          "stream_chunks": 7525
+        },
+        "final_translations": [
+          "COO của RexEntropy, khi các MCN trong nước vẫn cạnh tranh giá để thu hút người ảnh hưởng, đã chuyển sang thị trường quốc tế và trở thành nhà bán hàng TikTok hàng đầu tại Mỹ.",
+          "Những tổ chức hàng đầu như Lý Gia Kỳ, Mỹ Vạn, Nhiễu Vạn, Giao Gia Bạn dù đang hoạt động chưa thực sự nổi bật trên thị trường quốc tế, tại sao lại là họ thành công? Chúng tôi sẽ phân tích kỹ lưỡng sự khác biệt giữa hệ thống người ảnh hưởng trong nước và quốc tế.",
+          "Chúng tôi đã chọn Indonesia và Mỹ, từ chọn sản phẩm, logistics, kho bãi đến triển khai người ảnh hưởng và bán hàng, toàn bộ quy trình thương mại điện tử xuyên biên giới vận hành ra sao? Và quan trọng nhất, những người bình thường hiện nay vẫn có thể tận dụng được những khoảng chênh lệch thông tin kiếm tiền trên TikTok nào?"
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3.5-122B-A10B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "122B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.094,
+          "total_seconds": 35.958,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 28.48,
+          "stream_chunks": 1005
+        }
+      }
+    },
+    {
+      "model": "Qwen/Qwen3.5-27B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "27B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.884,
+          "total_seconds": 24.862,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 41.19,
+          "stream_chunks": 1026
+        }
+      }
+    },
+    {
+      "model": "Qwen/Qwen3.5-35B-A3B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "35B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.854,
+          "total_seconds": 18.194,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 56.28,
+          "stream_chunks": 1026
+        }
+      }
+    },
+    {
+      "model": "Qwen/Qwen3.5-397B-A17B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "397B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 500,
+        "tpm": 2000000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 122.125,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.505,
+          "total_seconds": 64.725,
+          "completion_tokens": 5749,
+          "estimated_output_tokens_per_second": 88.82,
+          "stream_chunks": 5751
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 2.036,
+          "total_seconds": 57.4,
+          "completion_tokens": 4834,
+          "estimated_output_tokens_per_second": 84.22,
+          "stream_chunks": 4836
+        },
+        "final_translations": [
+          "Rex, COO của Entropy. Khi MCN trong nước còn đua giá tranh KOL, họ đã đưa chiến trường ra hải ngoại, trở thành agency TikTok số 1 Mỹ.",
+          "Các ông lớn như Lý Gia Kỳ, Mỹ Vạn, Diêu Vạn hay Giao Bạn ở nước ngoài cũng chỉ ở mức trung bình. Sao họ lại đột phá? Ta sẽ mổ xẻ sự khác biệt giữa hệ thống KOL trong nước và quốc tế.",
+          "Họ chọn Indonesia và Mỹ. Từ chọn hàng, kho vận đến booking KOL, quy trình cross-border vận hành ra sao? Quan trọng nhất, người thường còn nắm được cơ hội kiếm tiền nào từ lợi thế thông tin trên TikTok?"
+        ]
+      }
+    },
+    {
+      "model": "Qwen/Qwen3.5-4B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "4B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 80000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.753,
+          "total_seconds": 9.859,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 103.86,
+          "stream_chunks": 936
+        }
+      }
+    },
+    {
+      "model": "Qwen/Qwen3.5-9B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "9B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 80000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.033,
+          "total_seconds": 29.028,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 35.28,
+          "stream_chunks": 1003
+        }
+      }
+    },
+    {
+      "model": "Qwen/Qwen3.6-27B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "27B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.863,
+          "total_seconds": 27.032,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 37.88,
+          "stream_chunks": 954
+        }
+      }
+    },
+    {
+      "model": "Qwen/Qwen3.6-35B-A3B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "35B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.052,
+          "total_seconds": 37.282,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 27.47,
+          "stream_chunks": 1008
+        }
+      }
+    },
+    {
+      "model": "THUDM/GLM-4-32B-0414",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "32B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.957,
+          "total_seconds": 9.957,
+          "completion_tokens": 400,
+          "estimated_output_tokens_per_second": 40.17,
+          "stream_chunks": 403
+        }
+      }
+    },
+    {
+      "model": "THUDM/GLM-4-9B-0414",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "9B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 50000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.967,
+          "total_seconds": 8.046,
+          "completion_tokens": 375,
+          "estimated_output_tokens_per_second": 46.61,
+          "stream_chunks": 378
+        }
+      }
+    },
+    {
+      "model": "THUDM/GLM-Z1-9B-0414",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "9B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 50000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "pass",
+        "total_seconds": 90.336,
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.793,
+          "total_seconds": 36.227,
+          "completion_tokens": 1833,
+          "estimated_output_tokens_per_second": 50.6,
+          "stream_chunks": 1827
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 2.194,
+          "total_seconds": 54.109,
+          "completion_tokens": 2695,
+          "estimated_output_tokens_per_second": 49.81,
+          "stream_chunks": 2696
+        },
+        "final_translations": [
+          "COO RexEntropy đã chuyển chiến trường từ MCN nội địa (cuộc đua giá cả giành KOLs) sang quốc tế, trở thành đơn vị dẫn đầu trong bán hàng qua TikTok tại Mỹ",
+          "Dù các tập đoàn như Jiaqi Meinv hay Yuen Wan đã nỗ lực mở rộng, kết quả vẫn chưa nổi bật. Chúng tôi sẽ làm rõ sự khác biệt giữa hệ thống KOLs trong nước và quốc tế - tại sao họ lại thành công dù chỉ hoạt động ở mức trung bình.",
+          "Chúng tôi tập trung vào Indonesia và Mỹ, xây dựng toàn bộ chuỗi thương mại điện tử từ chọn sản phẩm, logistics, kho bãi, quảng cáo KOLs đến thanh toán. Đặc biệt nhấn mạnh cơ hội kiếm tiền từ khoảng trống thông tin trên TikTok dành cho người dùng thông thường."
+        ]
+      }
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-OCR",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "3B",
+      "context_tokens": 8192,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 80000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.662,
+          "total_seconds": 0.662,
+          "completion_tokens": 1,
+          "estimated_output_tokens_per_second": 1.51,
+          "stream_chunks": 4
+        }
+      }
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-R1",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "671B",
+      "context_tokens": 163840,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 100000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "expressiveness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.387,
+          "total_seconds": 48.769,
+          "completion_tokens": 873,
+          "estimated_output_tokens_per_second": 17.9,
+          "stream_chunks": 869
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.736,
+          "total_seconds": 71.646,
+          "completion_tokens": 1453,
+          "estimated_output_tokens_per_second": 20.28,
+          "stream_chunks": 1443
+        }
+      }
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "8B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 50000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 0.92,
+          "total_seconds": 34.541,
+          "completion_tokens": 911,
+          "estimated_output_tokens_per_second": 26.37,
+          "stream_chunks": 914
+        }
+      }
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V3",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "671B",
+      "context_tokens": 163840,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 100000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 429,
+          "error": "{\"code\":50609,\"message\":\"Request was rejected due to rate limiting. Details: System is too busy now.\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V3.1-Terminus",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "671B",
+      "context_tokens": 163840,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 100000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "expressiveness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.467,
+          "total_seconds": 22.659,
+          "completion_tokens": 451,
+          "estimated_output_tokens_per_second": 19.9,
+          "stream_chunks": 449
+        },
+        "expressiveness": {
+          "status": "pass",
+          "ttft_seconds": 1.143,
+          "total_seconds": 37.713,
+          "completion_tokens": 1024,
+          "estimated_output_tokens_per_second": 27.15,
+          "stream_chunks": 1010
+        }
+      }
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V3.2",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "671B",
+      "context_tokens": 163840,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 100000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 4.842,
+          "total_seconds": 33.746,
+          "completion_tokens": 403,
+          "estimated_output_tokens_per_second": 11.94,
+          "stream_chunks": 398
+        }
+      }
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4-Flash",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "284B",
+      "context_tokens": 1048576,
+      "l0_rate_limit": {
+        "rpm": 500,
+        "tpm": 2000000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness_json",
+        "faithfulness": {
+          "status": "pass",
+          "ttft_seconds": 1.245,
+          "total_seconds": 21.541,
+          "completion_tokens": 661,
+          "estimated_output_tokens_per_second": 30.69,
+          "stream_chunks": 662
+        }
+      }
+    },
+    {
+      "model": "deepseek-ai/DeepSeek-V4-Pro",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "1600B",
+      "context_tokens": 1048576,
+      "l0_rate_limit": {
+        "rpm": 500,
+        "tpm": 2000000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "inclusionAI/Ling-flash-2.0",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "100B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "inclusionAI/Ling-mini-2.0",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "16B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "meituan-longcat/LongCat-2.0",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "1600B",
+      "context_tokens": 1048576,
+      "l0_rate_limit": {
+        "rpm": 500,
+        "tpm": 2000000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "moonshotai/Kimi-K2.7-Code",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "1000B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 500,
+        "tpm": 2000000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "nex-agi/Nex-N2-Pro",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "397B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 80000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "stepfun-ai/Step-3.5-Flash",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "196B",
+      "context_tokens": 262144,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 10000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "tencent/Hunyuan-A13B-Instruct",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "80B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "tencent/Hunyuan-MT-7B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "7B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 80000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "zai-org/GLM-4.5-Air",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "106B",
+      "context_tokens": 131072,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "zai-org/GLM-4.5V",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "106B",
+      "context_tokens": 65536,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 20000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    },
+    {
+      "model": "zai-org/GLM-5.2",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "chat",
+      "parameter_spec": "753B",
+      "context_tokens": 1048576,
+      "l0_rate_limit": {
+        "rpm": 500,
+        "tpm": 2000000,
+        "ipm": null,
+        "ipd": null
+      },
+      "result": {
+        "status": "fail",
+        "failure_stage": "faithfulness",
+        "faithfulness": {
+          "status": "fail",
+          "http_status": 402,
+          "error": "{\"code\":30001,\"message\":\"Sorry, your account balance is insufficient\",\"data\":null}"
+        }
+      }
+    }
+  ],
+  "not_benchmarked": [
+    {
+      "model": "BAAI/bge-large-en-v1.5",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "embedding",
+      "parameter_spec": "未公布",
+      "context_tokens": 512,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 500000,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "BAAI/bge-large-zh-v1.5",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "embedding",
+      "parameter_spec": "未公布",
+      "context_tokens": 512,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 500000,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "BAAI/bge-m3",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "embedding",
+      "parameter_spec": "未公布",
+      "context_tokens": 8192,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 500000,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "BAAI/bge-reranker-v2-m3",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "reranker",
+      "parameter_spec": "未公布",
+      "context_tokens": 8192,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 500000,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "FunAudioLLM/CosyVoice2-0.5B",
+      "platform": "SiliconFlow",
+      "type": "audio",
+      "sub_type": "text-to-speech",
+      "parameter_spec": "1B",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "FunAudioLLM/SenseVoiceSmall",
+      "platform": "SiliconFlow",
+      "type": "audio",
+      "sub_type": "speech-to-text",
+      "parameter_spec": "未公布",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 50000,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "Kwai-Kolors/Kolors",
+      "platform": "SiliconFlow",
+      "type": "image",
+      "sub_type": "text-to-image",
+      "parameter_spec": "未公布",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": null,
+        "tpm": null,
+        "ipm": 2,
+        "ipd": 400
+      }
+    },
+    {
+      "model": "Qwen/Qwen-Image",
+      "platform": "SiliconFlow",
+      "type": "image",
+      "sub_type": "text-to-image",
+      "parameter_spec": "20B",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": null,
+        "tpm": null,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "Qwen/Qwen-Image-Edit",
+      "platform": "SiliconFlow",
+      "type": "image",
+      "sub_type": "text-to-image",
+      "parameter_spec": "20B",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": null,
+        "tpm": null,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "Qwen/Qwen-Image-Edit-2509",
+      "platform": "SiliconFlow",
+      "type": "image",
+      "sub_type": "text-to-image",
+      "parameter_spec": "20B",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": null,
+        "tpm": null,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-Embedding-0.6B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "embedding",
+      "parameter_spec": "1B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 1000000,
+        "ipm": 1,
+        "ipd": 1440
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-Embedding-4B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "embedding",
+      "parameter_spec": "4B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 1000000,
+        "ipm": 1,
+        "ipd": 1440
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-Embedding-8B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "embedding",
+      "parameter_spec": "8B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 1000000,
+        "ipm": 1,
+        "ipd": 1440
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-Reranker-0.6B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "reranker",
+      "parameter_spec": "1B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 1000000,
+        "ipm": 1,
+        "ipd": 1440
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-Reranker-4B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "reranker",
+      "parameter_spec": "4B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 1000000,
+        "ipm": 1,
+        "ipd": 1440
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-Reranker-8B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "reranker",
+      "parameter_spec": "8B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 1000000,
+        "ipm": 1,
+        "ipd": 1440
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-VL-Embedding-8B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "embedding",
+      "parameter_spec": "8B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 1000000,
+        "ipm": 1,
+        "ipd": 1440
+      }
+    },
+    {
+      "model": "Qwen/Qwen3-VL-Reranker-8B",
+      "platform": "SiliconFlow",
+      "type": "text",
+      "sub_type": "reranker",
+      "parameter_spec": "8B",
+      "context_tokens": 32768,
+      "l0_rate_limit": {
+        "rpm": 2000,
+        "tpm": 1000000,
+        "ipm": 1,
+        "ipd": 1440
+      }
+    },
+    {
+      "model": "TeleAI/TeleSpeechASR",
+      "platform": "SiliconFlow",
+      "type": "audio",
+      "sub_type": "speech-to-text",
+      "parameter_spec": "未公布",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 50000,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "Tongyi-MAI/Z-Image",
+      "platform": "SiliconFlow",
+      "type": "image",
+      "sub_type": "text-to-image",
+      "parameter_spec": "6B",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": null,
+        "tpm": null,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "Tongyi-MAI/Z-Image-Turbo",
+      "platform": "SiliconFlow",
+      "type": "image",
+      "sub_type": "text-to-image",
+      "parameter_spec": "6B",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": null,
+        "tpm": null,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "Wan-AI/Wan2.2-I2V-A14B",
+      "platform": "SiliconFlow",
+      "type": "video",
+      "sub_type": "image-to-video",
+      "parameter_spec": "27B",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": null,
+        "tpm": null,
+        "ipm": 5,
+        "ipd": 200
+      }
+    },
+    {
+      "model": "Wan-AI/Wan2.2-T2V-A14B",
+      "platform": "SiliconFlow",
+      "type": "video",
+      "sub_type": "text-to-video",
+      "parameter_spec": "27B",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": null,
+        "tpm": null,
+        "ipm": 5,
+        "ipd": 200
+      }
+    },
+    {
+      "model": "baidu/ERNIE-Image-Turbo",
+      "platform": "SiliconFlow",
+      "type": "image",
+      "sub_type": "text-to-image",
+      "parameter_spec": "8B",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": null,
+        "tpm": null,
+        "ipm": null,
+        "ipd": null
+      }
+    },
+    {
+      "model": "fnlp/MOSS-TTSD-v0.5",
+      "platform": "SiliconFlow",
+      "type": "audio",
+      "sub_type": "text-to-speech",
+      "parameter_spec": "2B",
+      "context_tokens": 0,
+      "l0_rate_limit": {
+        "rpm": 1000,
+        "tpm": 40000,
+        "ipm": null,
+        "ipd": null
+      }
+    }
+  ],
+  "source": {
+    "api_models": "https://api.siliconflow.cn/v1/models",
+    "catalog": "https://www.siliconflow.cn/models"
+  }
+}

@@ -134,4 +134,4 @@ Phase 0 baseline reference: `docs/reports/baseline-2026-07-05.md`.
 | RF-2 | Artifact completion mostly checks existence/columns, not full input/model/profile fingerprints | High | Translation has provenance guard; ASR/timeline/TTS/video artifacts still need stronger run binding; schema drafted in `ARTIFACT-MANIFEST-SCHEMA.md` |
 | RF-3 | Quality pass depends on current config threshold | High | Current `content_score_min=0.55`; cinematic profile code sets `0.88` when applied |
 | RF-4 | Some model presets in config are stale or unverified | High | `gemini-3-pro-preview` is shut down per Gemini docs; current `DeepSeek-V3.2` route is provider-specific |
-| RF-5 | TTS providers are registered before all adapters are implemented | Medium | `openai_tts`, `elevenlabs_tts`, `cosyvoice3_tts` currently raise `NotImplementedError` |
+| RF-5 | Experimental MLX clone service may be offline | Medium | ZONOS2 requires its configured local HTTP service; health checks report it unavailable until started |

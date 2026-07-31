@@ -11,7 +11,7 @@ Videolingo 系统遵循以下核心处理流程：
 2. **音频处理**
    - 提取视频音频
    - 使用Demucs分离人声
-   - 使用WhisperX或stable-ts进行语音识别
+   - 使用 WhisperX 或 stable-ts 进行语音识别；两者必须输出模型原生词级时间戳
 
 3. **文本处理**
    - 使用SpaCy进行初步文本分割
@@ -98,10 +98,6 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
      —— `transcribe_audio(audio_file: str, start: float, end: float)`: 转录指定时间段的音频
      —— 输入文件: 音频文件片段
      —— 输出文件: 转录结果字典
-   - `core/all_whisper_methods/whisperX_302.py`: 使用 302 API 的 whisperX 模型进行转录。
-     —— `transcribe_audio_302(audio_file: str, start: float, end: float)`: 转录指定时间段的音频
-     —— 输入文件: 音频文件片段
-     —— 输出文件: 转录结果字典
    - `core/all_whisper_methods/stable_ts_local.py`: 使用本地 stable-ts 模型进行转录。
      —— `transcribe_audio(audio_file: str, start: float, end: float)`: 转录指定时间段的音频
      —— 输入文件: 音频文件片段
@@ -109,7 +105,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
    - `core/step2_whisperX.py`: 利用 WhisperX 或 stable-ts 模型进行高精度的语音识别
      —— `prepare_audio_and_vocals()`: 预处理音频，包括视频转音频、人声分离和压缩。
      —— `enhance_vocals(vocals_ratio=2.50)`: (可选)增强人声音量。
-     —— `transcribe()`: 执行转录的主函数，它会调用 `split_audio` 对音频分段，然后使用所选的 `runtime` (local, stable-ts, or cloud) 进行并行转录，最后调用 `process_transcription` 和 `save_results` 保存结果。
+     —— `transcribe()`: 执行转录的主函数，它会调用 `split_audio` 对音频分段，只允许 `local` (WhisperX) 或 `stable-ts`，并在保存前强制验证每个词的 `start/end`；随后由本地 MLX MOSS-Transcribe-Diarize 给原生词区间覆盖说话人 ID，不改写词时间戳。默认说话人覆盖率低于 98% 时闭锁失败。
      —— 输入文件: 
        - `output/[video_name].[ext]` (视频文件)
        - `config.yaml` (配置文件，包含模型路径、语言等参数)
@@ -184,7 +180,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
 
 4. **字幕处理与合成模块**:
    - `core/step5_splitforsub.py`: 根据字幕格式规范，对翻译后的文本进行精确分割和时间对齐。
-      —— `split_for_sub_main()`: 执行字幕分割主函数，包含多达5次的重试机制以确保所有字幕行都符合长度规范。
+      —— `split_for_sub_main()`: 执行字幕分割主函数，包含多达5次的重试机制以确保所有字幕行都符合长度规范；上游 spaCy 分句已按连续说话人组分别执行，任何语义分句都不能跨说话人边界。
       —— `split_align_subs(src_lines, tr_lines)`: 并行处理字幕分割和对齐，支持多线程。
       —— `align_subs(src_sub, tr_sub, src_part)`: 使用GPT模型对齐源字幕和翻译字幕。
       —— `calc_len(text: str)`: 计算文本长度，支持多语言字符权重计算。
@@ -192,7 +188,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
       —— 输出文件: `output/log/translation_results_for_subtitles.xlsx` (分割后的字幕)
    - `core/step6_generate_final_timeline.py`: 生成标准 SRT 格式的字幕文件，包含精确的时间轴信息。
       —— `align_timestamp_main()`: 执行时间轴对齐主函数。
-      —— `align_timestamp(df_text, df_translate, ...)`: 对齐时间戳。
+      —— `align_timestamp(df_text, df_translate, ...)`: 对齐时间戳；跨说话人的词范围会直接报错，字幕尾部只允许延展到同一已知说话人的下一行。
       —— `get_sentence_timestamps(df_words, df_sentences)`: 获取句子时间戳。
       —— 输入文件: `output/log/cleaned_chunks.xlsx` (转录结果), `output/log/translation_results_for_subtitles.xlsx` (分割后的字幕)
       —— 输出文件: `output/src.srt`, `output/trans.srt`, `output/src_trans.srt`, `output/trans_src.srt` (各种格式的字幕文件)
@@ -214,7 +210,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
        —— `analyze_subtitle_timing_and_speed(df)`: 分析字幕时序和语速，计算间隙和容忍度。
        —— `process_cutoffs(df)`: 根据间隙和语速标记切分点，智能合并行以优化配音节奏。
        —— `rewrite_estimated_overlong_rows(df)`: 在 TTS 前对预计超时的配音文本进行 LLM 短句改写。
-       —— `merge_rows(df, ...)`: 合并多行字幕。
+       —— `merge_rows(df, ...)`: 合并多行字幕；说话人变化或未知说话人均为硬边界，短片段预合并也遵守相同规则。
        —— 输入文件: `output/audio/tts_tasks.xlsx`, `output/src.srt`, `output/trans.srt`
        —— 输出文件: `output/audio/tts_tasks.xlsx` (更新后的配音任务文件)
      - `core/step9_extract_refer_audio.py`: 提取参考音频，支持Apple Silicon加速。
@@ -250,7 +246,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
          - `output/src.srt`, `output/trans.srt` (字幕文件)
        —— 输出文件: 
          - `output/AI配音.mp4` (带配音的视频)
-     - `core/all_tts_functions/`: 文本转语音功能集 (Azure, Edge, Fish, GPT-SoVITS, OpenAI, IndexTTS2 等)
+     - `core/all_tts_functions/`: MLX 文本转语音统一入口；具体音色克隆实现位于 `core/providers/mlx_tts.py`。
 
 6. **系统配置与工具模块**:
    - `core/delete_retry_dubbing.py`: 删除不必要的音频文件以清理生成过程中的多余文件。
@@ -271,7 +267,7 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
    - `load_nlp_model.py`: 加载和初始化所需的 NLP 模型。
 
 8. **文本转语音（TTS）模块 (core/all_tts_functions/)**:
-   - `fish_tts.py`, `openai_tts.py`, `gpt_sovits_tts.py`, `azure_tts.py`, `edge_tts.py`, `piper_tts.py`: 各种TTS实现的封装；本地 MLX IndexTTS2 通过 `core/providers/mlx_tts.py` 接入。
+   - `core/providers/mlx_tts.py`: 本地音色克隆路由，支持 IndexTTS2、OmniVoice、Qwen3-TTS、VoxCPM2、Higgs Audio、dots.tts、ZONOS2 和 MOSS-TTS；后四项默认仅显式选择，不参与自动路由。
    - `tts_main.py`: TTS主入口，统一调用各种TTS方法。
 
 ## 2026 升级说明
@@ -279,9 +275,11 @@ Videolingo 是一个高度集成的视频翻译系统，能够自动化执行视
 本地升级后的维护原则：
 
 - `config.yaml` 只保留非敏感默认值，真实 API Key / HF Token / TTS Key 通过 `.env.example` 中列出的环境变量注入。
-- `core.llm_provider` 负责 LLM provider registry，默认兼容原 OpenAI-compatible `api` 配置，同时预置 DeepSeek V4、OpenAI GPT-5.x、Gemini 3、LM Studio 等路线。
-- `core.asr_schema` 统一 ASR 输出字段：`segments`、`words`、`speaker`、`confidence`、`language`、`timestamp_granularity`。当 MLX stable-ts 无词级时间戳时，明确标记为 `segment` 粒度。
-- `core.all_tts_functions.tts_registry` 统一 TTS 方法注册，旧方法保留，新方法先注册为可选 adapter，避免一次性替换生产可用路线。
+- `core.llm_provider` 负责 LLM provider registry，默认通过本地 oMLX 使用 `Qwen3.6-35B-A3B-Qwable-Holo3-Qwopus-oQ6-mtp`；原 OpenAI-compatible `api` 配置及 DeepSeek、OpenAI、Gemini、LM Studio 路线仍可显式选择。
+- `core.asr_schema` 统一 ASR 输出字段并执行硬契约：主文本和时间轴只接受 WhisperX / stable-ts 的真实 `words[start,end]`。FunASR 的均分伪时间戳已移除；MOSS 段时间戳不替代词时间戳，只作为说话人 sidecar 对原生词区间标注，并继续用于配音读回质检。
+- `core.providers.speaker_diarization` 将 MOSS 说话人 turn 对齐到词，输出覆盖率、人数和切换次数。缓存的 `cleaned_chunks.xlsx` 若没有达到说话人覆盖率门槛会停止执行，避免旧的无说话人产物继续污染字幕和配音。
+- 说话人硬边界依次作用于 spaCy 分句、字幕时间轴延展、配音短片段/超速片段合并；审计产物包括 `output/log/speaker_diarization.json`、`output/log/speaker_sentence_boundaries.json` 以及最终时间轴目录中的 `speaker_boundary_report.json`。
+- `core.all_tts_functions.tts_registry` 只注册已有实现的 TTS。未实现的 CosyVoice 3、ElevenLabs、OpenAI TTS 占位入口已删除；MLX 音色克隆模型统一通过路由适配器接入。
 - `core.doctor` 是长任务前的环境检查入口：验证 FFmpeg、Python 包、服务端口、密钥、输出目录和步骤 checkpoint。
 
 三种推荐工作模式：

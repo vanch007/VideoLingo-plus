@@ -43,10 +43,7 @@ The following are the core technical modules and workflow of the system:
      - `load_nlp_model.py`: Loads and initializes required NLP models, supporting multiple languages.
 
 7. **Text-to-Speech (TTS) Module**:
-   - `core/all_tts_functions/fish_tts.py`: Implements text-to-speech functionality using external APIs to generate audio files.
-   - `core/all_tts_functions/openai_tts.py`: Uses OpenAI's TTS service to convert text to audio and save it.
-   - `core/all_tts_functions/gpt_sovits_tts.py`: Uses GPT-SoVITS for text-to-speech conversion, supporting multiple languages.
-   - `core/all_tts_functions/azure_tts.py`: Utilizes Azure Speech Service to convert text to audio, saving in WAV format.
+   - `core/providers/mlx_tts.py`: Routes local voice cloning through IndexTTS2, OmniVoice, Qwen3-TTS, VoxCPM2, Higgs Audio, dots.tts, ZONOS2, and MOSS-TTS.
 
 8. **System Configuration and Utility Module**:
    - `config.yaml`: Centrally stores and manages global parameter configurations for the system.

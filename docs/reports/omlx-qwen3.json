@@ -1,0 +1,47 @@
+{
+  "generated_at": "2026-07-31T05:00:49.445028+00:00",
+  "model": "Qwen3.6-35B-A3B-Qwable-Holo3-Qwopus-oQ6-mtp",
+  "api_base": "http://127.0.0.1:8000/v1",
+  "workload": {
+    "source_language": "zh",
+    "target_language": "vi",
+    "source_lines": [
+      "RexEntropy的COO当国内的MCN还在卷价格抢达人的时候他们直接把战场搬到了海外做到了美国TikTok带货机构的第一名",
+      "李嘉琪美万姚万交个朋友这种头部的机构他们在海外其实目前做的都是比较一般的为什么偏偏是他们跑出来了这些我们会聊透国内和海外的达人体系到底差在哪",
+      "选中了印尼和美国从选品物流仓储到投放达人带货整条跨境电商的链路怎么跑以及最关键的普通人现在还能抓住哪些TikTok上的赚钱信息差"
+    ]
+  },
+  "translation_benchmark": {
+    "status": "pass",
+    "total_seconds": 24.432,
+    "faithfulness": {
+      "status": "pass",
+      "ttft_seconds": 0.026,
+      "total_seconds": 7.275,
+      "completion_tokens": 360,
+      "estimated_output_tokens_per_second": 49.48,
+      "stream_chunks": 51
+    },
+    "expressiveness": {
+      "status": "pass",
+      "ttft_seconds": 0.01,
+      "total_seconds": 17.157,
+      "completion_tokens": 914,
+      "estimated_output_tokens_per_second": 53.27,
+      "stream_chunks": 125
+    },
+    "final_translations": [
+      "COO của RexEntropy đã đưa cuộc chiến ra nước ngoài, khi các MCN trong nước còn đang đấu giá để săn KOLs, họ đã trở thành đơn vị hàng đầu về bán hàng trên TikTok tại Mỹ.",
+      "Các đại gia như Li Jiaqi, Meiwanyao, Jiao Ge Pengyou... hoạt động ở nước ngoài hiện nay cũng chỉ ở mức trung bình. Vậy tại sao lại là họ nổi bật? Chúng ta sẽ cùng mổ xẻ xem hệ thống KOL trong và ngoài nước khác nhau thế nào.",
+      "Họ chọn Indonesia và Mỹ, từ chọn hàng, logistics, kho bãi đến hợp tác KOL bán hàng – cả chuỗi thương mại điện tử xuyên biên giới vận hành ra sao, và quan trọng nhất, người bình thường còn nắm bắt được những lợi thế thông tin nào để kiếm tiền trên TikTok."
+    ]
+  },
+  "quality": {
+    "score": null,
+    "min_total": null,
+    "max_total": null,
+    "valid_judges": 0,
+    "confidence": "insufficient"
+  },
+  "judges": []
+}

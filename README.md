@@ -27,7 +27,7 @@ Key features:
 
 - **✅ Netflix-standard, Single-line subtitles Only**
 
-- **🗣️ Dubbing with GPT-SoVITS, Azure, OpenAI, and more**
+- **🗣️ Local MLX voice-cloning dubbing with nine selectable backends**
 
 - 🚀 One-click startup and processing in Streamlit
 
@@ -50,14 +50,14 @@ https://github.com/user-attachments/assets/a5c3d8d1-2b29-4ba9-b0d0-25896829d951
 </td>
 <td width="33%">
 
-### Cosy2 Voice Clone
+### Voice Clone Demo
 ---
 https://github.com/user-attachments/assets/e065fe4c-3694-477f-b4d6-316917df7c0a
 
 </td>
 <td width="33%">
 
-### GPT-SoVITS with my voice
+### Voice Clone Demo
 ---
 https://github.com/user-attachments/assets/47d965b2-b4ab-4a0b-9d08-b49a7bf3508c
 
@@ -120,12 +120,12 @@ docker run -d -p 8501:8501 --gpus all videolingo
 ```
 
 ## APIs
-VideoLingo supports OpenAI-Like API format and various TTS interfaces:
+VideoLingo supports OpenAI-compatible LLM APIs and local MLX speech backends:
 - LLM: `claude-3-5-sonnet-20240620`, `deepseek-chat(v3)`, `gemini-2.0-flash-exp`, `gpt-4o`, ... (sorted by performance)
 - WhisperX: Run whisperX locally or use 302.ai API
-- TTS: `azure-tts`, `openai-tts`, `siliconflow-fishtts`, **`fish-tts`**, `GPT-SoVITS`, `edge-tts`, `*custom-tts`(You can modify your own TTS in custom_tts.py!)
+- TTS: the local MLX router with IndexTTS2, OmniVoice, Qwen3-TTS, VoxCPM2, Higgs Audio, dots.tts, ZONOS2, and MOSS-TTS.
 
-> **Note:** VideoLingo works with **[302.ai](https://gpt302.saaslink.net/C2oHR9)** - one API key for all services (LLM, WhisperX, TTS). Or run locally with Ollama and Edge-TTS for free, no API needed!
+> **Note:** Translation can still use an OpenAI-compatible API; dubbing in this fork is local MLX only.
 
 ## 2026 Local Upgrade Notes
 
@@ -133,15 +133,15 @@ This fork keeps the original workflow but adds provider-based configuration and 
 
 - Secrets are no longer expected in `config.yaml`. Set keys through `.env` / shell variables based on `.env.example`.
 - Run `conda run -n videolingo python -m core.doctor` before long jobs to check FFmpeg, Python packages, services, secrets, and recoverable step status.
-- LLM routing is provider-based. Default translation uses `llm.provider: openai_compatible`, which reads the existing `api.base_url` / `api.model` block. oMLX remains an optional provider for local experiments, but it is not the default translation route.
-- ASR routes remain configurable: stable-ts + MLX for Mac, FunASR Nano for Chinese-heavy content, and WhisperX 3.8.5 for alignment/diarization scenarios.
-- TTS routes are registry-based. Current working routes remain local MLX IndexTTS2, Edge/Cloudflare Edge, VoxCPM, GPT-SoVITS, Piper, and Indonesian VITS. `tts_method: mlx_indextts2` forces local dynamic voice cloning through `/Users/vanch/mlx-indextts2`; `tts_method: mlx_router` can still route across IndexTTS2, OmniVoice, Qwen3-TTS, and VoxCPM2.
+- LLM routing is provider-based. The default is local oMLX with `Qwen3.6-35B-A3B-Qwable-Holo3-Qwopus-oQ6-mtp`; the original `openai_compatible` API block and cloud presets remain explicitly selectable.
+- Source text and word timing are restricted to WhisperX and stable-ts. MOSS-Transcribe-Diarize runs as a local MLX speaker sidecar: it labels validated native words without replacing their timestamps, and the pipeline fails closed below 98% speaker coverage.
+- TTS routes are registry-based. `--tts auto` / `tts_method: mlx_router` auto-routes through proven defaults and exposes eight local voice-cloning adapters: IndexTTS2, OmniVoice, Qwen3-TTS, VoxCPM2, Higgs Audio, dots.tts, ZONOS2, and MOSS-TTS. Experimental additions must be explicitly selected.
 - High-sync dubbing now uses duration budgets, optional LLM shortening/retry, IndexTTS2 `target_duration` passthrough, absolute-timeline audio overlay, ASR/leak score fields when available, and `output/audio/dubbing_eval.json` / `.xlsx` metrics.
 - Shared CLI entrypoint: `conda run -n videolingo python -m core.cli doctor`, `python -m core.cli models list`, `python -m core.cli run --input <video-or-srt> --source zh --target vi --profile cinematic --tts auto`, and `python -m core.cli eval dubbing`.
-- Local video smoke runs can be trimmed directly with `python -m core.cli run --input <local-video> --source zh --target en --profile cinematic --llm config --tts edge_tts --smoke-seconds 60 --no-resume`; secrets should come from `.env` / environment variables, not `config.yaml`.
-- Optional ASR readback can be enabled by setting `dubbing_quality.asr_readback_command` in `config.yaml`, then running `python -m core.cli eval dubbing --readback`. The command receives `{audio}` and `{language}` placeholders and should print raw transcript text or JSON with `text` / `transcript` / `segments`.
+- Local video smoke runs can be trimmed directly with `python -m core.cli run --input <local-video> --source zh --target en --profile cinematic --llm omlx --tts mlx_indextts2 --smoke-seconds 60 --no-resume`; omit `--llm` to use the same configured oMLX default.
+- ASR readback defaults to `dubbing_quality.asr_readback_backend: moss-mlx`; run `python -m core.cli eval dubbing --readback`. `builtin` keeps stable-whisper available, while `command` accepts `{audio}`, `{language}`, and `{output_dir}` placeholders.
 - Dubbing repair loop: `python -m core.cli repair dubbing --limit 20` writes `output/audio/dubbing_repair_plan.json`; add `--reasons missing_audio,over_duration` to target specific failure classes, `--apply` to mutate selected rows, `--batches 3` to repeat several plan/apply batches, and `--full-remap` only when chunk timing should be recomputed globally. Applied repairs rebuild `output/dub.mp3` and `output/AI配音.mp4` by default; use `--no-rebuild-output` only for intermediate tuning. Batch runs append summaries to `output/audio/dubbing_repair_history.jsonl`, and over-duration triage writes `output/audio/dubbing_over_duration_report.json`.
-- For English smoke runs, ASR-low rows from unstable local voice cloning fall back to `edge_tts` by default via `dubbing_repair.low_content_fallback_backend`. Repeated ASR-quality failures are kept as explicit `manual_review` warnings instead of regenerating forever with the same bad reference.
+- For English smoke runs, ASR-low rows can switch to `qwen3_tts` via `dubbing_repair.low_content_fallback_backend`. Repeated ASR-quality failures become explicit `manual_review` warnings.
 - Repair/rewrite/readback/TTS use the current `output/pipeline_state.json` target language before `config.yaml`, so a resumed English smoke is not rewritten or scored as Vietnamese when config defaults drift.
 - ASR readback stores a fingerprint of target text, source reference, language, backend/model, and segment audio signatures. Cached scores are reused only when the fingerprint still matches.
 - Audio merge fails fast on missing or corrupt segment audio unless silence fallback is explicitly enabled, preventing a broken repair run from producing a silent dubbed video.
@@ -169,7 +169,7 @@ For detailed installation, API configuration, and batch mode instructions, pleas
 
 4. **Multilingual video transcription recognition will only retain the main language**. This is because whisperX uses a specialized model for a single language when forcibly aligning word-level subtitles, and will delete unrecognized languages.
 
-5. **Cannot dub multiple characters separately**, as whisperX's speaker distinction capability is not sufficiently reliable.
+5. Speaker identity is diarization-based rather than character-name recognition; MOSS separates voices as `S01`, `S02`, etc., but mapping those IDs to named characters still requires user metadata.
 
 ## 📄 License
 
