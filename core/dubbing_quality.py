@@ -2,6 +2,7 @@ import ast
 import json
 import math
 import os
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -70,7 +71,15 @@ def parse_list(value: Any, default: list | None = None) -> list:
         return default or []
     if isinstance(value, str):
         try:
-            parsed = ast.literal_eval(value)
+            # Pandas/numpy scalars stored inside object columns may be written
+            # to Excel as ``np.float64(1.23)``. Strip only that known wrapper
+            # before literal evaluation; never use eval on workbook content.
+            normalized = re.sub(
+                r"(?:np\.)?float(?:16|32|64)?\(\s*([-+0-9.eE]+)\s*\)",
+                r"\1",
+                value,
+            )
+            parsed = ast.literal_eval(normalized)
             return parsed if isinstance(parsed, list) else (default or [])
         except (SyntaxError, ValueError):
             return default or []

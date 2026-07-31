@@ -156,9 +156,28 @@ def _run_builtin_asr(audio_path: str, language: str) -> ASRVerificationResult:
         return ASRVerificationResult(status="fail", warnings=[f"builtin_asr_failed:{type(exc).__name__}:{exc}"])
 
 
+def _run_moss_asr(audio_path: str, language: str) -> ASRVerificationResult:
+    """Run the same local MOSS route used by source transcription for TTS readback."""
+    try:
+        from core.providers.moss_asr import run_moss_asr, transcript_from_segments
+
+        run = run_moss_asr(audio_path, purpose="readback")
+        transcript = transcript_from_segments(run.segments)
+        warnings = [] if transcript else [f"moss_asr_empty:{run.output_dir}"]
+        return ASRVerificationResult(
+            status="ok" if transcript else "fail",
+            transcript=transcript,
+            warnings=warnings,
+        )
+    except Exception as exc:
+        return ASRVerificationResult(status="fail", warnings=[f"moss_asr_failed:{type(exc).__name__}:{exc}"])
+
+
 def _run_asr(audio_path: str, language: str) -> ASRVerificationResult:
     backend = _readback_backend()
     template = _command_template()
+    if backend in {"moss", "moss-mlx", "mlx-moss"}:
+        return _run_moss_asr(audio_path, language)
     if backend in {"builtin", "stable_ts", "stable_ts_mlx"} or template == ["builtin"]:
         return _run_builtin_asr(audio_path, language)
     if not template:
@@ -215,7 +234,12 @@ def _asr_config_signature(language: str) -> dict[str, Any]:
         "language": language,
         "backend": backend,
     }
-    if backend in {"builtin", "stable_ts", "stable_ts_mlx"} or _command_template() == ["builtin"]:
+    if backend in {"moss", "moss-mlx", "mlx-moss"}:
+        from core.providers.moss_asr import moss_asr_health
+
+        health = moss_asr_health()
+        signature.update({"model": health.model, "python": health.python, "root": health.root})
+    elif backend in {"builtin", "stable_ts", "stable_ts_mlx"} or _command_template() == ["builtin"]:
         signature["model"] = str(_safe_load_key("dubbing_quality.asr_readback_model", _safe_load_key("whisper.model", "large-v3-turbo")))
         signature["use_mlx"] = bool(_safe_load_key("dubbing_quality.asr_readback_use_mlx", True))
     else:
@@ -288,6 +312,15 @@ def verify_tasks_df(tasks_df: pd.DataFrame, *, limit: int | None = None, force: 
     ):
         if column not in out.columns:
             out[column] = None
+    for column in (
+        "asr_transcript",
+        "asr_status",
+        "asr_line_results",
+        "asr_fingerprint",
+        "asr_language",
+        "asr_backend",
+    ):
+        out[column] = out[column].astype(object)
 
     for idx, row in out.iterrows():
         if limit is not None and checked >= limit:

@@ -9,8 +9,13 @@ import re
 from core.all_tts_functions.estimate_duration import init_estimator, estimate_duration
 from rich import print as rprint
 from core.constants import SRC_SUBS_FOR_AUDIO_FILE, TRANS_SUBS_FOR_AUDIO_FILE
-from core.dubbing_quality import apply_dubbing_budget_columns, estimated_rewrite_needed
+from core.dubbing_quality import (
+    apply_dubbing_budget_columns,
+    estimated_rewrite_needed,
+    get_quality_config,
+)
 from core.dubbing_rewrite import rewrite_task_lines
+from core.providers.speaker_diarization import same_known_speaker
 
 INPUT_EXCEL = "output/audio/tts_tasks.xlsx"
 OUTPUT_EXCEL = "output/audio/tts_tasks.xlsx"
@@ -48,8 +53,8 @@ def merge_rows(df, start_idx, merge_count):
         if has_speaker:
             curr_spk = df.iloc[start_idx]['speaker']
             next_spk = next_row['speaker']
-            # If speakers are different, break merge
-            if curr_spk != next_spk:
+            # Unknown or different speakers are both hard merge boundaries.
+            if not same_known_speaker(curr_spk, next_spk):
                 df.at[start_idx + merge_count - 1, 'cut_off'] = 1
                 return merge_count
 
@@ -168,27 +173,44 @@ def rewrite_estimated_overlong_rows(df):
         df["dubbing_rewrite_rounds"] = 0
     if "rewrite_reason" not in df.columns:
         df["rewrite_reason"] = ""
+    else:
+        df["rewrite_reason"] = df["rewrite_reason"].astype(object)
 
-    for idx, row in df.iterrows():
-        if not estimated_rewrite_needed(row):
-            continue
-        try:
-            reason = (
-                f"Estimated speech duration {float(row.get('est_dur', 0) or 0):.2f}s exceeds "
-                f"available window {float(row.get('available_duration', 0) or 0):.2f}s."
-            )
-            rewritten = rewrite_task_lines(row, reason=reason)
-            if rewritten:
+    max_rounds = get_quality_config().max_rewrite_rounds
+    for idx, initial_row in df.iterrows():
+        row = initial_row.to_dict()
+        rounds = int(row.get("dubbing_rewrite_rounds", 0) or 0)
+        while estimated_rewrite_needed(row) and rounds < max_rounds:
+            try:
+                reason = (
+                    f"Estimated speech duration {float(row.get('est_dur', 0) or 0):.2f}s exceeds "
+                    f"available window {float(row.get('available_duration', 0) or 0):.2f}s."
+                )
+                rewritten = rewrite_task_lines(
+                    row,
+                    reason=reason,
+                    max_retries=int(load_key("dubbing_repair.llm_retry_attempts", 1)),
+                    retry_interval=int(load_key("dubbing_repair.llm_retry_interval", 1)),
+                    timeout_seconds=float(load_key("dubbing_repair.llm_timeout_seconds", 60)),
+                )
+                if not rewritten:
+                    break
                 new_text = " ".join(rewritten)
                 df.at[idx, "lines"] = rewritten
                 df.at[idx, "text"] = new_text
                 df.at[idx, "est_dur"] = estimate_duration(new_text, ESTIMATOR)
                 df.at[idx, "rewritten_for_dubbing"] = True
-                df.at[idx, "dubbing_rewrite_rounds"] = int(row.get("dubbing_rewrite_rounds", 0) or 0) + 1
+                rounds += 1
+                df.at[idx, "dubbing_rewrite_rounds"] = rounds
                 df.at[idx, "rewrite_reason"] = "estimated_over_duration"
-                rprint(f"[green]✍️ Rewrote overlong dubbing row {row['number']} before TTS[/green]")
-        except Exception as exc:
-            rprint(f"[yellow]⚠️ Dubbing rewrite skipped for row {row.get('number', idx)}: {exc}[/yellow]")
+                row = df.loc[idx].to_dict()
+                rprint(
+                    f"[green]✍️ Rewrote overlong dubbing row {row['number']} "
+                    f"before TTS ({rounds}/{max_rounds})[/green]"
+                )
+            except Exception as exc:
+                rprint(f"[yellow]⚠️ Dubbing rewrite skipped for row {row.get('number', idx)}: {exc}[/yellow]")
+                break
     df['if_too_fast'] = df.apply(
         lambda x: calc_if_too_fast(x['est_dur'], x['tol_dur'], x['duration'], x['tolerance']),
         axis=1,
@@ -230,8 +252,7 @@ def pre_merge_short_chunks(df):
         if 'speaker' in df.columns:
             curr_spk = df.loc[current_group[0], 'speaker']
             next_spk = df.loc[i, 'speaker']
-            if pd.notna(curr_spk) and pd.notna(next_spk) and curr_spk != next_spk:
-                speaker_change = True
+            speaker_change = not same_known_speaker(curr_spk, next_spk)
 
         # Merge conditions: small gap, same speaker, and cumulative duration < target
         if gap < 0.05 and not speaker_change and cumulative_dur < MIN_CHUNK_DURATION:

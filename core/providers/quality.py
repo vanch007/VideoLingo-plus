@@ -42,6 +42,18 @@ def normalize_for_content_score(text: str) -> str:
     return re.sub(r"[^\w\u00c0-\u024f\u1e00-\u1eff\u4e00-\u9fff]", "", text)
 
 
+def _cross_script_phonetic_normalize(text: str) -> str:
+    """Romanize CJK ASR output so spoken names can match Latin subtitles."""
+    if not re.search(r"[\u4e00-\u9fff]", text or ""):
+        return normalize_for_content_score(text)
+    try:
+        from pypinyin import lazy_pinyin
+
+        return normalize_for_content_score(" ".join(lazy_pinyin(text or "")))
+    except ImportError:
+        return normalize_for_content_score(text)
+
+
 def content_similarity(expected: str, actual: str) -> float:
     expected_norm = normalize_for_content_score(expected)
     actual_norm = normalize_for_content_score(actual)
@@ -49,7 +61,15 @@ def content_similarity(expected: str, actual: str) -> float:
         return 1.0
     if not expected_norm or not actual_norm:
         return 0.0
-    return SequenceMatcher(None, expected_norm, actual_norm).ratio()
+    direct = SequenceMatcher(None, expected_norm, actual_norm).ratio()
+    cross_script = bool(re.search(r"[\u4e00-\u9fff]", expected or "")) != bool(
+        re.search(r"[\u4e00-\u9fff]", actual or "")
+    )
+    if not cross_script:
+        return direct
+    phonetic_expected = _cross_script_phonetic_normalize(expected)
+    phonetic_actual = _cross_script_phonetic_normalize(actual)
+    return max(direct, SequenceMatcher(None, phonetic_expected, phonetic_actual).ratio())
 
 
 def reference_leak_score(reference_text: str | None, actual: str) -> float:

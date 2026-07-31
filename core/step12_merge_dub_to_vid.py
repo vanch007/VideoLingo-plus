@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.all_whisper_methods.demucs_vl import BACKGROUND_AUDIO_FILE
 from core.step7_merge_sub_to_vid import check_gpu_available
 from core.config_utils import load_key
-from core.step1_ytdlp import find_video_files
+from core.constants import SOURCE_VIDEO
 from pydub import AudioSegment
 
 DUB_VIDEO = "output/AI配音.mp4"
@@ -52,7 +52,12 @@ def normalize_audio_volume(audio_path: str, output_path: str, target_db: float =
 
 def merge_video_audio():
     """Merge video and audio with subtitle burning (two-pass for FFmpeg 8.x compatibility)."""
-    VIDEO_FILE = find_video_files()
+    if not os.path.isfile(SOURCE_VIDEO):
+        raise FileNotFoundError(
+            f"Canonical source video is missing: {SOURCE_VIDEO}. Refusing to use an "
+            "already-subtitled or previously dubbed derivative as merge input."
+        )
+    VIDEO_FILE = SOURCE_VIDEO
     background_file = BACKGROUND_AUDIO_FILE
 
     normalized_dub_audio = 'output/normalized_dub.wav'
@@ -119,12 +124,14 @@ def merge_video_audio():
         abs_src_srt = os.path.abspath(SRC_SRT).replace("'", "'\\''")
         abs_dub_srt = os.path.abspath(DUB_SUB_FILE).replace("'", "'\\''")
 
-        vf = (
-            f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,"
-            f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,"
-            f"subtitles='{abs_src_srt}':force_style='{src_style}',"
-            f"subtitles='{abs_dub_srt}':force_style='{dub_style}'"
-        )
+        filters = [
+            f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease",
+            f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2"
+        ]
+        if bool(load_key("burn_source_subtitles", True)):
+            filters.append(f"subtitles='{abs_src_srt}':force_style='{src_style}'")
+        filters.append(f"subtitles='{abs_dub_srt}':force_style='{dub_style}'")
+        vf = ",".join(filters)
 
         temp_subbed = 'output/_temp_subbed.mp4'
 

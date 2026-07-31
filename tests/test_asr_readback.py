@@ -3,6 +3,7 @@ import pandas as pd
 from core.providers import asr_readback
 from core.providers.asr_readback import extract_transcript, verify_tasks_df
 from core.providers.contracts import ASRVerificationResult
+from core.providers.quality import content_similarity
 from core.providers.quality_gate import summarize_quality_gate
 
 
@@ -10,6 +11,10 @@ def test_extract_transcript_from_common_payloads():
     assert extract_transcript("plain transcript") == "plain transcript"
     assert extract_transcript('{"text": "hello"}') == "hello"
     assert extract_transcript('{"segments": [{"text": "xin"}, {"text": "chao"}]}') == "xin chao"
+
+
+def test_cross_script_proper_name_uses_phonetic_similarity():
+    assert content_similarity("Exactly. Jang Mah-zuh.", "Exactly. 江马斯族") > 0.8
 
 
 def test_verify_tasks_df_skips_when_command_not_configured():
@@ -141,6 +146,23 @@ def test_run_asr_uses_builtin_backend(monkeypatch):
     result = asr_readback._run_asr("sample.wav", "vi")
     assert result.status == "ok"
     assert result.transcript == "noi dung"
+
+
+def test_run_asr_uses_moss_backend(monkeypatch):
+    monkeypatch.setattr(
+        asr_readback,
+        "load_key",
+        lambda key, default=None: "moss-mlx" if key == "dubbing_quality.asr_readback_backend" else default,
+    )
+    monkeypatch.setattr(
+        asr_readback,
+        "_run_moss_asr",
+        lambda audio_path, language: ASRVerificationResult(status="ok", transcript="noi dung moss"),
+    )
+
+    result = asr_readback._run_asr("sample.wav", "vi")
+    assert result.status == "ok"
+    assert result.transcript == "noi dung moss"
 
 
 def test_quality_gate_summary_counts_reasons():

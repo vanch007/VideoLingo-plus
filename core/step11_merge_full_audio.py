@@ -135,6 +135,11 @@ def _write_merge_issues(merge_issues):
 
 def merge_audio_segments(audios, new_sub_times, sample_rate):
     quality = get_quality_config()
+    if len(audios) != len(new_sub_times):
+        raise ValueError(
+            f"Audio/timeline cardinality mismatch: {len(audios)} audio files "
+            f"but {len(new_sub_times)} timestamp ranges"
+        )
     total_duration_ms = int(max(end for _, end in new_sub_times) * 1000) if new_sub_times else 0
     merged_audio = AudioSegment.silent(duration=total_duration_ms, frame_rate=sample_rate)
     merge_issues = []
@@ -151,6 +156,31 @@ def merge_audio_segments(audios, new_sub_times, sample_rate):
             try:
                 audio_segment = process_audio_segment(audio_file, allow_silence_fallback=quality.allow_silence_fallback)
                 start_time, end_time = time_range
+                next_start = new_sub_times[i + 1][0] if i + 1 < len(new_sub_times) else end_time
+                hard_end = min(float(end_time), float(next_start))
+                window_ms = max(0, int(round((hard_end - float(start_time)) * 1000)))
+                if window_ms <= 0:
+                    raise ValueError(f"Invalid or overlapping timestamp window: {time_range}")
+                if len(audio_segment) > window_ms:
+                    overflow_ms = len(audio_segment) - window_ms
+                    rounding_tolerance_ms = int(
+                        load_key("dubbing_quality.timeline_rounding_tolerance_ms", 10)
+                    )
+                    if overflow_ms > rounding_tolerance_ms:
+                        raise RuntimeError(
+                            f"Audio exceeds its hard timeline boundary by {overflow_ms}ms. "
+                            "Refusing to truncate spoken content; rewrite/regenerate before merge."
+                        )
+                    audio_segment = audio_segment[:window_ms]
+                    if len(audio_segment) > 10:
+                        audio_segment = audio_segment.fade_out(10)
+                    merge_issues.append({
+                        "audio_file": audio_file,
+                        "time_range": [float(start_time), float(end_time)],
+                        "error": "trimmed_encoding_rounding_tail",
+                        "overflow_ms": overflow_ms,
+                        "silence_fallback": False,
+                    })
                 merged_audio = merged_audio.overlay(audio_segment, position=max(0, int(start_time * 1000)))
                 
             except Exception as e:

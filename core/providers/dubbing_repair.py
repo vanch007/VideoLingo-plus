@@ -22,7 +22,6 @@ from core.dubbing_quality import (
     temp_audio_file_for,
     write_dubbing_eval,
 )
-from core.runtime_context import effective_target_language
 from core.providers.dubbing_repair_io import (
     append_repair_history,
     compact_summary as _compact_summary,
@@ -79,15 +78,19 @@ __all__ = [
 ]
 
 
-def _has_ref_text(row: pd.Series | dict[str, Any]) -> bool:
-    return not _blank(row.get("ref_text")) or bool(normalize_lines(row.get("src_lines", "")))
-
-
 def _task_row(tasks_df: pd.DataFrame, number: int) -> pd.Series | None:
     matched = tasks_df[tasks_df["number"] == number]
     if matched.empty:
         return None
     return matched.iloc[0]
+
+
+def _content_failure_backend() -> str:
+    """Return the configured non-Index clone backend for content failures."""
+    fallback = str(
+        load_key("dubbing_repair.low_content_fallback_backend", "dots") or "dots"
+    ).strip()
+    return fallback if fallback in KNOWN_BACKENDS else "dots"
 
 
 def _resolve_backend(row: pd.Series | dict[str, Any], reasons: set[str], backend_fallback: str) -> str | None:
@@ -98,20 +101,11 @@ def _resolve_backend(row: pd.Series | dict[str, Any], reasons: set[str], backend
 
     current = row.get("tts_method") or row.get("tts_backend") or row.get("backend")
     current = str(current).strip() if not _blank(current) else ""
-    if current == "edge_tts" and "reference_leak" not in reasons:
-        return "edge_tts"
     if current in KNOWN_BACKENDS and reasons <= {"missing_audio", "silent_or_tiny_audio"}:
         return current
 
-    if "reference_leak" in reasons:
-        return "qwen3_tts" if _has_ref_text(row) else "indextts2"
-    if "low_content_score" in reasons:
-        if effective_target_language("").lower().startswith("vi"):
-            return "indextts2"
-        fallback = str(load_key("dubbing_repair.low_content_fallback_backend", "edge_tts") or "edge_tts").strip()
-        if fallback in KNOWN_BACKENDS:
-            return fallback
-        return "qwen3_tts" if _has_ref_text(row) else "indextts2"
+    if reasons & {"reference_leak", "low_content_score"}:
+        return _content_failure_backend()
     if "over_duration" in reasons or "under_duration" in reasons or "speech_rate_fast" in reasons:
         return "indextts2"
     return None
@@ -191,10 +185,7 @@ def choose_repair_action(
     if "reference_leak" in reason_set and backend == "voxcpm2":
         notes.append("voxcpm2 is not recommended for automatic leak repair; verify with ASR before accepting.")
     if "low_content_score" in reason_set:
-        if backend == "edge_tts":
-            notes.append("ASR content score is below threshold; non-Vietnamese rows fall back to Edge TTS instead of repeating unstable local voice cloning.")
-        else:
-            notes.append("ASR content score is below threshold; regenerate with cleaner backend/reference first.")
+        notes.append("ASR content score is below threshold; regenerate with a different MLX clone backend or cleaner reference.")
     if rewrite:
         if "over_duration" in reason_set or "speech_rate_fast" in reason_set:
             notes.append("Text will be shortened before regeneration.")
@@ -623,15 +614,9 @@ def apply_repair_plan(
         if item.get("backend"):
             if "tts_backend" not in tasks_df.columns:
                 tasks_df["tts_backend"] = ""
-            if item["backend"] == "edge_tts":
-                if "tts_method" not in tasks_df.columns:
-                    tasks_df["tts_method"] = ""
-                row_dict["tts_method"] = "edge_tts"
-                row_dict["tts_backend"] = ""
-            else:
-                row_dict["tts_backend"] = item["backend"]
-                if "tts_method" in tasks_df.columns:
-                    row_dict["tts_method"] = ""
+            row_dict["tts_backend"] = item["backend"]
+            if "tts_method" in tasks_df.columns:
+                row_dict["tts_method"] = ""
 
         quality = get_quality_config()
         max_repair_rounds = _repair_max_rewrite_rounds(quality)

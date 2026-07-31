@@ -7,6 +7,7 @@ from core.step10_gen_audio import build_atempo_filter, retry_fast_speech_rows
 
 def test_parse_list_handles_excel_repr():
     assert parse_list("[[1.0, 2.0], [2.0, 3.0]]") == [[1.0, 2.0], [2.0, 3.0]]
+    assert parse_list("[[np.float64(1.0), np.float64(2.0)]]") == [[1.0, 2.0]]
     assert parse_list("not a list") == []
 
 

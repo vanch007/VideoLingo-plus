@@ -144,27 +144,40 @@ def test_over_duration_extreme_routes_to_manual_timeline_review():
     assert not action.delete_audio
 
 
-def test_reference_leak_prefers_clean_ref_backend():
+def test_reference_leak_uses_configured_dots_fallback(monkeypatch):
+    monkeypatch.setattr(
+        "core.providers.dubbing_repair.load_key",
+        lambda key, default=None: "dots"
+        if key == "dubbing_repair.low_content_fallback_backend"
+        else default,
+    )
     eval_row = {"number": 1, "status": "warn", "reason": "reference_leak", "text": "xin chao"}
     action = choose_repair_action(eval_row, _task_row(ref_text="clean reference text"))
     assert action.action == "regenerate_with_backend"
-    assert action.backend == "qwen3_tts"
+    assert action.backend == "dots"
 
 
-def test_vietnamese_low_content_prefers_indextts2(monkeypatch):
-    monkeypatch.setattr("core.providers.dubbing_repair.load_key", lambda key, default=None: "vi" if key == "target_language" else default)
+def test_vietnamese_low_content_also_escapes_indextts2_to_dots(monkeypatch):
+    def fake_load_key(key, default=None):
+        if key == "target_language":
+            return "vi"
+        if key == "dubbing_repair.low_content_fallback_backend":
+            return "dots"
+        return default
+
+    monkeypatch.setattr("core.providers.dubbing_repair.load_key", fake_load_key)
     eval_row = {"number": 1, "status": "warn", "reason": "low_content_score", "text": "xin chao"}
     action = choose_repair_action(eval_row, _task_row(ref_text="clean reference text"))
     assert action.action == "regenerate_with_backend"
-    assert action.backend == "indextts2"
+    assert action.backend == "dots"
 
 
-def test_non_vietnamese_low_content_falls_back_to_edge_tts(monkeypatch, tmp_path):
+def test_non_vietnamese_low_content_falls_back_to_dots(monkeypatch, tmp_path):
     def fake_load_key(key, default=None):
         if key == "target_language":
             return "en"
         if key == "dubbing_repair.low_content_fallback_backend":
-            return "edge_tts"
+            return "dots"
         return default
 
     monkeypatch.chdir(tmp_path)
@@ -172,8 +185,8 @@ def test_non_vietnamese_low_content_falls_back_to_edge_tts(monkeypatch, tmp_path
     eval_row = {"number": 1, "status": "warn", "reason": "low_content_score", "text": "hello"}
     action = choose_repair_action(eval_row, _task_row(ref_text="clean reference text"))
     assert action.action == "regenerate_with_backend"
-    assert action.backend == "edge_tts"
-    assert "Edge TTS" in " ".join(action.notes)
+    assert action.backend == "dots"
+    assert "different MLX clone backend" in " ".join(action.notes)
 
 
 def test_low_content_uses_run_state_target_over_stale_config(monkeypatch, tmp_path):
@@ -185,14 +198,14 @@ def test_low_content_uses_run_state_target_over_stale_config(monkeypatch, tmp_pa
         if key == "target_language":
             return "vi"
         if key == "dubbing_repair.low_content_fallback_backend":
-            return "edge_tts"
+            return "dots"
         return default
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr("core.providers.dubbing_repair.load_key", fake_load_key)
     eval_row = {"number": 1, "status": "warn", "reason": "low_content_score", "text": "hello"}
     action = choose_repair_action(eval_row, _task_row(ref_text="clean reference text"))
-    assert action.backend == "edge_tts"
+    assert action.backend == "dots"
 
 
 def test_repeated_asr_quality_repair_routes_to_manual_review(monkeypatch):
@@ -209,7 +222,7 @@ def test_repeated_asr_quality_repair_routes_to_manual_review(monkeypatch):
     assert not action.delete_audio
 
 
-def test_repair_preserves_edge_fallback_for_later_speed_repairs(monkeypatch):
+def test_speed_repairs_use_duration_backend(monkeypatch):
     monkeypatch.setattr("core.providers.dubbing_repair.load_key", lambda key, default=None: default)
     eval_row = {
         "number": 1,
@@ -220,10 +233,10 @@ def test_repair_preserves_edge_fallback_for_later_speed_repairs(monkeypatch):
         "duration": 1.0,
         "speed_factor": 1.2,
     }
-    task_row = _task_row(tts_method="edge_tts", speed_factor=1.2, real_dur=2.0, duration=1.0)
+    task_row = _task_row(tts_backend="qwen3_tts", speed_factor=1.2, real_dur=2.0, duration=1.0)
     action = choose_repair_action(eval_row, task_row)
     assert action.action == "rewrite_and_regenerate"
-    assert action.backend == "edge_tts"
+    assert action.backend == "indextts2"
 
 
 def test_repair_routes_exhausted_rewrite_rows_to_manual_review(monkeypatch):

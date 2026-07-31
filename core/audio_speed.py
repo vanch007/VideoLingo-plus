@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import math
 import shutil
 import subprocess
 import time
 
 from pydub import AudioSegment
+from pydub.silence import detect_nonsilent
 from rich import print as rprint
 
 from core.all_whisper_methods.audio_preprocess import get_audio_duration
@@ -51,8 +53,10 @@ def _validate_adjusted_duration(output_file: str, input_duration: float, expecte
         return
     if output_duration <= expected_duration:
         return
+    # Never repair an encoder-duration discrepancy by clipping the tail: the
+    # excess may contain the final phoneme. The timeline merger can tolerate a
+    # few milliseconds of container rounding or reject/rewrite the whole row.
     if input_duration < 3 and diff <= 0.1:
-        _trim_audio(output_file, expected_duration)
         return
     if output_duration <= expected_duration * 1.05:
         rprint(f"[yellow]⚠️ Duration mismatch accepted: {output_duration:.2f}s (expected {expected_duration:.2f}s)[/yellow]")
@@ -63,8 +67,28 @@ def _validate_adjusted_duration(output_file: str, input_duration: float, expecte
     )
 
 
-def _trim_audio(output_file: str, expected_duration: float) -> None:
-    audio = AudioSegment.from_wav(output_file)
-    trimmed_audio = audio[: expected_duration * 1000].fade_out(10)
-    trimmed_audio.export(output_file, format="wav")
-    rprint(f"[yellow]✂️ Trimmed to expected duration: {expected_duration:.2f}s[/yellow]")
+def trim_edge_silence(
+    audio: AudioSegment,
+    *,
+    min_silence_len: int = 100,
+    silence_thresh: int = -40,
+    keep_silence: int = 50,
+) -> AudioSegment:
+    """Remove only leading/trailing silence while preserving every internal pause."""
+    # Avoid treating a quiet cloned voice as silence. IndexTTS2 can produce
+    # valid speech averaging below -45 dBFS; an absolute -40 dBFS threshold
+    # then keeps only the first transient and deletes the rest of the sentence.
+    effective_thresh = silence_thresh
+    if math.isfinite(audio.dBFS):
+        effective_thresh = min(silence_thresh, math.floor(audio.dBFS - 12))
+    spans = detect_nonsilent(
+        audio,
+        min_silence_len=min_silence_len,
+        silence_thresh=effective_thresh,
+        seek_step=1,
+    )
+    if not spans:
+        return audio
+    start_ms = max(0, spans[0][0] - keep_silence)
+    end_ms = min(len(audio), spans[-1][1] + keep_silence)
+    return audio[start_ms:end_ms]
