@@ -14,6 +14,11 @@ JSON_REPAIR_DECODE_ERROR = getattr(json_repair, "JSONDecodeError", json.JSONDeco
 LOG_FOLDER = 'output/gpt_log'
 LOCK = Lock()
 
+
+def is_non_retryable_api_error(error):
+    """Return true for client/account errors that another identical request cannot fix."""
+    return getattr(error, "status_code", None) in {400, 401, 402, 403, 404, 422}
+
 def save_log(model, prompt, response, log_title = 'default', message = None):
     os.makedirs(LOG_FOLDER, exist_ok=True)
     log_data = {
@@ -143,6 +148,8 @@ def ask_gpt(
                 break  # Non-JSON format, break the loop directly
                 
         except Exception as e:
+            if is_non_retryable_api_error(e):
+                raise
             if attempt < max_retries - 1:
                 if isinstance(e, RequestException):
                     print(f"Request error: {e}. Retrying ({attempt + 1}/{max_retries})...")

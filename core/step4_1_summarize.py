@@ -5,6 +5,7 @@ from core.ask_gpt import ask_gpt
 from core.prompts_storage import get_summary_prompt
 from core.config_utils import load_key
 from core.translation_state import record_llm_stage
+from core.translation_context import format_dialogue, load_speaker_aware_rows
 import pandas as pd
 from rich.console import Console
 
@@ -15,11 +16,11 @@ SENTENCE_TXT_PATH = 'output/log/sentence_splitbymeaning.txt'
 CUSTOM_TERMS_PATH = 'custom_terms.xlsx'
 CLEANED_CHUNKS_PATH = 'output/log/cleaned_chunks.xlsx'
 
-def combine_chunks():
+def combine_chunks(speaker_rows=None):
     """Combine the text chunks identified by whisper into a single long text"""
-    with open(SENTENCE_TXT_PATH, 'r', encoding='utf-8') as file:
-        sentences = file.readlines()
-    cleaned_sentences = [line.strip() for line in sentences if line.strip()]
+    if speaker_rows is None:
+        speaker_rows, _ = load_speaker_aware_rows()
+    cleaned_sentences = format_dialogue(speaker_rows).splitlines()
     # 用换行符连接，便于 LLM 逐行纠错
     combined_text = '\n'.join(cleaned_sentences)
     # 限制长度
@@ -75,13 +76,65 @@ def save_corrected_text(corrected_lines, original_lines=None):
         update_cleaned_chunks(original_lines, corrected_lines)
 
 
+def validate_stt_correction(response_data, original_lines):
+    corrected_lines = response_data.get('corrected_lines')
+    if not isinstance(corrected_lines, list):
+        return {"status": "error", "message": "Missing or invalid 'corrected_lines' list"}
+    if len(corrected_lines) != len(original_lines):
+        return {
+            "status": "error",
+            "message": f"Line count mismatch: expected {len(original_lines)}, got {len(corrected_lines)}",
+        }
+    for line_index, (original, corrected) in enumerate(zip(original_lines, corrected_lines), 1):
+        if not isinstance(corrected, str):
+            return {"status": "error", "message": f"Line {line_index} is not a string"}
+        if len(corrected) != len(original):
+            return {
+                "status": "error",
+                "message": (
+                    f"Character count mismatch on line {line_index}: "
+                    f"expected {len(original)}, got {len(corrected)}"
+                ),
+            }
+    return {"status": "success", "message": "Correction completed"}
+
+
+def apply_stt_exact_replacements(lines):
+    """Apply run-specific verified transcript fixes after the conservative LLM pass.
+
+    These replacements only change sentence text. Native word timestamps remain
+    untouched and Step 6 continues to align the corrected sentence fuzzily.
+    """
+    replacements = load_key("stt_correction_exact_replacements", {}) or {}
+    if not isinstance(replacements, dict):
+        raise ValueError("stt_correction_exact_replacements must be a mapping")
+    corrected = []
+    replacement_count = 0
+    for line in lines:
+        updated = line
+        for source, target in replacements.items():
+            if not isinstance(source, str) or not isinstance(target, str):
+                raise ValueError("STT exact replacement keys and values must be strings")
+            if source and source in updated:
+                updated = updated.replace(source, target)
+        replacement_count += int(updated != line)
+        corrected.append(updated)
+    return corrected, replacement_count
+
+
 def get_summary():
     """Get summary and optionally correct STT errors.
     
     STT correction is automatically enabled for Chinese (zh) to fix homophones,
     but disabled for other languages to prevent timestamp matching issues.
     """
-    src_content, line_count = combine_chunks()
+    speaker_rows, speaker_metrics = load_speaker_aware_rows()
+    src_content, line_count = combine_chunks(speaker_rows)
+    speaker_ids = speaker_metrics.speakers
+    console.print(
+        f"[cyan]🗣️ Speaker-aware summary context: {speaker_metrics.known_speaker_lines}/"
+        f"{speaker_metrics.total_lines} lines, {speaker_metrics.speaker_count} speakers[/cyan]"
+    )
     
     # Auto-detect whether to skip STT correction based on source language
     whisper_language = load_key("whisper.language")
@@ -95,7 +148,13 @@ def get_summary():
     else:
         console.print(f"[cyan]🔧 STT纠错已启用（源语言: {detected_language}）[/cyan]")
     
-    custom_terms = pd.read_excel(CUSTOM_TERMS_PATH)
+    if os.path.exists(CUSTOM_TERMS_PATH):
+        custom_terms = pd.read_excel(CUSTOM_TERMS_PATH)
+    else:
+        console.print(
+            f"[yellow]⏭️ Custom terms file not found: {CUSTOM_TERMS_PATH}; continuing without custom terms[/yellow]"
+        )
+        custom_terms = pd.DataFrame(columns=["src", "tgt", "note"])
     custom_terms_json = {
         "terms": [
             {
@@ -112,7 +171,7 @@ def get_summary():
     # ============ Step 1: Summarize topic and extract terms ============
     from core.prompts_storage import get_summary_prompt, get_stt_correction_prompt
     
-    summary_prompt = get_summary_prompt(src_content, custom_terms_json)
+    summary_prompt = get_summary_prompt(src_content, custom_terms_json, speaker_ids=speaker_ids)
     console.print("[cyan]📝 Step 1: Summarizing topic and extracting terminology...[/cyan]")
     
     def valid_summary(response_data):
@@ -121,6 +180,16 @@ def get_summary():
             return {"status": "error", "message": "Missing 'terms' key"}
         if 'topic' not in response_data:
             return {"status": "error", "message": "Missing 'topic' key"}
+        if 'speaker_profiles' not in response_data or not isinstance(response_data['speaker_profiles'], list):
+            return {"status": "error", "message": "Missing 'speaker_profiles' list"}
+        returned_speakers = {
+            str(item.get('speaker_id', '')).strip()
+            for item in response_data['speaker_profiles']
+            if isinstance(item, dict)
+        }
+        missing_speakers = set(speaker_ids) - returned_speakers
+        if missing_speakers:
+            return {"status": "error", "message": f"Missing speaker profiles: {sorted(missing_speakers)}"}
         for term in response_data['terms']:
             if not all(key in term for key in required_keys):
                 return {"status": "error", "message": "Invalid term format"}
@@ -148,7 +217,7 @@ def get_summary():
             original_lines = [line.strip() for line in f.readlines() if line.strip()]
         
         # 分批处理配置
-        BATCH_SIZE = 30  # 每批处理的行数
+        BATCH_SIZE = max(1, int(load_key('stt_correction_batch_size', 10)))
         total_lines = len(original_lines)
         all_corrected_lines = []
         total_corrections = 0
@@ -166,21 +235,20 @@ def get_summary():
             
             # 将批次内容组合成待纠错文本
             batch_content = '\n'.join(batch_lines)
+            batch_speaker_rows = speaker_rows.iloc[batch_idx:batch_end].copy()
+            batch_speaker_rows.loc[:, 'text'] = batch_lines
+            batch_speaker_context = format_dialogue(batch_speaker_rows)
             
             # 生成批次纠错prompt
-            correction_prompt = get_stt_correction_prompt(batch_content, topic, all_terms)
+            correction_prompt = get_stt_correction_prompt(
+                batch_content,
+                topic,
+                all_terms,
+                speaker_context=batch_speaker_context,
+            )
             
             def valid_correction(response_data):
-                if 'corrected_lines' not in response_data:
-                    return {"status": "error", "message": "Missing 'corrected_lines' key"}
-                if not isinstance(response_data['corrected_lines'], list):
-                    return {"status": "error", "message": "'corrected_lines' must be a list"}
-                # 验证行数是否匹配
-                expected_lines = len(batch_lines)
-                actual_lines = len(response_data['corrected_lines'])
-                if actual_lines != expected_lines:
-                    return {"status": "error", "message": f"Line count mismatch: expected {expected_lines}, got {actual_lines}"}
-                return {"status": "success", "message": "Correction completed"}
+                return validate_stt_correction(response_data, batch_lines)
             
             try:
                 correction_result = ask_gpt(
@@ -223,6 +291,14 @@ def get_summary():
         
         # 验证合并后的总行数
         if len(all_corrected_lines) == total_lines:
+            all_corrected_lines, exact_corrections = apply_stt_exact_replacements(
+                all_corrected_lines
+            )
+            if exact_corrections:
+                total_corrections += exact_corrections
+                console.print(
+                    f"[green]✅ 已应用 {exact_corrections} 行经核验的精确术语纠错[/green]"
+                )
             console.print(f"[green]✅ STT 纠错完成：共 {total_lines} 行，纠正 {total_corrections} 行 ({total_corrections/total_lines*100:.1f}%)[/green]")
             
             # 保存纠错结果
@@ -238,14 +314,29 @@ def get_summary():
     # 保存 terminology
     save_data = {
         'topic': summary.get('topic', ''),
-        'terms': summary.get('terms', [])
+        'terms': summary.get('terms', []),
+        'speaker_profiles': summary.get('speaker_profiles', []),
+        'speaker_context_metrics': {
+            'total_lines': speaker_metrics.total_lines,
+            'known_speaker_lines': speaker_metrics.known_speaker_lines,
+            'coverage': speaker_metrics.coverage,
+            'speaker_count': speaker_metrics.speaker_count,
+            'speaker_transitions': speaker_metrics.speaker_transitions,
+        },
     }
     
     with open(TERMINOLOGY_JSON_PATH, 'w', encoding='utf-8') as f:
         json.dump(save_data, f, ensure_ascii=False, indent=4)
 
     console.print(f'[green]💾 Summary saved to → {TERMINOLOGY_JSON_PATH}[/green]')
-    record_llm_stage("summarize")
+    record_llm_stage(
+        "summarize",
+        artifacts=[
+            TERMINOLOGY_JSON_PATH,
+            SENTENCE_TXT_PATH,
+            "output/log/translation_speaker_context.json",
+        ],
+    )
 
 if __name__ == '__main__':
     get_summary()

@@ -44,7 +44,7 @@ Split the given subtitle text into {num_parts} parts, each less than {word_limit
 
 ## ================================================================
 # @ step4_1_summarize.py
-def get_summary_prompt(source_content, custom_terms_json=None):
+def get_summary_prompt(source_content, custom_terms_json=None, speaker_ids=None):
     """Step 1: Summarize topic and extract terminology (without correction)"""
     src_lang = load_key("whisper.detected_language")
     tgt_lang = load_key("target_language")
@@ -59,7 +59,7 @@ def get_summary_prompt(source_content, custom_terms_json=None):
 
     summary_prompt = f"""
 ## Role
-You are a video translation expert and terminology consultant.
+You are a video dialogue analyst, translation expert, and terminology consultant.
 You specialize in {src_lang} comprehension and professional terminology extraction.
 
 ## Task
@@ -67,6 +67,7 @@ For the provided {src_lang} video text (transcribed by ASR, may contain errors):
 1. Summarize main topic in two sentences
 2. Extract professional terms/names with {tgt_lang} translations (excluding existing terms)
 3. Provide brief explanation for each term{terms_note}
+4. Infer a conservative role profile for every diarized speaker ID: {speaker_ids or []}
 
 ## Steps
 1. Topic Summary:
@@ -78,6 +79,12 @@ For the provided {src_lang} video text (transcribed by ASR, may contain errors):
    - Provide {tgt_lang} translation or keep original
    - Add brief explanation
 
+3. Speaker/Character Analysis:
+   - Treat labels such as [S01] as stable speaker identities, never as spoken text
+   - Infer role, relationship, status/formality, and speaking style only from dialogue evidence
+   - Use "unknown" when evidence is insufficient; never invent names, gender, or biography
+   - Explain how each profile should affect pronouns, honorifics, tone, and address terms in translation
+
 ## Output in only JSON format
 {{
     "topic": "Two-sentence video summary",
@@ -88,6 +95,17 @@ For the provided {src_lang} video text (transcribed by ASR, may contain errors):
             "note": "Brief explanation"
         }},
         ...
+    ],
+    "speaker_profiles": [
+        {{
+            "speaker_id": "S01",
+            "role": "conservative inferred role or unknown",
+            "relationship": "relationship to other speakers or unknown",
+            "status_and_formality": "relative status and expected register",
+            "speaking_style": "tone, temperament, recurring verbal style",
+            "translation_guidance": "pronoun, honorific, address-term and tone guidance",
+            "evidence": ["short dialogue evidence"]
+        }}
     ]
 }}
 
@@ -99,7 +117,7 @@ For the provided {src_lang} video text (transcribed by ASR, may contain errors):
     return summary_prompt
 
 
-def get_stt_correction_prompt(source_content, topic, terms):
+def get_stt_correction_prompt(source_content, topic, terms, speaker_context=None):
     """Step 2: Correct STT errors based on summary context"""
     src_lang = load_key("whisper.detected_language")
     
@@ -120,6 +138,9 @@ You correct ASR (Automatic Speech Recognition) transcription errors.
 
 ### Key Terms in This Video
 {terms_context}
+
+### Speaker-Aware Dialogue Context
+{speaker_context or "Not available"}
 
 ## Task
 Correct ASR errors in the provided text lines based on the context above.
@@ -175,7 +196,7 @@ DO NOT fix:
 
 ## ================================================================
 # @ step5_translate.py & translate_lines.py
-def generate_shared_prompt(previous_content_prompt, after_content_prompt, summary_prompt, things_to_note_prompt):
+def generate_shared_prompt(previous_content_prompt, after_content_prompt, summary_prompt, things_to_note_prompt, speaker_context_prompt=None):
     return f'''### Context Information
 <previous_content>
 {previous_content_prompt}
@@ -187,6 +208,14 @@ def generate_shared_prompt(previous_content_prompt, after_content_prompt, summar
 
 ### Content Summary
 {summary_prompt}
+
+### Current Lines and Speaker IDs
+<speaker_context>
+{speaker_context_prompt}
+</speaker_context>
+
+Speaker IDs are metadata, not dialogue. Use them to preserve each character's role, status,
+pronouns, honorifics, address terms, and speaking style. Never output speaker IDs in subtitles.
 
 ### Points to Note
 {things_to_note_prompt}'''
@@ -223,6 +252,8 @@ We have a segment of original {src_language} subtitles that need to be directly 
 1. Faithful to the original: Accurately convey the content and meaning of the original text, without arbitrarily changing, adding, or omitting content.
 2. Accurate terminology: Use professional terms correctly and maintain consistency in terminology.
 3. Understand the context: Fully comprehend and reflect the background and contextual relationships of the text.
+4. Speaker consistency: Use the supplied speaker identity and profile to resolve pronouns, titles,
+   formality, implied subjects, and dialogue intent consistently across batch boundaries.
 </translation_principles>
 
 ## INPUT
@@ -321,6 +352,7 @@ We already have a direct translation version of the original {src_language} subt
 2. Provide detailed modification suggestions
 3. Perform free translation based on your analysis
 4. Do not add comments or explanations in the translation, as the subtitles are for the audience to read
+5. Preserve each speaker's established register, status relationship, pronouns, titles, and recurring address terms
 
 {shared_prompt}
 
@@ -335,6 +367,9 @@ Please use a two-step thinking process to handle the text line by line:
 2. {TARGET_LANGUAGE} Free Translation:
    - **DUBBING LENGTH LIMIT**: The translated text must be short enough to speak naturally inside the original subtitle time window. Character count is only a weak proxy; prioritize spoken duration and rhythm.
    - **If translation is too long**: Use shorter synonyms, remove filler words, simplify sentence structure, or rephrase more concisely.
+   - **MEANING PRESERVATION OVERRIDES BREVITY**: Never shorten by deleting a core proposition. Preserve every explicit predicate/action, object, negation, quantity, name, and contrast from the source and direct translation.
+   - Before returning each `free` line, compare it with both `origin` and `direct`. If an action such as tax, collect, pay, take, give, stand, kneel, or earn is explicit, that action must remain explicit in `free`.
+   - Bad shortening example: translating “If you don't tax the poor, who do you tax?” as “If not the poor, then who?” because the action “tax” was dropped. A valid concise version is “If not the poor, who do you tax?”
    - **Avoid Unnecessary Expansion.** Do not add filler words or extra explanations unless absolutely necessary for meaning.
    - Aim for contextual smoothness and naturalness, conforming to {TARGET_LANGUAGE} expression habits
    - Ensure it's easy for {TARGET_LANGUAGE} audience to understand and accept

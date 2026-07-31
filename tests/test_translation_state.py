@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pandas as pd
+
 from core.llm_provider import LLMProviderConfig
 from core import translation_state
 
@@ -15,13 +17,24 @@ def _fake_provider(model: str = "deepseek-ai/DeepSeek-V3.2") -> LLMProviderConfi
     )
 
 
+def _write_speaker_translation(path: str = "output/log/translation_results.xlsx") -> None:
+    pd.DataFrame(
+        {
+            "LineID": ["L00001"],
+            "Speaker": ["S01"],
+            "Source": ["Hello"],
+            "Translation": ["你好"],
+        }
+    ).to_excel(path, index=False)
+
+
 def test_translation_status_flags_old_log_model(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda: _fake_provider())
 
     Path("output/log").mkdir(parents=True)
     Path("output/gpt_log").mkdir(parents=True)
-    Path("output/log/translation_results.xlsx").write_text("placeholder", encoding="utf-8")
+    _write_speaker_translation()
     Path("output/gpt_log/translate_faithfulness.json").write_text(
         json.dumps([{"model": "old-omlx-model", "prompt": "p", "response": {"ok": True}}]),
         encoding="utf-8",
@@ -40,7 +53,7 @@ def test_record_llm_stage_writes_current_provider_manifest(tmp_path, monkeypatch
 
     Path("output/log").mkdir(parents=True)
     Path("output/gpt_log").mkdir(parents=True)
-    Path("output/log/translation_results.xlsx").write_text("placeholder", encoding="utf-8")
+    _write_speaker_translation()
     Path("output/gpt_log/translate_faithfulness.json").write_text(
         json.dumps([{"model": "deepseek-ai/DeepSeek-V3.2", "prompt": "p", "response": {"ok": True}}]),
         encoding="utf-8",
@@ -58,7 +71,7 @@ def test_record_llm_stage_writes_current_provider_manifest(tmp_path, monkeypatch
 def test_archive_plan_is_dry_run_until_applied(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     Path("output/log").mkdir(parents=True)
-    Path("output/log/translation_results.xlsx").write_text("placeholder", encoding="utf-8")
+    _write_speaker_translation()
 
     plan = translation_state.build_translation_archive_plan(reason="test")
 
@@ -72,7 +85,7 @@ def test_adopt_current_writes_manifest_when_logs_match(tmp_path, monkeypatch):
 
     Path("output/log").mkdir(parents=True)
     Path("output/gpt_log").mkdir(parents=True)
-    Path("output/log/translation_results.xlsx").write_text("placeholder", encoding="utf-8")
+    _write_speaker_translation()
     Path("output/gpt_log/translate_faithfulness.json").write_text(
         json.dumps([{"model": "deepseek-ai/DeepSeek-V3.2", "prompt": "p", "response": {"ok": True}}]),
         encoding="utf-8",
@@ -113,3 +126,29 @@ def test_guard_ignores_non_translation_steps(tmp_path, monkeypatch):
 
     assert guard["ok"] is True
     assert guard["action"] == "not_applicable"
+
+
+def test_status_rejects_legacy_translation_without_speaker_columns(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda: _fake_provider())
+    Path("output/log").mkdir(parents=True)
+    pd.DataFrame({"Source": ["Hello"], "Translation": ["你好"]}).to_excel(
+        "output/log/translation_results.xlsx", index=False
+    )
+
+    status = translation_state.build_translation_status()
+
+    assert "speaker_translation_columns_missing" in status["stages"]["translate"]["reasons"]
+
+
+def test_status_rejects_summary_without_speaker_profiles(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda: _fake_provider())
+    Path("output/log").mkdir(parents=True)
+    Path("output/log/terminology.json").write_text(
+        json.dumps({"topic": "dialogue", "terms": []}), encoding="utf-8"
+    )
+
+    status = translation_state.build_translation_status()
+
+    assert "speaker_profiles_missing" in status["stages"]["summarize"]["reasons"]

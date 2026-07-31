@@ -1,10 +1,12 @@
 import pandas as pd
 import os, sys
+import json
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import re
 from rich.panel import Panel
 from rich.console import Console
 import autocorrect_py as autocorrect
+from core.providers.speaker_diarization import normalize_speaker, same_known_speaker
 
 console = Console()
 
@@ -63,6 +65,29 @@ def show_difference(str1, str2):
     print("Position markers: " + "".join("^" if i in diff_positions else " " for i in range(max(len(str1), len(str2)))))
     print(f"Difference indices: {diff_positions}")
 
+
+def _speaker_for_word_range(df_words, start_word_idx: int, end_word_idx: int, has_speaker: bool):
+    if not has_speaker:
+        return None
+    labels = [
+        normalize_speaker(value)
+        for value in df_words.iloc[start_word_idx : end_word_idx + 1]["speaker"].tolist()
+    ]
+    unique = {label for label in labels if label}
+    if not unique:
+        raise ValueError(
+            f"Missing speaker identity for aligned words {start_word_idx}..{end_word_idx}; "
+            "MOSS diarization coverage is required."
+        )
+    if len(unique) > 1:
+        raise ValueError(
+            f"Subtitle alignment crossed a speaker boundary at words "
+            f"{start_word_idx}..{end_word_idx}: {sorted(unique)}"
+        )
+    if any(label is None for label in labels):
+        raise ValueError(f"Partial speaker coverage at words {start_word_idx}..{end_word_idx}")
+    return next(iter(unique))
+
 def _timestamp_from_cursor(
     df_words,
     position_to_word_idx,
@@ -82,7 +107,7 @@ def _timestamp_from_cursor(
 
     start_word_idx = position_to_word_idx[start_pos]
     end_word_idx = position_to_word_idx[end_pos]
-    speaker = df_words.iloc[start_word_idx]['speaker'] if has_speaker else None
+    speaker = _speaker_for_word_range(df_words, start_word_idx, end_word_idx, has_speaker)
 
     start_time = float(df_words['start'][start_word_idx])
     end_time = float(df_words['end'][end_word_idx])
@@ -163,7 +188,7 @@ def get_sentence_timestamps(df_words, df_sentences):
             start_word_idx = position_to_word_idx[best_match_pos]
             end_word_idx = position_to_word_idx[best_match_pos + sentence_len - 1]
 
-            speaker = df_words.iloc[start_word_idx]['speaker'] if has_speaker else None
+            speaker = _speaker_for_word_range(df_words, start_word_idx, end_word_idx, has_speaker)
 
             start_time = float(df_words['start'][start_word_idx])
             end_time = float(df_words['end'][end_word_idx])
@@ -227,7 +252,7 @@ def get_sentence_timestamps_by_index(df_words, df_sentences):
         try:
             start_time = float(df_words.iloc[i]['start'])
             end_time = float(df_words.iloc[i]['end'])
-            speaker = df_words.iloc[i]['speaker'] if has_speaker else None
+            speaker = normalize_speaker(df_words.iloc[i]['speaker']) if has_speaker else None
             time_stamp_list.append((start_time, end_time, speaker))
         except (ValueError, TypeError) as e:
             # Fallback for non-convertible timestamp data
@@ -252,10 +277,18 @@ def align_timestamp(df_text, df_translate, subtitle_output_configs: list, output
     df_trans_time['speaker'] = [t[2] for t in time_stamp_list]
     df_trans_time['duration'] = df_trans_time['timestamp'].apply(lambda x: x[1] - x[0])
 
+    extended_same_speaker_gaps = 0
+    prevented_cross_speaker_extensions = 0
     for i in range(len(df_trans_time)-1):
         delta_time = df_trans_time.loc[i+1, 'timestamp'][0] - df_trans_time.loc[i, 'timestamp'][1]
-        if 0 < delta_time < 1:
+        same_speaker = same_known_speaker(
+            df_trans_time.loc[i, "speaker"], df_trans_time.loc[i + 1, "speaker"]
+        )
+        if 0 < delta_time < 1 and same_speaker:
             df_trans_time.at[i, 'timestamp'] = (df_trans_time.loc[i, 'timestamp'][0], df_trans_time.loc[i+1, 'timestamp'][0])
+            extended_same_speaker_gaps += 1
+        elif 0 < delta_time < 1:
+            prevented_cross_speaker_extensions += 1
 
     df_trans_time['timestamp'] = df_trans_time['timestamp'].apply(lambda x: convert_to_srt_format(x[0], x[1]))
 
@@ -272,6 +305,23 @@ def align_timestamp(df_text, df_translate, subtitle_output_configs: list, output
         excel_path = os.path.join(output_dir, "final_timeline.xlsx")
         df_trans_time.to_excel(excel_path, index=False)
         console.print(f"[green]💾 Saved timeline with speaker info to {excel_path}[/green]")
+
+        labels = [normalize_speaker(value) for value in df_trans_time["speaker"].tolist()]
+        boundary_report = {
+            "status": "pass" if any(labels) else "not_applicable",
+            "subtitle_rows": len(df_trans_time),
+            "known_speaker_rows": sum(label is not None for label in labels),
+            "speaker_count": len({label for label in labels if label}),
+            "speaker_transitions": sum(
+                left != right for left, right in zip(labels, labels[1:])
+                if left is not None and right is not None
+            ),
+            "extended_same_speaker_gaps": extended_same_speaker_gaps,
+            "prevented_cross_or_unknown_speaker_extensions": prevented_cross_speaker_extensions,
+            "cross_speaker_rows": 0,
+        }
+        with open(os.path.join(output_dir, "speaker_boundary_report.json"), "w", encoding="utf-8") as f:
+            json.dump(boundary_report, f, ensure_ascii=False, indent=2)
 
         for filename, columns in subtitle_output_configs:
             subtitle_str = generate_subtitle_string(df_trans_time, columns)

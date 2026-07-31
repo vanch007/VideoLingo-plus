@@ -1,13 +1,14 @@
 import pandas as pd
+import pytest
 
 from core.step6_generate_final_timeline import get_sentence_timestamps
 
 
-def _word_df(text: str, start: float = 0.0, step: float = 0.2) -> pd.DataFrame:
+def _word_df(text: str, start: float = 0.0, step: float = 0.2, speaker: str = "S01") -> pd.DataFrame:
     rows = []
     current = start
     for char in text:
-        rows.append({"text": char, "start": current, "end": current + step, "speaker": None})
+        rows.append({"text": char, "start": current, "end": current + step, "speaker": speaker})
         current += step
     return pd.DataFrame(rows)
 
@@ -51,3 +52,12 @@ def test_timeline_rejects_distant_repeated_match_when_similarity_is_not_strong()
 
     assert timestamps[1][0] < 8.0
     assert timestamps[2][0] < 12.0
+
+
+def test_timeline_rejects_sentence_crossing_speaker_boundary():
+    words = _word_df("甲乙丙丁")
+    words.loc[2:, "speaker"] = "S02"
+    sentences = pd.DataFrame({"Source": ["甲乙丙丁"]})
+
+    with pytest.raises(ValueError, match="crossed a speaker boundary"):
+        get_sentence_timestamps(words, sentences)

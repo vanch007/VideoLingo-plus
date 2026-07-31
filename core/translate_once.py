@@ -24,8 +24,14 @@ def valid_translate_result(result: dict, required_keys: list, required_sub_keys:
     return {"status": "success", "message": "Translation completed"}
 
 @time_it()
-def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_to_note_prompt, summary_prompt, index = 0):
-    shared_prompt = generate_shared_prompt(previous_content_prompt, after_cotent_prompt, summary_prompt, things_to_note_prompt)
+def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_to_note_prompt, summary_prompt, index = 0, speaker_context_prompt=None):
+    shared_prompt = generate_shared_prompt(
+        previous_content_prompt,
+        after_cotent_prompt,
+        summary_prompt,
+        things_to_note_prompt,
+        speaker_context_prompt,
+    )
 
     # Retry translation if the length of the original text and the translated text are not the same, or if the specified key is missing
     def retry_translation(prompt, step_name):

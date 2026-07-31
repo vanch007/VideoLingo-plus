@@ -56,6 +56,8 @@ TRANSLATION_DERIVED_PATHS = [
     "output/log/translation_results_for_subtitles.xlsx",
     "output/log/translation_results_remerged.xlsx",
     "output/log/terminology.json",
+    "output/log/translation_speaker_context.json",
+    "output/log/translation_workflow_metrics.json",
     "output/log/sentence_splitbymeaning.txt",
     "output/final_timeline.xlsx",
     "output/src_trans.srt",
@@ -63,6 +65,8 @@ TRANSLATION_DERIVED_PATHS = [
     "output/dub_orig.srt",
     "output/dub.srt",
     "output/dub.mp3",
+    "output/AI字幕.mp4",
+    "output/AI配音.mp4",
     "output/audio/final_timeline.xlsx",
     "output/audio/src_subs_for_audio.srt",
     "output/audio/trans_subs_for_audio.srt",
@@ -77,6 +81,8 @@ TRANSLATION_DERIVED_PATHS = [
     "output/audio/refers",
     "output/audio/segs",
 ]
+
+TRANSLATION_WORKFLOW_VERSION = "speaker-aware-dialogue-v2"
 
 
 def _now_iso() -> str:
@@ -179,6 +185,7 @@ def record_llm_stage(stage: str, artifacts: list[str] | None = None, logs: list[
         "stage": stage,
         "updated_at": _now_iso(),
         "provider": provider,
+        "workflow_version": TRANSLATION_WORKFLOW_VERSION,
         "artifacts": [_artifact_info(path) for path in artifacts],
         "logs": _log_models(logs),
     }
@@ -204,6 +211,10 @@ def build_translation_status() -> dict[str, Any]:
 
         if artifact_exists and not stage_manifest:
             warnings.append("artifact_exists_without_manifest")
+        if artifact_exists and stage in {"summarize", "translate"}:
+            if stage_manifest and stage_manifest.get("workflow_version") != TRANSLATION_WORKFLOW_VERSION:
+                reasons.append("workflow_version_mismatch")
+            reasons.extend(_speaker_artifact_reasons(stage))
         if manifest_provider and manifest_provider.get("fingerprint") != current_provider["fingerprint"]:
             reasons.append("manifest_provider_mismatch")
 
@@ -244,6 +255,31 @@ def build_translation_status() -> dict[str, Any]:
         "stages": stages,
         "next_action": _next_action(stale_stage_count, warning_stage_count),
     }
+
+
+def _speaker_artifact_reasons(stage: str) -> list[str]:
+    reasons: list[str] = []
+    if stage == "summarize":
+        path = Path("output/log/terminology.json")
+        if path.exists():
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+                if not isinstance(payload.get("speaker_profiles"), list) or not payload.get("speaker_profiles"):
+                    reasons.append("speaker_profiles_missing")
+            except (json.JSONDecodeError, OSError):
+                reasons.append("speaker_profiles_unreadable")
+    elif stage == "translate":
+        path = Path("output/log/translation_results.xlsx")
+        if path.exists():
+            try:
+                import pandas as pd
+
+                columns = set(pd.read_excel(path, nrows=1).columns)
+                if not {"LineID", "Speaker"}.issubset(columns):
+                    reasons.append("speaker_translation_columns_missing")
+            except Exception:
+                reasons.append("speaker_translation_artifact_unreadable")
+    return reasons
 
 
 def _stage_has_evidence(stage_state: dict[str, Any]) -> bool:

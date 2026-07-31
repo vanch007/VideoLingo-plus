@@ -13,7 +13,9 @@ def apply_cinematic_profile() -> None:
     update_key("dubbing_quality.leak_score_max", 0.12)
     update_key("dubbing_quality.loudness_target_lufs", -20.0)
     update_key("demucs", True)
-    update_key("tts_method", "mlx_indextts2")
+    update_key("whisper.runtime", "stable-ts")
+    update_key("dubbing_quality.asr_readback_backend", "moss-mlx")
+    update_key("tts_method", "mlx_router")
     update_key("mlx_tts.default_backend", "auto")
     update_key("rewrite_text_for_dubbing", True)
 
