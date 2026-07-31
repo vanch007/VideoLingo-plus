@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 import json
+import csv
+import math
 import os
 import re
 import shlex
+import shutil
 import subprocess
+import tempfile
 import time
+from base64 import b64encode
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -23,6 +28,34 @@ VIETNAMESE_RE = re.compile(
     r"ÉÈẺẼẸẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌỐỒỔỖỘỚỜỞỠỢÚÙỦŨỤỨỪỬỮỰÝỲỶỸỴ]"
 )
 CHINESE_RE = re.compile(r"[\u4e00-\u9fff]")
+BACKEND_ALIASES = {
+    "indextts": "indextts2",
+    "mlx_indextts2": "indextts2",
+    "qwen_tts": "qwen3_tts",
+    "mlx_qwen3_tts": "qwen3_tts",
+    "mlx_omnivoice": "omnivoice",
+    "mlx_voxcpm2": "voxcpm2",
+    "mlx_higgs_audio": "higgs",
+    "mlx_dots_tts": "dots",
+    "mlx_zonos2": "zonos2",
+    "mlx_moss_tts": "moss",
+}
+
+LANGUAGE_NAMES = {
+    "zh": "Chinese",
+    "zh-cn": "Chinese",
+    "yue": "Cantonese",
+    "en": "English",
+    "vi": "Vietnamese",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "fr": "French",
+    "de": "German",
+    "es": "Spanish",
+    "it": "Italian",
+    "pt": "Portuguese",
+    "ru": "Russian",
+}
 
 
 @dataclass(frozen=True)
@@ -62,7 +95,7 @@ def _clean_backend_name(value: Any) -> str | None:
     text = str(value).strip()
     if not text or text.lower() in {"nan", "<na>", "none"}:
         return None
-    return text
+    return BACKEND_ALIASES.get(text, text)
 
 
 def _cmd_prefix(value: Any) -> list[str]:
@@ -82,6 +115,21 @@ def _project_path(value: str | None) -> str | None:
     return str((Path.cwd() / path).resolve())
 
 
+def _audio_as_wav_bytes(path: str) -> bytes:
+    """Normalize arbitrary project reference formats to mono WAV for clone APIs."""
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as handle:
+        output = Path(handle.name)
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-loglevel", "error", "-i", path, "-ac", "1", str(output)],
+            check=True,
+            capture_output=True,
+        )
+        return output.read_bytes()
+    finally:
+        output.unlink(missing_ok=True)
+
+
 class CliBackend:
     name = "base"
 
@@ -98,10 +146,13 @@ class CliBackend:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         env = os.environ.copy()
         pythonpath = self.cfg.get("pythonpath")
+        inherited_pythonpath = env.get("PYTHONPATH", "") if _as_bool(self.cfg.get("inherit_pythonpath"), False) else ""
         if pythonpath:
-            env["PYTHONPATH"] = str(Path(pythonpath).expanduser())
+            entries = pythonpath if isinstance(pythonpath, list) else str(pythonpath).split(os.pathsep)
+            resolved = [str(Path(str(item)).expanduser()) for item in entries if str(item).strip()]
+            env["PYTHONPATH"] = os.pathsep.join(resolved + ([inherited_pythonpath] if inherited_pythonpath else []))
         elif self.root.exists():
-            env["PYTHONPATH"] = f"{self.root}{os.pathsep}{env.get('PYTHONPATH', '')}"
+            env["PYTHONPATH"] = os.pathsep.join([str(self.root)] + ([inherited_pythonpath] if inherited_pythonpath else []))
 
         result = subprocess.run(
             cmd,
@@ -130,7 +181,16 @@ class CliBackend:
     def health(self) -> BackendHealth:
         if not self.root.exists():
             return BackendHealth(self.name, False, f"missing root: {self.root}")
-        return BackendHealth(self.name, True, f"root ok: {self.root}")
+        prefix = _cmd_prefix(self.cfg.get("command_prefix"))
+        if prefix and not (Path(prefix[0]).expanduser().exists() or shutil.which(prefix[0])):
+            return BackendHealth(self.name, False, f"missing executable: {prefix[0]}")
+        for required in self.cfg.get("required_files", []) or []:
+            required_path = Path(str(required)).expanduser()
+            if not required_path.is_absolute():
+                required_path = self.root / required_path
+            if not required_path.exists():
+                return BackendHealth(self.name, False, f"missing required file: {required_path}")
+        return BackendHealth(self.name, True, f"runtime ready: {self.root}")
 
 
 class IndexTTS2Backend(CliBackend):
@@ -154,15 +214,152 @@ class IndexTTS2Backend(CliBackend):
         ]
         if cfg.get("model"):
             cmd += ["--model", str(cfg["model"])]
+        if cfg.get("seed") is not None:
+            cmd += ["--seed", str(cfg["seed"])]
+        fit_duration = _as_bool(cfg.get("fit_duration"), True)
+        estimated_duration = request.task_row.get("est_dur") if request.task_row else None
+        try:
+            estimated_ratio = float(estimated_duration) / float(request.target_duration)
+        except (TypeError, ValueError, ZeroDivisionError):
+            estimated_ratio = 1.0
+        disable_native_fit = _as_bool(
+            request.metadata.get("disable_native_fit")
+            or request.task_row.get("disable_native_fit"),
+            False,
+        )
+        native_fit_safe = (
+            not disable_native_fit
+            and estimated_ratio <= float(cfg.get("native_fit_max_estimated_ratio", 1.08))
+        )
+        # The patched local IndexTTS2 treats target_duration as a safe token
+        # budget with a 320-token content floor. Always pass the window so
+        # short retries do not fall back to an excessively loose 1500-token
+        # sampling cap; only the actual time stretch remains safety-gated.
         if request.target_duration:
             cmd += ["--target-duration", f"{request.target_duration:.3f}"]
-            if _as_bool(cfg.get("fit_duration"), False):
+            # IndexTTS2 can synthesize directly to a subtitle slot. Prefer its
+            # native fit mode to generic post-generation time stretching,
+            # which degrades cloned speech and leaves subtitle drift.
+            if fit_duration and native_fit_safe:
                 cmd += ["--fit-duration"]
         if not _as_bool(cfg.get("denoise_ref", True), True):
             cmd += ["--no-denoise-ref"]
         if request.emotion_ref:
             cmd += ["--emotion-ref-audio", _project_path(request.emotion_ref) or request.emotion_ref]
         return self._run(cmd, request)
+
+    def synthesize_batch(self, requests: list[TTSRequest]) -> list[TTSResult]:
+        """Generate a subtitle batch in one model-resident IndexTTS2 process."""
+        if not requests:
+            return []
+        if any(not request.ref_audio for request in requests):
+            raise ValueError("indextts2 requires ref_audio for every batch item")
+
+        cfg = self.cfg
+        started = time.perf_counter()
+        with tempfile.TemporaryDirectory(prefix="videolingo_indextts2_") as temp_dir_text:
+            temp_dir = Path(temp_dir_text)
+            csv_path = temp_dir / "batch.csv"
+            generated_dir = temp_dir / "generated"
+            with csv_path.open("w", encoding="utf-8", newline="") as handle:
+                fieldnames = [
+                    "id", "text", "ref_audio", "emotion_ref_audio",
+                    "target_duration_s", "fit_duration",
+                ]
+                writer = csv.DictWriter(handle, fieldnames=fieldnames)
+                writer.writeheader()
+                for index, request in enumerate(requests, start=1):
+                    estimated_duration = request.task_row.get("est_dur") if request.task_row else None
+                    try:
+                        estimated_ratio = float(estimated_duration) / float(request.target_duration)
+                    except (TypeError, ValueError, ZeroDivisionError):
+                        estimated_ratio = 1.0
+                    disable_native_fit = _as_bool(
+                        request.metadata.get("disable_native_fit")
+                        or request.task_row.get("disable_native_fit"),
+                        False,
+                    )
+                    native_fit_safe = (
+                        not disable_native_fit
+                        and estimated_ratio <= float(
+                            cfg.get("native_fit_max_estimated_ratio", 1.08)
+                        )
+                    )
+                    use_native_fit = bool(
+                        request.target_duration
+                        and _as_bool(cfg.get("fit_duration"), True)
+                        and native_fit_safe
+                    )
+                    writer.writerow({
+                        "id": f"{index:04d}",
+                        "text": request.text,
+                        "ref_audio": _project_path(request.ref_audio) or request.ref_audio,
+                        "emotion_ref_audio": (
+                            _project_path(request.emotion_ref) or request.emotion_ref or ""
+                        ),
+                        "target_duration_s": (
+                            f"{request.target_duration:.3f}" if request.target_duration else ""
+                        ),
+                        "fit_duration": "true" if use_native_fit else "false",
+                    })
+
+            cmd = _cmd_prefix(cfg.get("command_prefix", ["uv", "run", "mlx-indextts"]))
+            cmd += [
+                "batch", "--input", str(csv_path), "--output-dir", str(generated_dir),
+                "--profile", str(cfg.get("profile", "auto")),
+            ]
+            if cfg.get("model"):
+                cmd += ["--model", str(cfg["model"])]
+            if cfg.get("seed") is not None:
+                cmd += ["--seed", str(cfg["seed"])]
+            if not _as_bool(cfg.get("denoise_ref", True), True):
+                cmd += ["--no-denoise-ref"]
+
+            env = os.environ.copy()
+            pythonpath = cfg.get("pythonpath")
+            if pythonpath:
+                entries = pythonpath if isinstance(pythonpath, list) else str(pythonpath).split(os.pathsep)
+                env["PYTHONPATH"] = os.pathsep.join(
+                    str(Path(str(item)).expanduser()) for item in entries if str(item).strip()
+                )
+            elif self.root.exists():
+                env["PYTHONPATH"] = str(self.root)
+            completed = subprocess.run(
+                cmd,
+                cwd=str(self.root) if self.root.exists() else None,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=int(cfg.get("batch_timeout_seconds", max(self.timeout, 3600))),
+                check=False,
+            )
+            if completed.returncode != 0:
+                detail = (completed.stderr or completed.stdout or "").strip()
+                raise RuntimeError(f"indextts2 batch failed with code {completed.returncode}: {detail[-2000:]}")
+
+            results: list[TTSResult] = []
+            elapsed = max(time.perf_counter() - started, 0.001)
+            for index, request in enumerate(requests, start=1):
+                matches = sorted(generated_dir.glob(f"{index:04d}_*.wav"))
+                if len(matches) != 1:
+                    raise RuntimeError(
+                        f"indextts2 batch output mismatch for item {index}: found {len(matches)} files"
+                    )
+                destination_text = _project_path(request.output_path) or request.output_path
+                destination = Path(destination_text)
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(matches[0], destination)
+                if destination.stat().st_size < int(load_key("dubbing_quality.min_audio_size", 1000)):
+                    raise RuntimeError(f"indextts2 produced invalid batch audio: {destination}")
+                duration = get_audio_duration(str(destination))
+                results.append(TTSResult(
+                    output_path=destination_text,
+                    backend=self.name,
+                    duration=duration,
+                    rtf=(elapsed / len(requests)) / duration if duration > 0 else None,
+                    metadata={"mode": "model_resident_batch"},
+                ))
+            return results
 
 
 class QwenTTSBackend(CliBackend):
@@ -248,7 +445,9 @@ class VoxCPM2Backend(CliBackend):
             str(cfg.get("cfg_value", 2.0)),
         ]
         if request.ref_audio:
-            cmd += ["--reference-wav-path", _project_path(request.ref_audio) or request.ref_audio]
+            # VoxCPM2's cloning mode requires the prompt audio and its transcript
+            # as a pair; ``reference-wav-path`` alone is not the clone prompt.
+            cmd += ["--prompt-wav-path", _project_path(request.ref_audio) or request.ref_audio]
         if request.ref_text:
             cmd += ["--prompt-text", request.ref_text]
         if _as_bool(cfg.get("retry_badcase"), True):
@@ -258,6 +457,140 @@ class VoxCPM2Backend(CliBackend):
         return self._run(cmd, request)
 
 
+class HiggsBackend(CliBackend):
+    name = "higgs"
+
+    def synthesize(self, request: TTSRequest) -> TTSResult:
+        if not request.ref_audio:
+            raise ValueError("higgs requires ref_audio for voice cloning")
+        cmd = _cmd_prefix(self.cfg.get("command_prefix", [self.root / ".venv/bin/python", "scripts/run_tts.py"]))
+        cmd += [
+            "--text", request.text,
+            "--output", _project_path(request.output_path) or request.output_path,
+            "--reference-audio", _project_path(request.ref_audio) or request.ref_audio,
+        ]
+        if request.ref_text:
+            cmd += ["--reference-text", request.ref_text]
+        max_new_tokens = int(self.cfg.get("max_new_tokens", 512))
+        if request.target_duration and _as_bool(
+            self.cfg.get("use_target_duration_token_cap", True), True
+        ):
+            tokens_per_second = float(self.cfg.get("tokens_per_second", 36.0))
+            token_buffer = int(self.cfg.get("token_buffer", 48))
+            min_new_tokens = int(self.cfg.get("min_new_tokens", 64))
+            dynamic_cap = max(
+                min_new_tokens,
+                int(math.ceil(request.target_duration * tokens_per_second + token_buffer)),
+            )
+            max_new_tokens = min(max_new_tokens, dynamic_cap)
+        cmd += ["--max-new-tokens", str(max_new_tokens)]
+        return self._run([str(item) for item in cmd], request)
+
+
+class DotsBackend(CliBackend):
+    name = "dots"
+
+    def synthesize(self, request: TTSRequest) -> TTSResult:
+        if not request.ref_audio:
+            raise ValueError("dots requires ref_audio for voice cloning")
+        runner = Path(__file__).with_name("dots_clone_runner.py")
+        cmd = _cmd_prefix(self.cfg.get("command_prefix", [self.root / ".venv/bin/python", runner]))
+        cmd += [
+            "--model", str(self.cfg.get("model", "weights")),
+            "--text", request.text,
+            "--ref-audio", _project_path(request.ref_audio) or request.ref_audio,
+            "--output", _project_path(request.output_path) or request.output_path,
+            "--language", str(request.language if request.language != "auto" else request.target_language).upper(),
+            "--max-audio-tokens", str(self.cfg.get("max_audio_tokens", 30)),
+            "--num-steps", str(self.cfg.get("num_steps", 3)),
+            "--seed", str(self.cfg.get("seed", 42)),
+        ]
+        # dots.tts does not implement native duration fitting. Its runner only
+        # converts this value into a token ceiling; short subtitle windows can
+        # therefore cut or hallucinate the final words. Generate to natural EOS
+        # and let VideoLingo's measured post-fit enforce the timeline instead.
+        if request.target_duration and bool(self.cfg.get("use_target_duration_token_cap", False)):
+            cmd += ["--target-duration", f"{request.target_duration:.3f}"]
+        return self._run([str(item) for item in cmd], request)
+
+
+class MossTTSBackend(CliBackend):
+    name = "moss"
+
+    def synthesize(self, request: TTSRequest) -> TTSResult:
+        if not request.ref_audio:
+            raise ValueError("moss requires ref_audio for voice cloning")
+        language = request.language if request.language != "auto" else request.target_language
+        language = LANGUAGE_NAMES.get(str(language).lower(), language if language != "auto" else "English")
+        cmd = _cmd_prefix(self.cfg.get("command_prefix", ["python3", "-m", "mlx_moss_tts_local.cli"]))
+        max_tokens = int(self.cfg.get("max_tokens", 2048))
+        if request.target_duration and _as_bool(
+            self.cfg.get("use_target_duration_token_cap", True), True
+        ):
+            tokens_per_second = float(self.cfg.get("tokens_per_second", 24.0))
+            token_buffer = int(self.cfg.get("token_buffer", 32))
+            min_tokens = int(self.cfg.get("min_tokens", 32))
+            dynamic_cap = max(
+                min_tokens,
+                int(math.ceil(request.target_duration * tokens_per_second + token_buffer)),
+            )
+            max_tokens = min(max_tokens, dynamic_cap)
+        cmd += [
+            "--model", str(self.cfg.get("model")),
+            "--text", request.text,
+            "--language", str(language),
+            "--ref-audio", _project_path(request.ref_audio) or request.ref_audio,
+            "--output", _project_path(request.output_path) or request.output_path,
+            "--max-tokens", str(max_tokens),
+        ]
+        if request.ref_text:
+            cmd += ["--ref-text", request.ref_text]
+        return self._run(cmd, request)
+
+
+class Zonos2Backend:
+    name = "zonos2"
+
+    def __init__(self, cfg: dict[str, Any]):
+        self.cfg = cfg
+        self.url = str(cfg.get("api_url", "http://127.0.0.1:1920")).rstrip("/")
+        self.timeout = int(cfg.get("timeout_seconds", 600))
+
+    def synthesize(self, request: TTSRequest) -> TTSResult:
+        if not request.ref_audio:
+            raise ValueError("zonos2 requires ref_audio for voice cloning")
+        import numpy as np
+        import soundfile as sf
+
+        started = time.perf_counter()
+        ref = _audio_as_wav_bytes(_project_path(request.ref_audio) or request.ref_audio)
+        language = request.language if request.language != "auto" else request.target_language
+        payload = {
+            "text": request.text,
+            "language": language if language != "auto" else "en_us",
+            "text_normalization": str(language).lower().startswith("en"),
+            "max_tokens": int(self.cfg.get("max_tokens", 1024)),
+            "speaker_audio_base64": b64encode(ref).decode("ascii"),
+        }
+        response = requests.post(f"{self.url}/tts/generate", json=payload, timeout=self.timeout)
+        response.raise_for_status()
+        sample_rate = int(response.headers.get("X-Audio-Sample-Rate", 44100))
+        audio = np.frombuffer(response.content, dtype=np.float32)
+        output = Path(_project_path(request.output_path) or request.output_path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        sf.write(output, audio, sample_rate)
+        duration = len(audio) / sample_rate if sample_rate else 0.0
+        elapsed = max(time.perf_counter() - started, 0.001)
+        return TTSResult(str(output), self.name, duration, elapsed / duration if duration else None)
+
+    def health(self) -> BackendHealth:
+        try:
+            response = requests.get(f"{self.url}/health", timeout=3)
+            return BackendHealth(self.name, response.ok, f"HTTP {response.status_code}: {self.url}")
+        except requests.RequestException as exc:
+            return BackendHealth(self.name, False, f"service unavailable: {exc}")
+
+
 class MlxTTSRouter:
     def __init__(self):
         self.backends = {
@@ -265,6 +598,10 @@ class MlxTTSRouter:
             "omnivoice": OmniVoiceBackend(_load_backend_config("omnivoice")),
             "qwen3_tts": QwenTTSBackend(_load_backend_config("qwen3_tts")),
             "voxcpm2": VoxCPM2Backend(_load_backend_config("voxcpm2")),
+            "higgs": HiggsBackend(_load_backend_config("higgs")),
+            "dots": DotsBackend(_load_backend_config("dots")),
+            "zonos2": Zonos2Backend(_load_backend_config("zonos2")),
+            "moss": MossTTSBackend(_load_backend_config("moss")),
         }
 
     def select_backend(self, request: TTSRequest) -> str:
@@ -280,8 +617,6 @@ class MlxTTSRouter:
             return "indextts2"
         if request.emotion_ref:
             return "indextts2"
-        if request.ref_audio and request.ref_text and _as_bool(load_key("mlx_tts.router.prefer_qwen_with_clean_ref", False), False):
-            return "qwen3_tts"
         if language in {"zh", "zh-CN", "chinese"} or looks_chinese(text):
             return "omnivoice"
         if _as_bool(load_key("mlx_tts.router.allow_voxcpm2_auto", False), False):
@@ -321,6 +656,10 @@ def list_backend_status() -> list[dict[str, Any]]:
 
 def synthesize_with_mlx_router(request: TTSRequest) -> TTSResult:
     return MlxTTSRouter().synthesize(request)
+
+
+def synthesize_indextts2_batch(requests: list[TTSRequest]) -> list[TTSResult]:
+    return IndexTTS2Backend(_load_backend_config("indextts2")).synthesize_batch(requests)
 
 
 def write_router_plan(path: str = "output/audio/mlx_tts_router_plan.json") -> str:

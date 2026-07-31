@@ -22,6 +22,7 @@ from pydub import AudioSegment
 MIN_AUDIO_SIZE = 20000  # 最小有效音频文件大小 (20KB)
 MIN_AUDIO_DURATION_MS = 500  # 最小有效音频时长 (500ms)
 DEFAULT_REFERS_DIR = "output/audio/refers"
+_SPEAKER_ANCHOR_CACHE: dict[tuple[str, str, int], tuple[str, int]] = {}
 
 
 def get_audio_duration_ms(file_path: str) -> int:
@@ -57,7 +58,9 @@ def get_reference_audio_path(
     number: int, 
     refers_dir: str = None,
     task_df = None,
-    speaker: str = None
+    speaker: str = None,
+    prefer_speaker_anchor: bool = False,
+    speaker_anchor_target_ms: int = 5000,
 ) -> tuple[str, int | None]:
     """
     获取参考音频路径，如果指定编号不可用则自动 fallback。
@@ -85,6 +88,26 @@ def get_reference_audio_path(
         refers_dir = os.path.join(os.getcwd(), DEFAULT_REFERS_DIR)
     
     primary_path = os.path.join(refers_dir, f'{number}.wav')
+
+    if prefer_speaker_anchor and task_df is not None and speaker is not None:
+        try:
+            cache_key = (os.path.abspath(refers_dir), str(speaker), speaker_anchor_target_ms)
+            cached = _SPEAKER_ANCHOR_CACHE.get(cache_key)
+            if cached and os.path.exists(cached[0]):
+                anchor_path, anchor_number = cached
+                return anchor_path, (None if anchor_number == number else anchor_number)
+            candidates = []
+            for candidate_number in task_df[task_df['speaker'] == speaker]['number'].tolist():
+                candidate_path = os.path.join(refers_dir, f'{candidate_number}.wav')
+                if is_valid_reference_audio(candidate_path):
+                    duration_ms = get_audio_duration_ms(candidate_path)
+                    candidates.append((abs(duration_ms - speaker_anchor_target_ms), candidate_number, candidate_path))
+            if candidates:
+                _, anchor_number, anchor_path = min(candidates)
+                _SPEAKER_ANCHOR_CACHE[cache_key] = (anchor_path, anchor_number)
+                return anchor_path, (None if anchor_number == number else anchor_number)
+        except (KeyError, TypeError, AttributeError):
+            pass
     
     # 检查主音频是否有效
     if is_valid_reference_audio(primary_path):

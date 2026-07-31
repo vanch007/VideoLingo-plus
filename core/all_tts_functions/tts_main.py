@@ -39,10 +39,6 @@ def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target
     row_tts_method = str(row_tts_method).strip() if row_tts_method is not None else ""
     if row_tts_method.lower() in {"", "nan", "<na>", "none"}:
         row_tts_method = ""
-    backend_override = task_row.get("tts_backend")
-    backend_override = str(backend_override).strip() if backend_override is not None else ""
-    if not row_tts_method and backend_override == "edge_tts":
-        row_tts_method = backend_override
     TTS_METHOD = row_tts_method or load_key("tts_method")
     get_tts_provider(TTS_METHOD)
     
@@ -50,30 +46,7 @@ def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target
     for attempt in range(max_retries):
         try:
             
-            # Conditional imports based on TTS method to avoid import errors
-            if TTS_METHOD == 'gpt_sovits':
-                from core.all_tts_functions.gpt_sovits_tts import gpt_sovits_tts_for_videolingo
-                gpt_sovits_tts_for_videolingo(text, save_as, number, task_df)
-            elif TTS_METHOD == 'edge_tts':
-                from core.all_tts_functions.edge_tts import edge_tts
-                edge_tts(text, save_as)
-            elif TTS_METHOD == 'piper_tts':
-                from core.all_tts_functions.piper_tts import piper_tts
-                piper_tts(text, save_as)
-            elif TTS_METHOD == 'custom_tts':
-                from core.all_tts_functions.custom_tts import custom_tts
-                custom_tts(text, save_as, number, task_df, attempt)
-            elif TTS_METHOD == 'index_tts2':
-                from core.all_tts_functions.index_tts2 import custom_tts
-                custom_tts(text, save_as, number, task_df, attempt)
-            elif TTS_METHOD == 'indonesian_tts':
-                from core.all_tts_functions.indonesian_tts import indonesian_tts_for_videolingo
-                speaker = load_key("indonesian_tts.speaker", "wibowo")
-                indonesian_tts_for_videolingo(text, save_as, number, task_df, fixed_voice_name=speaker)
-            elif TTS_METHOD == 'voxcpm_tts':
-                from core.all_tts_functions.voxcpm_tts import voxcpm_tts
-                voxcpm_tts(text, save_as, number, task_df, attempt)
-            elif TTS_METHOD == 'mlx_router' or TTS_METHOD in MLX_ROUTER_BACKENDS:
+            if TTS_METHOD == 'mlx_router' or TTS_METHOD in MLX_ROUTER_BACKENDS:
                 from core.all_tts_functions.mlx_router import mlx_router_tts
                 row_payload = dict(task_row)
                 if TTS_METHOD in MLX_ROUTER_BACKENDS:
@@ -86,21 +59,9 @@ def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target
                     task_row=row_payload,
                     target_duration=target_duration,
                 )
-            elif TTS_METHOD == 'cosyvoice3_tts':
-                raise NotImplementedError("cosyvoice3_tts provider is registered but not implemented yet. Configure its local/API adapter before use.")
-            elif TTS_METHOD == 'elevenlabs_tts':
-                raise NotImplementedError("elevenlabs_tts provider is registered but not implemented yet. Add ELEVENLABS_API_KEY and adapter before use.")
-            elif TTS_METHOD == 'openai_tts':
-                raise NotImplementedError("openai_tts provider is registered but not implemented yet. Add OPENAI_API_KEY and adapter before use.")
             else:
                 raise ValueError(f"Unknown TTS method: {TTS_METHOD}")
                 
-            # For custom_tts, skip the duration check as per user request.
-            # For all other methods, validate the generated audio.
-            if TTS_METHOD == 'custom_tts':
-                break  # Assume success and exit the retry loop
-
-            # Check generated audio duration for other TTS methods
             duration = get_audio_duration(save_as)
             if duration > 0:
                 break
