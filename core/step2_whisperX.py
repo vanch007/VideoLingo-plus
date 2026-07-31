@@ -8,6 +8,8 @@ from core.config_utils import load_key
 from core.all_whisper_methods.demucs_vl import demucs_main, RAW_AUDIO_FILE, VOCAL_AUDIO_FILE
 from core.all_whisper_methods.audio_preprocess import process_transcription, convert_video_to_audio, split_audio, save_results, compress_audio, CLEANED_CHUNKS_EXCEL_PATH
 from core.step1_ytdlp import find_video_files
+from core.asr_schema import MAIN_ASR_RUNTIMES, sanitize_word_timestamps, validate_word_timestamps
+from core.providers.speaker_diarization import apply_speaker_diarization, validate_cached_speaker_rows
 
 WHISPER_FILE = "output/audio/for_whisper.mp3"
 ENHANCED_VOCAL_PATH = "output/audio/enhanced_vocals.mp3"
@@ -70,6 +72,8 @@ def enhance_vocals(vocals_ratio=2.50):
 
 def transcribe():
     if os.path.exists(CLEANED_CHUNKS_EXCEL_PATH):
+        import pandas as pd
+        validate_cached_speaker_rows(pd.read_excel(CLEANED_CHUNKS_EXCEL_PATH).to_dict("records"))
         rprint("[yellow]⚠️ Transcription results already exist, skipping transcription step.[/yellow]")
         # 但仍然需要确保音频文件存在
         prepare_audio_and_vocals()
@@ -78,12 +82,16 @@ def transcribe():
     # Prepare audio files (this is also needed for embedded subtitle workflow)
     whisper_audio = prepare_audio_and_vocals()
 
-    # step4 Extract audio
-    segments = split_audio(whisper_audio)
-
-    # step5 Transcribe audio
-    all_results = []
+    # Only ASR engines with native word timestamps may feed subtitle alignment.
     runtime = load_key("whisper.runtime")
+    if runtime not in MAIN_ASR_RUNTIMES:
+        raise ValueError(
+            f"ASR runtime {runtime!r} cannot feed subtitle alignment. "
+            f"Choose one of: {', '.join(MAIN_ASR_RUNTIMES)}"
+        )
+
+    segments = split_audio(whisper_audio)
+    all_results = []
     if runtime == "local":
         from core.all_whisper_methods.whisperX_local import transcribe_audio as ts
         rprint("[cyan]🎤 Transcribing audio with local WhisperX model...[/cyan]")
@@ -97,25 +105,16 @@ def transcribe():
         except ImportError:
             rprint("[bold red]❌ Error: stable-whisper is not installed![/bold red]")
             rprint("[yellow]Please run 'python install_stable_ts.py' to install stable-ts and its dependencies.[/yellow]")
-            rprint("[yellow]Alternatively, you can change the whisper.runtime to 'local' or 'cloud' in config.yaml.[/yellow]")
+            rprint("[yellow]Alternatively, change whisper.runtime to 'local' (WhisperX) in config.yaml.[/yellow]")
             raise ImportError("stable-whisper is not installed. Please run 'python install_stable_ts.py' to install it.")
-    elif runtime == "funasr":
-        try:
-            from funasr import AutoModel
-            from core.all_whisper_methods.funasr_local import transcribe_audio as ts
-            rprint("[cyan]🎤 Transcribing audio with FunASR model...[/cyan]")
-            rprint(f"[cyan]📊 Total segments to process: {len(segments)}[/cyan]")
-        except ImportError:
-            rprint("[bold red]❌ Error: funasr is not installed![/bold red]")
-            rprint("[yellow]Please run 'pip install funasr' to install FunASR.[/yellow]")
-            rprint("[yellow]Alternatively, you can change the whisper.runtime to 'local' or 'stable-ts' in config.yaml.[/yellow]")
-            raise ImportError("funasr is not installed. Please run 'pip install funasr' to install it.")
     else:
-        raise ValueError(f"Unknown whisper runtime: {runtime}. Supported: 'local', 'stable-ts', 'funasr'")
+        raise ValueError(f"Unknown whisper runtime: {runtime}. Supported: 'local', 'stable-ts'")
 
     for i, (start, end) in enumerate(segments):
         rprint(f"[cyan]📊 Processing segment {i+1}/{len(segments)}: {start:.2f}s to {end:.2f}s[/cyan]")
         result = ts(whisper_audio, start, end)
+        sanitize_word_timestamps(result)
+        validate_word_timestamps(result, backend=runtime, allow_empty=True)
         all_results.append(result)
 
         # 如果使用 stable-ts，显示当前处理进度
@@ -126,6 +125,21 @@ def transcribe():
     combined_result = {'segments': []}
     for result in all_results:
         combined_result['segments'].extend(result['segments'])
+    validate_word_timestamps(combined_result, backend=runtime)
+
+    # Keep native word timings from stable-ts/WhisperX and add only MOSS speaker IDs.
+    diarization = apply_speaker_diarization(
+        combined_result,
+        whisper_audio,
+        transcribe_range=lambda start, end: ts(whisper_audio, start, end),
+        source_backend=runtime,
+    )
+    if diarization.get("status") == "pass":
+        rprint(
+            f"[green]✅ MOSS speaker alignment: {diarization['speaker_count']} speakers, "
+            f"{diarization['coverage']:.1%} word coverage, "
+            f"{diarization['speaker_transitions']} turn boundaries[/green]"
+        )
 
     # step7 Process df
     df = process_transcription(combined_result)

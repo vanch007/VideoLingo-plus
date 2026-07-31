@@ -213,7 +213,7 @@ def save_sentences_from_segments(result: dict, output_file: str = "output/log/se
     """
     从 ASR 结果的 segments 直接生成分句文件，跳过 spacy 分句步骤。
     
-    适用于 stable-ts、funasr 等已经能按句子分割的 ASR 引擎。
+    适用于 stable-ts 等已经能按句子分割且保留词级时间戳的 ASR 引擎。
     
     Args:
         result: ASR 返回的结果字典，包含 segments 列表

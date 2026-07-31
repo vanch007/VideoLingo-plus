@@ -186,58 +186,8 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         else:
             # MLX backend does not support `transcribe_stable`, use the basic `transcribe`.
             result = model.transcribe(audio_segment, **transcribe_options)
-            # Manual post-processing for MLX to split segments by sentence
-            rprint("[green]Manually splitting MLX results by sentence...[/green]")
-            new_segments = []
-            for segment in result.segments:
-                # Split by common punctuation and spaces
-                import re
-                sentences = re.split(r'([。？！\s])', segment.text)
-                # Process sentences to keep delimiters
-                processed_sentences = []
-                for i in range(0, len(sentences) - 1, 2):
-                    processed_sentences.append(sentences[i] + (sentences[i+1] if sentences[i+1] else ''))
-                if len(sentences) % 2 == 1 and sentences[-1]:
-                    processed_sentences.append(sentences[-1])
-
-                if not processed_sentences:
-                    continue
-
-                # If only one sentence, just add it
-                if len(processed_sentences) <= 1:
-                    new_segments.append(segment)
-                    continue
-
-                # If multiple sentences, we need to approximate timestamps
-                total_chars = len(segment.text)
-                duration = segment.end - segment.start
-                current_start = segment.start
-
-                for sent in processed_sentences:
-                    sent = sent.strip()
-                    if not sent:
-                        continue
-                    
-                    char_ratio = len(sent) / total_chars
-                    segment_duration = duration * char_ratio
-                    
-                    new_segment_data = {
-                        'text': sent,
-                        'start': current_start,
-                        'end': current_start + segment_duration,
-                        'words': [] # Word timestamps are lost in this process
-                    }
-                    # Create a new segment object (assuming a simple dict or a class with this structure)
-                    # We need to check what type `result.segments` contains.
-                    # It's a list of `stable_whisper.result.Segment` objects.
-                    from stable_whisper.result import Segment, WordTiming
-                    new_seg = Segment(start=new_segment_data['start'], end=new_segment_data['end'], text=new_segment_data['text'], words=[])
-                    new_segments.append(new_seg)
-                    current_start += segment_duration
-            
-            result.segments = new_segments
-            
-            # Gap adjustment for MLX models (refine not supported)
+            # Preserve native word timings. The former manual sentence split
+            # replaced them with segment estimates and broke Step 6 alignment.
             rprint("[cyan]Adjusting gaps for better segment boundaries...[/cyan]")
             result = result.adjust_gaps(duration_threshold=0.75, one_section=False)
 
