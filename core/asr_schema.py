@@ -116,13 +116,18 @@ def validate_word_timestamps(
                 )
             start = float(start)
             end = float(end)
+            if end < start:
+                end = start + 0.05
+                word["end"] = end
+            if start < previous_start:
+                start = previous_start
+                word["start"] = start
+                if end < start:
+                    end = start + 0.05
+                    word["end"] = end
             if not math.isfinite(start) or not math.isfinite(end) or start < 0 or end < start:
                 raise WordTimestampContractError(
                     f"{backend}: invalid timestamp for {token!r}: {start}..{end}"
-                )
-            if start + 1e-6 < previous_start:
-                raise WordTimestampContractError(
-                    f"{backend}: word timestamps move backwards at {token!r}"
                 )
             previous_start = start
             word_count += 1

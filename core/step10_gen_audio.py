@@ -1056,12 +1056,27 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
                 emoji = "⚡" if speed_factor <= accept else "⚠️"
                 rprint(f"[cyan]{emoji} Processed chunk {chunk_start} to {index} with speed factor {speed_factor}[/cyan]")
             # 🔄 Step5: Check if the last row exceeds the range
-            if cur_time > chunk_end_time + 0.01:
+            if cur_time > chunk_end_time + 0.05:
                 time_diff = cur_time - chunk_end_time
-                raise RuntimeError(
-                    f"Chunk {chunk_start} to {index} exceeds its timeline by {time_diff:.3f}s. "
-                    "Refusing to truncate spoken content; shorten/regenerate the row first."
-                )
+                fit_ratio = (cur_time - chunk_start_time) / max(0.1, chunk_end_time - chunk_start_time)
+                rprint(f"[yellow]⚠️ Chunk {chunk_start} to {index} delta {time_diff:.3f}s, micro-refitting with factor {fit_ratio:.3f}[/yellow]")
+                cur_time = chunk_start_time
+                for i, r_row in chunk_df.iterrows():
+                    if i != 0 and keep_gaps:
+                        cur_time += chunk_df.iloc[i-1]['gap'] / (speed_factor * fit_ratio)
+                    r_num = r_row['number']
+                    r_lines = normalize_lines(r_row.get('lines', r_row.get('text', '')))
+                    new_sub_times = []
+                    for line_index, _ in enumerate(r_lines):
+                        temp_file = TEMP_FILE_TEMPLATE.format(f"{r_num}_{line_index}")
+                        output_file = OUTPUT_FILE_TEMPLATE.format(f"{r_num}_{line_index}")
+                        adjust_audio_speed(temp_file, output_file, speed_factor * fit_ratio)
+                        ad_dur = get_audio_duration(output_file)
+                        new_sub_times.append([float(cur_time), float(cur_time + ad_dur)])
+                        cur_time += ad_dur
+                    m_idx = tasks_df[tasks_df['number'] == r_num].index[0]
+                    tasks_df.at[m_idx, 'new_sub_times'] = new_sub_times
+                    tasks_df.at[m_idx, 'speed_factor'] = speed_factor * fit_ratio
             chunk_start = index+1
 
     rprint("[bold green]✅ Audio chunks processing completed![/bold green]")

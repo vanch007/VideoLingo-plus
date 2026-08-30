@@ -11,7 +11,17 @@ from core.constants import AUDIO_DIR
 DUBBING_REPAIR_PLAN_JSON = os.path.join(AUDIO_DIR, "dubbing_repair_plan.json")
 DUBBING_REPAIR_HISTORY_JSONL = os.path.join(AUDIO_DIR, "dubbing_repair_history.jsonl")
 DUBBING_OVERDURATION_REPORT_JSON = os.path.join(AUDIO_DIR, "dubbing_over_duration_report.json")
-KNOWN_BACKENDS = {"indextts2", "omnivoice", "qwen3_tts", "voxcpm2", "higgs", "dots", "zonos2", "moss"}
+KNOWN_BACKENDS = {
+    "indextts2",
+    "omnivoice",
+    "qwen3_tts",
+    "voxcpm2",
+    "higgs",
+    "dots",
+    "zonos2",
+    "moss",
+    "ming",
+}
 ASR_RESULT_COLUMNS = (
     "asr_transcript",
     "asr_content_score",

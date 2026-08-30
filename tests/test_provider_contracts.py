@@ -3,7 +3,13 @@ from core.llm_provider import LLMProviderConfig, build_completion_args, create_c
 from core.all_tts_functions.tts_registry import list_selectable_tts_methods, list_tts_methods
 from core.providers.provider_governance import list_provider_records, verify_provider_records
 from core.providers.contracts import TTSRequest, TTSResult
-from core.providers.mlx_tts import DotsBackend, IndexTTS2Backend, MlxTTSRouter, looks_vietnamese
+from core.providers.mlx_tts import (
+    DotsBackend,
+    IndexTTS2Backend,
+    MingTTSBackend,
+    MlxTTSRouter,
+    looks_vietnamese,
+)
 from core.providers.quality import content_similarity, reference_leak_score
 from core.providers.benchmarking import build_benchmark_plan
 
@@ -59,7 +65,7 @@ def test_unavailable_tts_routes_are_deleted_and_mlx_clone_routes_are_selectable(
         assert removed not in registered
     for backend in (
         "mlx_indextts2", "mlx_higgs_audio", "mlx_dots_tts", "mlx_zonos2",
-        "mlx_moss_tts",
+        "mlx_moss_tts", "mlx_ming_omni_tts",
     ):
         assert backend in selectable
 
@@ -103,11 +109,52 @@ def test_indextts2_uses_native_duration_fit_for_subtitle_slots(monkeypatch, tmp_
         text="Timed line",
         output_path=str(tmp_path / "line.wav"),
         ref_audio=str(tmp_path / "ref.wav"),
+        emotion_ref=str(tmp_path / "emotion.wav"),
         target_duration=2.5,
     )
-    IndexTTS2Backend({"root": str(tmp_path), "seed": 42}).synthesize(request)
+    IndexTTS2Backend(
+        {
+            "root": str(tmp_path),
+            "seed": 42,
+            "language": "en",
+            "denoise_ref": False,
+            "denoise_emotion_ref": False,
+        }
+    ).synthesize(request)
     assert "--target-duration" in captured["cmd"]
     assert "--fit-duration" in captured["cmd"]
+    assert captured["cmd"][captured["cmd"].index("--language") + 1] == "en"
+    assert "--no-denoise-ref" in captured["cmd"]
+    assert "--no-denoise-emotion-ref" in captured["cmd"]
+
+
+def test_ming_uses_reference_and_target_step_cap(monkeypatch, tmp_path):
+    captured = {}
+
+    def fake_run(self, cmd, request):
+        captured["cmd"] = cmd
+        return TTSResult(output_path=request.output_path, backend="ming")
+
+    monkeypatch.setattr(MingTTSBackend, "_run", fake_run)
+    request = TTSRequest(
+        text="Timed Ming line",
+        output_path=str(tmp_path / "line.wav"),
+        ref_audio=str(tmp_path / "ref.wav"),
+        ref_text="参考文本",
+        target_duration=2.0,
+    )
+    MingTTSBackend(
+        {
+            "root": str(tmp_path),
+            "command_prefix": ["ming"],
+            "max_steps": 200,
+            "steps_per_second": 3.125,
+            "step_buffer": 8,
+        }
+    ).synthesize(request)
+    assert "--ref-audio" in captured["cmd"]
+    assert captured["cmd"][captured["cmd"].index("--max-steps") + 1] == "15"
+    assert "--ref-text" in captured["cmd"]
     assert captured["cmd"][captured["cmd"].index("--seed") + 1] == "42"
 
 
@@ -182,6 +229,7 @@ def test_indextts2_batch_keeps_model_resident_and_omits_unsafe_duration_cap(
             text="Safe line",
             output_path=str(tmp_path / "safe.wav"),
             ref_audio=str(tmp_path / "ref.wav"),
+            emotion_ref=str(tmp_path / "emotion.wav"),
             target_duration=2.0,
             task_row={"est_dur": 2.0},
         ),
@@ -189,17 +237,26 @@ def test_indextts2_batch_keeps_model_resident_and_omits_unsafe_duration_cap(
             text="Overlong line that must first be rewritten",
             output_path=str(tmp_path / "unsafe.wav"),
             ref_audio=str(tmp_path / "ref.wav"),
+            emotion_ref=str(tmp_path / "emotion.wav"),
             target_duration=1.0,
             task_row={"est_dur": 2.0},
         ),
     ]
 
     results = IndexTTS2Backend(
-        {"root": str(tmp_path), "fit_duration": True, "seed": 42}
+        {
+            "root": str(tmp_path),
+            "fit_duration": True,
+            "seed": 42,
+            "denoise_ref": False,
+            "denoise_emotion_ref": False,
+        }
     ).synthesize_batch(requests)
 
     assert captured["cmd"][1:3] == ["run", "mlx-indextts"]
     assert "batch" in captured["cmd"]
+    assert "--no-denoise-ref" in captured["cmd"]
+    assert "--no-denoise-emotion-ref" in captured["cmd"]
     assert captured["cmd"][captured["cmd"].index("--seed") + 1] == "42"
     assert captured["rows"][0]["target_duration_s"] == "2.000"
     assert captured["rows"][0]["fit_duration"] == "true"
@@ -254,6 +311,7 @@ def test_mlx_router_accepts_all_new_voice_clone_aliases():
         "mlx_dots_tts": "dots",
         "mlx_zonos2": "zonos2",
         "mlx_moss_tts": "moss",
+        "mlx_ming_omni_tts": "ming",
     }
     for alias, expected in aliases.items():
         req = TTSRequest(

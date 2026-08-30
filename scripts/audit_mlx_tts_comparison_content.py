@@ -21,6 +21,7 @@ from core.providers.quality import content_similarity
 
 BACKENDS = (
     "indextts2",
+    "indextts2_v25",
     "omnivoice",
     "qwen3_tts",
     "voxcpm2",
@@ -28,6 +29,7 @@ BACKENDS = (
     "dots",
     "zonos2",
     "moss",
+    "ming",
 )
 
 
@@ -59,7 +61,10 @@ def _locations(run_dir: Path, backend: str) -> tuple[Path, Path, Path | None]:
             run_dir / "output/audio/segs",
             run_dir / "output/audio/temp",
         )
-    workspace = root / backend / "workspace/output/audio"
+    # Ming was first generated with a non-official prompt; audit the
+    # recommended official-prompt render when it is present.
+    workspace_root = root / ("ming_official_prompt" if backend == "ming" else backend)
+    workspace = workspace_root / "workspace/output/audio"
     return workspace / "tts_tasks.xlsx", workspace / "segs", workspace / "raw"
 
 

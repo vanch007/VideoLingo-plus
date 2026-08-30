@@ -21,10 +21,11 @@ from core.audio_speed import adjust_audio_speed, trim_edge_silence
 from core.dubbing_quality import normalize_lines, parse_list
 from core.providers.asr_readback import verify_tasks_df
 from core.providers.contracts import TTSRequest
-from core.providers.mlx_tts import synthesize_with_mlx_router
+from core.providers.mlx_tts import IndexTTS2Backend, synthesize_with_mlx_router
 
 
 METHODS = {
+    "indextts2_v25": "mlx_indextts2",
     "omnivoice": "mlx_omnivoice",
     "qwen3_tts": "mlx_qwen3_tts",
     "voxcpm2": "mlx_voxcpm2",
@@ -32,6 +33,26 @@ METHODS = {
     "dots": "mlx_dots_tts",
     "zonos2": "mlx_zonos2",
     "moss": "mlx_moss_tts",
+    "ming": "mlx_ming_omni_tts",
+}
+
+
+INDEXTTS25_CONFIG = {
+    "root": "/Users/vanch/mlx-indextts2",
+    "command_prefix": [
+        "/Users/vanch/mlx-indextts2/.venv/bin/python",
+        "-m",
+        "mlx_indextts.cli",
+    ],
+    "profile": "v25",
+    "model": "models/mlx-IndexTTS-2.5-8bit",
+    "language": "en",
+    "denoise_ref": False,
+    "seed": 42,
+    "fit_duration": True,
+    "native_fit_max_estimated_ratio": 1.08,
+    "timeout_seconds": 7200,
+    "batch_timeout_seconds": 7200,
 }
 
 
@@ -162,6 +183,106 @@ def _fit_to_window(raw_path: Path, temp_path: Path, segment_path: Path, window: 
     }
 
 
+def _generate_indextts2_v25_batch(
+    tasks: pd.DataFrame,
+    run_dir: Path,
+    workspace: Path,
+    resume: bool,
+) -> list[dict]:
+    """Generate the frozen IndexTTS2.5 rows in one model-resident batch."""
+    pending: list[TTSRequest] = []
+    descriptors: list[dict] = []
+    for idx, row in tasks.iterrows():
+        number = int(row["number"])
+        lines = normalize_lines(row.get("lines", row.get("text", "")))
+        times = parse_list(row.get("new_sub_times"))
+        if len(lines) != len(times):
+            raise RuntimeError(
+                f"row {number} line/timestamp mismatch: {len(lines)} != {len(times)}"
+            )
+        ref_audio = run_dir / "output/audio/refers" / f"{number}.wav"
+        if not ref_audio.is_file():
+            raise FileNotFoundError(ref_audio)
+        for line_index, (text, window_pair) in enumerate(zip(lines, times)):
+            start, end = map(float, window_pair)
+            window = end - start
+            raw_path = workspace / "output/audio/raw" / f"{number}_{line_index}.wav"
+            temp_path = workspace / "output/audio/temp" / f"{number}_{line_index}_temp.wav"
+            segment_path = workspace / "output/audio/segs" / f"{number}_{line_index}.wav"
+            descriptor = {
+                "task_index": idx,
+                "number": number,
+                "line_index": line_index,
+                "speaker": str(row.get("speaker", "")),
+                "text": text,
+                "ref_audio": ref_audio,
+                "ref_text": str(row.get("origin", "")),
+                "raw_path": raw_path,
+                "temp_path": temp_path,
+                "segment_path": segment_path,
+                "window": window,
+            }
+            descriptors.append(descriptor)
+            if not (resume and raw_path.is_file() and raw_path.stat().st_size >= 1000):
+                pending.append(
+                    _request(
+                        "indextts2_v25",
+                        row,
+                        text,
+                        raw_path,
+                        ref_audio,
+                        window,
+                    )
+                )
+
+    batch_elapsed = 0.0
+    if pending:
+        started = time.perf_counter()
+        results = IndexTTS2Backend(INDEXTTS25_CONFIG).synthesize_batch(pending)
+        batch_elapsed = time.perf_counter() - started
+        if len(results) != len(pending):
+            raise RuntimeError(
+                f"IndexTTS2.5 batch output mismatch: expected {len(pending)}, got {len(results)}"
+            )
+        if any(result.backend != "indextts2" for result in results):
+            raise RuntimeError("IndexTTS2.5 batch returned a substituted backend")
+
+    generation_elapsed = batch_elapsed / len(pending) if pending else 0.0
+    report_rows: list[dict] = []
+    totals: dict[int, float] = {}
+    speeds: dict[int, float] = {}
+    for descriptor in descriptors:
+        fit = _fit_to_window(
+            descriptor["raw_path"],
+            descriptor["temp_path"],
+            descriptor["segment_path"],
+            descriptor["window"],
+        )
+        number = descriptor["number"]
+        totals[number] = totals.get(number, 0.0) + fit["natural_duration"]
+        speeds[number] = max(speeds.get(number, 1.0), fit["speed_factor"])
+        report_rows.append(
+            {
+                "number": number,
+                "line_index": descriptor["line_index"],
+                "speaker": descriptor["speaker"],
+                "text": descriptor["text"],
+                "ref_audio": str(descriptor["ref_audio"]),
+                "ref_text": descriptor["ref_text"],
+                "raw_audio": str(descriptor["raw_path"]),
+                "segment_audio": str(descriptor["segment_path"]),
+                "backend": "indextts2_v25",
+                "generation_elapsed": round(generation_elapsed, 4),
+                **fit,
+            }
+        )
+    for idx, row in tasks.iterrows():
+        number = int(row["number"])
+        tasks.at[idx, "real_dur"] = totals.get(number, 0.0)
+        tasks.at[idx, "speed_factor"] = speeds.get(number, 1.0)
+    return report_rows
+
+
 def generate_backend(
     backend: str,
     run_dir: Path,
@@ -180,7 +301,19 @@ def generate_backend(
     old_cwd = Path.cwd()
     os.chdir(workspace)
     try:
-        for idx, row in tasks.iterrows():
+        if backend == "indextts2_v25":
+            report_rows = _generate_indextts2_v25_batch(
+                tasks,
+                run_dir,
+                workspace,
+                resume,
+            )
+            tasks.to_excel(workspace / "output/audio/tts_tasks.xlsx", index=False)
+            (output_dir / "generation_rows.json").write_text(
+                json.dumps(report_rows, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+        rows_to_generate = tasks.iterrows() if backend != "indextts2_v25" else ()
+        for idx, row in rows_to_generate:
             number = int(row["number"])
             lines = normalize_lines(row.get("lines", row.get("text", "")))
             times = parse_list(row.get("new_sub_times"))
@@ -248,6 +381,14 @@ def generate_backend(
         "max_speed_factor": max((row["speed_factor"] for row in report_rows), default=0),
         "workspace": str(workspace),
     }
+    if backend == "indextts2_v25":
+        report.update(
+            {
+                "model": str(Path(INDEXTTS25_CONFIG["root"]) / INDEXTTS25_CONFIG["model"]),
+                "profile": INDEXTTS25_CONFIG["profile"],
+                "language": INDEXTTS25_CONFIG["language"],
+            }
+        )
     (output_dir / "report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
     )

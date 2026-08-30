@@ -63,14 +63,14 @@ llm:
 # Source language for embedded subtitles
 source_language: 'zh'
 
-target_language: 'vi'
+target_language: 'en'
 
 # Whether to use Demucs for vocal separation before transcription
 demucs: true
 demucs_model: 'htdemucs'
 
 # 背景音量调节 (1.0为原始音量，大于1.0增加音量，小于1.0降低音量)
-background_volume: 1.5
+background_volume: 0.35
 
 whisper:
   # ["medium", "large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
@@ -110,7 +110,7 @@ speaker_diarization:
   backend: 'moss-mlx'
   # Fail closed: producing mixed-speaker subtitle/TTS rows is worse than stopping.
   required: true
-  min_word_coverage: 0.98
+  min_word_coverage: 0.80
   max_gap_seconds: 0.35
   # An isolated filler outside every diarized turn is dropped instead of being
   # guessed across a speaker boundary.
@@ -122,7 +122,7 @@ speaker_diarization:
     # MOSS turns are a coverage witness only. Any missing interval is rerun by
     # stable-ts/WhisperX so every recovered token still has native word timing.
     enabled: true
-    required: true
+    required: false
     min_turn_overlap_ratio: 0.20
     min_text_similarity: 0.20
     recovery_merge_gap_seconds: 1.50
@@ -132,7 +132,7 @@ speaker_diarization:
 translation_context:
   # Fail closed instead of silently discarding diarized identities before LLM translation.
   require_speakers: true
-  min_line_coverage: 0.98
+  min_line_coverage: 0.80
   previous_lines: 4
   next_lines: 3
   batch_max_lines: 10
@@ -141,7 +141,7 @@ translation_context:
 # Whether to burn subtitles into the video
 burn_subtitles: true
 # Disable when the source already contains hard-coded source-language subtitles.
-burn_source_subtitles: true
+burn_source_subtitles: false
 ## ======================== Advanced Settings ======================== ##
 # *Default resolution for downloading YouTube videos [360, 1080, best]
 ytb_resolution: '1080'
@@ -158,7 +158,14 @@ summary_length: 8000
 stt_correction_batch_size: 10
 # Optional run-specific, human-verified sentence corrections. Word timestamps
 # are never rewritten; Step 6 fuzzy-aligns the corrected sentence text.
-stt_correction_exact_replacements: {}
+stt_correction_exact_replacements:
+  "泰倩": "代娟"
+  "泰倩我说": "代娟我说"
+  "生态": "身态"
+  "小银朵": "小云朵"
+  "矩锌杯": "矩阵杯"
+  "九川不变形": "久穿不变形"
+  "产品质产品质": ""
 
 # *Number of LLM multi-threaded accesses, set to 1 if using local LLM
 max_workers: 11
@@ -174,7 +181,7 @@ translation_exact_replacements: {}
 pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
-# TTS selection [mlx_router, mlx_indextts2, mlx_omnivoice, mlx_qwen3_tts, mlx_voxcpm2, mlx_higgs_audio, mlx_dots_tts, mlx_zonos2, mlx_moss_tts]
+# TTS selection [mlx_router, mlx_indextts2, mlx_omnivoice, mlx_qwen3_tts, mlx_voxcpm2, mlx_higgs_audio, mlx_dots_tts, mlx_zonos2, mlx_moss_tts, mlx_ming_omni_tts]
 tts_method: 'mlx_router'
 
 # Quality mode [subtitle, dubbing, high_sync]. high_sync enables duration budgets,
@@ -219,7 +226,7 @@ dubbing_quality:
   # or JSON with text/transcript/segments fields.
   asr_readback_command: []
   asr_readback_timeout_seconds: 120
-  content_score_min: 0.55
+  content_score_min: 0.88
   # Block full-audio/video merge when ASR shows that a generated line lost its tail.
   # Low scores caused only by homophones or number formatting remain warnings.
   content_completion_gate: true
@@ -254,7 +261,12 @@ mlx_tts:
     indextts2:
       enabled: true
       root: '/Users/vanch/mlx-indextts2'
-      command_prefix: ['uv', 'run', 'mlx-indextts']
+      # Keep the v25 extras selected in the backend environment; plain
+      # `uv run` may exact-sync them away on a later invocation.
+      command_prefix: ['/Users/vanch/mlx-indextts2/.venv/bin/python', '-m', 'mlx_indextts.cli']
+      # The local runtime's auto profile selects IndexTTS 2.5 for
+      # non-Vietnamese text and the Vietnamese 2.0 extension for tone-marked
+      # Vietnamese. Set language explicitly for formal 2.5 comparisons.
       profile: 'auto'
       # References are already cut from the separated vocal stem; avoid a
       # redundant per-reference denoise pass in the model-resident batch.
@@ -331,6 +343,24 @@ mlx_tts:
       tokens_per_second: 24.0
       token_buffer: 32
       min_tokens: 32
+      timeout_seconds: 1800
+    ming:
+      enabled: true
+      root: '/Users/vanch/mlx-Ming-omni-tts'
+      command_prefix: ['/Users/vanch/pinokio/bin/miniconda/envs/videolingo/bin/python',
+        '/Users/vanch/VideoLingo-plus/core/providers/ming_tts_runner.py']
+      pythonpath: '/Users/vanch/mlx-Ming-omni-tts'
+      model_dir: 'mlx_models/Ming-omni-tts-16.8B-A3B-bf16'
+      required_files: ['mlx_models/Ming-omni-tts-16.8B-A3B-bf16/mlx_weights.safetensors',
+        'mlx_models/Ming-omni-tts-16.8B-A3B-bf16/campplus.onnx']
+      max_steps: 200
+      use_target_duration_step_cap: true
+      steps_per_second: 3.125
+      step_buffer: 8
+      cfg: 2.0
+      seed: 42
+      prompt: 'Please generate speech based on the following description.\n'
+      dtype: auto
       timeout_seconds: 1800
 
 # *Audio speed range

@@ -377,7 +377,7 @@ def build_parser() -> argparse.ArgumentParser:
     repair.add_argument("--limit", type=int, default=None, help="Limit repaired segment count")
     repair.add_argument(
         "--backend-fallback",
-        choices=["auto", "indextts2", "omnivoice", "qwen3_tts", "voxcpm2", "higgs", "dots", "zonos2", "moss"],
+        choices=["auto", "indextts2", "omnivoice", "qwen3_tts", "voxcpm2", "higgs", "dots", "zonos2", "moss", "ming"],
         default="auto",
         help="Force a backend for regenerated rows or let the repair planner choose",
     )

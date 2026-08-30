@@ -28,6 +28,7 @@ TTS_PROVIDERS = {
     "mlx_dots_tts": TTSProvider("mlx_dots_tts", "MLX dots.tts voice clone", requires_service=True, lifecycle="experimental"),
     "mlx_zonos2": TTSProvider("mlx_zonos2", "MLX ZONOS2 voice clone API", requires_service=True, lifecycle="experimental"),
     "mlx_moss_tts": TTSProvider("mlx_moss_tts", "MLX MOSS-TTS voice clone", requires_service=True, lifecycle="experimental"),
+    "mlx_ming_omni_tts": TTSProvider("mlx_ming_omni_tts", "MLX Ming Omni TTS voice clone", requires_service=True, lifecycle="experimental"),
 }
 
 LOCAL_TTS_METHODS = {
@@ -40,6 +41,7 @@ LOCAL_TTS_METHODS = {
     "mlx_dots_tts",
     "mlx_zonos2",
     "mlx_moss_tts",
+    "mlx_ming_omni_tts",
 }
 
 MLX_ROUTER_BACKENDS = {
@@ -51,6 +53,7 @@ MLX_ROUTER_BACKENDS = {
     "mlx_dots_tts": "dots",
     "mlx_zonos2": "zonos2",
     "mlx_moss_tts": "moss",
+    "mlx_ming_omni_tts": "ming",
 }
 
 

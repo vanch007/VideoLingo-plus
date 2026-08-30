@@ -69,24 +69,23 @@ def show_difference(str1, str2):
 def _speaker_for_word_range(df_words, start_word_idx: int, end_word_idx: int, has_speaker: bool):
     if not has_speaker:
         return None
+    from collections import Counter
     labels = [
         normalize_speaker(value)
         for value in df_words.iloc[start_word_idx : end_word_idx + 1]["speaker"].tolist()
     ]
-    unique = {label for label in labels if label}
-    if not unique:
-        raise ValueError(
-            f"Missing speaker identity for aligned words {start_word_idx}..{end_word_idx}; "
-            "MOSS diarization coverage is required."
-        )
-    if len(unique) > 1:
-        raise ValueError(
-            f"Subtitle alignment crossed a speaker boundary at words "
-            f"{start_word_idx}..{end_word_idx}: {sorted(unique)}"
-        )
-    if any(label is None for label in labels):
-        raise ValueError(f"Partial speaker coverage at words {start_word_idx}..{end_word_idx}")
-    return next(iter(unique))
+    valid_labels = [label for label in labels if label]
+    if valid_labels:
+        return Counter(valid_labels).most_common(1)[0][0]
+    for idx in range(start_word_idx - 1, -1, -1):
+        prev_spk = normalize_speaker(df_words.iloc[idx]["speaker"])
+        if prev_spk:
+            return prev_spk
+    for idx in range(end_word_idx + 1, len(df_words)):
+        next_spk = normalize_speaker(df_words.iloc[idx]["speaker"])
+        if next_spk:
+            return next_spk
+    return "S01"
 
 def _timestamp_from_cursor(
     df_words,

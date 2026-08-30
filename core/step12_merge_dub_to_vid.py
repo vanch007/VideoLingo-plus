@@ -43,6 +43,7 @@ TRANS_BACK_COLOR = '&H33000000'
 # --- End of Styles ---
 
 def normalize_audio_volume(audio_path: str, output_path: str, target_db: float = -20.0):
+    target_db = float(load_key("dubbing_quality.loudness_target_lufs", -14.0))
     audio = AudioSegment.from_file(audio_path)
     change_in_dBFS = target_db - audio.dBFS
     normalized_audio = audio.apply_gain(change_in_dBFS)
@@ -114,10 +115,10 @@ def merge_video_audio():
             f"MarginL={margin_lr},MarginR={margin_lr},MarginV={src_margin_v}"
         )
         dub_style = (
-            f"FontSize={trans_size},FontName={TRANS_FONT_NAME},"
-            f"PrimaryColour={TRANS_FONT_COLOR},OutlineColour={TRANS_OUTLINE_COLOR},OutlineWidth={trans_outline},"
-            f"BackColour={TRANS_BACK_COLOR},Alignment=2,BorderStyle=4,"
-            f"MarginL={margin_lr},MarginR={margin_lr},MarginV={margin_v}"
+            f"FontSize=11,FontName={TRANS_FONT_NAME},"
+            f"PrimaryColour=&H00FFFF&,OutlineColour=&H000000&,OutlineWidth=1.2,"
+            f"ShadowColour=&H80000000&,Alignment=2,BorderStyle=1,"
+            f"MarginL=15,MarginR=15,MarginV=4"
         )
 
         # Use absolute paths to avoid escaping issues
@@ -169,14 +170,14 @@ def merge_video_audio():
     # ── Pass 2: Mix audio streams with filter_complex (no subtitle filters here) ──
     rprint("[bold green]Pass 2: Mixing audio and merging...[/bold green]")
 
-    background_volume = load_key("background_volume", 1.5)
+    background_volume = load_key("background_volume", 0.35)
 
     audio_filter = (
         f"[1:a]volume={background_volume}[bg];"
         f"[2:a]aformat=channel_layouts=stereo[dub];"
         f"[dub]asplit[dub_sc][dub_mix];"
-        f"[bg][dub_sc]sidechaincompress=threshold=0.05:ratio=4:attack=50:release=300[docked_bg];"
-        f"[docked_bg][dub_mix]amix=inputs=2:duration=first:dropout_transition=3[a]"
+        f"[bg][dub_sc]sidechaincompress=threshold=0.015:ratio=8:attack=20:release=250[docked_bg];"
+        f"[docked_bg][dub_mix]amix=inputs=2:duration=first:dropout_transition=2:normalize=0[a]"
     )
 
     cmd = [

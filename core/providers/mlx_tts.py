@@ -39,6 +39,7 @@ BACKEND_ALIASES = {
     "mlx_dots_tts": "dots",
     "mlx_zonos2": "zonos2",
     "mlx_moss_tts": "moss",
+    "mlx_ming_omni_tts": "ming",
 }
 
 LANGUAGE_NAMES = {
@@ -214,6 +215,9 @@ class IndexTTS2Backend(CliBackend):
         ]
         if cfg.get("model"):
             cmd += ["--model", str(cfg["model"])]
+        language = str(cfg.get("language", "auto") or "auto").strip().lower()
+        if language and language != "auto":
+            cmd += ["--language", language]
         if cfg.get("seed") is not None:
             cmd += ["--seed", str(cfg["seed"])]
         fit_duration = _as_bool(cfg.get("fit_duration"), True)
@@ -244,6 +248,10 @@ class IndexTTS2Backend(CliBackend):
                 cmd += ["--fit-duration"]
         if not _as_bool(cfg.get("denoise_ref", True), True):
             cmd += ["--no-denoise-ref"]
+        if not _as_bool(
+            cfg.get("denoise_emotion_ref", cfg.get("denoise_ref", True)), True
+        ):
+            cmd += ["--no-denoise-emotion-ref"]
         if request.emotion_ref:
             cmd += ["--emotion-ref-audio", _project_path(request.emotion_ref) or request.emotion_ref]
         return self._run(cmd, request)
@@ -310,10 +318,17 @@ class IndexTTS2Backend(CliBackend):
             ]
             if cfg.get("model"):
                 cmd += ["--model", str(cfg["model"])]
+            language = str(cfg.get("language", "auto") or "auto").strip().lower()
+            if language and language != "auto":
+                cmd += ["--language", language]
             if cfg.get("seed") is not None:
                 cmd += ["--seed", str(cfg["seed"])]
             if not _as_bool(cfg.get("denoise_ref", True), True):
                 cmd += ["--no-denoise-ref"]
+            if not _as_bool(
+                cfg.get("denoise_emotion_ref", cfg.get("denoise_ref", True)), True
+            ):
+                cmd += ["--no-denoise-emotion-ref"]
 
             env = os.environ.copy()
             pythonpath = cfg.get("pythonpath")
@@ -548,6 +563,57 @@ class MossTTSBackend(CliBackend):
         return self._run(cmd, request)
 
 
+class MingTTSBackend(CliBackend):
+    name = "ming"
+
+    def synthesize(self, request: TTSRequest) -> TTSResult:
+        if not request.ref_audio:
+            raise ValueError("ming requires ref_audio for speaker cloning")
+        cmd = _cmd_prefix(
+            self.cfg.get(
+                "command_prefix",
+                ["python3", str(Path(__file__).with_name("ming_tts_runner.py"))],
+            )
+        )
+        max_steps = int(self.cfg.get("max_steps", 200))
+        if request.target_duration and _as_bool(
+            self.cfg.get("use_target_duration_step_cap", True), True
+        ):
+            steps_per_second = float(self.cfg.get("steps_per_second", 3.125))
+            step_buffer = int(self.cfg.get("step_buffer", 8))
+            max_steps = min(
+                max_steps,
+                max(8, int(math.ceil(request.target_duration * steps_per_second + step_buffer))),
+            )
+        cmd += [
+            "--model-dir",
+            str(self.cfg.get("model_dir", "mlx_models/Ming-omni-tts-16.8B-A3B-bf16")),
+            "--text",
+            request.text,
+            "--ref-audio",
+            _project_path(request.ref_audio) or request.ref_audio,
+            "--output",
+            _project_path(request.output_path) or request.output_path,
+            "--prompt",
+            str(
+                self.cfg.get(
+                    "prompt", "Please generate speech based on the following description.\n"
+                )
+            ),
+            "--max-steps",
+            str(max_steps),
+            "--cfg",
+            str(self.cfg.get("cfg", 2.0)),
+            "--seed",
+            str(self.cfg.get("seed", 42)),
+            "--dtype",
+            str(self.cfg.get("dtype", "auto")),
+        ]
+        if request.ref_text:
+            cmd += ["--ref-text", request.ref_text]
+        return self._run([str(item) for item in cmd], request)
+
+
 class Zonos2Backend:
     name = "zonos2"
 
@@ -602,6 +668,7 @@ class MlxTTSRouter:
             "dots": DotsBackend(_load_backend_config("dots")),
             "zonos2": Zonos2Backend(_load_backend_config("zonos2")),
             "moss": MossTTSBackend(_load_backend_config("moss")),
+            "ming": MingTTSBackend(_load_backend_config("ming")),
         }
 
     def select_backend(self, request: TTSRequest) -> str:

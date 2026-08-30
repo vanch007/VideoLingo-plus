@@ -356,7 +356,7 @@ def page_setting():
 
         elif select_tts == "mlx_router" or select_tts.startswith("mlx_"):
             st.info(t("Local MLX TTS router provides nine voice-cloning backends; experimental backends require their local runtime or API service."))
-            router_backends = ["auto", "indextts2", "omnivoice", "qwen3_tts", "voxcpm2", "higgs", "dots", "zonos2", "moss"]
+            router_backends = ["auto", "indextts2", "omnivoice", "qwen3_tts", "voxcpm2", "higgs", "dots", "zonos2", "moss", "ming"]
             forced = {
                 "mlx_indextts2": "indextts2",
                 "mlx_omnivoice": "omnivoice",
@@ -366,6 +366,7 @@ def page_setting():
                 "mlx_dots_tts": "dots",
                 "mlx_zonos2": "zonos2",
                 "mlx_moss_tts": "moss",
+                "mlx_ming_omni_tts": "ming",
             }.get(select_tts, load_key("mlx_tts.default_backend", "auto"))
             selected_backend = st.selectbox(
                 "MLX TTS Backend",
