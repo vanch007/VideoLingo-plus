@@ -21,6 +21,7 @@ from core.translation_context import (
     split_speaker_aware_batches,
     surrounding_context,
 )
+from core.translation_review import is_valid_target_language, review_and_repair_translation
 from core.translation_state import record_llm_stage
 
 
@@ -175,6 +176,22 @@ def translate_all():
         console.print(
             f"[green]✅ Applied {exact_replacements} verified exact translation replacement(s).[/green]"
         )
+
+    # Independent semantic review and bounded local repair
+    output, review_report = review_and_repair_translation(output, terminology, max_repair_rounds=int(load_key("translation.max_repair_rounds", 5)))
+    if review_report.get("status") == "failed":
+        review_err = review_report.get("error") or "Semantic review detected unresolvable critical issues"
+        console.print(f"[bold red]❌ Translation review failed: {review_err}[/bold red]")
+        if load_key("translation.strict_review_gate", True):
+            raise ValueError(f"Translation review gate failed: {review_err}")
+    target_lang = str(load_key("target_language", "en"))
+    for _, row in output.iterrows():
+        t_val = str(row.get("Translation", "") or "")
+        if not is_valid_target_language(t_val, target_lang):
+            raise ValueError(
+                f"Translation line {row.get('LineID')} has invalid target language content: {t_val}"
+            )
+
     output.to_excel(TRANSLATION_RESULTS_FILE, index=False)
     baseline_comparisons = len(batches) * len(batches)
     optimized_comparisons = len(batches)
@@ -200,6 +217,7 @@ def translate_all():
         artifacts=[
             TRANSLATION_RESULTS_FILE,
             "output/log/translation_speaker_context.json",
+            "output/log/translation_review.json",
             WORKFLOW_REPORT_FILE,
         ],
     )

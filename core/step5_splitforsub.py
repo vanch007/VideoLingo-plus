@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, re
 import pandas as pd
 from typing import List, Tuple
 import concurrent.futures
@@ -49,7 +49,7 @@ def _target_joiner() -> str:
 
 def align_subs(src_sub: str, tr_sub: str, src_part: str) -> Tuple[List[str], List[str], str]:
     align_prompt = get_align_prompt(src_sub, tr_sub, src_part)
-    
+
     def valid_align(response_data):
         if 'align' not in response_data:
             return {"status": "error", "message": "Missing required key: `align`"}
@@ -58,14 +58,14 @@ def align_subs(src_sub: str, tr_sub: str, src_part: str) -> Tuple[List[str], Lis
         return {"status": "success", "message": "Align completed"}
 
     parsed = ask_gpt(align_prompt, response_json=True, valid_def=valid_align, log_title='align_subs')
-    
+
     align_data = parsed['align']
     src_parts = src_part.split('\n')
     tr_parts = [item[f'target_part_{i+1}'].strip() for i, item in enumerate(align_data)]
-    
+
     joiner = _target_joiner()
     tr_remerged = joiner.join(tr_parts)
-    
+
     table = Table(title="🔗 Aligned parts")
     table.add_column("Language", style="cyan")
     table.add_column("Parts", style="magenta")
@@ -73,7 +73,7 @@ def align_subs(src_sub: str, tr_sub: str, src_part: str) -> Tuple[List[str], Lis
     table.add_row("TARGET_LANG", "\n".join(tr_parts))
     table.add_row("REMERGED", tr_remerged)
     console.print(table)
-    
+
     return src_parts, tr_parts, tr_remerged
 
 def split_align_subs(src_lines: List[str], tr_lines: List[str]) -> Tuple[List[str], List[str], List[str]]:
@@ -81,12 +81,12 @@ def split_align_subs(src_lines: List[str], tr_lines: List[str]) -> Tuple[List[st
     MAX_SUB_LENGTH = subtitle_set["max_length"]
     TARGET_SUB_MULTIPLIER = subtitle_set["target_multiplier"]
     remerged_tr_lines = tr_lines.copy()
-    
+
     to_split = []
     for i, (src, tr) in enumerate(zip(src_lines, tr_lines)):
         src, tr = str(src), str(tr)
         # 只有当长度超过限制且不是仅由单个标点组成时才分割
-        if (len(src) > MAX_SUB_LENGTH or calc_len(tr) * TARGET_SUB_MULTIPLIER > MAX_SUB_LENGTH) and \
+        if (len(src) > MAX_SUB_LENGTH or calc_len(tr) > MAX_SUB_LENGTH * TARGET_SUB_MULTIPLIER) and \
            not (len(src.strip()) == 1 and src.strip() in ',.?!，。？！'):
             to_split.append(i)
             table = Table(title=f"📏 Line {i} needs to be split")
@@ -95,7 +95,7 @@ def split_align_subs(src_lines: List[str], tr_lines: List[str]) -> Tuple[List[st
             table.add_row("Source Line", src)
             table.add_row("Target Line", tr)
             console.print(table)
-    
+
     def process(i):
         # 尝试正常分割，如果失败则强制分割
         try:
@@ -108,37 +108,42 @@ def split_align_subs(src_lines: List[str], tr_lines: List[str]) -> Tuple[List[st
             console.print(f"[yellow]Warning: Normal split failed for line {i}, using forced split. Error: {e}[/yellow]")
             # 如果正常分割失败，使用强制分割
             split_src = split_sentence(src_lines[i], num_parts=2, force_split=True).strip()
-            
+
         src_parts, tr_parts, tr_remerged = align_subs(src_lines[i], tr_lines[i], split_src)
+        return i, src_parts, tr_parts, tr_remerged
+
+    results_map = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=load_key("max_workers")) as executor:
+        for i, src_parts, tr_parts, tr_remerged in executor.map(process, to_split):
+            results_map[i] = (src_parts, tr_parts, tr_remerged)
+
+    for i, (src_parts, tr_parts, tr_remerged) in results_map.items():
         src_lines[i] = src_parts
         tr_lines[i] = tr_parts
         remerged_tr_lines[i] = tr_remerged
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=load_key("max_workers")) as executor:
-        executor.map(process, to_split)
-    
+
     # Flatten `src_lines` and `tr_lines`
     src_lines = [item for sublist in src_lines for item in (sublist if isinstance(sublist, list) else [sublist])]
     tr_lines = [item for sublist in tr_lines for item in (sublist if isinstance(sublist, list) else [sublist])]
-    
+
     return src_lines, tr_lines, remerged_tr_lines
 
 def split_for_sub_main():
     console.print("[bold green]🚀 Processing subtitles...[/bold green]")
-    
+
     df = pd.read_excel(INPUT_FILE)
     original_src = df['Source'].tolist()
     original_trans = df['Translation'].tolist()
     src = original_src.copy()
     trans = original_trans.copy()
     audio_remerged = None
-    
+
     # Subtitle splitting is now always enabled.
-    
+
     subtitle_set = load_key("subtitle")
     MAX_SUB_LENGTH = subtitle_set["max_length"]
     TARGET_SUB_MULTIPLIER = subtitle_set["target_multiplier"]
-    
+
     for attempt in range(5):  # 增加到5次重试以提高成功率
         console.print(Panel(f"🔄 Split attempt {attempt + 1}", expand=False))
         try:
@@ -150,11 +155,11 @@ def split_for_sub_main():
             if attempt == 4:  # 最后一次尝试
                 raise
             continue
-        
+
         # 检查是否所有字幕都符合长度要求
         src_check = all(len(str(src)) <= MAX_SUB_LENGTH for src in split_src)
-        trans_check = all(calc_len(str(tr)) * TARGET_SUB_MULTIPLIER <= MAX_SUB_LENGTH for tr in split_trans)
-        
+        trans_check = all(calc_len(str(tr)) <= MAX_SUB_LENGTH * TARGET_SUB_MULTIPLIER for tr in split_trans)
+
         if src_check and trans_check:
             console.print("[green]✅ All subtitles meet the length requirements![/green]")
             break
@@ -162,16 +167,24 @@ def split_for_sub_main():
             console.print(f"[yellow]⚠️ Some subtitles still exceed length limits:[/yellow]")
             console.print(f"  - Source check passed: {src_check}")
             console.print(f"  - Translation check passed: {trans_check}")
-        
+
         # 更新源数据继续下一轮分割
         src = split_src
         trans = split_trans
 
     if audio_remerged is None or len(audio_remerged) != len(original_src):
         audio_remerged = original_trans
-    
+
+    split_trans = [re.sub(r'\[(?:S\d+|SPEAKER_\d+)\]\s*', '', str(t or ''), flags=re.IGNORECASE).strip() for t in split_trans]
+    audio_remerged = [re.sub(r'\[(?:S\d+|SPEAKER_\d+)\]\s*', '', str(t or ''), flags=re.IGNORECASE).strip() for t in audio_remerged]
+
     pd.DataFrame({'Source': split_src, 'Translation': split_trans}).to_excel(OUTPUT_SPLIT_FILE, index=False)
-    pd.DataFrame({'Source': original_src, 'Translation': audio_remerged}).to_excel(OUTPUT_REMERGED_FILE, index=False)
+    remerged_dict = {'Source': original_src, 'Translation': audio_remerged}
+    if 'LineID' in df.columns:
+        remerged_dict['LineID'] = df['LineID'].tolist()
+    if 'Speaker' in df.columns:
+        remerged_dict['Speaker'] = df['Speaker'].tolist()
+    pd.DataFrame(remerged_dict).to_excel(OUTPUT_REMERGED_FILE, index=False)
     record_llm_stage("split_subtitle")
 
 if __name__ == '__main__':

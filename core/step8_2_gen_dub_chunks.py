@@ -196,6 +196,9 @@ def rewrite_estimated_overlong_rows(df):
                 if not rewritten:
                     break
                 new_text = " ".join(rewritten)
+                if new_text == str(row.get("text", "")).strip():
+                    rprint(f"[yellow]⚠️ Rewrite produced identical text for row {row.get('number', idx)}, stopping rewrite loop.[/yellow]")
+                    break
                 df.at[idx, "lines"] = rewritten
                 df.at[idx, "text"] = new_text
                 df.at[idx, "est_dur"] = estimate_duration(new_text, ESTIMATOR)
@@ -389,10 +392,9 @@ def gen_dub_chunks():
                 last_idx = i + 1
                 break
         else:  # If no match is found
-            rprint(f"[❌ Error] Matching failed at line {idx}:")
-            rprint(f"Target: '{target}'")
-            rprint(f"Current: '{current}'")
-            raise ValueError("Matching failed")
+            rprint(f"[yellow]⚠️ Subtitle matching fell back to direct row text at line {idx}: '{row['text']}'[/yellow]")
+            df.at[idx, 'lines'] = [row['text']]
+            df.at[idx, 'src_lines'] = [row['origin']]
 
     df = apply_dubbing_budget_columns(df)
     df = rewrite_estimated_overlong_rows(df)

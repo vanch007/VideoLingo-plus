@@ -1,5 +1,6 @@
 import os, sys, json
 import re
+from typing import Any
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.ask_gpt import ask_gpt
 from core.prompts_storage import get_summary_prompt
@@ -15,6 +16,71 @@ TERMINOLOGY_JSON_PATH = 'output/log/terminology.json'
 SENTENCE_TXT_PATH = 'output/log/sentence_splitbymeaning.txt'
 CUSTOM_TERMS_PATH = 'custom_terms.xlsx'
 CLEANED_CHUNKS_PATH = 'output/log/cleaned_chunks.xlsx'
+
+def resolve_source_anomalies(anomalies: list[dict[str, Any]], speaker_rows: pd.DataFrame | None = None, sentences_path: str = SENTENCE_TXT_PATH) -> list[dict[str, Any]]:
+    """Flag detected script anomalies without destructive regex stripping of valid mixed-language content."""
+    resolved_anomalies = []
+    for a in anomalies:
+        item = dict(a)
+        if item.get('type') == 'corrupted_source_script':
+            item['resolved'] = False
+            item['action'] = 'flagged_script_risk_acoustic_witness_required'
+        else:
+            item['resolved'] = False
+        resolved_anomalies.append(item)
+    return resolved_anomalies
+
+
+def detect_source_anomalies(words_path: str = CLEANED_CHUNKS_PATH, speaker_rows: pd.DataFrame | None = None) -> list[dict[str, Any]]:
+    anomalies = []
+    if os.path.exists(words_path):
+        try:
+            df_words = pd.read_excel(words_path)
+            for idx, row in df_words.iterrows():
+                dur = float(row.get('end', 0)) - float(row.get('start', 0))
+                text = str(row.get('text', '')).strip()
+                if dur > 1.5 and len(text) <= 2:
+                    anomalies.append({
+                        'type': 'long_duration_token',
+                        'index': idx,
+                        'text': text,
+                        'duration': round(dur, 3),
+                        'start': round(float(row.get('start', 0)), 3),
+                        'end': round(float(row.get('end', 0)), 3),
+                        'speaker': str(row.get('speaker', '')),
+                    })
+                if re.search(r'[\u0400-\u04FF]', text) or (re.search(r'[a-zA-Z]{3,}', text) and re.search(r'[\u4e00-\u9fff]', text)):
+                    anomalies.append({
+                        'type': 'corrupted_source_script',
+                        'index': idx,
+                        'text': text,
+                        'duration': round(dur, 3),
+                        'start': round(float(row.get('start', 0)), 3),
+                        'end': round(float(row.get('end', 0)), 3),
+                        'speaker': str(row.get('speaker', '')),
+                        'problem': f"Corrupted or foreign script detected in source ASR: '{text}'",
+                    })
+        except Exception:
+            pass
+    if speaker_rows is not None and not speaker_rows.empty:
+        for idx, row in speaker_rows.iterrows():
+            text = str(row.get('text', '')).strip()
+            if re.search(r'(.{2,4})\\1{3,}', text):
+                anomalies.append({
+                    'type': 'repetition_loop',
+                    'line_id': str(row.get('line_id', f'L{idx+1:05d}')),
+                    'text': text,
+                    'speaker': str(row.get('speaker', '')),
+                })
+            if re.search(r'[\u0400-\u04FF]', text) or re.search(r'[\u4e00-\u9fff].*[a-zA-Z]{3,}|[a-zA-Z]{3,}.*[\u4e00-\u9fff]', text):
+                anomalies.append({
+                    'type': 'corrupted_source_script',
+                    'line_id': str(row.get('line_id', f'L{idx+1:05d}')),
+                    'text': text,
+                    'speaker': str(row.get('speaker', '')),
+                    'problem': f"Corrupted or foreign script detected in line: '{text}'",
+                })
+    return anomalies
 
 def combine_chunks(speaker_rows=None):
     """Combine the text chunks identified by whisper into a single long text"""
@@ -56,7 +122,7 @@ def search_things_to_note_in_prompt(sentence):
 
 def update_cleaned_chunks(original_lines, corrected_lines):
     """Update cleaned_chunks.xlsx with corrected text while preserving timestamps.
-    
+
     Note: Word-level timestamp updates are disabled to preserve data integrity.
     The sentence-level corrections are saved to sentence_splitbymeaning.txt,
     and step6's fuzzy matching algorithm will handle the text differences.
@@ -70,7 +136,7 @@ def save_corrected_text(corrected_lines, original_lines=None):
     with open(SENTENCE_TXT_PATH, 'w', encoding='utf-8') as f:
         f.write('\n'.join(corrected_lines))
     console.print(f'[green]📝 STT 纠错完成，已覆盖 → {SENTENCE_TXT_PATH}[/green]')
-    
+
     # Also update cleaned_chunks.xlsx if original_lines provided
     if original_lines is not None:
         update_cleaned_chunks(original_lines, corrected_lines)
@@ -124,7 +190,7 @@ def apply_stt_exact_replacements(lines):
 
 def get_summary():
     """Get summary and optionally correct STT errors.
-    
+
     STT correction is automatically enabled for Chinese (zh) to fix homophones,
     but disabled for other languages to prevent timestamp matching issues.
     """
@@ -135,31 +201,36 @@ def get_summary():
         f"[cyan]🗣️ Speaker-aware summary context: {speaker_metrics.known_speaker_lines}/"
         f"{speaker_metrics.total_lines} lines, {speaker_metrics.speaker_count} speakers[/cyan]"
     )
-    
+
     # Auto-detect whether to skip STT correction based on source language
     whisper_language = load_key("whisper.language")
     detected_language = load_key("whisper.detected_language") if whisper_language == 'auto' else whisper_language
-    
+
     # Only enable STT correction for Chinese
-    skip_stt_correction = (detected_language not in ['zh', 'zh-CN', 'zh-TW'])
-    
+    skip_stt_correction = load_key('skip_stt_correction', False) or (detected_language not in ['zh', 'zh-CN', 'zh-TW'])
+
     if skip_stt_correction:
         console.print(f"[yellow]⏭️ STT纠错已禁用（源语言: {detected_language}，仅中文启用纠错）[/yellow]")
     else:
         console.print(f"[cyan]🔧 STT纠错已启用（源语言: {detected_language}）[/cyan]")
-    
-    if os.path.exists(CUSTOM_TERMS_PATH):
+
+    enable_custom_terms = load_key('enable_custom_terms', False)
+    custom_terms_path = load_key('custom_terms_path', None)
+    if enable_custom_terms and custom_terms_path and os.path.exists(custom_terms_path):
+        custom_terms = pd.read_excel(custom_terms_path)
+    elif enable_custom_terms and os.path.exists(CUSTOM_TERMS_PATH):
         custom_terms = pd.read_excel(CUSTOM_TERMS_PATH)
     else:
-        console.print(
-            f"[yellow]⏭️ Custom terms file not found: {CUSTOM_TERMS_PATH}; continuing without custom terms[/yellow]"
-        )
+        if enable_custom_terms:
+            console.print(f"[yellow]⏭️ Custom terms file not found: {CUSTOM_TERMS_PATH}; continuing without custom terms[/yellow]")
+        else:
+            console.print("[cyan]⏭️ External custom terms disabled by default (clean isolated run)[/cyan]")
         custom_terms = pd.DataFrame(columns=["src", "tgt", "note"])
     custom_terms_json = {
         "terms": [
             {
                 "src": str(row.iloc[0]),
-                "tgt": str(row.iloc[1]), 
+                "tgt": str(row.iloc[1]),
                 "note": str(row.iloc[2])
             }
             for _, row in custom_terms.iterrows()
@@ -167,13 +238,13 @@ def get_summary():
     }
     if len(custom_terms) > 0:
         console.print(f"[cyan]📖 Custom Terms Loaded: {len(custom_terms)} terms[/cyan]")
-    
+
     # ============ Step 1: Summarize topic and extract terms ============
     from core.prompts_storage import get_summary_prompt, get_stt_correction_prompt
-    
+
     summary_prompt = get_summary_prompt(src_content, custom_terms_json, speaker_ids=speaker_ids)
     console.print("[cyan]📝 Step 1: Summarizing topic and extracting terminology...[/cyan]")
-    
+
     def valid_summary(response_data):
         required_keys = {'src', 'tgt', 'note'}
         if 'terms' not in response_data:
@@ -196,49 +267,49 @@ def get_summary():
         return {"status": "success", "message": "Summary completed"}
 
     summary = ask_gpt(summary_prompt, response_json=True, valid_def=valid_summary, log_title='summary')
-    
+
     topic = summary.get('topic', '')
     terms = summary.get('terms', [])
-    
+
     console.print(f"[green]✅ Topic: {topic[:50]}...[/green]")
     console.print(f"[green]✅ Extracted {len(terms)} terms[/green]")
-    
+
     # ============ Step 2: STT Correction with context ============
     if skip_stt_correction:
         console.print("[yellow]⏭️ Skipping STT correction (not needed for provided subtitles)[/yellow]")
     else:
         console.print("[cyan]🔧 Step 2: Correcting STT errors with context...[/cyan]")
-        
+
         # Combine custom terms with extracted terms for context
         all_terms = terms + custom_terms_json['terms']
-        
+
         # 读取原始完整文件
         with open(SENTENCE_TXT_PATH, 'r', encoding='utf-8') as f:
             original_lines = [line.strip() for line in f.readlines() if line.strip()]
-        
+
         # 分批处理配置
         BATCH_SIZE = max(1, int(load_key('stt_correction_batch_size', 10)))
         total_lines = len(original_lines)
         all_corrected_lines = []
         total_corrections = 0
-        
+
         console.print(f"[cyan]📊 总计 {total_lines} 行，将分 {(total_lines + BATCH_SIZE - 1) // BATCH_SIZE} 批处理（每批 {BATCH_SIZE} 行）[/cyan]")
-        
+
         # 分批处理
         for batch_idx in range(0, total_lines, BATCH_SIZE):
             batch_end = min(batch_idx + BATCH_SIZE, total_lines)
             batch_lines = original_lines[batch_idx:batch_end]
             batch_num = batch_idx // BATCH_SIZE + 1
             total_batches = (total_lines + BATCH_SIZE - 1) // BATCH_SIZE
-            
+
             console.print(f"[cyan]🔄 处理第 {batch_num}/{total_batches} 批 (行 {batch_idx+1}-{batch_end})...[/cyan]")
-            
+
             # 将批次内容组合成待纠错文本
             batch_content = '\n'.join(batch_lines)
             batch_speaker_rows = speaker_rows.iloc[batch_idx:batch_end].copy()
             batch_speaker_rows.loc[:, 'text'] = batch_lines
             batch_speaker_context = format_dialogue(batch_speaker_rows)
-            
+
             # 生成批次纠错prompt
             correction_prompt = get_stt_correction_prompt(
                 batch_content,
@@ -246,25 +317,25 @@ def get_summary():
                 all_terms,
                 speaker_context=batch_speaker_context,
             )
-            
+
             def valid_correction(response_data):
                 return validate_stt_correction(response_data, batch_lines)
-            
+
             try:
                 correction_result = ask_gpt(
-                    correction_prompt, 
-                    response_json=True, 
-                    valid_def=valid_correction, 
+                    correction_prompt,
+                    response_json=True,
+                    valid_def=valid_correction,
                     log_title=f'stt_correction_batch_{batch_num}'
                 )
-                
+
                 if 'corrected_lines' in correction_result:
                     batch_corrected = correction_result['corrected_lines']
-                    
+
                     # 统计本批次纠正了多少行
                     batch_corrections = sum(1 for i in range(len(batch_lines)) if batch_lines[i] != batch_corrected[i])
                     total_corrections += batch_corrections
-                    
+
                     if batch_corrections > 0:
                         console.print(f"[green]✅ 第 {batch_num} 批：纠正 {batch_corrections}/{len(batch_lines)} 行[/green]")
                         # 显示前3个纠正示例
@@ -278,17 +349,17 @@ def get_summary():
                             console.print(f"[cyan]  ... 还有 {batch_corrections - 3} 处纠正未显示[/cyan]")
                     else:
                         console.print(f"[cyan]📝 第 {batch_num} 批：无需纠正[/cyan]")
-                    
+
                     all_corrected_lines.extend(batch_corrected)
                 else:
                     console.print(f"[yellow]⚠️ 第 {batch_num} 批纠错失败，保留原文[/yellow]")
                     all_corrected_lines.extend(batch_lines)
-                    
+
             except Exception as e:
                 console.print(f"[red]❌ 第 {batch_num} 批处理出错: {e}[/red]")
                 console.print(f"[yellow]⚠️ 保留第 {batch_num} 批的原文[/yellow]")
                 all_corrected_lines.extend(batch_lines)
-        
+
         # 验证合并后的总行数
         if len(all_corrected_lines) == total_lines:
             all_corrected_lines, exact_corrections = apply_stt_exact_replacements(
@@ -300,22 +371,69 @@ def get_summary():
                     f"[green]✅ 已应用 {exact_corrections} 行经核验的精确术语纠错[/green]"
                 )
             console.print(f"[green]✅ STT 纠错完成：共 {total_lines} 行，纠正 {total_corrections} 行 ({total_corrections/total_lines*100:.1f}%)[/green]")
-            
+
             # 保存纠错结果
             save_corrected_text(all_corrected_lines, original_lines)
         else:
             console.print(f"[red]❌ 批次合并出错：期望 {total_lines} 行，实际 {len(all_corrected_lines)} 行[/red]")
             console.print(f"[yellow]⚠️ 跳过纠错，保留原文[/yellow]")
-    
+
     # 保存术语和主题
-    if 'terms' in summary:
+    if 'terms' in summary and len(custom_terms) > 0:
         summary['terms'].extend(custom_terms_json['terms'])
-    
+
+    # 保存源异常并解析修复
+    anomalies = detect_source_anomalies(CLEANED_CHUNKS_PATH, speaker_rows)
+    anomalies = resolve_source_anomalies(anomalies, speaker_rows, SENTENCE_TXT_PATH)
+    with open('output/log/source_anomalies.json', 'w', encoding='utf-8') as f:
+        json.dump(anomalies, f, ensure_ascii=False, indent=2)
+
+    # 保存场景与内容理解
+    # 保存对话单元与意图
+    dialogue_units = summary.get('dialogue_units', [])
+    if speaker_rows is not None and not speaker_rows.empty:
+        existing_lids = {str(u.get('line_id')) for u in dialogue_units if isinstance(u, dict)}
+        for idx, r in speaker_rows.iterrows():
+            lid = str(r.get('line_id', f'L{idx+1:05d}'))
+            if lid not in existing_lids:
+                dialogue_units.append({
+                    'line_id': lid,
+                    'speaker_id': str(r.get('speaker', '')),
+                    'addressed_to': 'unknown',
+                    'speech_act': 'dialogue',
+                    'core_proposition': str(r.get('text', '')),
+                })
+
+    content_context = {
+        'topic': summary.get('topic', ''),
+        'scenes': summary.get('scenes', []),
+        'dialogue_coverage': round(len(dialogue_units) / max(speaker_metrics.total_lines, 1), 4),
+        'total_lines': speaker_metrics.total_lines,
+    }
+    with open('output/log/content_context.json', 'w', encoding='utf-8') as f:
+        json.dump(content_context, f, ensure_ascii=False, indent=2)
+
+    # 保存角色画像与关系
+    with open('output/log/speaker_profiles.json', 'w', encoding='utf-8') as f:
+        json.dump(summary.get('speaker_profiles', []), f, ensure_ascii=False, indent=2)
+    with open('output/log/dialogue_units.json', 'w', encoding='utf-8') as f:
+        json.dump(dialogue_units, f, ensure_ascii=False, indent=2)
+
+    # 保存全局翻译决策
+    translation_decisions = {
+        'terms': summary.get('terms', []),
+        'key_motifs': summary.get('translation_decisions', []),
+    }
+    with open('output/log/translation_decisions.json', 'w', encoding='utf-8') as f:
+        json.dump(translation_decisions, f, ensure_ascii=False, indent=2)
+
     # 保存 terminology
     save_data = {
         'topic': summary.get('topic', ''),
         'terms': summary.get('terms', []),
         'speaker_profiles': summary.get('speaker_profiles', []),
+        'scenes': summary.get('scenes', []),
+        'dialogue_units': dialogue_units,
         'speaker_context_metrics': {
             'total_lines': speaker_metrics.total_lines,
             'known_speaker_lines': speaker_metrics.known_speaker_lines,
@@ -324,7 +442,7 @@ def get_summary():
             'speaker_transitions': speaker_metrics.speaker_transitions,
         },
     }
-    
+
     with open(TERMINOLOGY_JSON_PATH, 'w', encoding='utf-8') as f:
         json.dump(save_data, f, ensure_ascii=False, indent=4)
 
@@ -335,6 +453,11 @@ def get_summary():
             TERMINOLOGY_JSON_PATH,
             SENTENCE_TXT_PATH,
             "output/log/translation_speaker_context.json",
+            "output/log/source_anomalies.json",
+            "output/log/content_context.json",
+            "output/log/speaker_profiles.json",
+            "output/log/dialogue_units.json",
+            "output/log/translation_decisions.json",
         ],
     )
 

@@ -21,12 +21,12 @@ def time_diff_seconds(t1: datetime.time, t2: datetime.time, base_date: datetime.
 
 def process_srt():
     """Process srt file or excel timeline, generate audio tasks"""
-    
+
     excel_path = 'output/audio/final_timeline.xlsx'
     if os.path.exists(excel_path):
         rprint(Panel(f"Found {excel_path}, loading tasks from Excel...", title="Info", border_style="cyan"))
         df_excel = pd.read_excel(excel_path)
-        
+
         subtitles = []
         for i, row in df_excel.iterrows():
             # Parse timestamp "00:00:00,000 --> 00:00:00,000"
@@ -34,27 +34,27 @@ def process_srt():
             start_str, end_str = time_str.split(' --> ')
             start_time = datetime.datetime.strptime(start_str, '%H:%M:%S,%f').time()
             end_time = datetime.datetime.strptime(end_str, '%H:%M:%S,%f').time()
-            
+
             # Final timeline timestamps are the source of truth for dubbing budgets.
             duration = time_diff_seconds(start_time, end_time, datetime.date.today())
-            
+
             # Handle potential NaN/float values in Translation column
             raw_text = row['Translation']
             if pd.isna(raw_text):
                 text = ""
             else:
                 text = str(raw_text)
-                
+
             # Remove content within parentheses
             text = re.sub(r'\([^)]*\)', '', text).strip()
             text = re.sub(r'（[^）]*）', '', text).strip()
-            text = text.replace('-', '')
-            
+            text = re.sub(r'^\s*[-*•]\s*', '', text).strip()
+
             # Filter out pure punctuation/whitespace (e.g., "、", "。", ", ", etc.)
             # Keep only text that contains at least one alphanumeric or CJK character
             if text and not re.search(r'[\w\u4e00-\u9fff]', text):
                 text = ""
-            
+
             subtitles.append({
                 'number': i + 1,
                 'start_time': start_time,
@@ -62,11 +62,10 @@ def process_srt():
                 'duration': duration,
                 'text': text,
                 'origin': str(row['Source']),
-                'speaker': row.get('speaker', None)
+                'speaker': None if pd.isna(row.get('speaker')) else str(row['speaker']).strip(),
+                'line_id': '' if pd.isna(row.get('LineID')) else str(row.get('LineID')).strip()
             })
-        
-        df = pd.DataFrame(subtitles)
-        
+
     else:
         rprint(Panel("Excel timeline not found, falling back to SRT parsing...", title="Info", border_style="yellow"))
         with open(TRANS_SUBS_FOR_AUDIO_FILE, 'r', encoding='utf-8') as file:
@@ -103,8 +102,11 @@ def process_srt():
                 text = re.sub(r'\([^)]*\)', '', text).strip()
                 text = re.sub(r'（[^）]*）', '', text).strip()
                 # Remove only '-' character, keep other punctuation
-                text = text.replace('-', '')
-                
+                text = re.sub(r'^\s*[-*•]\s*', '', text).strip()
+                # Remove any leaked bracketed speaker labels like [S01] or [SPEAKER_00]
+                text = re.sub(r'\[(?:S\d+|SPEAKER_\d+)\]\s*', '', text, flags=re.IGNORECASE).strip()
+                text = re.sub(r'\s*\[(?:S\d+|SPEAKER_\d+)\]', '', text, flags=re.IGNORECASE).strip()
+
                 # Filter out pure punctuation/whitespace (e.g., "、", "。", ", ", etc.)
                 # Keep only text that contains at least one alphanumeric or CJK character
                 if text and not re.search(r'[\w\u4e00-\u9fff]', text):
@@ -119,7 +121,43 @@ def process_srt():
 
             subtitles.append({'number': number, 'start_time': start_time, 'end_time': end_time, 'duration': duration, 'text': text, 'origin': origin, 'speaker': None})
 
-        df = pd.DataFrame(subtitles)
+    merged_subtitles = []
+    for sub in subtitles:
+        dur = sub['duration']
+        txt = sub['text'].strip()
+        spk = sub.get('speaker')
+        if spk is None or pd.isna(spk) or str(spk).strip().lower() in ['', 'nan', 'none']:
+            spk = None
+        orig = str(sub.get('origin', '')).strip()
+
+        # Suppress isolated micro-hallucinations (noise fragments without speech text or speaker)
+        if not spk and not txt and (dur < 0.3 or not re.search(r'[w一-鿿]', orig)):
+            continue
+
+        if dur < 0.25:
+            if merged_subtitles and merged_subtitles[-1].get('speaker') == spk:
+                prev = merged_subtitles[-1]
+                prev['end_time'] = sub['end_time']
+                prev['duration'] = time_diff_seconds(prev['start_time'], sub['end_time'], datetime.date.today())
+                if txt:
+                    prev['text'] = f"{prev['text']} {txt}".strip()
+                prev_orig = prev.get('origin', '')
+                sub_orig = sub.get('origin', '')
+                if sub_orig:
+                    prev['origin'] = f"{prev_orig} {sub_orig}".strip()
+                sub_lid = sub.get('line_id', '')
+                if sub_lid:
+                    prev['line_id'] = f"{prev.get('line_id', '')},{sub_lid}".strip(',')
+                continue
+            has_dialogue = bool(re.search(r'[a-zA-Z0-9\u4e00-\u9fff]', txt)) or bool(re.search(r'[a-zA-Z0-9\u4e00-\u9fff]', orig)) or bool(sub.get('line_id'))
+            if not has_dialogue:
+                continue
+        merged_subtitles.append(sub)
+
+    for idx, item in enumerate(merged_subtitles, 1):
+        item['number'] = idx
+
+    df = pd.DataFrame(merged_subtitles)
 
     # Add sub_times column
     df['sub_times'] = df.apply(lambda row: [
@@ -139,7 +177,7 @@ def save_to_srt(df, srt_path):
             # Convert time format from 00:00:00.000 to 00:00:00,000 for SRT
             start = row['start_time'].replace('.', ',')
             end = row['end_time'].replace('.', ',')
-            
+
             # Ensure text is string and handle NaN
             text = row['text']
             if pd.isna(text):
@@ -148,7 +186,7 @@ def save_to_srt(df, srt_path):
                 text = str(text)
                 if not text.strip():
                     text = " "
-            
+
             f.write(f"{row['number']}\n")
             f.write(f"{start} --> {end}\n")
             f.write(f"{text}\n\n")
@@ -159,33 +197,33 @@ def gen_audio_task_main():
         rprint(Panel(f"{TTS_TASKS_FILE} already exists, skip.", title="Info", border_style="blue"))
     else:
         df = process_srt()
-        
+
         # Filter out invalid rows before saving
         # This ensures tts_tasks.xlsx and trans.srt are consistent with each other
         initial_count = len(df)
-        
+
         # Filter empty text rows
         df = df[df['text'].notna() & (df['text'].astype(str).str.strip() != '')]
         empty_filtered = initial_count - len(df)
-        
+
         # Filter rows with duration <= 0 (invalid timestamps)
         df = df[df['duration'] > 0]
         df = df.reset_index(drop=True)
         duration_filtered = initial_count - empty_filtered - len(df)
-        
+
         if empty_filtered > 0:
             rprint(f"[yellow]🗑️ Filtered out {empty_filtered} empty text rows[/yellow]")
         if duration_filtered > 0:
             rprint(f"[yellow]🗑️ Filtered out {duration_filtered} rows with duration <= 0[/yellow]")
-        
+
         if len(df) == 0:
             rprint("[red]❌ No valid rows to generate TTS tasks![/red]")
             return
-        
+
         console.print(df)
         df.to_excel(TTS_TASKS_FILE, index=False)
         rprint(Panel(f"Successfully generated {TTS_TASKS_FILE}", title="Success", border_style="green"))
-        
+
         # Note: Disabled auto-sync to trans.srt when using pre-merged translations (Plan C)
         # save_to_srt(df, TRANS_SRT)
 

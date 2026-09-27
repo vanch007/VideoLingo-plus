@@ -7,7 +7,7 @@ from core.runtime_context import effective_target_language
 # @ step4_splitbymeaning.py
 def get_split_prompt(sentence, num_parts = 2, word_limit = 20, retry_count = 0):
     language = load_key("whisper.detected_language")
-    
+
     retry_instruction = ""
     if retry_count > 0:
         retry_instruction = f"""
@@ -75,9 +75,9 @@ For the provided {src_lang} video text (transcribed by ASR, may contain errors):
    - Write two sentences: first for main topic, second for key point
 
 2. Term Extraction:
-   - Mark professional terms, brand names, and proper nouns
-   - Provide {tgt_lang} translation or keep original
-   - Add brief explanation
+   - Mark proper nouns, character names, recurring dialogue motifs (thematic words repeated in the scene), and culturally specific action idioms.
+   - In 'tgt', provide ONLY the clean, concise translation in {tgt_lang} (e.g. 'surprise', 'bandits', 'Master Huang'). NEVER put parenthetical notes or transliterations in 'tgt'. Put all background notes in 'note'.
+   - Ensure core recurring motifs and names (e.g. key nouns repeated multiple times) are included with consistent translations.
 
 3. Speaker/Character Analysis:
    - Treat labels such as [S01] as stable speaker identities, never as spoken text
@@ -88,6 +88,14 @@ For the provided {src_lang} video text (transcribed by ASR, may contain errors):
 ## Output in only JSON format
 {{
     "topic": "Two-sentence video summary",
+    "scenes": [
+        {{
+            "scene_id": "scene_1",
+            "line_range": "L00001-L00012",
+            "scene_goal": "goal of this scene or confrontation",
+            "conflict_focus": "primary conflict or topic"
+        }}
+    ],
     "terms": [
         {{
             "src": "{src_lang} term",
@@ -103,8 +111,25 @@ For the provided {src_lang} video text (transcribed by ASR, may contain errors):
             "relationship": "relationship to other speakers or unknown",
             "status_and_formality": "relative status and expected register",
             "speaking_style": "tone, temperament, recurring verbal style",
+            "relationships": [
+                {{
+                    "to_speaker": "S02",
+                    "status_dynamic": "relative power / hierarchy",
+                    "address_terms": "how this speaker addresses the other",
+                    "attitude": "attitude and stance"
+                }}
+            ],
             "translation_guidance": "pronoun, honorific, address-term and tone guidance",
             "evidence": ["short dialogue evidence"]
+        }}
+    ],
+    "dialogue_units": [
+        {{
+            "line_id": "L00001",
+            "speaker_id": "S01",
+            "addressed_to": "S02 or all or unknown",
+            "speech_act": "accusation, question, threat, demand, bargain, or reaction",
+            "core_proposition": "essential action/predicate/claim in this line"
         }}
     ]
 }}
@@ -120,7 +145,7 @@ For the provided {src_lang} video text (transcribed by ASR, may contain errors):
 def get_stt_correction_prompt(source_content, topic, terms, speaker_context=None):
     """Step 2: Correct STT errors based on summary context"""
     src_lang = load_key("whisper.detected_language")
-    
+
     # Build context from summary
     terms_context = ""
     if terms:
@@ -147,7 +172,7 @@ Correct ASR errors in the provided text lines based on the context above.
 
 ## CRITICAL RULES
 ⚠️ You must ONLY correct characters that sound similar (homophones).
-⚠️ DO NOT add or remove any characters. 
+⚠️ DO NOT add or remove any characters.
 ⚠️ The corrected line MUST have the EXACT SAME character count as the original line.
 
 Only fix these types of errors:
@@ -216,6 +241,11 @@ def generate_shared_prompt(previous_content_prompt, after_content_prompt, summar
 
 Speaker IDs are metadata, not dialogue. Use them to preserve each character's role, status,
 pronouns, honorifics, address terms, and speaking style. Never output speaker IDs in subtitles.
+
+### Critical Semantic Invariants
+1. Preserve explicit actions, numbers (taels, days, amounts), and conditions.
+2. Maintain directional relationships: who speaks to whom; never turn a relayer into a promiser.
+3. Maintain aggressive repetition and pressure (e.g. repeated demands for an explanation).
 
 ### Points to Note
 {things_to_note_prompt}'''
@@ -407,6 +437,9 @@ def get_dubbing_rewrite_prompt(
     source_lines=None,
     direction="shorten",
     word_budget=None,
+    speaker=None,
+    speaker_profile=None,
+    semantic_constraints=None,
 ):
     TARGET_LANGUAGE = effective_target_language("auto")
     target_code = str(TARGET_LANGUAGE).lower()
@@ -453,7 +486,14 @@ def get_dubbing_rewrite_prompt(
             style_rule = "For English, use plain spoken wording, short common words, and natural contractions."
         else:
             style_rule = "Use natural short phrasing in the target language and avoid unnecessary filler words."
-        edit_rule = "Prefer deleting filler, compressing repeated ideas, and replacing long phrases with shorter natural equivalents."
+        edit_rule = "CRITICAL FACT INTEGRITY: You MUST preserve all participants (who does what to whom), all explicit amounts/quantities, dates/deadlines, and conjoined actions. DO NOT drop participants or core bargains just to shorten the text. Prefer natural contractions, concise vocabulary, and compressing wordiness."
+
+    speaker_info = ""
+    if speaker or speaker_profile:
+        speaker_info = f"\n## Character & Speaker\nSpeaker: {speaker or 'UNKNOWN'}\nProfile: {speaker_profile or 'Maintain speaker tone'}\n"
+    constraints_info = ""
+    if semantic_constraints:
+        constraints_info = f"\n## Semantic Invariants to Preserve\n{semantic_constraints}\n"
 
     return f'''
 ## Role
@@ -470,6 +510,7 @@ You are a professional dubbing script editor for high-sync video localization.
 5. {style_rule}
 6. {edit_rule}
 
+{speaker_info}{constraints_info}
 ## Reason This Needs Rewriting
 {reason}
 
@@ -595,14 +636,14 @@ def get_batch_subtitle_trim_prompt(subtitles_list):
         ...
     ]
     """
-    
+
     rule = '''Consider a. Reducing filler words without modifying meaningful content. b. Omitting unnecessary modifiers or pronouns, for example:
     - "Please explain your thought process" can be shortened to "Please explain thought process"
     - "We need to carefully analyze this complex problem" can be shortened to "We need to analyze this problem"
     '''
 
     subtitles_text = json.dumps(subtitles_list, ensure_ascii=False, indent=2)
-    
+
     trim_prompt = f'''
 ## Role
 You are a professional subtitle editor, editing and optimizing lengthy subtitles that exceed voiceover time before handing them to voice actors.

@@ -3,7 +3,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dataclasses import replace
 from threading import Lock
 import json_repair
-import json 
+import json
 import time
 from requests.exceptions import RequestException
 from core.config_utils import load_key
@@ -28,7 +28,7 @@ def save_log(model, prompt, response, log_title = 'default', message = None):
         "message": message
     }
     log_file = os.path.join(LOG_FOLDER, f"{log_title}.json")
-    
+
     if os.path.exists(log_file):
         with open(log_file, 'r', encoding='utf-8') as f:
             logs = json.load(f)
@@ -37,7 +37,7 @@ def save_log(model, prompt, response, log_title = 'default', message = None):
     logs.append(log_data)
     with open(log_file, 'w', encoding='utf-8') as f:
         json.dump(logs, f, ensure_ascii=False, indent=4)
-        
+
 def check_ask_gpt_history(prompt, model, log_title):
     # check if the prompt has been asked before
     if not os.path.exists(LOG_FOLDER):
@@ -66,8 +66,14 @@ def ask_gpt(
     with LOCK:
         history_response = check_ask_gpt_history(prompt, provider.model, log_title)
         if history_response:
+            if valid_def:
+                valid_response = valid_def(history_response)
+                if not isinstance(valid_response, dict) or valid_response.get("status") != "success":
+                    err_msg = valid_response.get("message", "Invalid cached response") if isinstance(valid_response, dict) else "Invalid cached response"
+                    save_log(provider.model, prompt, history_response, log_title="error", message=err_msg)
+                    raise ValueError(f"❎ Cached API response error: {err_msg}")
             return history_response
-    
+
     messages = [{"role": "user", "content": prompt}]
     client = create_chat_client(provider)
 
@@ -98,8 +104,8 @@ def ask_gpt(
         time.sleep(delay)  # 根据 TPM 限制动态调整延迟
         try:
             completion_args = build_completion_args(provider, messages, response_json)
-            response = client.chat.completions.create(**completion_args)
-            
+            response = client.chat.completions.create(**completion_args, timeout=provider.timeout_seconds)
+
             if response_json:
                 try:
                     raw_content = response.choices[0].message.content
@@ -114,16 +120,16 @@ def ask_gpt(
                             first_newline = content.find('\n')
                             if first_newline != -1:
                                 content = content[first_newline+1:end_marker].strip()
-                    
+
                     response_data = json_repair.loads(content)
-                    
+
                     # check if the response is valid, otherwise save the log and raise error and retry
                     if valid_def:
                         valid_response = valid_def(response_data)
                         if valid_response['status'] != 'success':
                             save_log(provider.model, prompt, response_data, log_title="error", message=valid_response['message'])
                             raise ValueError(f"❎ API response error: {valid_response['message']}")
-                        
+
                     break  # Successfully accessed and parsed, break the loop
                 except JSON_REPAIR_DECODE_ERROR as e:
                     # Actual JSON parsing failure
@@ -146,7 +152,7 @@ def ask_gpt(
             else:
                 response_data = response.choices[0].message.content
                 break  # Non-JSON format, break the loop directly
-                
+
         except Exception as e:
             if is_non_retryable_api_error(e):
                 raise
