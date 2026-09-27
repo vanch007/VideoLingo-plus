@@ -80,6 +80,16 @@ def _check_moss_asr() -> CheckResult:
         return CheckResult("mlx-asr:moss", False, f"{type(exc).__name__}: {exc}")
 
 
+def _check_nemotron_diarization() -> CheckResult:
+    try:
+        from core.providers.nemotron_diarization import nemotron_diarization_health
+
+        health = nemotron_diarization_health()
+        return CheckResult("diarization:nemotron-mlx", health.ok, health.detail)
+    except Exception as exc:
+        return CheckResult("diarization:nemotron-mlx", False, f"{type(exc).__name__}: {exc}")
+
+
 def run_checks(include_services: bool = True) -> list[CheckResult]:
     checks: list[CheckResult] = []
 
@@ -101,6 +111,12 @@ def run_checks(include_services: bool = True) -> list[CheckResult]:
     else:
         checks.append(CheckResult("source-asr", False, f"ineligible runtime: {asr_runtime}"))
     if load_key("dubbing_quality.asr_readback_backend", "moss-mlx") == "moss-mlx":
+        checks.append(_check_moss_asr())
+    diar_backend = str(load_key("speaker_diarization.backend", "moss-mlx")).strip().lower()
+    shadow_backend = str(load_key("speaker_diarization.shadow_backend", "") or "").strip().lower()
+    if "nemotron-mlx" in (diar_backend, shadow_backend):
+        checks.append(_check_nemotron_diarization())
+    if "moss-mlx" in (diar_backend, shadow_backend) and load_key("dubbing_quality.asr_readback_backend", "moss-mlx") != "moss-mlx":
         checks.append(_check_moss_asr())
     for module in ("openai", "streamlit"):
         checks.append(_check_import(module))

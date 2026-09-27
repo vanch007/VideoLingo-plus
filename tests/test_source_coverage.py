@@ -4,6 +4,7 @@ import pytest
 
 from core.providers.source_coverage import (
     SourceCoverageError,
+    analyze_acoustic_coverage,
     analyze_source_coverage,
     reconcile_source_coverage,
 )
@@ -104,3 +105,23 @@ def test_recovery_fails_closed_when_native_asr_still_returns_no_words(tmp_path):
             backend="stable-ts",
             report_path=tmp_path / "coverage.json",
         )
+
+
+def test_acoustic_coverage_detects_gap_without_text():
+    result = _native([("第一句", 1.0, 2.0)])
+    # Speech turn at 5.0 - 7.0 with no text
+    report = analyze_acoustic_coverage(
+        result,
+        [{"start": 5.0, "end": 7.0, "speaker": "S02"}],
+    )
+    assert report["status"] == "fail"
+    assert report["missing_turns"] == 1
+    assert report["turns"][0]["status"] == "missing"
+    assert report["coverage_mode"] == "acoustic"
+
+
+def test_acoustic_coverage_passes_when_words_overlap_turn():
+    result = _native([("第一句", 1.0, 2.0)])
+    report = analyze_acoustic_coverage(result, [{"start": 1.0, "end": 1.8, "speaker": "S01"}])
+    assert report["status"] == "pass"
+    assert report["missing_turns"] == 0

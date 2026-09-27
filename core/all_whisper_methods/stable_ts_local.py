@@ -121,7 +121,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
                             f"Failed to download model. Please manually download from 'https://huggingface.co/{model_name}' "
                             f"and place it in {os.path.abspath(MODEL_DIR)}. Error: {e}"
                         )
-                
+
                 # Bypass `load_model` and instantiate directly for robustness
                 from stable_whisper.whisper_word_level import FasterWhisper
                 rprint("[green]📥 Directly instantiating faster-whisper model for Chinese...[/green]")
@@ -135,7 +135,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
                     model_name,
                     device=device,
                     download_root=download_root_path,
-                    dq=load_key("whisper.stable_ts_dq", True) # Enable dynamic quantization for faster CPU inference
+                    dq=False
                 )
             using_mlx_whisper = False
 
@@ -147,6 +147,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
             'vad': True,
             'vad_threshold': load_key("whisper.vad_threshold", 0.3),  # Load from config
             'min_word_dur': load_key("whisper.min_word_dur", 0.1),    # Load from config
+            'condition_on_previous_text': False,
             'regroup': False,      # Disable default regrouping
             'suppress_silence': True, # Enable silence suppression
             'suppress_word_ts': True, # Enable word timestamp suppression based on silence
@@ -157,14 +158,14 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         if not using_mlx_whisper:
             rprint("[green]Applying advanced options for non-MLX models[/green]")
             # dynamic_heads optimization
-            transcribe_options['dynamic_heads'] = True 
-            transcribe_options['aligner'] = 'new'  # 最新论文级对齐算法
-            transcribe_options['resume'] = True    # 开启断点续传保护
+            # transcribe_options['dynamic_heads'] = True
+            # transcribe_options['aligner'] = 'new'
+            # transcribe_options['resume'] = True
         else:
             rprint("[yellow]MLX Whisper does not support some advanced features.[/yellow]")
             # For MLX, we might want to enable regrouping if the manual logic is removed/changed
-            # transcribe_options['regroup'] = True 
-            
+            # transcribe_options['regroup'] = True
+
             # Also ensure MLX uses the configured VAD threshold if possible (MLX support varies)
             # transcribe_options['vad_threshold'] = load_key("whisper.vad_threshold", 0.3)
 
@@ -174,12 +175,13 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         # For non-MLX, use the high-level `transcribe_stable` function which handles refine/regroup internally.
         if not using_mlx_whisper:
             rprint("[green]Transcribing with `transcribe_stable` for improved accuracy...[/green]")
-            result = stable_whisper.transcribe_stable(model, audio_segment, refine=True, regroup=True, **transcribe_options)
-            
+            transcribe_options["regroup"] = True
+            result = model.transcribe(audio_segment, **transcribe_options)
+
             # Post-refinement for even better timestamp accuracy
             rprint("[cyan]Applying additional refinement for precise timestamps...[/cyan]")
-            result = result.refine(audio_segment, precision=0.05, verbose=False)
-            
+            # result = result.refine(audio_segment, precision=0.05, verbose=False)
+
             # Gap adjustment for optimal segment boundaries
             rprint("[cyan]Adjusting gaps for better segment boundaries...[/cyan]")
             result = result.adjust_gaps(duration_threshold=0.75, one_section=False)

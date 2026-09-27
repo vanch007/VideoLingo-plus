@@ -66,3 +66,10 @@ def test_sanitizer_removes_zero_duration_and_repeated_decoder_loop():
     sanitize_word_timestamps(result)
     assert result["segments"][0]["text"] == "张麻子"
     assert [word["word"] for word in result["segments"][0]["words"]] == ["张麻子"]
+
+def test_sanitizer_preserves_spaced_repetitions_and_speaker_turns():
+    words = [{'word': w, 'start': i * 5.0, 'end': i * 5.0 + 0.5, 'speaker': f'S{i // 2 + 1:02d}'} for i, w in enumerate(['快', '走', '快', '走', '快', '走'])]
+    raw = {'segments': [{'words': words, 'start': 0.0, 'end': 25.5, 'text': '快走快走快走'}]}
+    clean = sanitize_word_timestamps(raw)
+    assert clean['word_timestamp_sanitizer']['output_words'] == 6
+    assert clean['word_timestamp_sanitizer']['removed_repeated_tokens'] == 0

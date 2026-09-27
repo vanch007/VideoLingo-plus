@@ -4,6 +4,7 @@ from core.providers.speaker_diarization import (
     SpeakerDiarizationError,
     apply_speaker_overrides_to_rows,
     align_speakers_to_words,
+    apply_speaker_diarization,
     group_word_rows_by_speaker,
     same_known_speaker,
     speaker_coverage,
@@ -105,7 +106,7 @@ def test_old_cache_without_speakers_fails_closed(monkeypatch):
         validate_cached_speaker_rows([{"text": "hello", "speaker": None}])
 
 
-def test_isolated_unassigned_filler_is_dropped_instead_of_guessing_speaker():
+def test_isolated_unassigned_filler_is_retained_as_unknown_instead_of_dropping():
     result = {
         "segments": [
             {
@@ -124,9 +125,10 @@ def test_isolated_unassigned_filler_is_dropped_instead_of_guessing_speaker():
         [{"start": 0.9, "end": 1.3, "speaker": "S01"}],
         max_gap_seconds=0.1,
     )
-    assert [word["word"] for word in result["segments"][0]["words"]] == ["好"]
-    assert report["coverage"] == 1.0
-    assert report["dropped_unassigned_fillers"] == 1
+    assert [word["word"] for word in result["segments"][0]["words"]] == ["好", "嗯"]
+    assert result["segments"][0]["words"][1]["speaker"] is None
+    assert report["word_count"] == 2
+    assert report["assigned_words"] == 1
 
 
 def test_verified_word_override_snaps_a_boundary_word_without_changing_timing():
@@ -142,3 +144,93 @@ def test_verified_word_override_snaps_a_boundary_word_without_changing_timing():
     assert rows[0]["speaker"] == "S01"
     assert rows[0]["speaker_source"] == "verified-config-override"
     assert (rows[0]["start"], rows[0]["end"]) == original_times
+
+
+def test_unsupported_diarization_backend_raises(monkeypatch):
+    monkeypatch.setattr(
+        "core.providers.speaker_diarization.load_key",
+        lambda key, default=None: {"enabled": True, "backend": "unsupported-engine"},
+    )
+    with pytest.raises(SpeakerDiarizationError, match="supported: moss-mlx, nemotron-mlx"):
+        apply_speaker_diarization(_result(), "dummy.wav")
+
+
+def test_align_speakers_with_probabilities_tensor(tmp_path):
+    import numpy as np
+
+    probs_file = tmp_path / "probs.npz"
+    # Create 200 frames (2.0s) of probabilities for 8 speakers
+    # S01 (index 0) active for 0.0 - 0.9s (frames 0 to 90)
+    # S02 (index 1) active for 1.0 - 2.0s (frames 100 to 200)
+    probs = np.zeros((200, 8), dtype=np.float32)
+    probs[0:90, 0] = 0.95
+    probs[105:200, 1] = 0.92
+    np.savez_compressed(probs_file, probs=probs, frame_stride=0.01)
+
+    result = _result()
+    report = align_speakers_to_words(
+        result,
+        [
+            {"start": 0.0, "end": 0.9, "speaker": "S01"},
+            {"start": 1.05, "end": 1.9, "speaker": "S02"},
+        ],
+        backend_name="nemotron-mlx",
+        probabilities_path=str(probs_file),
+    )
+    words = result["segments"][0]["words"]
+    assert [w["speaker"] for w in words] == ["S01", "S01", "S02", "S02"]
+    assert words[0]["speaker_source"] == "nemotron-mlx"
+    assert words[0]["speaker_score"] >= 0.9
+    assert report["coverage"] == 1.0
+
+
+def test_apply_speaker_diarization_routes_nemotron_and_shadow(monkeypatch, tmp_path):
+    from dataclasses import dataclass
+
+    @dataclass
+    class DummyRun:
+        segments: list
+        output_dir: str
+        probabilities_path: str = None
+
+    monkeypatch.setattr(
+        "core.providers.speaker_diarization.load_key",
+        lambda key, default=None: {
+            "enabled": True,
+            "backend": "nemotron-mlx",
+            "shadow_backend": "moss-mlx",
+            "report_path": str(tmp_path / "speaker_diarization.json"),
+            "source_coverage": {"enabled": False},
+            "min_word_coverage": 0.5,
+        },
+    )
+    monkeypatch.setattr(
+        "core.providers.nemotron_diarization.run_nemotron_diarization",
+        lambda audio_path, **kwargs: DummyRun(
+            segments=[
+                {"start": 0.0, "end": 0.9, "speaker": "S01"},
+                {"start": 1.0, "end": 2.0, "speaker": "S02"},
+            ],
+            output_dir=str(tmp_path / "nemotron_out"),
+        ),
+    )
+    monkeypatch.setattr(
+        "core.providers.moss_asr.run_moss_asr",
+        lambda audio_path, **kwargs: DummyRun(
+            segments=[
+                {"start": 0.0, "end": 0.9, "speaker": "S01", "text": "hello there"},
+                {"start": 1.0, "end": 2.0, "speaker": "S02", "text": "general kenobi"},
+            ],
+            output_dir=str(tmp_path / "moss_out"),
+        ),
+    )
+
+    result = _result()
+    report = apply_speaker_diarization(result, "test.wav")
+    assert report["status"] == "pass"
+    assert report["backend"] == "nemotron-mlx"
+    assert "shadow" in report
+    assert report["shadow"]["status"] == "pass"
+    assert report["shadow"]["backend"] == "moss-mlx"
+    assert report["shadow"]["report_path"] == str(tmp_path / "speaker_diarization_shadow.json")
+    assert (tmp_path / "speaker_diarization_shadow.json").is_file()

@@ -96,13 +96,80 @@ def analyze_source_coverage(
         )
 
     missing_turns = [turn for turn in turns if turn["status"] == "missing"]
+    has_any = any(True for _ in reference_segments)
+    status = "pass" if not missing_turns else "fail"
+    if has_any and not turns:
+        status = "not_applicable"
     return {
-        "status": "pass" if not missing_turns else "fail",
+        "status": status,
         "eligible_turns": len(turns),
         "covered_turns": len(turns) - len(missing_turns),
         "missing_turns": len(missing_turns),
         "coverage": (len(turns) - len(missing_turns)) / len(turns) if turns else 1.0,
         "turns": turns,
+    }
+
+
+def analyze_acoustic_coverage(
+    result: dict[str, Any],
+    reference_segments: Iterable[dict[str, Any]],
+    *,
+    min_turn_overlap_ratio: float = 0.20,
+    min_turn_duration: float = 0.50,
+) -> dict[str, Any]:
+    """Analyze temporal coverage of speech turns without requiring reference text.
+
+    Used for acoustic diarization backends (e.g. Nemotron) where turns have
+    precise speech intervals but no transcription text.
+    """
+    native_words = _words(result)
+    turns: list[dict[str, Any]] = []
+    for index, raw in enumerate(reference_segments):
+        start = float(raw["start"])
+        end = float(raw["end"])
+        if end <= start or end - start < min_turn_duration:
+            continue
+
+        overlapping = [
+            word
+            for word in native_words
+            if min(float(word["end"]), end) > max(float(word["start"]), start)
+        ]
+        overlap_seconds = sum(
+            max(0.0, min(float(word["end"]), end) - max(float(word["start"]), start))
+            for word in overlapping
+        )
+        overlap_ratio = min(1.0, overlap_seconds / (end - start))
+        missing = overlap_ratio < min_turn_overlap_ratio
+        turns.append(
+            {
+                "index": index,
+                "start": start,
+                "end": end,
+                "speaker": raw.get("speaker"),
+                "reference_text": "",
+                "native_text": "".join(str(word.get("word", "")) for word in overlapping),
+                "overlap_ratio": round(overlap_ratio, 4),
+                "text_similarity": None,
+                "longest_native_word": 0.0,
+                "status": "missing" if missing else "covered",
+                "coverage_mode": "acoustic",
+            }
+        )
+
+    missing_turns = [turn for turn in turns if turn["status"] == "missing"]
+    has_any = any(True for _ in reference_segments)
+    status = "pass" if not missing_turns else "fail"
+    if has_any and not turns:
+        status = "not_applicable"
+    return {
+        "status": status,
+        "eligible_turns": len(turns),
+        "covered_turns": len(turns) - len(missing_turns),
+        "missing_turns": len(missing_turns),
+        "coverage": (len(turns) - len(missing_turns)) / len(turns) if turns else 1.0,
+        "turns": turns,
+        "coverage_mode": "acoustic",
     }
 
 
@@ -135,8 +202,11 @@ def _replace_range_with_recovery(
 
     for segment in recovery.get("segments", []):
         for word in segment.get("words", []) or []:
-            midpoint = (float(word["start"]) + float(word["end"])) / 2.0
-            if start <= midpoint <= end:
+            w_s = float(word["start"])
+            w_e = float(word["end"])
+            midpoint = (w_s + w_e) / 2.0
+            overlaps = max(w_s, start) < min(w_e, end)
+            if overlaps or (start - 0.1 <= midpoint <= end + 0.1):
                 merged_words.append((dict(word), True))
 
     # Rebuild at word granularity. Keeping a pre-recovery segment containing
@@ -167,15 +237,27 @@ def reconcile_source_coverage(
     required: bool = True,
     min_turn_overlap_ratio: float = 0.20,
     min_text_similarity: float = 0.20,
+    min_turn_duration: float = 0.50,
     recovery_merge_gap_seconds: float = 1.50,
     recovery_padding_seconds: float = 0.50,
+    min_coverage: float = 0.95,
 ) -> dict[str, Any]:
-    before = analyze_source_coverage(
-        result,
-        reference_segments,
-        min_turn_overlap_ratio=min_turn_overlap_ratio,
-        min_text_similarity=min_text_similarity,
-    )
+    has_text = any(bool(str(item.get("text", "")).strip()) for item in reference_segments)
+    if has_text:
+        before = analyze_source_coverage(
+            result,
+            reference_segments,
+            min_turn_overlap_ratio=min_turn_overlap_ratio,
+            min_text_similarity=min_text_similarity,
+            min_turn_duration=min_turn_duration,
+        )
+    else:
+        before = analyze_acoustic_coverage(
+            result,
+            reference_segments,
+            min_turn_overlap_ratio=min_turn_overlap_ratio,
+            min_turn_duration=min_turn_duration,
+        )
     ranges = _merge_missing_ranges(
         [turn for turn in before["turns"] if turn["status"] == "missing"],
         recovery_merge_gap_seconds,
@@ -190,12 +272,25 @@ def reconcile_source_coverage(
         recovered_ranges.append({**item, "padded_start": padded_start, "padded_end": padded_end})
 
     validate_word_timestamps(result, backend=backend)
-    after = analyze_source_coverage(
-        result,
-        reference_segments,
-        min_turn_overlap_ratio=min_turn_overlap_ratio,
-        min_text_similarity=min_text_similarity,
-    )
+    if has_text:
+        after = analyze_source_coverage(
+            result,
+            reference_segments,
+            min_turn_overlap_ratio=min_turn_overlap_ratio,
+            min_text_similarity=min_text_similarity,
+            min_turn_duration=min_turn_duration,
+        )
+    else:
+        after = analyze_acoustic_coverage(
+            result,
+            reference_segments,
+            min_turn_overlap_ratio=min_turn_overlap_ratio,
+            min_turn_duration=min_turn_duration,
+        )
+        # Strict acoustic coverage: missing turns must not be statistically waived
+        if after.get("missing_turns", 0) > 0:
+            after["status"] = "fail"
+
     report = {
         "status": after["status"],
         "backend": backend,

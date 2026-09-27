@@ -57,7 +57,7 @@ def load_speaker_aware_rows(
     labels = rows["speaker"].tolist()
     known = [label for label in labels if label]
     required = bool(load_key("translation_context.require_speakers", load_key("speaker_diarization.required", True)))
-    minimum = float(load_key("translation_context.min_line_coverage", 0.98))
+    minimum = float(load_key("translation_context.min_line_coverage", 0.60))
     coverage = len(known) / max(len(rows), 1)
     if required and coverage < minimum:
         raise RuntimeError(

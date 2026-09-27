@@ -37,6 +37,7 @@ def sanitize_word_timestamps(
         token = str(
             positive_words[index].get("word", positive_words[index].get("text", ""))
         ).strip()
+        spk = positive_words[index].get("speaker")
         end_index = index + 1
         while end_index < len(positive_words):
             candidate = str(
@@ -47,12 +48,55 @@ def sanitize_word_timestamps(
             gap = float(positive_words[end_index]["start"]) - float(
                 positive_words[end_index - 1]["end"]
             )
-            if not token or candidate != token or gap > repeated_token_max_gap:
+            cand_spk = positive_words[end_index].get("speaker")
+            same_spk = (spk is None or cand_spk is None or spk == cand_spk)
+            if not token or candidate != token or gap > repeated_token_max_gap or not same_spk:
                 break
             end_index += 1
         if end_index - index >= repeated_token_limit:
             remove_ids.update(id(word) for word in positive_words[index:end_index])
         index = end_index
+
+    # Detect repeated n-gram phrase loops (e.g. repeated hallucinations >= 3 times)
+    tokens = [str(w.get("word", w.get("text", ""))).strip() for w in positive_words]
+    for n in range(2, 6):
+        i = 0
+        while i + n <= len(tokens):
+            pattern = tokens[i : i + n]
+            if not all(pattern):
+                i += 1
+                continue
+            rep_count = 1
+            cursor = i + n
+            while cursor + n <= len(tokens):
+                if tokens[cursor : cursor + n] != pattern:
+                    break
+                gap_to_prev = float(positive_words[cursor]["start"]) - float(
+                    positive_words[cursor - 1]["end"]
+                )
+                prev_spk = positive_words[cursor - 1].get("speaker")
+                curr_spk = positive_words[cursor].get("speaker")
+                same_spk = (prev_spk is None or curr_spk is None or prev_spk == curr_spk)
+                if gap_to_prev > repeated_token_max_gap or not same_spk:
+                    break
+                intra_gap_ok = True
+                for k in range(cursor, cursor + n - 1):
+                    intra_gap = float(positive_words[k + 1]["start"]) - float(positive_words[k]["end"])
+                    k_spk = positive_words[k].get("speaker")
+                    k1_spk = positive_words[k + 1].get("speaker")
+                    if intra_gap > repeated_token_max_gap or (k_spk is not None and k1_spk is not None and k_spk != k1_spk):
+                        intra_gap_ok = False
+                        break
+                if not intra_gap_ok:
+                    break
+                rep_count += 1
+                cursor += n
+            if rep_count >= 3:
+                for w in positive_words[i + n : cursor]:
+                    remove_ids.add(id(w))
+                i = cursor
+            else:
+                i += 1
 
     cleaned_segments: list[dict[str, Any]] = []
     for segment in result.get("segments", []):

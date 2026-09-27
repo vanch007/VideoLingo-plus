@@ -30,7 +30,17 @@ def _load_project_env(path: Path | None = None) -> None:
 
 _load_project_env()
 
-CONFIG_PATH = 'config.yaml'
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+def _resolve_config_path() -> str:
+    if os.path.isfile("config.yaml"):
+        return "config.yaml"
+    repo_cfg = REPO_ROOT / "config.yaml"
+    if repo_cfg.is_file():
+        return str(repo_cfg)
+    return "config.yaml"
+
+CONFIG_PATH = _resolve_config_path()
 config_lock = threading.Lock()
 
 yaml = YAML()
@@ -63,16 +73,17 @@ def _env_value(key_path: str):
 def load_config():
     """Load the config.yaml file into a dictionary."""
     with config_lock:
-        with open(CONFIG_PATH, 'r', encoding='utf-8') as file:
+        path_to_open = CONFIG_PATH if os.path.isfile(CONFIG_PATH) else _resolve_config_path()
+        with open(path_to_open, 'r', encoding='utf-8') as file:
             return yaml.load(file)
 
 def load_key(key_path: str, default=None):
     """Load a specific key's value from the config.yaml file.
-    
+
     Args:
         key_path (str): Path to the key in dot notation (e.g., 'whisper.language')
         default: Default value to return if key is not found
-        
+
     Returns:
         The value of the key or default if not found
     """
@@ -134,7 +145,7 @@ def update_key(key: str, new_value: Any) -> bool:
             if temp_path and os.path.exists(temp_path):
                 os.unlink(temp_path)
         return True
-        
+
 # basic utils
 def get_joiner(language):
     if language in load_key('language_split_with_space'):

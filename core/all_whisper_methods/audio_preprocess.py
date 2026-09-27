@@ -7,6 +7,7 @@ from core.config_utils import update_key
 
 AUDIO_DIR = "output/audio"
 RAW_AUDIO_FILE = "output/audio/raw.mp3"
+RAW_MASTER_AUDIO_FILE = "output/audio/raw_master.wav"
 CLEANED_CHUNKS_EXCEL_PATH = "output/log/cleaned_chunks.xlsx"
 
 def compress_audio(input_file: str, output_file: str):
@@ -24,12 +25,23 @@ def compress_audio(input_file: str, output_file: str):
 
 def convert_video_to_audio(video_file: str):
     os.makedirs(AUDIO_DIR, exist_ok=True)
-    if not os.path.exists(RAW_AUDIO_FILE):
-        print(f"🎬➡️🎵 Converting to high quality audio with FFmpeg ......")
+    raw_master = os.path.join(AUDIO_DIR, "raw_master.wav")
+    if not os.path.exists(raw_master):
+        print(f"🎬➡️🎵 Extracting lossless master audio with FFmpeg ......")
         subprocess.run([
             'ffmpeg', '-y', '-i', video_file, '-vn',
+            '-c:a', 'pcm_s16le',
+            raw_master
+        ], check=True, stderr=subprocess.PIPE)
+        print(f"🎬➡️🎵 Extracted lossless master <{raw_master}>\n")
+
+    if not os.path.exists(RAW_AUDIO_FILE):
+        print(f"🎬➡️🎵 Converting to ASR analysis audio with FFmpeg ......")
+        input_audio = raw_master if os.path.exists(raw_master) else video_file
+        subprocess.run([
+            'ffmpeg', '-y', '-i', input_audio, '-vn',
             '-c:a', 'libmp3lame', '-b:a', '128k',
-            '-ar', '32000',
+            '-ar', '16000',
             '-ac', '1',
             '-metadata', 'encoding=UTF-8', RAW_AUDIO_FILE
         ], check=True, stderr=subprocess.PIPE)
@@ -88,8 +100,8 @@ def get_audio_duration(audio_file: str) -> float:
         duration = 0
     return duration
 
-def split_audio(audio_file: str, target_len: int = 30*60, win: int = 60) -> List[Tuple[float, float]]:
-    # 30 min 16000 Hz 96kbps ~ 22MB < 25MB required by whisper
+def split_audio(audio_file: str, target_len: int = 25, win: int = 5) -> List[Tuple[float, float]]:
+    # Natural dialogue segments (15-25s) matching Whisper's 30s attention window
     print("[bold blue]🔪 Starting audio segmentation...[/]")
 
     duration = get_audio_duration(audio_file)
@@ -122,7 +134,7 @@ def process_transcription(result: Dict) -> pd.DataFrame:
     for segment in result['segments']:
         # Get speaker for the segment if available
         segment_speaker = segment.get('speaker', None)
-        
+
         if 'words' in segment and segment['words']:
             for word in segment['words']:
                 # Check word length
@@ -132,7 +144,7 @@ def process_transcription(result: Dict) -> pd.DataFrame:
 
                 # ! For French, we need to convert guillemets to empty strings
                 word["word"] = word["word"].replace('»', '').replace('«', '').strip()
-                
+
                 # Use word-level speaker if available, otherwise fallback to segment speaker
                 current_speaker = word.get('speaker', segment_speaker)
 
@@ -200,11 +212,11 @@ def save_results(df: pd.DataFrame):
         df = df[df['text'].str.len() <= 20]
 
     df['text'] = df['text'].apply(lambda x: f'"{x}"')
-    
+
     # Ensure speaker column exists if not present
     if 'speaker' not in df.columns:
         df['speaker'] = None
-        
+
     df.to_excel(CLEANED_CHUNKS_EXCEL_PATH, index=False)
     print(f"📊 Excel file saved to {CLEANED_CHUNKS_EXCEL_PATH}")
 
@@ -212,15 +224,15 @@ def save_results(df: pd.DataFrame):
 def save_sentences_from_segments(result: dict, output_file: str = "output/log/sentence_splitbynlp.txt"):
     """
     从 ASR 结果的 segments 直接生成分句文件，跳过 spacy 分句步骤。
-    
+
     适用于 stable-ts 等已经能按句子分割且保留词级时间戳的 ASR 引擎。
-    
+
     Args:
         result: ASR 返回的结果字典，包含 segments 列表
         output_file: 输出的分句文件路径
     """
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
-    
+
     sentences = []
     for segment in result.get('segments', []):
         text = segment.get('text', '').strip()
@@ -228,7 +240,7 @@ def save_sentences_from_segments(result: dict, output_file: str = "output/log/se
             # 清理文本：去除多余空格
             text = ' '.join(text.split())
             sentences.append(text)
-    
+
     if sentences:
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write('\n'.join(sentences))

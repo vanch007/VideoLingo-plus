@@ -10,9 +10,11 @@ from core.all_whisper_methods.audio_preprocess import process_transcription, con
 from core.step1_ytdlp import find_video_files
 from core.asr_schema import MAIN_ASR_RUNTIMES, sanitize_word_timestamps, validate_word_timestamps
 from core.providers.speaker_diarization import apply_speaker_diarization, validate_cached_speaker_rows
+import json
 
 WHISPER_FILE = "output/audio/for_whisper.mp3"
 ENHANCED_VOCAL_PATH = "output/audio/enhanced_vocals.mp3"
+ASR_FINGERPRINT_PATH = "output/log/asr_fingerprint.json"
 
 def prepare_audio_and_vocals():
     """Prepare audio files and vocals - this is needed for both transcription and embedded subtitle workflows"""
@@ -25,15 +27,14 @@ def prepare_audio_and_vocals():
         demucs_model = load_key("demucs_model", "htdemucs")
         demucs_main(demucs_model)
 
-    # step2 Enhance vocals if needed
     choose_audio = enhance_vocals() if load_key("demucs") else RAW_AUDIO_FILE
-    
+
     # step3 Compress audio for whisper
     whisper_audio = compress_audio(choose_audio, WHISPER_FILE)
-    
+
     # 确保输出目录存在
     os.makedirs('output/log', exist_ok=True)
-    
+
     return whisper_audio
 
 def prepare_audio_only():
@@ -41,13 +42,13 @@ def prepare_audio_only():
     # step0 Convert video to audio
     video_file = find_video_files()
     convert_video_to_audio(video_file)
-    
+
     # step1 Compress audio for whisper
     whisper_audio = compress_audio(RAW_AUDIO_FILE, WHISPER_FILE)
-    
+
     # 确保输出目录存在
     os.makedirs('output/log', exist_ok=True)
-    
+
     return whisper_audio
 
 def enhance_vocals(vocals_ratio=2.50):
@@ -71,13 +72,48 @@ def enhance_vocals(vocals_ratio=2.50):
         return VOCAL_AUDIO_FILE  # Fallback to original vocals if enhancement fails
 
 def transcribe():
+    current_fp = {
+        "runtime": load_key("whisper.runtime"),
+        "model": load_key("whisper.model"),
+        "stable_ts_mlx": load_key("whisper.stable_ts_mlx", True),
+        "language": load_key("whisper.language"),
+    }
+
     if os.path.exists(CLEANED_CHUNKS_EXCEL_PATH):
-        import pandas as pd
-        validate_cached_speaker_rows(pd.read_excel(CLEANED_CHUNKS_EXCEL_PATH).to_dict("records"))
-        rprint("[yellow]⚠️ Transcription results already exist, skipping transcription step.[/yellow]")
-        # 但仍然需要确保音频文件存在
-        prepare_audio_and_vocals()
-        return
+        cached_fp = None
+        if os.path.exists(ASR_FINGERPRINT_PATH):
+            try:
+                with open(ASR_FINGERPRINT_PATH, "r", encoding="utf-8") as f:
+                    cached_fp = json.load(f)
+            except Exception:
+                cached_fp = None
+
+        if cached_fp == current_fp:
+            import pandas as pd
+            validate_cached_speaker_rows(pd.read_excel(CLEANED_CHUNKS_EXCEL_PATH).to_dict("records"))
+            rprint("[yellow]⚠️ Transcription results matching current model already exist, skipping transcription step.[/yellow]")
+            prepare_audio_and_vocals()
+            return
+        else:
+            cached_model = cached_fp.get("model") if cached_fp else "unknown/legacy"
+            rprint(f"[yellow]🔄 Whisper model or settings changed ({cached_model} -> {current_fp.get('model')}). Invalidating old transcript cache...[/yellow]")
+            for downstream in [
+                CLEANED_CHUNKS_EXCEL_PATH,
+                "output/log/sentence_splitbynlp.txt",
+                "output/log/sentence_splitbymeaning.txt",
+                "output/log/terminology.json",
+                "output/log/translation_results.xlsx",
+                "output/log/translation_results_for_subtitles.xlsx",
+                "output/log/translation_results_remerged.xlsx",
+                "output/audio/trans_subs_for_audio.srt",
+                "output/audio/final_timeline.xlsx",
+                "output/audio/tts_tasks.xlsx",
+            ]:
+                if os.path.exists(downstream):
+                    try:
+                        os.remove(downstream)
+                    except Exception:
+                        pass
 
     # Prepare audio files (this is also needed for embedded subtitle workflow)
     whisper_audio = prepare_audio_and_vocals()
@@ -128,10 +164,19 @@ def transcribe():
     validate_word_timestamps(combined_result, backend=runtime)
 
     # Keep native word timings from stable-ts/WhisperX and add only MOSS speaker IDs.
+    def _robust_transcribe_range(start: float, end: float):
+        vocal_wav = "output/audio/vocal.wav"
+        if os.path.exists(vocal_wav):
+            rec_vocal = ts(vocal_wav, start, end)
+            if any(bool(s.get("words")) for s in rec_vocal.get("segments", [])):
+                return rec_vocal
+        return ts(whisper_audio, start, end)
+
+    diarization_audio = "output/audio/vocal.wav" if os.path.exists("output/audio/vocal.wav") else whisper_audio
     diarization = apply_speaker_diarization(
         combined_result,
-        whisper_audio,
-        transcribe_range=lambda start, end: ts(whisper_audio, start, end),
+        diarization_audio,
+        transcribe_range=_robust_transcribe_range,
         source_backend=runtime,
     )
     if diarization.get("status") == "pass":
@@ -144,6 +189,9 @@ def transcribe():
     # step7 Process df
     df = process_transcription(combined_result)
     save_results(df)
+    os.makedirs(os.path.dirname(ASR_FINGERPRINT_PATH), exist_ok=True)
+    with open(ASR_FINGERPRINT_PATH, "w", encoding="utf-8") as f:
+        json.dump(current_fp, f, ensure_ascii=False, indent=2)
 
 if __name__ == "__main__":
     transcribe()

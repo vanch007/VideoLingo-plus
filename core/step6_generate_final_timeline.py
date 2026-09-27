@@ -69,23 +69,19 @@ def show_difference(str1, str2):
 def _speaker_for_word_range(df_words, start_word_idx: int, end_word_idx: int, has_speaker: bool):
     if not has_speaker:
         return None
-    from collections import Counter
     labels = [
         normalize_speaker(value)
         for value in df_words.iloc[start_word_idx : end_word_idx + 1]["speaker"].tolist()
     ]
     valid_labels = [label for label in labels if label]
+    distinct_speakers = set(valid_labels)
+    if len(distinct_speakers) > 1:
+        raise ValueError(
+            f"Sentence span [{start_word_idx}:{end_word_idx}] crossed a speaker boundary: {sorted(distinct_speakers)}"
+        )
     if valid_labels:
-        return Counter(valid_labels).most_common(1)[0][0]
-    for idx in range(start_word_idx - 1, -1, -1):
-        prev_spk = normalize_speaker(df_words.iloc[idx]["speaker"])
-        if prev_spk:
-            return prev_spk
-    for idx in range(end_word_idx + 1, len(df_words)):
-        next_spk = normalize_speaker(df_words.iloc[idx]["speaker"])
-        if next_spk:
-            return next_spk
-    return "S01"
+        return valid_labels[0]
+    return None
 
 def _timestamp_from_cursor(
     df_words,
@@ -289,6 +285,19 @@ def align_timestamp(df_text, df_translate, subtitle_output_configs: list, output
         elif 0 < delta_time < 1:
             prevented_cross_speaker_extensions += 1
 
+    has_speaker = "speaker" in df_text.columns
+    cross_speaker_rows = 0
+    if has_speaker:
+        for _, row in df_trans_time.iterrows():
+            try:
+                s_t, e_t = row["timestamp"]
+                sub_words = df_text[(df_text["start"] >= s_t - 0.05) & (df_text["end"] <= e_t + 0.05)]
+                spks = {normalize_speaker(x) for x in sub_words["speaker"].tolist() if normalize_speaker(x)}
+                if len(spks) > 1:
+                    cross_speaker_rows += 1
+            except Exception:
+                pass
+
     df_trans_time['timestamp'] = df_trans_time['timestamp'].apply(lambda x: convert_to_srt_format(x[0], x[1]))
 
     if for_display:
@@ -317,7 +326,7 @@ def align_timestamp(df_text, df_translate, subtitle_output_configs: list, output
             ),
             "extended_same_speaker_gaps": extended_same_speaker_gaps,
             "prevented_cross_or_unknown_speaker_extensions": prevented_cross_speaker_extensions,
-            "cross_speaker_rows": 0,
+            "cross_speaker_rows": cross_speaker_rows,
         }
         with open(os.path.join(output_dir, "speaker_boundary_report.json"), "w", encoding="utf-8") as f:
             json.dump(boundary_report, f, ensure_ascii=False, indent=2)
