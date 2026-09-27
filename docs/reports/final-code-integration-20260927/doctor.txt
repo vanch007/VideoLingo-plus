@@ -1,0 +1,22 @@
+[OK] ffmpeg: ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers
+[FAIL] pip-check: opencv-python 4.14.0.94 has requirement numpy>=2; python_version >= "3.9", but you have numpy 1.26.4.
+[OK] python: 3.10.21
+[OK] import:stable_whisper: ok
+[OK] diarization:nemotron-mlx: ready
+[OK] import:openai: ok
+[OK] import:streamlit: ok
+[OK] output-writable: output exists or project root is writable
+[OK] secret:api.key: required; env=VIDEOLINGO_API_KEY,OPENAI_API_KEY
+[OK] secret:llm.providers.omlx.api_key: optional; env=OMLX_API_KEY,VIDEOLINGO_OMLX_API_KEY
+[OK] secret:hf_token: optional; env=VIDEOLINGO_HF_TOKEN,HF_TOKEN
+[OK] mlx-tts:indextts2: runtime ready: /Users/vanch/mlx-indextts2
+[OK] mlx-tts:omnivoice: runtime ready: /Users/vanch/mlx-omnivoice
+[OK] mlx-tts:qwen3_tts: runtime ready: /Users/vanch/mlx-qwen3-tts
+[OK] mlx-tts:voxcpm2: runtime ready: /Users/vanch/mlx-voxcpm2
+[OK] mlx-tts:higgs: runtime ready: /Users/vanch/mlx-higgs-audio
+[OK] mlx-tts:dots: runtime ready: /Users/vanch/mlx-dots.tts
+[FAIL] mlx-tts:zonos2: service unavailable: HTTPConnectionPool(host='127.0.0.1', port=1920): Max retries exceeded with url: /health (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=1920): Failed to establish a new connection: [Errno 61] Connection refused"))
+[FAIL] mlx-tts:moss: missing root: /Users/vanch/mlx-MOSS-TTS-Local-Transformer-v1.5
+[FAIL] mlx-tts:ming: missing required file: /Users/vanch/mlx-Ming-omni-tts/mlx_models/Ming-omni-tts-16.8B-A3B-bf16/mlx_weights.safetensors
+[OK] step-checkpoints: 0/15 completed
+[OK] ffmpeg-path: /opt/homebrew/bin/ffmpeg

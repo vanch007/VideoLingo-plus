@@ -1,0 +1,80 @@
+{
+  "run": {
+    "run_id": "20260927-115606",
+    "profile": "cinematic",
+    "source": "zh",
+    "target": "en",
+    "input": "run_workspaces/e0c803_full_fidelity_rerun_v13_20260927/output/source.mp4",
+    "subtitle_only": false,
+    "no_subtitles": false,
+    "llm": null,
+    "tts": "mlx_indextts2",
+    "smoke_seconds": null,
+    "steps": [
+      "import_video",
+      "transcribe",
+      "split_spacy",
+      "split_meaning",
+      "summarize",
+      "translate",
+      "split_subtitle",
+      "timeline",
+      "merge_subtitle",
+      "gen_audio_task",
+      "gen_dub_chunks",
+      "extract_refer",
+      "gen_audio",
+      "merge_audio",
+      "merge_video"
+    ],
+    "status": "dry_run",
+    "quality_status": null,
+    "quality_gate_passed": null,
+    "started_at": 1790481366.749769,
+    "completed_steps": [],
+    "failed_step": null
+  },
+  "translation_guard": {
+    "ok": true,
+    "impacted_steps": [
+      "split_meaning",
+      "summarize",
+      "translate",
+      "split_subtitle",
+      "timeline",
+      "merge_subtitle",
+      "gen_audio_task",
+      "gen_dub_chunks",
+      "extract_refer",
+      "gen_audio",
+      "merge_audio",
+      "merge_video"
+    ],
+    "action": "none",
+    "warning_stage_count": 0,
+    "manifest_path": "output/log/llm_artifacts_manifest.json"
+  },
+  "planned_config": {
+    "profile": "cinematic",
+    "source_language": "zh",
+    "target_language": "en",
+    "tts_method": "mlx_indextts2"
+  },
+  "pending_steps": [
+    "import_video",
+    "transcribe",
+    "split_spacy",
+    "split_meaning",
+    "summarize",
+    "translate",
+    "split_subtitle",
+    "timeline",
+    "merge_subtitle",
+    "gen_audio_task",
+    "gen_dub_chunks",
+    "extract_refer",
+    "gen_audio",
+    "merge_audio",
+    "merge_video"
+  ]
+}

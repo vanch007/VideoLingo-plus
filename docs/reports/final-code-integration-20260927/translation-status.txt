@@ -1,0 +1,174 @@
+{
+  "current_provider": {
+    "name": "openai_compatible",
+    "model": "zai-org/GLM-4.5-Air",
+    "base_url": "https://api.siliconflow.cn/v1",
+    "supports_json_object": false,
+    "provider_type": "openai_compatible",
+    "timeout_seconds": 180.0,
+    "fingerprint": "openai_compatible|openai_compatible|https://api.siliconflow.cn/v1|zai-org/GLM-4.5-Air|False"
+  },
+  "manifest_path": "output/log/llm_artifacts_manifest.json",
+  "manifest_exists": true,
+  "stale_stage_count": 0,
+  "warning_stage_count": 0,
+  "stages": {
+    "split_meaning": {
+      "stage": "split_meaning",
+      "stale": false,
+      "warning": false,
+      "reasons": [],
+      "warnings": [],
+      "artifacts": [
+        {
+          "path": "output/log/sentence_splitbymeaning.txt",
+          "exists": true,
+          "type": "file",
+          "size": 1352,
+          "mtime": "2026-09-25T22:41:48+0800"
+        }
+      ],
+      "log_state": {
+        "files": [
+          "output/gpt_log/sentence_splitbymeaning.json"
+        ],
+        "models": {
+          "zai-org/GLM-4.5-Air": 69
+        },
+        "bad_files": [],
+        "entry_count": 69
+      },
+      "manifest_provider": {
+        "name": "openai_compatible",
+        "model": "zai-org/GLM-4.5-Air",
+        "base_url": "https://api.siliconflow.cn/v1",
+        "supports_json_object": false,
+        "provider_type": "openai_compatible",
+        "timeout_seconds": 180.0,
+        "fingerprint": "openai_compatible|openai_compatible|https://api.siliconflow.cn/v1|zai-org/GLM-4.5-Air|False"
+      }
+    },
+    "summarize": {
+      "stage": "summarize",
+      "stale": false,
+      "warning": false,
+      "reasons": [],
+      "warnings": [],
+      "artifacts": [
+        {
+          "path": "output/log/terminology.json",
+          "exists": true,
+          "type": "file",
+          "size": 14652,
+          "mtime": "2026-09-26T01:10:15+0800"
+        },
+        {
+          "path": "output/log/sentence_splitbymeaning.txt",
+          "exists": true,
+          "type": "file",
+          "size": 1352,
+          "mtime": "2026-09-25T22:41:48+0800"
+        }
+      ],
+      "log_state": {
+        "files": [
+          "output/gpt_log/summary.json"
+        ],
+        "models": {
+          "zai-org/GLM-4.5-Air": 4
+        },
+        "bad_files": [],
+        "entry_count": 4
+      },
+      "manifest_provider": {
+        "name": "openai_compatible",
+        "model": "zai-org/GLM-4.5-Air",
+        "base_url": "https://api.siliconflow.cn/v1",
+        "supports_json_object": false,
+        "provider_type": "openai_compatible",
+        "timeout_seconds": 180.0,
+        "fingerprint": "openai_compatible|openai_compatible|https://api.siliconflow.cn/v1|zai-org/GLM-4.5-Air|False"
+      }
+    },
+    "translate": {
+      "stage": "translate",
+      "stale": false,
+      "warning": false,
+      "reasons": [],
+      "warnings": [],
+      "artifacts": [
+        {
+          "path": "output/log/translation_results.xlsx",
+          "exists": true,
+          "type": "file",
+          "size": 7896,
+          "mtime": "2026-09-26T01:25:57+0800"
+        }
+      ],
+      "log_state": {
+        "files": [
+          "output/gpt_log/translate_faithfulness.json",
+          "output/gpt_log/translate_expressiveness.json"
+        ],
+        "models": {
+          "zai-org/GLM-4.5-Air": 26
+        },
+        "bad_files": [],
+        "entry_count": 26
+      },
+      "manifest_provider": {
+        "name": "openai_compatible",
+        "model": "zai-org/GLM-4.5-Air",
+        "base_url": "https://api.siliconflow.cn/v1",
+        "supports_json_object": false,
+        "provider_type": "openai_compatible",
+        "timeout_seconds": 180.0,
+        "fingerprint": "openai_compatible|openai_compatible|https://api.siliconflow.cn/v1|zai-org/GLM-4.5-Air|False"
+      }
+    },
+    "split_subtitle": {
+      "stage": "split_subtitle",
+      "stale": false,
+      "warning": false,
+      "reasons": [],
+      "warnings": [],
+      "artifacts": [
+        {
+          "path": "output/log/translation_results_for_subtitles.xlsx",
+          "exists": true,
+          "type": "file",
+          "size": 7082,
+          "mtime": "2026-09-26T01:30:22+0800"
+        },
+        {
+          "path": "output/log/translation_results_remerged.xlsx",
+          "exists": true,
+          "type": "file",
+          "size": 7418,
+          "mtime": "2026-09-26T01:30:22+0800"
+        }
+      ],
+      "log_state": {
+        "files": [
+          "output/gpt_log/align_subs.json",
+          "output/gpt_log/sentence_splitbymeaning.json"
+        ],
+        "models": {
+          "zai-org/GLM-4.5-Air": 126
+        },
+        "bad_files": [],
+        "entry_count": 126
+      },
+      "manifest_provider": {
+        "name": "openai_compatible",
+        "model": "zai-org/GLM-4.5-Air",
+        "base_url": "https://api.siliconflow.cn/v1",
+        "supports_json_object": false,
+        "provider_type": "openai_compatible",
+        "timeout_seconds": 180.0,
+        "fingerprint": "openai_compatible|openai_compatible|https://api.siliconflow.cn/v1|zai-org/GLM-4.5-Air|False"
+      }
+    }
+  },
+  "next_action": "translation artifacts match the current model evidence"
+}

@@ -1,0 +1,342 @@
+{
+  "pipeline_state": {
+    "run_id": "20260925-183124",
+    "profile": "cinematic",
+    "source": "zh",
+    "target": "en",
+    "input": "/tmp/e0c803_dl.mp4",
+    "subtitle_only": false,
+    "no_subtitles": false,
+    "llm": null,
+    "tts": "mlx_indextts2",
+    "smoke_seconds": null,
+    "steps": [
+      "import_video",
+      "transcribe",
+      "split_spacy",
+      "split_meaning",
+      "summarize",
+      "translate",
+      "split_subtitle",
+      "timeline",
+      "merge_subtitle",
+      "gen_audio_task",
+      "gen_dub_chunks",
+      "extract_refer",
+      "gen_audio",
+      "merge_audio",
+      "merge_video"
+    ],
+    "status": "accepted",
+    "started_at": 1790332284.850392,
+    "completed_steps": [
+      "import_video",
+      "transcribe",
+      "split_spacy",
+      "split_meaning",
+      "summarize",
+      "translate",
+      "split_subtitle",
+      "timeline",
+      "merge_subtitle",
+      "gen_audio_task",
+      "gen_dub_chunks",
+      "extract_refer",
+      "gen_audio",
+      "merge_audio",
+      "merge_video"
+    ],
+    "failed_step": null,
+    "quality_gate_passed": true,
+    "quality_status": "pass"
+  },
+  "artifacts": [
+    {
+      "step": "transcribe",
+      "path": "output/log/cleaned_chunks.xlsx",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/log/cleaned_chunks.xlsx",
+        "manifest_path": "output/log/cleaned_chunks.xlsx.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "split_spacy",
+      "path": "output/log/sentence_splitbynlp.txt",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/log/sentence_splitbynlp.txt",
+        "manifest_path": "output/log/sentence_splitbynlp.txt.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "split_meaning",
+      "path": "output/log/sentence_splitbymeaning.txt",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/log/sentence_splitbymeaning.txt",
+        "manifest_path": "output/log/sentence_splitbymeaning.txt.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "summarize",
+      "path": "output/log/terminology.json",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/log/terminology.json",
+        "manifest_path": "output/log/terminology.json.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "translate",
+      "path": "output/log/translation_results.xlsx",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/log/translation_results.xlsx",
+        "manifest_path": "output/log/translation_results.xlsx.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "split_subtitle",
+      "path": "output/log/translation_results_for_subtitles.xlsx",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/log/translation_results_for_subtitles.xlsx",
+        "manifest_path": "output/log/translation_results_for_subtitles.xlsx.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "timeline",
+      "path": "output/audio/trans_subs_for_audio.srt",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/audio/trans_subs_for_audio.srt",
+        "manifest_path": "output/audio/trans_subs_for_audio.srt.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "merge_subtitle",
+      "path": "output/AI字幕.mp4",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/AI字幕.mp4",
+        "manifest_path": "output/AI字幕.mp4.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "gen_audio_task",
+      "path": "output/audio/tts_tasks.xlsx",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/audio/tts_tasks.xlsx",
+        "manifest_path": "output/audio/tts_tasks.xlsx.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "gen_dub_chunks",
+      "path": "output/audio/tts_tasks.xlsx",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/audio/tts_tasks.xlsx",
+        "manifest_path": "output/audio/tts_tasks.xlsx.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "extract_refer",
+      "path": "output/audio/refers",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/audio/refers",
+        "manifest_path": "output/audio/refers.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "gen_audio",
+      "path": "output/audio/segs",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/audio/segs",
+        "manifest_path": "output/audio/segs.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "dubbing_eval",
+      "path": "output/audio/dubbing_eval.json",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/audio/dubbing_eval.json",
+        "manifest_path": "output/audio/dubbing_eval.json.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "merge_audio",
+      "path": "output/dub.mp3",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/dub.mp3",
+        "manifest_path": "output/dub.mp3.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    },
+    {
+      "step": "merge_video",
+      "path": "output/AI配音.mp4",
+      "completed": false,
+      "manifest": {
+        "ok": false,
+        "status": "pending",
+        "artifact": "output/AI配音.mp4",
+        "manifest_path": "output/AI配音.mp4.manifest.json",
+        "artifact_exists": true,
+        "manifest_exists": false,
+        "reasons": [
+          "manifest_missing"
+        ],
+        "version": null,
+        "step": null
+      }
+    }
+  ],
+  "pending_steps": [
+    "transcribe",
+    "split_spacy",
+    "split_meaning",
+    "summarize",
+    "translate",
+    "split_subtitle",
+    "timeline",
+    "merge_subtitle",
+    "gen_audio_task",
+    "gen_dub_chunks",
+    "extract_refer",
+    "gen_audio",
+    "dubbing_eval",
+    "merge_audio",
+    "merge_video"
+  ]
+}
