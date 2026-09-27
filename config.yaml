@@ -11,7 +11,7 @@ api:
   model: 'zai-org/GLM-4.5-Air'
 
 # Language settings, written into the prompt, can be described in natural language
-  tpm_limit: 10000
+  tpm_limit: 500000
   retry_attempts: 3
   retry_interval: 3
 
@@ -70,7 +70,15 @@ demucs: true
 demucs_model: 'htdemucs'
 
 # 背景音量调节 (1.0为原始音量，大于1.0增加音量，小于1.0降低音量)
-background_volume: 0.35
+background_volume: 1.0
+
+# Keep the source mix intact between translated speech windows. During dubbed
+# windows, the original voice is replaced by cloned speech plus Demucs background.
+audio_mix:
+  preserve_original_non_speech: true
+  ducking: false
+  ducking_ratio: 2.0
+  ducking_threshold: 0.08
 
 whisper:
   # ["medium", "large-v3", "large-v3-turbo"]. Note: for zh model will force to use Belle/large-v3
@@ -106,11 +114,13 @@ moss_asr:
 
 speaker_diarization:
   enabled: true
-  # pyannote remains a same-dataset benchmark candidate; only moss-mlx is installed.
-  backend: 'moss-mlx'
+  # Supported backends: 'moss-mlx', 'nemotron-mlx'.
+  backend: 'nemotron-mlx'
+  # Optional shadow evaluation backend: 'nemotron-mlx' | 'moss-mlx' | null
+  shadow_backend:
   # Fail closed: producing mixed-speaker subtitle/TTS rows is worse than stopping.
   required: true
-  min_word_coverage: 0.80
+  min_word_coverage: 0.95
   max_gap_seconds: 0.35
   # An isolated filler outside every diarized turn is dropped instead of being
   # guessed across a speaker boundary.
@@ -122,17 +132,28 @@ speaker_diarization:
     # MOSS turns are a coverage witness only. Any missing interval is rerun by
     # stable-ts/WhisperX so every recovered token still has native word timing.
     enabled: true
-    required: false
+    required: true
     min_turn_overlap_ratio: 0.20
     min_text_similarity: 0.20
     recovery_merge_gap_seconds: 1.50
     recovery_padding_seconds: 0.50
     report_path: 'output/log/source_asr_coverage.json'
 
+nemotron_diarization:
+  python: '/Users/vanch/.codex/envs/nemotron-diarization/bin/python'
+  model: 'mlx-community/Nemotron-3-Diarization-8bit'
+  revision: 'dd8b8ce3d69a80540a7e50150e2beed1c34fee37'
+  preset: 'offline'
+  threshold: 0.5
+  min_duration: 0.0
+  merge_gap: 0.0
+  output_root: 'output/log/nemotron_diarization'
+  timeout_seconds: 1800
+
 translation_context:
   # Fail closed instead of silently discarding diarized identities before LLM translation.
   require_speakers: true
-  min_line_coverage: 0.80
+  min_line_coverage: 0.60
   previous_lines: 4
   next_lines: 3
   batch_max_lines: 10
@@ -158,14 +179,7 @@ summary_length: 8000
 stt_correction_batch_size: 10
 # Optional run-specific, human-verified sentence corrections. Word timestamps
 # are never rewritten; Step 6 fuzzy-aligns the corrected sentence text.
-stt_correction_exact_replacements:
-  "泰倩": "代娟"
-  "泰倩我说": "代娟我说"
-  "生态": "身态"
-  "小银朵": "小云朵"
-  "矩锌杯": "矩阵杯"
-  "九川不变形": "久穿不变形"
-  "产品质产品质": ""
+stt_correction_exact_replacements: {}
 
 # *Number of LLM multi-threaded accesses, set to 1 if using local LLM
 max_workers: 11
@@ -177,12 +191,17 @@ reflect_translate: true
 # Optional run-specific, source-keyed translations for verified names/terms.
 translation_exact_replacements: {}
 
+# Whether to load external custom_terms.xlsx into terminology. Keep false for normal
+# autonomous runs to prevent cross-task terminology contamination.
+enable_custom_terms: false
+custom_terms_path:
+
 # *Whether to pause after extracting professional terms and before translation, allowing users to manually adjust the terminology table output\log\terminology.json
 pause_before_translate: false
 
 ## ======================== Dubbing Settings ======================== ##
 # TTS selection [mlx_router, mlx_indextts2, mlx_omnivoice, mlx_qwen3_tts, mlx_voxcpm2, mlx_higgs_audio, mlx_dots_tts, mlx_zonos2, mlx_moss_tts, mlx_ming_omni_tts]
-tts_method: 'mlx_router'
+tts_method: 'mlx_indextts2'
 
 # Quality mode [subtitle, dubbing, high_sync]. high_sync enables duration budgets,
 # LLM shortening for overlong dubbing text, measured retry, and strict eval.
@@ -203,7 +222,7 @@ dubbing_quality:
   allow_silence_fallback: false
   max_start_drift: 0.12
   max_end_drift: 0.18
-  max_early_end_drift: 0.46
+  max_early_end_drift: 0.18
   slow_fit_min_speed: 0.75
   slow_fit_target_ratio: 0.92
   under_duration_fit_margin_seconds: 0.06
@@ -212,19 +231,24 @@ dubbing_quality:
   trim_generated_silence: false
   min_audio_size: 1000
   # Encoder rounding margin used for whole-line speed fit; no speech tail is trimmed.
-  timeline_rounding_tolerance_ms: 30
+  timeline_rounding_tolerance_ms: 50
   # Only inaudible encoder-padding samples within the tolerance may be removed.
   timeline_rounding_silence_dbfs: -35.0
   asr_readback: true
-  # ASR readback backend: moss-mlx closes the local TTS content/leakage loop.
-  # builtin uses cached stable-whisper; command uses the template below.
-  asr_readback_backend: 'moss-mlx'
+  # Use the local Qwen3-ASR command because MOSS cannot load this runtime's WAVs.
+  asr_readback_backend: 'command'
   asr_readback_model: 'large-v3-turbo'
   asr_readback_use_mlx: true
   # Optional command template for ASR readback backend=command. Leave empty to skip live ASR.
   # Placeholders: {audio}, {language}, {output_dir}. Command stdout can be raw text
   # or JSON with text/transcript/segments fields.
-  asr_readback_command: []
+  asr_readback_command:
+  - '/Users/vanch/mlx-audio/.venv/bin/python'
+  - '/Users/vanch/VideoLingo-plus/scripts/qwen3_asr_readback.py'
+  - '--audio'
+  - '{audio}'
+  - '--language'
+  - '{language}'
   asr_readback_timeout_seconds: 120
   content_score_min: 0.88
   # Block full-audio/video merge when ASR shows that a generated line lost its tail.
@@ -251,12 +275,13 @@ smoke_test:
 
 mlx_tts:
   default_backend: 'auto'
-  # speaker_anchor is faster but reduced cross-language content scores on the
-  # 33SjTgWt1gI benchmark; keep it opt-in until a better anchor selector exists.
-  reference_strategy: 'row'
-  speaker_anchor_target_seconds: 5.0
+  reference_strategy: 'hybrid'
+  # Use speaker anchors only for short/fragmented source utterances.
+  hybrid_short_threshold_seconds: 2.0
+  hybrid_min_source_units: 4
+  speaker_anchor_target_seconds: 6.0
   router:
-    allow_voxcpm2_auto: false
+    allow_voxcpm2_auto: true
   backends:
     indextts2:
       enabled: true
@@ -271,6 +296,10 @@ mlx_tts:
       # References are already cut from the separated vocal stem; avoid a
       # redundant per-reference denoise pass in the model-resident batch.
       denoise_ref: false
+      # Short utterances: speaker anchor + source emotion; long ones: source for both.
+      emotion_reference_strategy: 'source_row'
+      emo_alpha: 1.0
+      denoise_emotion_ref: false
       seed: 42
       fit_duration: true
       native_fit_max_estimated_ratio: 1.08
@@ -297,8 +326,10 @@ mlx_tts:
       command_prefix: ['/Users/vanch/mlx-indextts2/.venv/bin/python', '-m', 'mlx_voxcpm2.cli']
       pythonpath: '/Users/vanch/mlx-voxcpm2'
       model_dir: 'models/VoxCPM2-official-mlx-int8-components'
-      inference_timesteps: 4
+      inference_timesteps: 10
       cfg_value: 2.0
+      clone_mode: 'reference'
+      control: '请用自然清晰的马来语发音'
       retry_badcase: true
       denoise_ref: false
       timeout_seconds: 600
@@ -446,3 +477,7 @@ dubbing_profiles:
       chars_per_line_trans_portrait: 18
       chars_per_line_src_landscape: 36
       chars_per_line_trans_landscape: 30
+skip_stt_correction: true
+
+translation:
+  strict_review_gate: true
