@@ -11,14 +11,14 @@ import pandas as pd
 STEP_CHECKPOINTS = {
     # 文本处理流程
     "transcribe": "output/log/cleaned_chunks.xlsx",
-    "split_spacy": "output/log/sentence_splitbynlp.txt", 
+    "split_spacy": "output/log/sentence_splitbynlp.txt",
     "split_meaning": "output/log/sentence_splitbymeaning.txt",
     "summarize": "output/log/terminology.json",
     "translate": "output/log/translation_results.xlsx",
     "split_subtitle": "output/log/translation_results_for_subtitles.xlsx",
     "timeline": "output/audio/trans_subs_for_audio.srt",
     "merge_subtitle": "output/AI字幕.mp4",
-    
+
     # 音频处理流程
     "gen_audio_task": "output/audio/tts_tasks.xlsx",
     "gen_dub_chunks": "output/audio/tts_tasks.xlsx",
@@ -62,31 +62,69 @@ def _step_has_required_columns(step_name: str) -> bool:
     return _excel_has_columns(checkpoint, columns)
 
 
+def _generation_completed() -> bool:
+    from core.config_utils import load_key
+
+    try:
+        method = load_key("tts_method", "")
+    except (OSError, KeyError):
+        return False
+    if method == "mlx_indextts2":
+        from core.tts_reference_plan import reference_plan_is_current
+        from core.step10_gen_audio import tts_generation_checkpoint_valid
+
+        try:
+            tasks = pd.read_excel("output/audio/tts_tasks.xlsx")
+            return (
+                _dir_has_files(STEP_CHECKPOINTS["gen_audio"])
+                and STEP_REQUIRED_COLUMNS["gen_audio"].issubset(tasks.columns)
+                and reference_plan_is_current(tasks)
+                and tts_generation_checkpoint_valid(tasks)
+            )
+        except (OSError, ValueError, KeyError):
+            return False
+    return (
+        _dir_has_files(STEP_CHECKPOINTS["gen_audio"])
+        and _excel_has_columns("output/audio/tts_tasks.xlsx", STEP_REQUIRED_COLUMNS["gen_audio"])
+    ) or (_file_exists("output/dub.mp3") and _file_exists("output/dub.srt"))
+
+
 STEP_VALIDATORS: dict[str, Callable[[], bool]] = {
     "gen_audio_task": lambda: _step_has_required_columns("gen_audio_task"),
     "gen_dub_chunks": lambda: _step_has_required_columns("gen_dub_chunks"),
-    "gen_audio": lambda: (
-        _dir_has_files(STEP_CHECKPOINTS["gen_audio"]) and _step_has_required_columns("gen_audio")
-    ) or (_file_exists("output/dub.mp3") and _file_exists("output/dub.srt")),
+    "gen_audio": _generation_completed,
     "merge_audio": lambda: _file_exists("output/dub.mp3") and _file_exists("output/dub.srt"),
 }
 
 def is_step_completed(step_name: str) -> bool:
     """检查指定步骤是否已完成"""
+    checkpoint = STEP_CHECKPOINTS.get(step_name)
+    if not checkpoint:
+        return False
+
+    if os.path.isdir(checkpoint):
+        if not _dir_has_files(checkpoint):
+            return False
+    else:
+        if not _file_exists(checkpoint):
+            return False
+
+    try:
+        from core.pipeline.artifact_manifest import inspect_artifact_manifest, manifest_path_for
+        sidecar = manifest_path_for(checkpoint)
+        if not sidecar.exists():
+            return False
+        audit = inspect_artifact_manifest(checkpoint)
+        if not audit.ok:
+            return False
+    except Exception:
+        return False
+
     validator = STEP_VALIDATORS.get(step_name)
     if validator:
         return validator()
 
-    checkpoint = STEP_CHECKPOINTS.get(step_name)
-    if not checkpoint:
-        return False
-    
-    if os.path.isdir(checkpoint):
-        # 对于目录，检查是否存在且非空
-        return _dir_has_files(checkpoint)
-    else:
-        # 对于文件，检查是否存在
-        return _file_exists(checkpoint)
+    return True
 
 def get_completed_steps() -> list:
     """获取所有已完成的步骤列表"""
@@ -107,17 +145,17 @@ def print_step_status():
     """打印所有步骤的状态"""
     from rich.console import Console
     from rich.table import Table
-    
+
     console = Console()
     table = Table(title="Step Status")
     table.add_column("Step", style="cyan")
     table.add_column("Checkpoint File", style="blue")
     table.add_column("Status", style="green")
-    
+
     for step, checkpoint in STEP_CHECKPOINTS.items():
         status = "✅ Completed" if is_step_completed(step) else "⏳ Pending"
         table.add_row(step, checkpoint, status)
-    
+
     console.print(table)
 
 

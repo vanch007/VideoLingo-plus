@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 import hashlib
 import json
 import logging
@@ -23,6 +24,7 @@ from core.all_tts_functions.tts_main import tts_main
 from core.all_tts_functions.mlx_router import build_mlx_tts_request
 from core.all_tts_functions.tts_registry import MLX_ROUTER_BACKENDS, is_local_tts_method
 from core.providers.mlx_tts import synthesize_indextts2_batch
+from core.tts_reference_plan import audio_identity, prepare_reference_plan, refresh_conditioning_receipt_audio
 from core.audio_speed import adjust_audio_speed as _adjust_audio_speed
 from core.audio_speed import build_atempo_filter as _build_atempo_filter
 from core.audio_speed import trim_edge_silence as _trim_edge_silence
@@ -55,6 +57,8 @@ OUTPUT_FILE_TEMPLATE = f"{SEGS_DIR}/{{}}.wav"
 def _generation_fingerprint(row: dict) -> str:
     number = int(row["number"])
     lines = normalize_lines(row.get("lines", row.get("text", "")))
+    speaker = str(row.get("speaker") or "")
+    ref_audio = str(row.get("ref_audio") or "")
     audio = []
     for line_index in range(len(lines)):
         path = TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}")
@@ -63,7 +67,21 @@ def _generation_fingerprint(row: dict) -> str:
             audio.append({"path": path, "size": stat.st_size, "mtime_ns": stat.st_mtime_ns})
         except OSError:
             audio.append({"path": path, "missing": True})
-    payload = {"number": number, "lines": lines, "audio": audio}
+    payload = {
+        "number": number,
+        "lines": lines,
+        "speaker": speaker,
+        "ref_audio": ref_audio,
+        "reference_plan": str(row.get("reference_plan_fingerprint", "")),
+        "conditioning_audio": {key: audio_identity(row.get(key)) for key in (
+            "ref_audio", "emotion_ref", "emotion_ref_audio", "resolved_speaker_ref", "resolved_emotion_ref"
+        )},
+        "emo_alpha": str(row.get("emo_alpha", "")),
+        "source_window": [str(row.get("start_time", "")), str(row.get("end_time", ""))],
+        "reference_config": load_key("mlx_tts.reference_strategy", "row"),
+        "indextts_config": load_key("mlx_tts.backends.indextts2", {}),
+        "audio": audio,
+    }
     return hashlib.sha1(
         json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
     ).hexdigest()
@@ -86,6 +104,8 @@ def _tts_generation_row_valid(row: pd.Series) -> bool:
     stored = row.get("tts_generation_fingerprint")
     return (
         isinstance(stored, str)
+        and all(os.path.isfile(TEMP_FILE_TEMPLATE.format(f"{int(row['number'])}_{index}"))
+                for index, _ in enumerate(normalize_lines(row.get("lines", row.get("text", "")))))
         and stored == _generation_fingerprint(row.to_dict())
         and float(row.get("real_dur", 0) or 0) > 0
     )
@@ -109,19 +129,19 @@ def remove_silence_from_file(file_path: str, min_silence_len: int = 200, silence
         # silence_thresh: Threshold for silence (dBFS)
         # keep_silence: Amount of silence to leave at beginning/end of chunks (ms)
         chunks = split_on_silence(
-            audio, 
-            min_silence_len=min_silence_len, 
+            audio,
+            min_silence_len=min_silence_len,
             silence_thresh=silence_thresh,
-            keep_silence=50 
+            keep_silence=50
         )
-        
+
         if chunks:
             # Recombine chunks
             output = chunks[0]
             for chunk in chunks[1:]:
                 output += chunk
             output.export(file_path, format="wav")
-            
+
             # Log if significant reduction
             original_len = len(audio) / 1000
             new_len = len(output) / 1000
@@ -136,12 +156,13 @@ def check_audio(file_path: str) -> None:
         return
     try:
         audio = AudioSegment.from_wav(file_path)
-        
+
         # Only apply fade-out to prevent popping
         # Silence trimming is too aggressive and can cause issues
         if len(audio) > 20:
             audio = audio.fade_out(10)
             audio.export(file_path, format="wav")
+            refresh_conditioning_receipt_audio(file_path)
     except Exception as e:
         rprint(f"[yellow]⚠️ Audio check failed for {file_path}: {e}[/yellow]")
 
@@ -161,13 +182,23 @@ def _export_wav_if_audio_changed(audio: AudioSegment, output_file: str) -> None:
         except Exception:
             pass
     audio.export(output_file, format="wav")
+    refresh_conditioning_receipt_audio(output_file)
+
+
+def row_target_generation_duration(row: dict | pd.Series) -> float:
+    """Target the original spoken duration for high acoustic sync, falling back to available window."""
+    dur = float(row.get("duration", 0) or 0)
+    avail = row_available_duration(row)
+    if dur > 0.3:
+        return dur
+    return avail
 
 
 def process_row(row: dict, tasks_df: pd.DataFrame) -> Tuple[int, float]:
     """Helper function for processing single row data"""
     number = row['number']
     lines = normalize_lines(row.get('lines', row.get('text', '')))
-    target_duration = row_available_duration(row)
+    target_duration = row_target_generation_duration(row)
     real_dur = 0
     for line_index, line in enumerate(lines):
         temp_file = TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}")
@@ -200,7 +231,7 @@ def process_indextts2_batch(
         number = int(row["number"])
         lines = normalize_lines(row.get("lines", row.get("text", "")))
         outputs = []
-        per_line_duration = row_available_duration(row) / max(len(lines), 1)
+        per_line_duration = row_target_generation_duration(row) / max(len(lines), 1)
         for line_index, line in enumerate(lines):
             output = TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}")
             outputs.append(output)
@@ -241,7 +272,7 @@ def _batch_regenerate_rewritten_rows(
 def _delete_temp_files_for_row(row: dict) -> None:
     number = int(row["number"])
     lines = normalize_lines(row.get("lines", row.get("text", "")))
-    for line_index in range(len(lines)):
+    for line_index in range(max(len(lines), 10)):
         for file_path in (
             TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}"),
             temp_audio_file_for(number, line_index),
@@ -316,6 +347,8 @@ def retry_overlong_rows(tasks_df: pd.DataFrame) -> pd.DataFrame:
                     _delete_temp_files_for_row(row_dict)
                     row_dict["lines"] = rewritten
                     row_dict["text"] = " ".join(rewritten)
+                    word_cnt = len(re.findall(r"[\wÀ-ỹ]+", row_dict["text"]))
+                    row_dict["est_dur"] = max(word_cnt * 0.42, 0.3)
                     row_dict["rewritten_for_dubbing"] = True
                     row_dict["rewrite_reason"] = "measured_over_duration"
                     row_dict["dubbing_rewrite_rounds"] = rounds + 1
@@ -448,8 +481,14 @@ def retry_fast_speech_rows(tasks_df: pd.DataFrame) -> tuple[pd.DataFrame, bool]:
         for idx, row in tasks_df.iterrows():
             row_dict = row.to_dict()
             speed_factor = float(row_dict.get("speed_factor", 1.0) or 1.0)
+            real_dur = float(row_dict.get("real_dur", 0) or 0)
+            avail = row_available_duration(row_dict)
+            if real_dur > 0 and avail > 0:
+                speed_factor = max(speed_factor, real_dur / avail)
+            limit = _row_natural_speed_limit(row, quality)
             rounds = int(row_dict.get("dubbing_rewrite_rounds", 0) or 0)
-            if speed_factor <= quality.max_natural_speed_factor or rounds >= quality.max_rewrite_rounds:
+            max_allowed_rounds = quality.max_rewrite_rounds + (2 if avail <= 0.6 else 0)
+            if speed_factor <= limit or rounds >= max_allowed_rounds:
                 continue
             try:
                 reason = (
@@ -478,6 +517,7 @@ def retry_fast_speech_rows(tasks_df: pd.DataFrame) -> tuple[pd.DataFrame, bool]:
                 "IndexTTS2 rows[/yellow]"
             )
             _batch_regenerate_rewritten_rows(tasks_df, rewritten_indices)
+            tasks_df.to_excel(TTS_TASKS_FILE, index=False)
             changed = True
         return tasks_df, changed
 
@@ -599,8 +639,7 @@ def generate_tts_audio(tasks_df: pd.DataFrame) -> pd.DataFrame:
 def _row_natural_speed_limit(row: pd.Series, quality) -> float:
     """Allow slightly faster fitting only for ASR-unreliable short replies."""
     base_limit = float(quality.max_natural_speed_factor)
-    tokens = re.findall(r"[\w\u00c0-\u024f\u1e00-\u1eff\u4e00-\u9fff]+", str(row.get("text", "")))
-    if len(tokens) <= 2 and row_available_duration(row) <= 0.8:
+    if row_available_duration(row) <= 0.6:
         short_limit = float(
             load_key("dubbing_quality.short_utterance_max_speed_factor", 1.35)
         )
@@ -614,7 +653,7 @@ def merge_indextts2_native_fit(tasks_df: pd.DataFrame) -> pd.DataFrame:
     tasks_df["speed_factor"] = 1.0
     tasks_df["keep_gaps"] = True
     rounding_tolerance_ms = int(
-        load_key("dubbing_quality.timeline_rounding_tolerance_ms", 30)
+        load_key("dubbing_quality.timeline_rounding_tolerance_ms", 50)
     )
     quality = get_quality_config()
 
@@ -638,13 +677,19 @@ def merge_indextts2_native_fit(tasks_df: pd.DataFrame) -> pd.DataFrame:
         row_speed_factor = 1.0
         if total_audio_ms > row_window_ms:
             natural_speed_factor = total_audio_ms / max(row_window_ms, 1)
-            row_speed_factor = total_audio_ms / max(row_window_ms - fit_margin_ms, 1)
-            if natural_speed_factor > max_natural_speed:
+            if natural_speed_factor > max_natural_speed + 0.005:
                 raise RuntimeError(
                     f"IndexTTS2 row {number} needs {natural_speed_factor:.3f}x speed to fit, "
                     f"above the natural limit {max_natural_speed:.3f}x. Refusing to "
                     "truncate spoken content; rewrite/regenerate first."
                 )
+            natural_speed_factor = min(natural_speed_factor, max_natural_speed)
+            # Ensure the effective speed factor never exceeds the allowable limit
+            target_margin_speed = total_audio_ms / max(row_window_ms - fit_margin_ms, 1)
+            if target_margin_speed <= max_natural_speed:
+                row_speed_factor = max(target_margin_speed, natural_speed_factor)
+            else:
+                row_speed_factor = natural_speed_factor
             adjusted = []
             for line_index, (source_file, audio) in enumerate(zip(source_files, audios)):
                 output_file = OUTPUT_FILE_TEMPLATE.format(f"{number}_{line_index}")
@@ -683,12 +728,13 @@ def merge_indextts2_native_fit(tasks_df: pd.DataFrame) -> pd.DataFrame:
                     break
                 audios[audio_index] = audios[audio_index][:-removable]
                 remaining -= removable
-            if overflow_ms > rounding_tolerance_ms or remaining > 0:
+            if remaining > rounding_tolerance_ms:
                 raise RuntimeError(
-                    f"IndexTTS2 row {number} still exceeds its slot by {overflow_ms}ms "
-                    "after natural speed fitting; the overflow contains audible samples, "
-                    "so spoken content will not be truncated."
+                    f"IndexTTS2 row {number} still exceeds its slot by {remaining}ms "
+                    f"(tolerance: {rounding_tolerance_ms}ms) after natural speed fitting; "
+                    "the overflow contains audible samples, so spoken content will not be truncated."
                 )
+            row_window_ms += remaining
 
         # Allocate the row window in proportion to measured line duration. Equal
         # partitions make a short interjection steal time from a long sentence.
@@ -752,6 +798,7 @@ def _trim_generated_edges(tasks_df: pd.DataFrame, indices: list[int]) -> None:
             temp_file = TEMP_FILE_TEMPLATE.format(f"{number}_{line_index}")
             audio = _trim_edge_silence(AudioSegment.from_wav(temp_file))
             audio.export(temp_file, format="wav")
+            refresh_conditioning_receipt_audio(temp_file)
             total_duration += len(audio) / 1000
         tasks_df.at[idx, "real_dur"] = total_duration
 
@@ -804,17 +851,22 @@ def _split_content_rows_for_retry(tasks_df: pd.DataFrame, indices: list[int]) ->
                 for clause in re.findall(r"[^.!?]+[.!?]?", str(line))
                 if clause.strip()
             ] or [str(line).strip()]
-            for clause in clauses:
-                words = clause.split()
-                if len(words) <= 4:
-                    split_lines.append(clause)
-                    continue
-                midpoint = max(2, len(words) // 2)
-                split_lines.extend((" ".join(words[:midpoint]), " ".join(words[midpoint:])))
+            if len(clauses) >= 2:
+                split_lines.extend(clauses)
+            else:
+                for clause in clauses:
+                    words = clause.split()
+                    if len(words) <= 7:
+                        split_lines.append(clause)
+                    else:
+                        midpoint = max(2, len(words) // 2)
+                        split_lines.extend((" ".join(words[:midpoint]), " ".join(words[midpoint:])))
         if split_lines == original or not all(split_lines):
             continue
         tasks_df.at[idx, "lines"] = split_lines
         tasks_df.at[idx, "text"] = " ".join(split_lines)
+        word_cnt = len(re.findall(r"[\wÀ-ỹ]+", tasks_df.at[idx, "text"]))
+        tasks_df.at[idx, "est_dur"] = max(word_cnt * 0.42, 0.3)
         tasks_df.at[idx, "rewritten_for_dubbing"] = True
         tasks_df.at[idx, "rewrite_reason"] = "asr_incomplete_split_retry"
         tasks_df.at[idx, "dubbing_rewrite_rounds"] = int(
@@ -831,6 +883,12 @@ def _content_fallback_method() -> tuple[str, str]:
         or ""
     ).strip()
     if backend.lower() in {"", "none", "off", "disabled"}:
+        return "", ""
+    if (
+        load_key("mlx_tts.backends.indextts2.emotion_reference_strategy", "explicit_only") == "source_row"
+        and backend not in {"indextts2", "mlx_indextts2"}
+    ):
+        rprint("[yellow]Independent emotion is required; keeping IndexTTS2 for the bounded content retry instead of a speaker-only fallback.[/yellow]")
         return "", ""
     if backend in MLX_ROUTER_BACKENDS:
         return backend, MLX_ROUTER_BACKENDS[backend]
@@ -861,7 +919,10 @@ def _regenerate_content_rows(tasks_df: pd.DataFrame, indices: list[int]) -> None
     # the same seed; retrying each failed row alone gives IndexTTS2 one clean,
     # deterministic attempt before the workflow changes model.
     for idx in indextts2_indices:
-        process_indextts2_batch(tasks_df, tasks_df.loc[[idx]].copy())
+        row = tasks_df.loc[idx].to_dict()
+        _delete_temp_files_for_row(row)
+        for number, real_dur in process_indextts2_batch(tasks_df, tasks_df.loc[[idx]].copy()):
+            tasks_df.loc[tasks_df["number"] == number, "real_dur"] = real_dur
 
 
 def repair_indextts2_content_rows(
@@ -924,10 +985,11 @@ def repair_indextts2_content_rows(
         rewritten.extend(duration_rewritten)
         unresolved = [idx for idx in overlong if int(tasks_df.at[idx, "number"]) not in duration_rewritten]
         if unresolved:
-            numbers = [int(tasks_df.at[idx, "number"]) for idx in unresolved]
-            raise RuntimeError(
-                f"IndexTTS2 complete speech is too long for rows {numbers}, and compact rewriting failed."
-            )
+            tasks_df.loc[unresolved, "disable_native_fit"] = False
+            for idx in unresolved:
+                for number, real_dur in process_indextts2_batch(tasks_df, tasks_df.loc[[idx]].copy()):
+                    tasks_df.loc[tasks_df["number"] == number, "real_dur"] = real_dur
+            _trim_generated_edges(tasks_df, unresolved)
         # The first repair pass is intentionally uncapped so the content gate
         # can learn whether the model is capable of speaking the full tail. Once
         # that complete take proves too long and the script is shortened, turn
@@ -935,11 +997,12 @@ def repair_indextts2_content_rows(
         tasks_df.loc[overlong, "disable_native_fit"] = False
         _regenerate_content_rows(tasks_df, overlong)
         _trim_generated_edges(tasks_df, overlong)
+        rounding_tol_s = float(load_key("dubbing_quality.timeline_rounding_tolerance_ms", 50)) / 1000.0
         still_overlong = [
             idx for idx in overlong
             if float(tasks_df.at[idx, "real_dur"] or 0)
-            > row_available_duration(tasks_df.loc[idx])
-            * _row_natural_speed_limit(tasks_df.loc[idx], quality)
+            > (row_available_duration(tasks_df.loc[idx])
+            * _row_natural_speed_limit(tasks_df.loc[idx], quality) + rounding_tol_s)
         ]
         if still_overlong:
             numbers = [int(tasks_df.at[idx, "number"]) for idx in still_overlong]
@@ -982,14 +1045,14 @@ def process_chunk(chunk_df: pd.DataFrame, accept: float, min_speed: float) -> tu
 
     # Check the gap of the last line in the chunk
     last_gap = chunk_df.iloc[-1]['gap']
-    
+
     # Dynamic speed_var_error: if gap is small (< 0.1s), it means continuous speech
     # In this case, we don't want to leave any safety gap (speed_var_error = 0)
     # Otherwise, we keep the 0.1s safety margin
     speed_var_error = 0.1 if last_gap >= 0.1 else 0
-    
+
     rprint(f"[dim]  └─ Last gap: {last_gap:.3f}s, speed_var_error: {speed_var_error:.3f}s[/dim]")
-    
+
     # Only check for division by zero - don't skip small durations
     # Small duration chunks still need speed adjustment, possibly with high speed factors
     if (tol_durs - speed_var_error) <= 0.01 or (durations - speed_var_error) <= 0.01:
@@ -1059,6 +1122,11 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
             if cur_time > chunk_end_time + 0.05:
                 time_diff = cur_time - chunk_end_time
                 fit_ratio = (cur_time - chunk_start_time) / max(0.1, chunk_end_time - chunk_start_time)
+                if speed_factor * fit_ratio > accept:
+                    raise RuntimeError(
+                        f"Chunk {chunk_start} to {index} exceeds its timeline by {time_diff:.3f}s. "
+                        "Refusing to truncate spoken content; shorten/regenerate the row first."
+                    )
                 rprint(f"[yellow]⚠️ Chunk {chunk_start} to {index} delta {time_diff:.3f}s, micro-refitting with factor {fit_ratio:.3f}[/yellow]")
                 cur_time = chunk_start_time
                 for i, r_row in chunk_df.iterrows():
@@ -1094,7 +1162,9 @@ def gen_audio() -> None:
     # 📝 Step2: Load task file
     tasks_df = pd.read_excel(TTS_TASKS_FILE)
     # Note: Filtering is done in step8_1, so tasks_df is already clean
-    
+    if tts_method in {"mlx_indextts2", "mlx_router"}:
+        tasks_df = prepare_reference_plan(tasks_df)
+
     rprint("[green]📊 Loaded task file successfully[/green]")
 
     # 🔊 Step3: Generate TTS audio, or resume an exact script/audio checkpoint.
@@ -1118,7 +1188,31 @@ def gen_audio() -> None:
         tts_method == "mlx_indextts2"
         and bool(load_key("mlx_tts.backends.indextts2.fit_duration", True))
     ):
-        tasks_df = merge_indextts2_native_fit(tasks_df)
+        max_fit_attempts = max(int(load_key("dubbing_quality.max_rewrite_rounds", 3)), 1)
+        for attempt in range(max_fit_attempts + 1):
+            try:
+                tasks_df = merge_indextts2_native_fit(tasks_df)
+                break
+            except RuntimeError as err:
+                if ("above the natural limit" in str(err) or "exceeds natural limit" in str(err)) and attempt < max_fit_attempts:
+                    for idx, row in tasks_df.iterrows():
+                        row_dict = row.to_dict()
+                        lines = normalize_lines(row_dict.get("lines", row_dict.get("text", "")))
+                        row_window_ms = int(round(row_available_duration(row_dict) * 1000))
+                        audios = []
+                        for line_index in range(len(lines)):
+                            temp_file = TEMP_FILE_TEMPLATE.format(f"{row_dict['number']}_{line_index}")
+                            if os.path.exists(temp_file):
+                                audios.append(_trim_edge_silence(AudioSegment.from_wav(temp_file)))
+                        if audios:
+                            total_audio_ms = sum(len(a) for a in audios)
+                            if total_audio_ms > row_window_ms:
+                                tasks_df.at[idx, "speed_factor"] = total_audio_ms / max(row_window_ms, 1)
+                    tasks_df, changed = retry_fast_speech_rows(tasks_df)
+                    if not changed:
+                        raise
+                else:
+                    raise
     else:
         tasks_df = merge_chunks(tasks_df)
         tasks_df, natural_speed_changed = retry_fast_speech_rows(tasks_df)
@@ -1133,7 +1227,22 @@ def gen_audio() -> None:
         tasks_df = run_indextts2_content_gate(tasks_df)
 
     # 💾 Step5: Save results
+    ref_manifest_path = Path("output/audio") / "reference_manifest.json"
+    if ref_manifest_path.is_file():
+        try:
+            ref_data = json.loads(ref_manifest_path.read_text(encoding="utf-8"))
+            ref_data["stage"] = "executed"
+            ref_manifest_path.write_text(json.dumps(ref_data, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception:
+            pass
     tasks_df.to_excel(TTS_TASKS_FILE, index=False)
+    try:
+        from core.translation_review import audit_final_tts_tasks
+        audit_res = audit_final_tts_tasks(tasks_df)
+        if audit_res.get("status") != "pass":
+            rprint(f"[bold red]❌ Final TTS tasks semantic audit failed with {audit_res.get('issues_count', 0)} issue(s)![/bold red]")
+    except Exception as exc:
+        rprint(f"[bold red]⚠️ Final TTS tasks semantic audit raised exception: {exc}[/bold red]")
     summary = write_dubbing_eval(tasks_df)
     rprint(f"[bold green]📊 Dubbing eval written: {summary}[/bold green]")
     rprint("[bold green]🎉 Audio generation completed successfully![/bold green]")

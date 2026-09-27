@@ -260,6 +260,8 @@ def test_indextts2_batch_keeps_model_resident_and_omits_unsafe_duration_cap(
     assert captured["cmd"][captured["cmd"].index("--seed") + 1] == "42"
     assert captured["rows"][0]["target_duration_s"] == "2.000"
     assert captured["rows"][0]["fit_duration"] == "true"
+    assert captured["rows"][0]["emotion_ref_audio"].endswith("emotion.wav")
+    assert captured["rows"][0]["emo_alpha"] == "1.0"
     assert captured["rows"][1]["target_duration_s"] == "1.000"
     assert captured["rows"][1]["fit_duration"] == "false"
     assert len(results) == 2
@@ -284,7 +286,8 @@ def test_mlx_router_routes_chinese_to_omnivoice_by_default():
     assert MlxTTSRouter().select_backend(req) == "omnivoice"
 
 
-def test_mlx_router_never_auto_selects_qwen_for_clean_reference():
+def test_mlx_router_never_auto_selects_qwen_for_clean_reference(monkeypatch):
+    monkeypatch.setattr("core.providers.mlx_tts.load_key", lambda key, default=None: default)
     req = TTSRequest(
         text="Taxed ninety years ahead.",
         output_path="output/audio/segs/test.wav",

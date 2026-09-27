@@ -20,6 +20,7 @@ import requests
 from core.all_whisper_methods.audio_preprocess import get_audio_duration
 from core.config_utils import load_key
 from core.providers.contracts import TTSRequest, TTSResult
+from core.tts_reference_plan import validate_emotion_alpha, write_conditioning_receipt
 
 
 VIETNAMESE_RE = re.compile(
@@ -170,6 +171,8 @@ class CliBackend:
         if not output_path.exists() or output_path.stat().st_size < int(load_key("dubbing_quality.min_audio_size", 1000)):
             raise RuntimeError(f"{self.name} did not create a valid audio file: {output_path}")
         duration = get_audio_duration(str(output_path))
+        effective_backend = request.metadata.get("backend") or self.name
+        write_conditioning_receipt(request, backend=effective_backend)
         elapsed = max(time.perf_counter() - start, 0.001)
         return TTSResult(
             output_path=output_path_text,
@@ -197,6 +200,11 @@ class CliBackend:
 class IndexTTS2Backend(CliBackend):
     name = "indextts2"
 
+    def _emotion_alpha(self, request):
+        return validate_emotion_alpha(
+            request.emo_alpha if request.emo_alpha is not None else self.cfg.get("emo_alpha", 1.0)
+        )
+
     def synthesize(self, request: TTSRequest) -> TTSResult:
         if not request.ref_audio:
             raise ValueError("indextts2 requires ref_audio for VideoLingo voice cloning")
@@ -216,6 +224,8 @@ class IndexTTS2Backend(CliBackend):
         if cfg.get("model"):
             cmd += ["--model", str(cfg["model"])]
         language = str(cfg.get("language", "auto") or "auto").strip().lower()
+        if language == "auto":
+            language = str(request.language or request.target_language or "auto").lower()
         if language and language != "auto":
             cmd += ["--language", language]
         if cfg.get("seed") is not None:
@@ -254,6 +264,7 @@ class IndexTTS2Backend(CliBackend):
             cmd += ["--no-denoise-emotion-ref"]
         if request.emotion_ref:
             cmd += ["--emotion-ref-audio", _project_path(request.emotion_ref) or request.emotion_ref]
+            cmd += ["--emo-alpha", str(self._emotion_alpha(request))]
         return self._run(cmd, request)
 
     def synthesize_batch(self, requests: list[TTSRequest]) -> list[TTSResult]:
@@ -272,12 +283,15 @@ class IndexTTS2Backend(CliBackend):
             with csv_path.open("w", encoding="utf-8", newline="") as handle:
                 fieldnames = [
                     "id", "text", "ref_audio", "emotion_ref_audio",
-                    "target_duration_s", "fit_duration",
+                    "target_duration_s", "fit_duration", "emo_alpha", "language", "speaker",
                 ]
                 writer = csv.DictWriter(handle, fieldnames=fieldnames)
                 writer.writeheader()
                 for index, request in enumerate(requests, start=1):
-                    estimated_duration = request.task_row.get("est_dur") if request.task_row else None
+                    words_count = len(re.findall(r"[\wÀ-ỹ]+", str(request.text or "")))
+                    # Estimated duration for English is ~0.40-0.45s per word
+                    fresh_est = max(words_count * 0.42, 0.3) if words_count > 0 else 0.5
+                    estimated_duration = fresh_est
                     try:
                         estimated_ratio = float(estimated_duration) / float(request.target_duration)
                     except (TypeError, ValueError, ZeroDivisionError):
@@ -305,6 +319,9 @@ class IndexTTS2Backend(CliBackend):
                         "emotion_ref_audio": (
                             _project_path(request.emotion_ref) or request.emotion_ref or ""
                         ),
+                        "emo_alpha": self._emotion_alpha(request),
+                        "language": request.language,
+                        "speaker": request.speaker_id or "",
                         "target_duration_s": (
                             f"{request.target_duration:.3f}" if request.target_duration else ""
                         ),
@@ -367,6 +384,8 @@ class IndexTTS2Backend(CliBackend):
                 if destination.stat().st_size < int(load_key("dubbing_quality.min_audio_size", 1000)):
                     raise RuntimeError(f"indextts2 produced invalid batch audio: {destination}")
                 duration = get_audio_duration(str(destination))
+                effective_backend = request.metadata.get("backend") or self.name
+                write_conditioning_receipt(request, backend=effective_backend)
                 results.append(TTSResult(
                     output_path=destination_text,
                     backend=self.name,
@@ -442,6 +461,8 @@ class VoxCPM2Backend(CliBackend):
 
     def synthesize(self, request: TTSRequest) -> TTSResult:
         cfg = self.cfg
+        clone_mode = str(cfg.get("clone_mode", "prompt") or "prompt").strip().lower()
+        reference_only = clone_mode in {"reference", "reference_only", "clone"}
         cmd = _cmd_prefix(cfg.get("command_prefix", ["python3", "-m", "mlx_voxcpm2.cli"]))
         max_len = int(cfg.get("max_len", max(32, min(256, len(request.text) * 2))))
         cmd += [
@@ -460,11 +481,12 @@ class VoxCPM2Backend(CliBackend):
             str(cfg.get("cfg_value", 2.0)),
         ]
         if request.ref_audio:
-            # VoxCPM2's cloning mode requires the prompt audio and its transcript
-            # as a pair; ``reference-wav-path`` alone is not the clone prompt.
-            cmd += ["--prompt-wav-path", _project_path(request.ref_audio) or request.ref_audio]
-        if request.ref_text:
+            reference_flag = "--reference-wav-path" if reference_only else "--prompt-wav-path"
+            cmd += [reference_flag, _project_path(request.ref_audio) or request.ref_audio]
+        if request.ref_text and not reference_only:
             cmd += ["--prompt-text", request.ref_text]
+        if reference_only and cfg.get("control"):
+            cmd += ["--control", str(cfg["control"])]
         if _as_bool(cfg.get("retry_badcase"), True):
             cmd += ["--retry-badcase"]
         if _as_bool(cfg.get("denoise_ref"), False):
@@ -692,6 +714,11 @@ class MlxTTSRouter:
 
     def synthesize(self, request: TTSRequest) -> TTSResult:
         backend_name = self.select_backend(request)
+        if request.metadata.get("requires_separate_emotion") and backend_name != "indextts2":
+            raise ValueError(
+                f"Backend {backend_name} cannot preserve separate emotion conditioning; "
+                "refusing a silent speaker-only fallback"
+            )
         backend = self.backends[backend_name]
         result = backend.synthesize(request)
         metadata = dict(result.metadata)

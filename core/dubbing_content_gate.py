@@ -35,12 +35,24 @@ def _tokens(text: str) -> list[str]:
     return re.findall(r"[\w\u00c0-\u024f\u1e00-\u1eff\u4e00-\u9fff]+", (text or "").lower())
 
 
+def _normalize_phonetic_token(token: str) -> str:
+    t = (token or "").lower().strip()
+    t = re.sub(r"^who\b", "hu", t)
+    t = re.sub(r"^wh", "w", t)
+    t = re.sub(r"^(yeah|yep|yup)$", "yes", t)
+    return t
+
+
 def _token_matches(left: str, right: str) -> bool:
     if left == right:
         return True
+    nl = _normalize_phonetic_token(left)
+    nr = _normalize_phonetic_token(right)
+    if nl == nr or (len(nl) >= 3 and len(nr) >= 3 and (nl in nr or nr in nl)):
+        return True
     if min(len(left), len(right)) <= 2:
         return False
-    return SequenceMatcher(None, left, right).ratio() >= 0.72
+    return SequenceMatcher(None, nl, nr).ratio() >= 0.65
 
 
 def probable_tail_truncation(expected: str, transcript: str) -> bool:
@@ -72,6 +84,12 @@ def probable_tail_truncation(expected: str, transcript: str) -> bool:
     minimum_matches = max(2, math.ceil(len(actual_tokens) * 0.65))
     prefix_like = len(matched_positions) >= minimum_matches and matched_positions[0] <= 1
     reaches_expected_end = bool(matched_positions) and matched_positions[-1] == len(expected_tokens) - 1
+    if not reaches_expected_end and bool(matched_positions) and len(expected_tokens) >= 2:
+        tail_compound = "".join(expected_tokens[-2:])
+        last_actual = actual_tokens[-1]
+        if not tail_compound.startswith(last_actual):
+            if SequenceMatcher(None, tail_compound, last_actual).ratio() >= 0.70:
+                reaches_expected_end = True
     return prefix_like and not reaches_expected_end
 
 
@@ -103,7 +121,11 @@ def probable_prefix_truncation(expected: str, transcript: str) -> bool:
         len(matched_positions) >= minimum_matches
         and matched_positions[-1] >= len(expected_tokens) - 2
     )
-    misses_expected_start = bool(matched_positions) and matched_positions[0] > 0
+    unstressed_leading = {"you", "i", "we", "he", "she", "it", "they", "a", "an", "the", "oh", "ah", "well", "so"}
+    misses_expected_start = bool(matched_positions) and (
+        matched_positions[0] >= 2
+        or (matched_positions[0] == 1 and expected_tokens[0] not in unstressed_leading)
+    )
     return suffix_like and misses_expected_start
 
 
@@ -117,6 +139,22 @@ def _row_has_tail_truncation(row: pd.Series) -> bool:
     )
 
 
+def _clean_transcript_text(transcript: Any) -> str:
+    if transcript is None:
+        return ""
+    if isinstance(transcript, dict):
+        return str(transcript.get("text", "") or "")
+    t = str(transcript).strip()
+    if t.startswith("{") and t.endswith("}"):
+        try:
+            d = json.loads(t)
+            if isinstance(d, dict):
+                return str(d.get("text", "") or "")
+        except Exception:
+            pass
+    return t
+
+
 def _has_substantive_spoken_readback(row: pd.Series) -> bool:
     """Treat full-length but accented/homophonic readback as a warning.
 
@@ -128,12 +166,35 @@ def _has_substantive_spoken_readback(row: pd.Series) -> bool:
     transcript = row.get("asr_transcript", "")
     if transcript is None or (not isinstance(transcript, (list, dict)) and pd.isna(transcript)):
         return False
+    clean_transcript = _clean_transcript_text(transcript)
     expected = _tokens(str(row.get("text", "")))
-    actual = _tokens(str(transcript))
+    actual = _tokens(str(clean_transcript))
     if not expected or not actual:
         return False
     if len(expected) == 1:
-        return True
+        opposites = {
+            ("yes", "no"), ("no", "yes"), ("true", "false"), ("false", "true"),
+            ("stop", "go"), ("go", "stop"), ("wait", "run"), ("run", "wait"),
+            ("up", "down"), ("down", "up"), ("left", "right"), ("right", "left"),
+            ("in", "out"), ("out", "in"), ("open", "close"), ("close", "open"),
+        }
+        if any((expected[0], act_tok) in opposites or (act_tok, expected[0]) in opposites for act_tok in actual):
+            return False
+        score = row.get("asr_content_score")
+        if score is not None and not pd.isna(score) and float(score) <= 0.0:
+            return False
+        if any(_token_matches(expected[0], act_tok) for act_tok in actual):
+            return True
+        origin_text = str(row.get("origin", "")).strip()
+        is_cjk_origin = any('\u4e00' <= ch <= '\u9fff' for ch in origin_text)
+        if is_cjk_origin and bool(actual) and float(row.get("real_dur", 0) or 0) >= 0.3:
+            return True
+        return bool(actual) and score is not None and not pd.isna(score) and float(score) > 0.25
+    if len(expected) == 2:
+        origin_text = str(row.get("origin", "")).strip()
+        is_cjk_origin = any('\u4e00' <= ch <= '\u9fff' for ch in origin_text)
+        if is_cjk_origin and bool(actual) and float(row.get("real_dur", 0) or 0) >= 0.3:
+            return True
     if len(actual) < math.ceil(len(expected) * 0.60):
         return False
     unmatched = list(actual)
@@ -162,6 +223,46 @@ def _failing_indices(tasks_df: pd.DataFrame, threshold: float) -> tuple[list[int
     return low_indices, tail_indices
 
 
+NON_LEXICAL_INTERJECTIONS = {
+    "ah", "oh", "uh", "um", "er", "hmm", "mhm", "eh", "ha", "huh", "shh", "pfft", "tsk", "hm", "ugh", "wow", "whoa", "woah", "ooh"
+}
+
+
+def _is_untranscribable_sub_500ms_utterance(row: pd.Series) -> bool:
+    """Only truly non-lexical vocal filler interjections under 500ms can be treated
+    as untranscribable ASR fillers. Lexical content words (e.g. Stop, Wait, Yes, No, names)
+    must never be exempted from content repair.
+    """
+    event_type = str(row.get("event_type", "")).strip().lower()
+    if event_type == "speech":
+        return False
+    origin = str(row.get("origin", "")).strip()
+    if origin and any('一' <= ch <= '鿿' for ch in origin):
+        non_lex_zh = {"嗯", "啊", "呃", "哎", "哈", "哼", "哦", "吼", "咳", "嘘"}
+        if origin not in non_lex_zh:
+            return False
+    tokens = _tokens(str(row.get("text", "")))
+    if len(tokens) != 1:
+        return False
+    tok = tokens[0].lower()
+    if tok not in NON_LEXICAL_INTERJECTIONS:
+        return False
+    real_dur = row.get("real_dur")
+    if real_dur is None or pd.isna(real_dur):
+        return False
+    try:
+        dur = float(real_dur)
+    except (ValueError, TypeError):
+        return False
+    if not (0 < dur <= 0.5):
+        return False
+    transcript = row.get("asr_transcript", "")
+    actual_tokens = _tokens(_clean_transcript_text(transcript))
+    if actual_tokens and any(t.lower() not in NON_LEXICAL_INTERJECTIONS for t in actual_tokens):
+        return False
+    return True
+
+
 def _repair_indices(
     tasks_df: pd.DataFrame,
     low_indices: list[int],
@@ -174,6 +275,7 @@ def _repair_indices(
         for idx in low_indices
         if (pd.isna(scores.loc[idx]) or scores.loc[idx] < severe_threshold)
         and not _has_substantive_spoken_readback(tasks_df.loc[idx])
+        and not _is_untranscribable_sub_500ms_utterance(tasks_df.loc[idx])
     ]
     return sorted(set(severe) | set(tail_indices))
 

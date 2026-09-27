@@ -39,7 +39,13 @@ def normalize_for_content_score(text: str) -> str:
     text = (text or "").lower()
     text = normalize_vietnamese_number_words(text)
     text = re.sub(r"\s+", "", text)
-    return re.sub(r"[^\w\u00c0-\u024f\u1e00-\u1eff\u4e00-\u9fff]", "", text)
+    cleaned = re.sub(r"[^\w\u00c0-\u024f\u1e00-\u1eff\u4e00-\u9fff]", "", text)
+    for variant, canonical in [
+        ("wanna", "wantto"),
+        ("gonna", "goingto"),
+    ]:
+        cleaned = cleaned.replace(variant, canonical)
+    return cleaned
 
 
 def _cross_script_phonetic_normalize(text: str) -> str:
@@ -62,14 +68,17 @@ def content_similarity(expected: str, actual: str) -> float:
     if not expected_norm or not actual_norm:
         return 0.0
     direct = SequenceMatcher(None, expected_norm, actual_norm).ratio()
+    score = direct
     cross_script = bool(re.search(r"[\u4e00-\u9fff]", expected or "")) != bool(
         re.search(r"[\u4e00-\u9fff]", actual or "")
     )
-    if not cross_script:
-        return direct
-    phonetic_expected = _cross_script_phonetic_normalize(expected)
-    phonetic_actual = _cross_script_phonetic_normalize(actual)
-    return max(direct, SequenceMatcher(None, phonetic_expected, phonetic_actual).ratio())
+    if cross_script:
+        phonetic_expected = _cross_script_phonetic_normalize(expected)
+        phonetic_actual = _cross_script_phonetic_normalize(actual)
+        score = max(score, SequenceMatcher(None, phonetic_expected, phonetic_actual).ratio())
+
+
+    return score
 
 
 def reference_leak_score(reference_text: str | None, actual: str) -> float:

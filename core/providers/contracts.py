@@ -42,6 +42,7 @@ class TTSRequest:
     target_duration: float | None = None
     task_row: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
+    emo_alpha: float | None = None
 
 
 @dataclass(frozen=True)

@@ -429,3 +429,128 @@ def test_english_rewrite_rejects_vietnamese_language_drift(monkeypatch, tmp_path
     )
 
     assert rewritten == ["A tenth to a third."]
+
+
+def test_shorten_rewrite_rejects_single_word_semantic_collapse(monkeypatch):
+    class Quality:
+        max_natural_speed_factor = 1.12
+
+    # Simulate LLM trying to collapse a multi-word phrase into a single word like 'Fear'
+    def fake_ask_gpt(prompt, **kwargs):
+        return {"lines": ["Fear"]}
+
+    monkeypatch.setattr(dubbing_rewrite, "ask_gpt", fake_ask_gpt)
+    monkeypatch.setattr(dubbing_rewrite, "load_key", lambda key, default=None: "en" if key == "target_language" else default)
+    monkeypatch.setattr(dubbing_rewrite, "get_quality_config", lambda: Quality())
+
+    rewritten = dubbing_rewrite.rewrite_task_lines(
+        {
+            "text": "Wait here in fear.",
+            "lines": ["Wait here in fear."],
+            "real_dur": 3.0,
+            "available_duration": 1.0,
+        },
+        reason="speech_rate_fast",
+        direction="shorten",
+    )
+    # Must reject 'Fear' because it collapsed a clause into 1 word
+    assert rewritten != ["Fear"]
+
+
+def test_measure_acoustic_activity_returns_none_for_missing_or_silent(tmp_path):
+    absent = dubbing_quality.measure_acoustic_activity(str(tmp_path / "nonexistent.wav"), 5.0)
+    assert absent["onset"] is None
+    assert absent["offset"] is None
+    assert absent["tail_padding"] is None
+
+
+def test_evaluate_dubbing_warns_on_silent_tail_padding(tmp_path, monkeypatch):
+    from pydub import AudioSegment
+    from pydub.generators import Sine
+
+    audio_dir = tmp_path / "segs"
+    audio_dir.mkdir()
+    tone = Sine(440).to_audio_segment(duration=1000).apply_gain(-20)
+    (tone + AudioSegment.silent(duration=3000)).export(audio_dir / "1_0.wav", format="wav")
+
+    monkeypatch.setattr(dubbing_quality, "SEGS_DIR", str(audio_dir))
+    monkeypatch.setattr(dubbing_quality, "get_audio_duration", lambda _: 4.0)
+
+    def fake_load_key(key, default=None):
+        if key == "dubbing_quality.mode":
+            return "high_sync"
+        if key == "dubbing_quality.min_duration_ratio":
+            return 0.9
+        if key == "dubbing_quality.max_early_end_drift":
+            return 0.3
+        if key == "dubbing_quality.min_audio_size":
+            return 1
+        return default
+
+    monkeypatch.setattr(dubbing_quality, "load_key", fake_load_key)
+    tasks = pd.DataFrame([
+        {
+            "number": 1,
+            "start_time": "00:00:00.000",
+            "end_time": "00:00:04.000",
+            "duration": 4.0,
+            "available_duration": 4.0,
+            "tolerance": 0.0,
+            "text": "test",
+            "lines": ["test"],
+            "new_sub_times": [[0.0, 4.0]],
+            "real_dur": 4.0,
+        }
+    ])
+
+    eval_df, summary = dubbing_quality.evaluate_dubbing(tasks)
+    assert eval_df.loc[0, "status"] == "warn"
+    assert not summary["quality_gate"]["passed"]
+    assert "acoustic_tail_padding" in eval_df.loc[0, "reason"] or "under_duration" in eval_df.loc[0, "reason"]
+
+
+def test_evaluate_dubbing_warns_on_positive_acoustic_end_drift(tmp_path, monkeypatch):
+    audio_dir = tmp_path / "segs"
+    audio_dir.mkdir()
+    wav = audio_dir / "1_0.wav"
+    wav.write_bytes(b"dummy")
+
+    monkeypatch.setattr(dubbing_quality, "SEGS_DIR", str(audio_dir))
+    monkeypatch.setattr(dubbing_quality, "get_audio_duration", lambda _: 2.0)
+    # Acoustic offset extends past source_end by 0.5s (0.5s > max_end_drift 0.18s)
+    monkeypatch.setattr(
+        dubbing_quality,
+        "measure_acoustic_activity",
+        lambda *args, **kwargs: {"onset": 0.0, "offset": 2.5, "tail_padding": 0.0},
+    )
+
+    def fake_load_key(key, default=None):
+        if key == "dubbing_quality.mode":
+            return "high_sync"
+        if key == "dubbing_quality.max_end_drift":
+            return 0.18
+        if key == "dubbing_quality.min_audio_size":
+            return 1
+        return default
+
+    monkeypatch.setattr(dubbing_quality, "load_key", fake_load_key)
+    tasks = pd.DataFrame([
+        {
+            "number": 1,
+            "start_time": "00:00:00.000",
+            "end_time": "00:00:02.000",
+            "duration": 2.0,
+            "available_duration": 2.0,
+            "tolerance": 0.0,
+            "text": "test",
+            "lines": ["test"],
+            "new_sub_times": [[0.0, 2.0]],
+            "real_dur": 2.0,
+        }
+    ])
+
+    eval_df, summary = dubbing_quality.evaluate_dubbing(tasks)
+    assert eval_df.loc[0, "status"] == "warn"
+    assert "over_duration" in eval_df.loc[0, "reason"]
+    assert eval_df.loc[0, "acoustic_end_drift"] == 0.5
+    assert not summary["quality_gate"]["passed"]

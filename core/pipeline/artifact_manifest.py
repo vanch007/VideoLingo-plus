@@ -11,12 +11,14 @@ from typing import Any, Callable
 SUPPORTED_MANIFEST_VERSION = 1
 DEFAULT_COMPARE_PATHS = (
     "input.sha256",
+    "output_sha256",
     "profile",
     "source_language",
     "target_language",
     "step",
     "models",
     "quality.config_hash",
+    "step_version.code_hashes",
 )
 
 
@@ -52,8 +54,14 @@ def manifest_path_for(artifact: str | Path) -> Path:
     return Path(f"{artifact}.manifest.json")
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
 def hash_path(path: str | Path) -> str | None:
     target = Path(path)
+    if not target.exists() and not target.is_absolute():
+        alt = PROJECT_ROOT / path
+        if alt.exists():
+            target = alt
     if not target.exists():
         return None
     digest = hashlib.sha256()
@@ -85,6 +93,18 @@ def build_artifact_manifest(
     schema: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     input_path = run_context.get("input_path") or run_context.get("input")
+    git_commit = run_context.get("git_commit")
+    if not git_commit:
+        try:
+            import subprocess
+            res = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True)
+            if res.returncode == 0:
+                git_commit = res.stdout.strip()
+        except Exception:
+            pass
+    producing_steps = run_context.get("producing_steps") or [step]
+    if step not in producing_steps:
+        producing_steps = list(dict.fromkeys(list(producing_steps) + [step]))
     return {
         "version": SUPPORTED_MANIFEST_VERSION,
         "artifact": str(artifact),
@@ -94,16 +114,19 @@ def build_artifact_manifest(
             "path": str(input_path) if input_path else None,
             "sha256": hash_path(input_path) if input_path else None,
         },
+        "output_sha256": hash_path(artifact),
         "profile": run_context.get("profile"),
         "source_language": run_context.get("source_language") or run_context.get("source"),
         "target_language": run_context.get("target_language") or run_context.get("target"),
         "step": step,
+        "producing_steps": producing_steps,
         "step_version": {
-            "git_commit": run_context.get("git_commit"),
+            "git_commit": git_commit,
             "code_paths": code_paths or [],
+            "code_hashes": {str(p): hash_path(p) for p in (code_paths or []) if hash_path(p)},
         },
-        "models": models or {},
-        "quality": quality or {},
+        "models": models or run_context.get("models") or {},
+        "quality": quality or run_context.get("quality") or {},
         "schema": schema or {},
     }
 
@@ -141,8 +164,41 @@ def inspect_artifact_manifest(artifact: str | Path, *, expected_step: str | None
         reasons.append("unsupported_manifest_version")
     if manifest.get("artifact") not in {str(artifact_path), str(artifact)}:
         reasons.append("manifest_artifact_mismatch")
-    if expected_step and step != expected_step:
+    recorded_steps = set(manifest.get("producing_steps") or [])
+    if step:
+        recorded_steps.add(step)
+    if expected_step and expected_step not in recorded_steps:
         reasons.append("manifest_step_mismatch")
+    recorded_output_sha = manifest.get("output_sha256")
+    if not recorded_output_sha:
+        reasons.append("manifest_missing_output_hash")
+    elif artifact_path.exists():
+        current_sha = hash_path(artifact_path)
+        if current_sha != recorded_output_sha:
+            reasons.append("artifact_content_mismatch")
+
+    input_info = manifest.get("input", {})
+    input_path = input_info.get("path")
+    recorded_input_sha = input_info.get("sha256")
+    if input_path:
+        curr_input_sha = hash_path(input_path)
+        if not curr_input_sha or not recorded_input_sha:
+            reasons.append("input_missing")
+        elif curr_input_sha != recorded_input_sha:
+            reasons.append("input_content_mismatch")
+
+    code_paths = manifest.get("step_version", {}).get("code_paths", [])
+    code_hashes = manifest.get("step_version", {}).get("code_hashes", {})
+    if code_paths and not code_hashes:
+        reasons.append("code_hashes_missing")
+    for path_str in code_paths:
+        expected_hash = code_hashes.get(path_str)
+        curr_hash = hash_path(path_str)
+        if not expected_hash or not curr_hash:
+            reasons.append(f"code_missing:{path_str}")
+        elif curr_hash != expected_hash:
+            reasons.append(f"code_content_mismatch:{path_str}")
+
     return _audit_result(artifact_path, sidecar, reasons, version=version, step=step)
 
 
@@ -170,6 +226,13 @@ def validate_artifact_manifest(
         return _check_result(artifact_path, sidecar, reasons)
     if manifest.get("version") != SUPPORTED_MANIFEST_VERSION:
         reasons.append("unsupported_manifest_version")
+    recorded_output_sha = manifest.get("output_sha256")
+    if not recorded_output_sha:
+        reasons.append("manifest_missing_output_hash")
+    elif artifact_path.exists():
+        current_sha = hash_path(artifact_path)
+        if current_sha != recorded_output_sha:
+            reasons.append("artifact_content_mismatch")
     for path in compare_paths:
         if _nested_get(manifest, path) != _nested_get(expected, path):
             reasons.append(f"manifest_mismatch:{path}")

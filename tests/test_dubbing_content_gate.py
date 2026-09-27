@@ -328,3 +328,43 @@ def test_content_gate_repairs_partial_asr_failures_instead_of_treating_backend_a
     assert repairs == [[1]]
     assert summary.status == "ok"
     assert result.at[1, "asr_transcript"] == "Right."
+
+
+@pytest.mark.parametrize(
+    ("expected", "heard"),
+    [
+        ("Stop!", "Go!"),
+        ("Wait!", "Run!"),
+        ("Yes!", "No!"),
+        ("Up!", "Down!"),
+        ("Open!", "Close!"),
+        ("In!", "Out!"),
+    ],
+)
+def test_contradictory_short_words_require_repair_not_exempt_by_short_duration(expected, heard):
+    row = {
+        "text": expected,
+        "asr_transcript": heard,
+        "asr_content_score": 0.0,
+        "available_duration": 0.4,
+        "number": 1,
+    }
+    df = pd.DataFrame([row])
+    assert not dubbing_content_gate._has_substantive_spoken_readback(df.iloc[0])
+    assert dubbing_content_gate._repair_indices(df, [0], []) == [0]
+
+
+@pytest.mark.parametrize(
+    "filler",
+    ["Ah!", "Oh...", "Um", "Uh", "Hmm"],
+)
+def test_true_non_lexical_interjections_under_500ms_do_not_fail_closed(filler):
+    row = {
+        "text": filler,
+        "asr_transcript": "",
+        "asr_content_score": 0.0,
+        "real_dur": 0.3,
+        "available_duration": 0.4,
+        "number": 1,
+    }
+    assert dubbing_content_gate._is_untranscribable_sub_500ms_utterance(pd.Series(row))

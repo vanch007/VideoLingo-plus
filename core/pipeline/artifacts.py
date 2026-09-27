@@ -27,4 +27,7 @@ def list_artifacts(*, include_manifests: bool = False) -> list[ArtifactStatus]:
 
 
 def pending_steps(step_order: list[str]) -> list[str]:
-    return [step for step in step_order if not is_step_completed(step)]
+    pending = {step for step in step_order if not is_step_completed(step)}
+    if "gen_audio" in pending:
+        pending.update({"merge_audio", "merge_video"} & set(step_order))
+    return [step for step in step_order if step in pending]

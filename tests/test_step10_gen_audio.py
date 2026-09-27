@@ -99,7 +99,8 @@ def test_indextts2_measured_overlong_retries_are_batched(monkeypatch):
     assert result["dubbing_rewrite_rounds"].tolist() == [1, 1]
 
 
-def test_indextts2_fast_speech_retries_are_batched(monkeypatch):
+def test_indextts2_fast_speech_retries_are_batched(monkeypatch, tmp_path):
+    monkeypatch.setattr(step10_gen_audio, "TTS_TASKS_FILE", str(tmp_path / "tts_tasks.xlsx"))
     calls = []
     monkeypatch.setattr(
         step10_gen_audio,
@@ -418,7 +419,8 @@ def test_indextts2_native_fit_allows_short_reply_speed_limit(monkeypatch, tmp_pa
 
     assert (tmp_path / "1_0_final.wav").exists()
     # The actual atempo factor includes the configured timeline rounding margin.
-    assert 1.35 < result.at[0, "speed_factor"] < 1.5
+    # Speed factor must strictly respect the configured limit (1.35) without margin bypass
+    assert 1.25 <= result.at[0, "speed_factor"] <= 1.35
 
 
 def test_content_repair_regenerates_selected_indextts2_rows_without_native_fit(monkeypatch):
@@ -671,6 +673,7 @@ def test_content_rewrite_provider_failure_is_nonfatal_and_returns_no_change(monk
 def test_gen_audio_runs_content_gate_before_writing_tasks(monkeypatch):
     calls = []
     tasks = pd.DataFrame([{"number": 1, "text": "Complete."}])
+    monkeypatch.setattr(step10_gen_audio, "prepare_reference_plan", lambda df: df)
     monkeypatch.setattr(
         step10_gen_audio,
         "load_key",

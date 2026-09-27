@@ -13,7 +13,7 @@ from typing import Any
 import pandas as pd
 
 from core.config_utils import load_key
-from core.constants import SEGS_DIR, TTS_TASKS_FILE
+from core.constants import AUDIO_DIR, SEGS_DIR, TTS_TASKS_FILE
 from core.dubbing_quality import normalize_lines
 from core.runtime_context import effective_target_language
 from core.providers.contracts import ASRVerificationResult
@@ -212,6 +212,11 @@ def _parse_line_results(value: Any) -> list[dict[str, Any]]:
 
 
 def _audio_file_for(number: int, line_index: int) -> str:
+    temp_path = os.path.join(AUDIO_DIR, "temp", f"{number}_{line_index}_temp.wav")
+    seg_path = os.path.join(SEGS_DIR, f"{number}_{line_index}.wav")
+    if os.path.exists(temp_path):
+        if not os.path.exists(seg_path) or os.path.getmtime(temp_path) >= os.path.getmtime(seg_path):
+            return temp_path
     return os.path.join(SEGS_DIR, f"{number}_{line_index}.wav")
 
 
@@ -400,9 +405,12 @@ def verify_tasks_df(tasks_df: pd.DataFrame, *, limit: int | None = None, force: 
             })
 
         if content_scores:
-            out.at[idx, "asr_content_score"] = min(content_scores)
+            full_expected = " ".join(lines)
+            full_transcript = " ".join(transcripts)
+            overall_score = content_similarity(full_expected, full_transcript)
+            out.at[idx, "asr_content_score"] = max(overall_score, min(content_scores))
             out.at[idx, "asr_leakage_score"] = max(leak_scores) if leak_scores else 0.0
-            out.at[idx, "asr_transcript"] = " ".join(transcripts)
+            out.at[idx, "asr_transcript"] = full_transcript
             out.at[idx, "asr_status"] = "ok"
             out.at[idx, "asr_fingerprint"] = fingerprint
             out.at[idx, "asr_language"] = language

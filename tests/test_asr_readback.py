@@ -53,6 +53,7 @@ def test_verify_tasks_df_scores_builtin_readback(monkeypatch, tmp_path):
     (segs / "1_0.wav").write_bytes(b"fake wav")
     monkeypatch.setattr(asr_readback, "SEGS_DIR", str(segs))
     monkeypatch.setattr(asr_readback, "load_key", lambda key, default=None: "vi" if key == "target_language" else default)
+    monkeypatch.setattr(asr_readback, "effective_target_language", lambda default="auto": "vi")
     monkeypatch.setattr(
         asr_readback,
         "_run_asr",

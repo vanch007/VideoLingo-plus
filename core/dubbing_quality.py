@@ -3,6 +3,7 @@ import json
 import math
 import os
 import re
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Any
 
@@ -157,9 +158,13 @@ def actual_rewrite_needed(row: pd.Series | dict) -> bool:
     if not quality.enabled:
         return False
     real_dur = float(row.get("real_dur", 0) or 0)
-    if real_dur <= 0:
+    avail = row_available_duration(row)
+    if real_dur <= 0 or avail <= 0:
         return False
-    return real_dur > row_available_duration(row) * quality.rewrite_actual_ratio
+    if avail <= 0.6:
+        short_limit = float(load_key("dubbing_quality.short_utterance_max_speed_factor", 1.35))
+        return real_dur > avail * short_limit
+    return real_dur > avail * quality.rewrite_actual_ratio
 
 
 def natural_speed_rewrite_needed(row: pd.Series | dict) -> bool:
@@ -167,9 +172,14 @@ def natural_speed_rewrite_needed(row: pd.Series | dict) -> bool:
     if not quality.enabled:
         return False
     real_dur = float(row.get("real_dur", 0) or 0)
-    if real_dur <= 0:
+    avail = row_available_duration(row)
+    if real_dur <= 0 or avail <= 0:
         return False
-    return real_dur > row_available_duration(row) * quality.max_natural_speed_factor
+    limit = float(quality.max_natural_speed_factor)
+    if avail <= 0.6:
+        short_limit = float(load_key("dubbing_quality.short_utterance_max_speed_factor", 1.35))
+        limit = max(limit, short_limit)
+    return real_dur > avail * limit
 
 
 def actual_expand_needed(row: pd.Series | dict) -> bool:
@@ -205,6 +215,63 @@ def _flatten_times(row: pd.Series | dict, column: str) -> list[list[float]]:
     return flattened
 
 
+
+def measure_acoustic_activity(audio_file: str, base_offset_seconds: float = 0.0) -> dict[str, float | None]:
+    """Measure acoustic onset and offset in seconds using local RMS energy."""
+    try:
+        from pydub import AudioSegment
+        from pydub.silence import detect_nonsilent
+        if not os.path.exists(audio_file) or os.path.getsize(audio_file) < 100:
+            return {"onset": None, "offset": None, "tail_padding": None}
+        audio = AudioSegment.from_file(audio_file)
+        if len(audio) == 0:
+            return {"onset": None, "offset": None, "tail_padding": None}
+        thresh = min(-35, math.floor(audio.dBFS - 12)) if math.isfinite(audio.dBFS) else -35
+        spans = detect_nonsilent(audio, min_silence_len=80, silence_thresh=thresh, seek_step=10)
+        if spans:
+            onset = round(base_offset_seconds + spans[0][0] / 1000.0, 3)
+            offset = round(base_offset_seconds + spans[-1][1] / 1000.0, 3)
+            tail_padding = round((len(audio) - spans[-1][1]) / 1000.0, 3)
+            return {"onset": onset, "offset": offset, "tail_padding": tail_padding}
+    except Exception:
+        pass
+    return {"onset": None, "offset": None, "tail_padding": None}
+
+
+def measure_voice_similarity(ref_audio: str, gen_audio: str) -> float | None:
+    try:
+        import librosa
+        import numpy as np
+        from scipy.spatial.distance import cosine
+        if not os.path.exists(ref_audio) or not os.path.exists(gen_audio):
+            return None
+        y_ref, sr_ref = librosa.load(ref_audio, sr=16000)
+        y_gen, sr_gen = librosa.load(gen_audio, sr=16000)
+        if len(y_ref) < 1000 or len(y_gen) < 1000:
+            return None
+        mfcc_ref = np.mean(librosa.feature.mfcc(y=y_ref, sr=sr_ref, n_mfcc=20), axis=1)
+        mfcc_gen = np.mean(librosa.feature.mfcc(y=y_gen, sr=sr_gen, n_mfcc=20), axis=1)
+        sim = float(1.0 - cosine(mfcc_ref, mfcc_gen))
+        return round(sim, 4) if math.isfinite(sim) else None
+    except Exception:
+        return None
+
+
+def measure_emotion_fidelity(emotion_ref_audio: str, gen_audio: str) -> float | None:
+    try:
+        import librosa
+        import numpy as np
+        if not os.path.exists(emotion_ref_audio) or not os.path.exists(gen_audio):
+            return None
+        y_ref, sr = librosa.load(emotion_ref_audio, sr=16000)
+        y_gen, _ = librosa.load(gen_audio, sr=16000)
+        rms_ref = float(np.std(librosa.feature.rms(y=y_ref)))
+        rms_gen = float(np.std(librosa.feature.rms(y=y_gen)))
+        ratio = min(rms_ref, rms_gen) / max(rms_ref, rms_gen, 1e-6)
+        return round(float(ratio), 4) if math.isfinite(ratio) else None
+    except Exception:
+        return None
+
 def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame, dict[str, Any]]:
     quality = get_quality_config()
     if tasks_df is None:
@@ -215,8 +282,11 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
         number = int(row["number"])
         lines = normalize_lines(row.get("lines", row.get("text", ""))) or [str(row.get("text", ""))]
         new_times = _flatten_times(row, "new_sub_times")
-        target_start = row_start_seconds(row)
-        target_end = row_end_seconds(row) + float(row.get("tolerance", 0) or 0)
+        source_start = row_start_seconds(row)
+        source_end = row_end_seconds(row)
+        tolerance = float(row.get("tolerance", 0) or 0)
+        target_start = source_start
+        target_end = source_end + tolerance
         available = row_available_duration(row)
         real_dur = float(row.get("real_dur", 0) or 0)
         actual_start = new_times[0][0] if new_times else None
@@ -249,6 +319,71 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
             diffs = [new_times[i][0] - new_times[i - 1][1] for i in range(1, len(new_times))]
             overlap_or_gap = min(diffs) if diffs else 0.0
 
+        acoustic_onset = None
+        acoustic_offset = None
+        acoustic_tail_padding = None
+        if line_durations and not missing_files and actual_start is not None:
+            first_audio = audio_file_for(number, 0)
+            last_audio = audio_file_for(number, len(lines) - 1)
+            act0 = measure_acoustic_activity(first_audio, actual_start)
+            last_win_start = new_times[-1][0] if new_times else actual_start
+            actN = measure_acoustic_activity(last_audio, last_win_start)
+            acoustic_onset = act0.get("onset")
+            acoustic_offset = actN.get("offset")
+            acoustic_tail_padding = actN.get("tail_padding")
+
+        spk_ref = row.get("resolved_speaker_ref")
+        emo_ref = row.get("resolved_emotion_ref")
+        first_audio = audio_file_for(number, 0)
+        voice_sim = measure_voice_similarity(str(spk_ref), first_audio) if spk_ref and pd.notna(spk_ref) else None
+        emo_fid = measure_emotion_fidelity(str(emo_ref), first_audio) if emo_ref and pd.notna(emo_ref) else None
+
+        acoustic_start_drift = None if acoustic_onset is None else round(acoustic_onset - target_start, 3)
+        # End drift relative to source speech end:
+        acoustic_end_drift = None if acoustic_offset is None else round(acoustic_offset - source_end, 3)
+        # End drift relative to task window end (with tolerance):
+        acoustic_window_drift = None if acoustic_offset is None else round(acoustic_offset - target_end, 3)
+
+        native_onset = None
+        native_durations = []
+        has_native_files = True
+        first_native_audio = None
+        for line_index, _ in enumerate(lines):
+            audio_file = audio_file_for(number, line_index)
+            native_candidate = Path(audio_file).with_name(f"{Path(audio_file).stem}.native{Path(audio_file).suffix}")
+            if not native_candidate.is_file():
+                rec_file = Path(audio_file).with_suffix(".conditioning.json")
+                if rec_file.is_file():
+                    try:
+                        rec_data = json.loads(rec_file.read_text(encoding="utf-8"))
+                        n_path = rec_data.get("native_audio", {}).get("path")
+                        if n_path and os.path.isfile(n_path):
+                            native_candidate = Path(n_path)
+                    except Exception:
+                        pass
+            if native_candidate.is_file():
+                native_durations.append(get_audio_duration(str(native_candidate)))
+                if line_index == 0:
+                    first_native_audio = str(native_candidate)
+            else:
+                has_native_files = False
+                break
+
+        if has_native_files and first_native_audio and actual_start is not None:
+            act_native = measure_acoustic_activity(first_native_audio, actual_start)
+            native_onset = act_native.get("onset")
+            native_duration = round(sum(native_durations), 3) if native_durations else None
+        else:
+            native_onset = None
+            native_duration = None
+
+        four_layer_timing = {
+            "layer1_source": {"onset": source_start, "offset": source_end, "duration": round(source_end - source_start, 3)},
+            "layer2_native_take": {"onset": native_onset, "duration": native_duration},
+            "layer3_processed_segment": {"onset": acoustic_onset, "offset": acoustic_offset, "tail_padding": acoustic_tail_padding, "duration": final_audio_dur, "speed_factor": speed_factor},
+            "layer4_timeline_window": {"target_start": target_start, "target_end": target_end, "actual_start": actual_start, "actual_end": actual_end, "start_drift": start_drift, "end_drift": end_drift},
+        }
+
         status = "ok"
         reasons = []
         if missing_files:
@@ -258,18 +393,35 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
             status = "fail"
             reasons.append("silent_or_tiny_audio")
         ends_too_early = end_drift is not None and end_drift < -quality.max_early_end_drift
+        acoustic_ends_too_early = (
+            acoustic_end_drift is not None and acoustic_end_drift < -quality.max_early_end_drift
+        )
+        acoustic_ends_too_late = (
+            (acoustic_end_drift is not None and acoustic_end_drift > quality.max_end_drift)
+            or (acoustic_window_drift is not None and acoustic_window_drift > quality.max_end_drift)
+        )
         if duration_ratio > quality.max_duration_ratio:
             status = "warn" if status == "ok" else status
             reasons.append("over_duration")
-        if (0 < duration_ratio < quality.min_duration_ratio) or ends_too_early:
+        if (0 < duration_ratio < quality.min_duration_ratio) or ends_too_early or acoustic_ends_too_early:
             status = "warn" if status == "ok" else status
             reasons.append("under_duration")
-        if start_drift is not None and abs(start_drift) > quality.max_start_drift:
+        if (start_drift is not None and abs(start_drift) > quality.max_start_drift) or (
+            acoustic_start_drift is not None and abs(acoustic_start_drift) > quality.max_start_drift
+        ):
             status = "warn" if status == "ok" else status
             reasons.append("start_drift")
-        if end_drift is not None and end_drift > quality.max_end_drift and "over_duration" not in reasons:
+        if ((end_drift is not None and end_drift > quality.max_end_drift) or acoustic_ends_too_late) and "over_duration" not in reasons:
             status = "warn" if status == "ok" else status
             reasons.append("over_duration")
+        row_tolerance = float(row.get("tolerance", 0.0) or 0.0)
+        unexplained_tail_padding = max(0.0, (acoustic_tail_padding or 0.0) - row_tolerance)
+        if unexplained_tail_padding > 0.5 and (
+            final_audio_dur > 0 and (unexplained_tail_padding / final_audio_dur) > 0.25
+        ):
+            status = "warn" if status == "ok" else status
+            if "acoustic_tail_padding" not in reasons:
+                reasons.append("acoustic_tail_padding")
         if speed_factor > quality.max_natural_speed_factor:
             status = "warn" if status == "ok" else status
             reasons.append("speech_rate_fast")
@@ -298,6 +450,16 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
             "actual_end": actual_end,
             "start_drift": start_drift,
             "end_drift": end_drift,
+            "source_end": source_end,
+            "acoustic_onset": acoustic_onset,
+            "acoustic_offset": acoustic_offset,
+            "acoustic_start_drift": acoustic_start_drift,
+            "acoustic_end_drift": acoustic_end_drift,
+            "acoustic_window_drift": acoustic_window_drift,
+            "acoustic_tail_padding": acoustic_tail_padding,
+            "voice_similarity": voice_sim,
+            "emotion_fidelity": emo_fid,
+            "four_layer_timing": four_layer_timing,
             "duration": float(row.get("duration", 0) or 0),
             "available_duration": available,
             "target_duration": row_target_duration(row),
@@ -341,6 +503,9 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
         "avg_duration_ratio": safe_float(eval_df["duration_ratio"].mean()) if not eval_df.empty else 0.0,
         "max_abs_start_drift": safe_float(pd.to_numeric(eval_df["start_drift"], errors="coerce").abs().max()) if "start_drift" in eval_df else 0.0,
         "max_abs_end_drift": safe_float(pd.to_numeric(eval_df["end_drift"], errors="coerce").abs().max()) if "end_drift" in eval_df else 0.0,
+        "max_abs_acoustic_start_drift": safe_float(pd.to_numeric(eval_df["acoustic_start_drift"], errors="coerce").abs().max()) if "acoustic_start_drift" in eval_df else 0.0,
+        "max_abs_acoustic_end_drift": safe_float(pd.to_numeric(eval_df["acoustic_end_drift"], errors="coerce").abs().max()) if "acoustic_end_drift" in eval_df else 0.0,
+        "max_acoustic_tail_padding": safe_float(pd.to_numeric(eval_df["acoustic_tail_padding"], errors="coerce").max()) if "acoustic_tail_padding" in eval_df else 0.0,
         "max_speed_factor": safe_float(eval_df["speed_factor"].max()) if "speed_factor" in eval_df else 0.0,
         "max_natural_speed_factor": quality.max_natural_speed_factor,
         "missing_audio_count": int(eval_df["missing_audio_count"].sum()) if not eval_df.empty else 0,
@@ -353,6 +518,22 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
         "loudness_target_lufs": quality.loudness_target_lufs,
     }
     summary["quality_gate"] = summarize_quality_gate(eval_df).to_dict()
+    # Readback/timing success does not establish identity or emotional fidelity.
+    summary["quality_gate"]["scope"] = "content_timing_audio_integrity"
+    voice_sims = [s for s in eval_df.get("voice_similarity", []) if pd.notna(s) and isinstance(s, (int, float))]
+    emo_fids = [s for s in eval_df.get("emotion_fidelity", []) if pd.notna(s) and isinstance(s, (int, float))]
+    avg_voice_sim = safe_float(pd.Series(voice_sims).mean()) if voice_sims else None
+    avg_emo_fid = safe_float(pd.Series(emo_fids).mean()) if emo_fids else None
+    summary["perceptual_quality"] = {
+        "voice_similarity": f"acoustic_voiceprint_similarity: {avg_voice_sim:.4f}" if avg_voice_sim is not None else "missing evidence",
+        "emotion_fidelity": f"prosodic_energy_fidelity: {avg_emo_fid:.4f}" if avg_emo_fid is not None else "missing evidence",
+        "avg_voice_similarity": avg_voice_sim,
+        "avg_emotion_fidelity": avg_emo_fid,
+        "independent_speaker_embedding": "missing evidence",
+        "independent_emotion_classification": "missing evidence",
+        "status": "perceptual_pending",
+        "acceptance_note": "Acoustic MFCC similarity and RMS energy dynamics measured as proxy; calibrated independent speaker embedding and emotion classification remain pending.",
+    }
     return eval_df, summary
 
 

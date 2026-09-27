@@ -21,18 +21,14 @@ def clean_text_for_tts(text):
 
 def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target_duration=None):
     text = clean_text_for_tts(text)
-    # Check if text is empty or single character, single character voiceovers are prone to bugs
+    # A single-character utterance ("I...", "啊") can carry meaningful emotion.
     cleaned_text = re.sub(r'[^\w\s]', '', text).strip()
-    if not cleaned_text or len(cleaned_text) <= 1:
+    if not cleaned_text:
         silence = AudioSegment.silent(duration=100)  # 100ms = 0.1s
         silence.export(save_as, format="wav")
-        rprint(f"Created silent audio for empty/single-char text: {save_as}")
+        rprint(f"Created silent audio for empty text: {save_as}")
         return
-    
-    # Skip if file exists
-    if os.path.exists(save_as):
-        return
-    
+
     print(f"Generating <{text}...>")
     task_row = task_row or {}
     row_tts_method = task_row.get("tts_method")
@@ -41,11 +37,21 @@ def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target
         row_tts_method = ""
     TTS_METHOD = row_tts_method or load_key("tts_method")
     get_tts_provider(TTS_METHOD)
-    
+    if os.path.exists(save_as) and (TTS_METHOD == 'mlx_router' or TTS_METHOD in MLX_ROUTER_BACKENDS):
+        from core.all_tts_functions.mlx_router import build_mlx_tts_request
+        from core.tts_reference_plan import conditioning_receipt_matches
+
+        payload = dict(task_row)
+        if TTS_METHOD in MLX_ROUTER_BACKENDS:
+            payload['tts_backend'] = MLX_ROUTER_BACKENDS[TTS_METHOD]
+        request = build_mlx_tts_request(text, save_as, number, task_df, payload, target_duration)
+        if conditioning_receipt_matches(request):
+            return
+
     max_retries = 3
     for attempt in range(max_retries):
         try:
-            
+
             if TTS_METHOD == 'mlx_router' or TTS_METHOD in MLX_ROUTER_BACKENDS:
                 from core.all_tts_functions.mlx_router import mlx_router_tts
                 row_payload = dict(task_row)
@@ -61,7 +67,7 @@ def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target
                 )
             else:
                 raise ValueError(f"Unknown TTS method: {TTS_METHOD}")
-                
+
             duration = get_audio_duration(save_as)
             if duration > 0:
                 break
