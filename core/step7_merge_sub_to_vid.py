@@ -118,15 +118,18 @@ def merge_subtitles_to_video():
     abs_src_srt = os.path.abspath(SRC_SRT).replace("'", "'\\''")
     abs_trans_srt = os.path.abspath(TRANS_SRT).replace("'", "'\\''")
 
-    vf_str = (
-        f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease,"
-        f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2,"
-        f"subtitles='{abs_src_srt}':force_style='{src_style}',"
-        f"subtitles='{abs_trans_srt}':force_style='{dub_style}'"
-    )
+    filters = [
+        f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease",
+        f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2"
+    ]
+    if bool(load_key("burn_source_subtitles", True)):
+        filters.append(f"subtitles='{abs_src_srt}':force_style='{src_style}'")
+    filters.append(f"subtitles='{abs_trans_srt}':force_style='{dub_style}'")
+    vf_str = ",".join(filters)
 
+    from core.step12_merge_dub_to_vid import get_ffmpeg_binary
     ffmpeg_cmd = [
-        'ffmpeg', '-i', video_file,
+        get_ffmpeg_binary(), '-i', video_file,
         '-vf', vf_str,
     ]
 
