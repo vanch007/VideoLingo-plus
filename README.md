@@ -37,6 +37,73 @@ Key features:
 
 This fork includes speaker-aware translation, local voice cloning, and explicit dubbing quality reports.
 
+The default translation model is **Index-Translate-35B-A3B-preview-oQ6e-fp16-mtp**
+served locally by oMLX at `http://127.0.0.1:8000/v1`. Translation uses speaker and
+glossary context, a natural translation pass with explicit source-fact guards,
+then a non-mutating audit. Narrow ownership and unspecified-payer corrections
+are recorded in `output/log/translation_fact_normalizations.json`; other factual
+conflicts receive a focused translation retry. Index self-review flags issues for inspection rather than overwriting
+the draft. Select `omlx` in the existing LLM settings or use `--llm omlx` in the CLI.
+
+For video dubbing, translation now owns speech-duration acceptance. It plans
+source utterances at measured word boundaries, gives Index a natural-speech
+budget, and synthesizes candidate takes before publishing the translation.
+Only candidates that preserve content and fit within the configured speed
+limit (default 1.08×, inclusive) can be locked. Word budgets guide translation;
+measured complete audio determines duration acceptance. Short complete takes retain their natural
+pace with silence filling the remaining window. Downstream dubbing reuses the
+locked wording and audio. Bilingual display parts preserve complete words,
+names and amounts and pass a source/target correspondence review before sharing
+one clock. Dubbed videos use measured target words; original-audio subtitle
+videos use source words. Native translation anchors can propose source cuts,
+but only exact locked substrings enter subtitles. Rendering rejects stale
+pairing or changed subtitle files without changing synthesis units. Changes to wording, clocks, voice
+configuration or audio invalidate the lock. The evidence is retained in
+`output/log/utterance_plan.json` and `translation_speech_preflight.json`.
+Failed candidates remain available for review.
+
+English duration adaptation uses local **Index-Homura-9B-8bit** through the
+`omlx_homura` candidate route. Index-Translate stays the main translator and
+source-meaning reviewer. Only complete, readback-verified overlong natural takes
+can calibrate Homura's positive-integer syllable target. Homura translates the
+original source with glossary/role context; source-bound meaning feedback can
+clarify rejected candidates without tightening their length target. The next
+complete take must pass real duration and readback gates. Partial speech retries
+the unchanged script, and unresolved final review blocks translation export.
+Changing the pinned local weights invalidates request and speech acceptance
+caches. Candidate decisions are retained in
+`output/log/translation_duration_candidate_provenance.json`.
+
+Dialogue characters are inferred per line before translation. Scene analysis first
+hides acoustic cluster labels to reduce anchoring, then records who speaks, who is
+addressed, and whose promise is being relayed. Original voice labels and timestamps
+remain available for comparison; uncertain assignments stay review-required.
+Speaker identity and reported-action relations are assessed separately. Repeated
+amounts and a first-to-third-person possession change flag a possible relayed
+promise; a conflicting role assignment cannot establish the payer.
+`output/log/dialogue_role_review.json` contains the evidence and voice-to-character
+comparison. Source audio disagreements, semantic review and subtitle readability
+have separate quality reports; generated files alone do not establish acceptance.
+Source ASR now defaults to local MOSS recognition on original lossless audio,
+followed by separately measured Qwen forced alignment. Recognition phrases,
+punctuation, repeated speech and collapsed timing tokens are preserved; intact
+dialogue units reach translation before display-only wrapping. Whisper remains
+selectable and no longer defaults to external 25-second context cuts.
+Optional source review imports require the original audio hash, matching before
+text and evidence. Configured reference checks block translation on failure.
+ASR disagreement ranks review urgency without claiming either transcript is true.
+Film vocabulary and reference edits stay in the case workspace. See the
+[ASR case assessment](docs/reports/local-index-translate-20261007/asr-assessment-20261007/report.md)
+for measured gains and remaining recognition errors.
+Subtitle candidates carry a visible review marker and remain unaccepted until
+the source, roles, semantics and viewing quality are independently confirmed.
+See [local integration and validation](docs/reports/local-index-translate-20261007/README.md)
+for configuration, quality limits, and handling older cloud-generated artifacts.
+
+The maintained [local translation and dubbing workflow](docs/localization-workflow.md)
+defines the default stage contracts, normal CLI/UI entry points, and the retained
+validation workspace. Experimental case scripts are not required for new inputs.
+
 ## 🎥 Demo
 
 <table>
@@ -100,10 +167,18 @@ cd VideoLingo
 2. Install dependencies(requires `python=3.10`)
 
 ```bash
-conda create -n videolingo python=3.10.0 -y
+conda env create -f environment.yml
 conda activate videolingo
 python install.py
 ```
+
+The environment definition supplies Python 3.10 and FFmpeg 7's native libraries;
+`constraints.txt` keeps NumPy, SciPy, PyTorch, TorchAudio and TorchCodec compatible.
+The installer verifies both package requirements and native imports before launch.
+On an existing macOS environment with Homebrew FFmpeg 9, install the keg-only
+`ffmpeg@7` libraries; the installer exposes them inside the Python environment.
+The [environment repair record](docs/reports/environment-repair-20261009/README.md)
+contains the validated versions and checks.
 
 3. Start the application
 
