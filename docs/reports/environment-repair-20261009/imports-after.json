@@ -1,0 +1,76 @@
+{
+  "python": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo/bin/python",
+  "python_version": "3.10.21",
+  "results": [
+    {
+      "module": "numpy",
+      "status": "pass",
+      "version": "2.2.6"
+    },
+    {
+      "module": "scipy",
+      "status": "pass",
+      "version": "1.15.3"
+    },
+    {
+      "module": "scipy.sparse.linalg",
+      "status": "pass",
+      "version": null
+    },
+    {
+      "module": "cv2",
+      "status": "pass",
+      "version": "4.14.0"
+    },
+    {
+      "module": "torch",
+      "status": "pass",
+      "version": "2.8.0"
+    },
+    {
+      "module": "torchaudio",
+      "status": "pass",
+      "version": "2.8.0"
+    },
+    {
+      "module": "torchvision",
+      "status": "pass",
+      "version": "0.23.0"
+    },
+    {
+      "module": "torchcodec",
+      "status": "pass",
+      "version": "0.7.0"
+    },
+    {
+      "module": "spacy",
+      "status": "pass",
+      "version": "3.8.16"
+    },
+    {
+      "module": "librosa",
+      "status": "pass",
+      "version": "0.10.2.post1"
+    },
+    {
+      "module": "demucs.api",
+      "status": "pass",
+      "version": null
+    },
+    {
+      "module": "whisperx",
+      "status": "pass",
+      "version": null
+    },
+    {
+      "module": "stable_whisper",
+      "status": "pass",
+      "version": "2.19.1"
+    },
+    {
+      "module": "pyannote.audio",
+      "status": "pass",
+      "version": "4.0.7"
+    }
+  ]
+}

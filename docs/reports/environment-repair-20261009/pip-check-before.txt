@@ -1,0 +1,10 @@
+opencv-python 4.14.0.94 has requirement numpy>=2; python_version >= "3.9", but you have numpy 1.26.4.
+pyannote-audio 4.0.7 has requirement torch>=2.8.0, but you have torch 2.3.1.
+pyannote-audio 4.0.7 has requirement torchaudio>=2.8.0, but you have torchaudio 2.3.1.
+pyannote-core 6.0.1 has requirement numpy>=2.0, but you have numpy 1.26.4.
+pyannote-metrics 4.1 has requirement numpy>=2.2.2, but you have numpy 1.26.4.
+pyannote-metrics 4.1 has requirement scipy>=1.15.1, but you have scipy 1.13.1.
+torchvision 0.23.0 has requirement torch==2.8.0, but you have torch 2.3.1.
+whisperx 3.8.6 has requirement numpy>=2.1.0, but you have numpy 1.26.4.
+whisperx 3.8.6 has requirement torch~=2.8.0, but you have torch 2.3.1.
+whisperx 3.8.6 has requirement torchaudio~=2.8.0, but you have torchaudio 2.3.1.

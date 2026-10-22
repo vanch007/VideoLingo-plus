@@ -1,0 +1,44 @@
+{
+  "status": "pass",
+  "audio_path": "/Users/vanch/VideoLingo-plus/run_workspaces/shentai_7665241785426403049/output/audio/for_whisper.mp3",
+  "model": "mlx-community/Nemotron-3-Diarization-8bit",
+  "preset": "offline",
+  "threshold": 0.5,
+  "min_duration": 0.0,
+  "merge_gap": 0.0,
+  "load_time_seconds": 1.411,
+  "infer_time_seconds": 0.078,
+  "total_time_seconds": 1.648,
+  "num_speakers": 1,
+  "speaker_labels": [
+    "S01"
+  ],
+  "speaker_indices": [
+    0
+  ],
+  "segments_count": 1,
+  "total_frames": 5265,
+  "frame_stride_seconds": 0.01,
+  "audio_duration_seconds": 52.65,
+  "command": [
+    "/Users/vanch/.codex/envs/nemotron-diarization/bin/python",
+    "/Users/vanch/VideoLingo-plus/core/providers/nemotron_diarization_runner.py",
+    "--audio",
+    "/Users/vanch/VideoLingo-plus/run_workspaces/shentai_7665241785426403049/output/audio/for_whisper.mp3",
+    "--out-dir",
+    "/Users/vanch/VideoLingo-plus/docs/reports/nemotron-diarization/eval_runs/diarization_20260925_175454_72a7a4cf",
+    "--model",
+    "mlx-community/Nemotron-3-Diarization-8bit",
+    "--preset",
+    "offline",
+    "--threshold",
+    "0.5",
+    "--min-duration",
+    "0.0",
+    "--merge-gap",
+    "0.0",
+    "--save-probs"
+  ],
+  "output_dir": "/Users/vanch/VideoLingo-plus/docs/reports/nemotron-diarization/eval_runs/diarization_20260925_175454_72a7a4cf",
+  "backend": "nemotron-mlx"
+}

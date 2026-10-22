@@ -13,6 +13,7 @@ DEFAULT_COMPARE_PATHS = (
     "input.sha256",
     "output_sha256",
     "profile",
+    "policy_version",
     "source_language",
     "target_language",
     "step",
@@ -58,7 +59,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 def hash_path(path: str | Path) -> str | None:
     target = Path(path)
-    if not target.exists() and not target.is_absolute():
+    if not target.exists() and not target.is_absolute() and str(path).startswith(("core/", "scripts/")):
         alt = PROJECT_ROOT / path
         if alt.exists():
             target = alt
@@ -116,6 +117,7 @@ def build_artifact_manifest(
         },
         "output_sha256": hash_path(artifact),
         "profile": run_context.get("profile"),
+        "policy_version": run_context.get("policy_version"),
         "source_language": run_context.get("source_language") or run_context.get("source"),
         "target_language": run_context.get("target_language") or run_context.get("target"),
         "step": step,
@@ -180,7 +182,7 @@ def inspect_artifact_manifest(artifact: str | Path, *, expected_step: str | None
     input_info = manifest.get("input", {})
     input_path = input_info.get("path")
     recorded_input_sha = input_info.get("sha256")
-    if input_path:
+    if input_path and not str(input_path).startswith(("http://", "https://")):
         curr_input_sha = hash_path(input_path)
         if not curr_input_sha or not recorded_input_sha:
             reasons.append("input_missing")
@@ -198,6 +200,14 @@ def inspect_artifact_manifest(artifact: str | Path, *, expected_step: str | None
             reasons.append(f"code_missing:{path_str}")
         elif curr_hash != expected_hash:
             reasons.append(f"code_content_mismatch:{path_str}")
+
+    for path_str, expected_hash in manifest.get("dependencies", {}).items():
+        if not expected_hash or hash_path(path_str) != expected_hash:
+            reasons.append(f"dependency_content_mismatch:{path_str}")
+    config = manifest.get("quality", {}).get("config_path")
+    config_hash = manifest.get("quality", {}).get("config_hash")
+    if config and (not config_hash or hash_path(config) != config_hash):
+        reasons.append("config_content_mismatch")
 
     return _audit_result(artifact_path, sidecar, reasons, version=version, step=step)
 

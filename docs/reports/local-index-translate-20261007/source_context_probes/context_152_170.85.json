@@ -1,0 +1,379 @@
+{
+  "status": "witness_not_ground_truth",
+  "model": "mlx-community/whisper-large-v3-mlx",
+  "basis": "contextual_reprobe_of_same_ASR_family",
+  "source_audio": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v11_validated_20261007/output/audio/raw_master.wav",
+  "source_sha256": "177f18efd9094352fc2240c336d294031c32f5d270d35708645eb3fee95d8b5a",
+  "clip_sha256": "c9f2319d3bab6b5e4e2a461688fa36bd7afd97eb355af0e901c4aa5c9d4f5844",
+  "start": 152,
+  "end": 170.85,
+  "text": "皇老爷汤师爷是我的挚爱你可不能夺我所爱啊要人要人到底谁是你的你这个你这个",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 1.3599999999999977,
+      "end": 2.44,
+      "text": "皇老爷",
+      "tokens": [
+        50365,
+        41393,
+        10439,
+        43725,
+        50391
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.932699937086839,
+      "compression_ratio": 1.0909090909090908,
+      "no_speech_prob": 0.06434135884046555,
+      "words": [
+        {
+          "word": "皇",
+          "start": 1.3599999999999977,
+          "end": 2.0,
+          "probability": 0.09912109375
+        },
+        {
+          "word": "老",
+          "start": 2.0,
+          "end": 2.18,
+          "probability": 0.9921875
+        },
+        {
+          "word": "爷",
+          "start": 2.18,
+          "end": 2.44,
+          "probability": 0.99365234375
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "seek": 0,
+      "start": 2.44,
+      "end": 3.82,
+      "text": "汤师爷",
+      "tokens": [
+        50421,
+        12800,
+        97,
+        29186,
+        43725,
+        50459
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.932699937086839,
+      "compression_ratio": 1.0909090909090908,
+      "no_speech_prob": 0.06434135884046555,
+      "words": [
+        {
+          "word": "汤",
+          "start": 2.44,
+          "end": 3.44,
+          "probability": 0.90625
+        },
+        {
+          "word": "师",
+          "start": 3.44,
+          "end": 3.58,
+          "probability": 0.81396484375
+        },
+        {
+          "word": "爷",
+          "start": 3.58,
+          "end": 3.82,
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "seek": 0,
+      "start": 3.82,
+      "end": 5.52,
+      "text": "是我的挚爱",
+      "tokens": [
+        50473,
+        1541,
+        14200,
+        8501,
+        248,
+        27324,
+        50541
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.932699937086839,
+      "compression_ratio": 1.0909090909090908,
+      "no_speech_prob": 0.06434135884046555,
+      "words": [
+        {
+          "word": "是",
+          "start": 3.82,
+          "end": 4.46,
+          "probability": 0.9794921875
+        },
+        {
+          "word": "我的",
+          "start": 4.46,
+          "end": 4.94,
+          "probability": 0.9990234375
+        },
+        {
+          "word": "挚",
+          "start": 4.94,
+          "end": 5.3,
+          "probability": 0.7939453125
+        },
+        {
+          "word": "爱",
+          "start": 5.3,
+          "end": 5.52,
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "seek": 0,
+      "start": 5.52,
+      "end": 8.92,
+      "text": "你可不能夺我所爱啊",
+      "tokens": [
+        50567,
+        2166,
+        4429,
+        28590,
+        1787,
+        118,
+        1654,
+        5966,
+        27324,
+        4905,
+        50699
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.932699937086839,
+      "compression_ratio": 1.0909090909090908,
+      "no_speech_prob": 0.06434135884046555,
+      "words": [
+        {
+          "word": "你",
+          "start": 5.52,
+          "end": 6.36,
+          "probability": 0.91064453125
+        },
+        {
+          "word": "可",
+          "start": 6.36,
+          "end": 6.56,
+          "probability": 0.99951171875
+        },
+        {
+          "word": "不能",
+          "start": 6.56,
+          "end": 7.0,
+          "probability": 0.99951171875
+        },
+        {
+          "word": "夺",
+          "start": 7.0,
+          "end": 7.9,
+          "probability": 0.96484375
+        },
+        {
+          "word": "我",
+          "start": 7.9,
+          "end": 8.06,
+          "probability": 1.0
+        },
+        {
+          "word": "所",
+          "start": 8.06,
+          "end": 8.26,
+          "probability": 0.99951171875
+        },
+        {
+          "word": "爱",
+          "start": 8.26,
+          "end": 8.6,
+          "probability": 0.99951171875
+        },
+        {
+          "word": "啊",
+          "start": 8.6,
+          "end": 8.92,
+          "probability": 0.79833984375
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "seek": 0,
+      "start": 9.579999999999998,
+      "end": 10.38,
+      "text": "要人",
+      "tokens": [
+        50749,
+        4275,
+        4035,
+        50785
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.932699937086839,
+      "compression_ratio": 1.0909090909090908,
+      "no_speech_prob": 0.06434135884046555,
+      "words": [
+        {
+          "word": "要",
+          "start": 9.579999999999998,
+          "end": 10.22,
+          "probability": 0.77001953125
+        },
+        {
+          "word": "人",
+          "start": 10.22,
+          "end": 10.38,
+          "probability": 0.9423828125
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "seek": 0,
+      "start": 10.38,
+      "end": 11.5,
+      "text": "要人",
+      "tokens": [
+        50807,
+        4275,
+        4035,
+        50847
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.932699937086839,
+      "compression_ratio": 1.0909090909090908,
+      "no_speech_prob": 0.06434135884046555,
+      "words": [
+        {
+          "word": "要",
+          "start": 10.38,
+          "end": 11.26,
+          "probability": 0.24658203125
+        },
+        {
+          "word": "人",
+          "start": 11.26,
+          "end": 11.5,
+          "probability": 1.0
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "seek": 0,
+      "start": 15.299999999999997,
+      "end": 16.54,
+      "text": "到底谁是你的",
+      "tokens": [
+        51077,
+        33883,
+        33556,
+        1541,
+        18961,
+        51125
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.932699937086839,
+      "compression_ratio": 1.0909090909090908,
+      "no_speech_prob": 0.06434135884046555,
+      "words": [
+        {
+          "word": "到底",
+          "start": 15.299999999999997,
+          "end": 15.94,
+          "probability": 0.490234375
+        },
+        {
+          "word": "谁",
+          "start": 15.94,
+          "end": 16.26,
+          "probability": 0.966796875
+        },
+        {
+          "word": "是",
+          "start": 16.26,
+          "end": 16.4,
+          "probability": 0.60693359375
+        },
+        {
+          "word": "你的",
+          "start": 16.4,
+          "end": 16.54,
+          "probability": 0.1365966796875
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "seek": 0,
+      "start": 16.54,
+      "end": 17.22,
+      "text": "你这个",
+      "tokens": [
+        51133,
+        2166,
+        15368,
+        51171
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.932699937086839,
+      "compression_ratio": 1.0909090909090908,
+      "no_speech_prob": 0.06434135884046555,
+      "words": [
+        {
+          "word": "你",
+          "start": 16.54,
+          "end": 16.94,
+          "probability": 0.336669921875
+        },
+        {
+          "word": "这个",
+          "start": 16.94,
+          "end": 17.22,
+          "probability": 0.93896484375
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "seek": 0,
+      "start": 17.22,
+      "end": 18.2,
+      "text": "你这个",
+      "tokens": [
+        51179,
+        2166,
+        15368,
+        51215
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.932699937086839,
+      "compression_ratio": 1.0909090909090908,
+      "no_speech_prob": 0.06434135884046555,
+      "words": [
+        {
+          "word": "你",
+          "start": 17.22,
+          "end": 17.94,
+          "probability": 0.51318359375
+        },
+        {
+          "word": "这个",
+          "start": 17.94,
+          "end": 18.2,
+          "probability": 0.8212890625
+        }
+      ]
+    }
+  ]
+}

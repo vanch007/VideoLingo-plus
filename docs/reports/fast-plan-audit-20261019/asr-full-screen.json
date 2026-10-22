@@ -1,0 +1,3000 @@
+{
+  "status": "needs_review",
+  "scope": "all_332_final_segment_wavs_not_final_muxed_track",
+  "method": "Qwen3-ASR-0.6B-8bit; normalized string similarity is triage only, not proof of pronunciation or semantics",
+  "threshold": 0.88,
+  "count": 332,
+  "empty_count": 0,
+  "review_count": 33,
+  "mean": 0.9645669367469879,
+  "records": [
+    {
+      "number": 1,
+      "expected": "你在这段视频里看到的所有内容，都是我在睡觉时，由我的克劳德代码系统剪辑完成的。",
+      "transcript": "你在这段视频里看到的所有内容，都是我在睡觉时由我的克劳德代码系统编辑完成的。",
+      "nonempty": true,
+      "similarity": 0.972222,
+      "audio_sha256": "8cec82c15f73b1199883b887733964870a315d1555733b6514405553a9bc9836",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 2,
+      "expected": "每一个剪辑、每一个音效、每一个动画，就像这个、这个，还有这个，",
+      "transcript": "每一个剪辑，每一个音效，每一个动画，就像这个，这个，还有这个。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b1371b11ecbd89b34da175305b1458ff446d4847f190c7ee9cc58de3de8877eb",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 3,
+      "expected": "全都是在没碰时间轴的情况下完成的。不，我不会写代码。",
+      "transcript": "全都是在没碰时间轴的情况下完成的。不，我不会写代码。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c11b2c2bb2841d5ce4476477697762d6b398e0c4593c77e14ebc5987a196f16c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 4,
+      "expected": "所以今天，我就要揭开谜底，向你展示我究竟是怎么打造出这个专家级剪辑器的，",
+      "transcript": "所以今天我就要揭开谜底，向你展示我究竟是怎么打造出这个专家级剪辑器的。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "877fe83dacd021ebb51d468905afab32f7904e87abad6355a5bcf4935ce45e66",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 5,
+      "expected": "一步步来：用什么工具、怎么设置、怎么教会它我的剪辑风格。",
+      "transcript": "一步步来，用什么工具？怎么设置？怎么教会他我的剪辑风格？",
+      "nonempty": true,
+      "similarity": 0.958333,
+      "audio_sha256": "0c9c0c7b96211ebed9d8c70a4b05336a27cea85b8126f16b136663d86e83c74a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 6,
+      "expected": "还有确切的花费，以及我每月到底省下了几千美元。开始吧。",
+      "transcript": "还有确切的花费，以及我每月到底省下了几千美元。开始吧。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "26fe9cbf304826e6bf52adfaae82734b11dc120966416dcc4d8c290e6d0ba58c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 7,
+      "expected": "好，以前要做出像这样的视频，得靠一个小团队。",
+      "transcript": "好，以前要做出像这样的视频，得靠一个小团队。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b34ac536fd281a0f901152549db7144a94d438aaff3f5945db42c52b94dcc23c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 8,
+      "expected": "说清楚点，我现在还得负责一件事：开拍，还有给出反馈。",
+      "transcript": "说清楚点，我现在还得负责一件事：开拍，还有给出反馈。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "564fb19638ee8176eb9135bcd239989c3ccb24d439e0fc2419353c97dedfcb2f",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 9,
+      "expected": "但在我的系统里，其他所有活儿都交给了不同的工具，所以接下来我会一个一个地给你拆解。",
+      "transcript": "但在我的系统里，其他所有活儿都交给了不同的工具。所以接下来我会一个一个的给你拆解。",
+      "nonempty": true,
+      "similarity": 0.973684,
+      "audio_sha256": "5a04f16181366462850ff7d3876a226f2c6162a5558eeb422e2b6df79ed0f741",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 10,
+      "expected": "现在，第一个就是剪辑器。",
+      "transcript": "现在，第一个就是剪辑器。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "bfd187670eaf5269705216e1bf462ea899abad01fcb48d5eb3a186550e0b7e45",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 11,
+      "expected": "这人就是会守在时间线前好几个小时的人。",
+      "transcript": "这人就是会守在时间线前好几个小时的人。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "284cfbf17af671b8f2bfe0ce61f0fa32390b1037a8e0c8b0ba0c9c5e572f5073",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 12,
+      "expected": "他们看完每一段素材，挑出喜欢的，再把不喜欢的剪掉，",
+      "transcript": "他们看完每一段素材，挑出喜欢的，再把不喜欢的剪掉。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "aa6cbc8bc5db22eeabbba31c35b3e15a9be76b629c304751dc721f6ffb1c3a90",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 13,
+      "expected": "决定好每一次缩放的位置，还想好要加什么画面和动画，以及加在哪儿。",
+      "transcript": "决定好每一次缩放的位置，还想好要加什么画面和动画，以及加在哪儿。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9ec284b25619807f314e943c7a9da6191b09d5ad859c5bc029dd8901d17c94ea",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 14,
+      "expected": "在我的系统里，克劳德代码就是干这些事的工具。",
+      "transcript": "在我的系统里，克劳德代码就是干这些事的工具。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "174981813031c3b1e5a2fdff70ae9670db3ffb455caf5d8754685abbe06a8a1c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 15,
+      "expected": "你可以把它当成整个视频的项目经理。",
+      "transcript": "你可以把它当成整个视频的项目经理。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "91a44e156a00c155b73dfe52ad0ed8785e30e8bdc609909b66d9ec7a185d8fd0",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 16,
+      "expected": "我用的是克劳德的桌面版，用起来完全没问题。",
+      "transcript": "我用的是克劳德的桌面版，用起来完全没问题。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "1531fc54e060b2d90bb595f8ba5b38776e4c82ee9b9b65d3f65b20993c96920e",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 17,
+      "expected": "克劳德代码还能在本地运行，也就是说，它直接用我的电脑干活。",
+      "transcript": "克劳德代码还能在本地运行，也就是说，他直接用我的电脑干活。",
+      "nonempty": true,
+      "similarity": 0.961538,
+      "audio_sha256": "964e3b2854af81dc5bf12ad820e11b363f699abfb12db74d8ab3cdc1c52b1f69",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 18,
+      "expected": "它能访问文件，能调用其他程序，最后还能把输出结果",
+      "transcript": "它能访问文件，能调用其他程序，最后还能把输出结果。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "93417d07ebbf7428f0448dcd0894e01ac4bb900b5f50c0caddbec78755b259c1",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 19,
+      "expected": "放到我电脑的一个文件夹里。",
+      "transcript": "放到我电脑的一个文件夹里。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9674d4986535ff3bf7268c8286636496e9c539170f43da0409dfc287bba866ab",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 20,
+      "expected": "这其实很重要，因为克劳德才是这里所有其他工具的协调者。",
+      "transcript": "这其实很重要，因为克劳德才是这里所有其他工具的协调者。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "4c5e43ec99b4856e3c1c378c1d2b9fbdf2891c76db790a7540246f4f6d42bf57",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 21,
+      "expected": "但有个问题，克劳德根本听不到我的视频声音。",
+      "transcript": "但有个问题：克劳德根本听不到我的视频声音。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "89160d37a1a8a3e81ac5005bc03d8a85405280b008c6adbf2d34f444cce74995",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 22,
+      "expected": "那它怎么知道我说了什么、哪儿出错了，好把整个视频剪出来呢？",
+      "transcript": "那他怎么知道我说了什么，哪儿出错了？好把整个视频剪出来呢？",
+      "nonempty": true,
+      "similarity": 0.961538,
+      "audio_sha256": "2c5284b830dbd4be4d625b11777dd1887928a80b1736d5854e65d30878c0437a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 23,
+      "expected": "这就是我们清单上的第二份工作，也就是转录员的工作。",
+      "transcript": "这就是我们清单上的第二份工作，也就是转录员的工作。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c370e4d5b9493ec3d77e4eeff2373327cb7ccc649ea78033dfe4713ff989399d",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 24,
+      "expected": "这个人要听完所有素材，再把内容转换成文字，",
+      "transcript": "这个人要听完所有素材，再把内容转换成文字。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "6018d88762f1ecc9740193044b83935e4117d3a81ff637c7578a702b5a7ef316",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 25,
+      "expected": "并加上时间戳。",
+      "transcript": "并加上时间戳。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "880e708b0396830dcb05c332cab9692e4c25bb62e3835d878823f73fa229eed4",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 26,
+      "expected": "实现这个功能的工具叫帕拉基特。",
+      "transcript": "实现这个功能的工具叫帕拉吉特。",
+      "nonempty": true,
+      "similarity": 0.928571,
+      "audio_sha256": "5dc8a1899e32d718dd4c85350ab495676078f27d6e6fd44c2c08e7cd0c0b0be8",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 27,
+      "expected": "这是个完全免费的工具，由芯片行业的领先制造商英伟达开发。",
+      "transcript": "这是个完全免费的工具，由芯片行业的领先制造商英伟达开发。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "bff02edf830afa4a742b0938d99f9ab793349d2d11616be8318b08ff03e0f942",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 28,
+      "expected": "不，不是多力多滋或乐事，我指的是给AI用的那种芯片。",
+      "transcript": "不，不是多利多资获乐事，我指的是给 AI 用的那种芯片。",
+      "nonempty": true,
+      "similarity": 0.869565,
+      "audio_sha256": "5d03147326a260b6f7eb2bebde5435b1efc66cf02ecfabe057350e305a5ebacc",
+      "status": "needs_review"
+    },
+    {
+      "number": 29,
+      "expected": "嗯，芯片。",
+      "transcript": "嗯，信片。",
+      "nonempty": true,
+      "similarity": 0.666667,
+      "audio_sha256": "bf193bc7bbf782cc501a770d68e6d3cf4d0008b36872ff1210cc630e3a838f92",
+      "status": "needs_review"
+    },
+    {
+      "number": 30,
+      "expected": "说回正题。",
+      "transcript": "说回正题。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "a744ac6f56edae033d6613dc613c06276702c4b09a9d64c477eee06befa96739",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 31,
+      "expected": "所以帕拉基特负责转录，然后克劳德就能真正读取时间戳，",
+      "transcript": "所以帕拉吉特负责转路，然后克劳德就能真正读取时间戳。",
+      "nonempty": true,
+      "similarity": 0.916667,
+      "audio_sha256": "8318e84fb9c43ee3e3354eac259f8c7416448187f30547e0642a49a91b71fb13",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 32,
+      "expected": "以及具体说了什么，接着就能把这些信息用到流程的下一步。",
+      "transcript": "以及具体说了什么，接着就能把这些信息用到流程的下一步。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "7307d0ccdd9b3d4ea87ef66549e81441ca8075d8f913060d6cc5eb089f66be47",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 33,
+      "expected": "我们就是这么识别并切分素材，确保拿到正确的镜头。",
+      "transcript": "我们就是这么识别，并切分素材，确保拿到正确的镜头。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b712eee795e12c147e6d6506d11fc7e4f1e9beaeb54e06b227ea6f73109dd016",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 34,
+      "expected": "第三个工作，其实是动画师。",
+      "transcript": "第三个工作其实是动画师。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "75e3aa3b5144697af1f7f7a7771be665ebf5328a2734bef0991d7ce3fec0cc0d",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 35,
+      "expected": "这个人要做出每一个标题，",
+      "transcript": "这个人要做出每一个标题。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8c922d2b61ce8f3d72536c1f415ee0d3d4772f90b9b407f6e28122e36d09eed4",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 36,
+      "expected": "每一个弹出的标志，还有所有动态图形。",
+      "transcript": "每一个弹出的标志，还有所有动态图形。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "ae403bf60e85a62acd068a5432ce0baf33b6283bf6b2608957dda8b956479dd0",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 37,
+      "expected": "以前，这都靠 阿夫特伊费克茨。",
+      "transcript": "以前，这都靠阿夫特伊费克茨。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "067c7e59f63561debf32b2b8e3d9cbc03f40322d28bd86021272d67c86ba32e3",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 38,
+      "expected": "你真就得只用一个工具来做这些事。",
+      "transcript": "你真就得只用一个工具来做这些事。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "eb0b40673cf6941c2ae67576127c5aed2272c3d0d61f1c991be6d7fd9b3e7967",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 39,
+      "expected": "而这时，海珀帧就派上用场了，也就是第三个工具。",
+      "transcript": "而这时，海珀真就派上用场了，也就是第三个工具。",
+      "nonempty": true,
+      "similarity": 0.95,
+      "audio_sha256": "336cddbd842bc4125dc4a12a2cd1352040b3b881d2c2cbb350417c46585294f7",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 40,
+      "expected": "这又是一个免费工具，由视频平台海珍开发。",
+      "transcript": "这又是一个免费工具，由视频平台海真开发。",
+      "nonempty": true,
+      "similarity": 0.944444,
+      "audio_sha256": "fc250aad8edfff7a3d267f5008400986ae6b5c20e09a8e35d7c28d9f1385b23e",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 41,
+      "expected": "克劳德把每个动画都写成一个小网站，然后海珀帧把它转成4K视频。",
+      "transcript": "克劳德把每个动画都写成一个小网站，然后海珀真把它转成四K视频。",
+      "nonempty": true,
+      "similarity": 0.931034,
+      "audio_sha256": "bb97ac09259925179f38f6faff944e68e59525b0825f1ce069f0b843348cba72",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 42,
+      "expected": "所以现在动画在大电视上看着也很清晰。",
+      "transcript": "所以现在东华在大电视上看着也很清晰。",
+      "nonempty": true,
+      "similarity": 0.882353,
+      "audio_sha256": "0e041dd088c4a50505a99a2b299747acb0ed4b4144e94d85894d2f14699da10b",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 43,
+      "expected": "全在我自己的电脑上运行，所以其实不花我一分钱。",
+      "transcript": "全在我自己的电脑上运行，所以其实不花我一分钱。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8d65a1b3cb07e0e34a538664232cd1fb25c2d5a73f20e19feb37d0762472dbe4",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 44,
+      "expected": "不过视频里，我有时会说像“欧盆诶艾刚宣布了云云”这种话，",
+      "transcript": "不过，视频里我有时会说：“像欧鹏哎，爱刚宣布了云云这种话。”",
+      "nonempty": true,
+      "similarity": 0.875,
+      "audio_sha256": "73fd9b22591906ba3eb44e1debcaf38f8a4488cab0e78c5e65e9dd089132e0ac",
+      "status": "needs_review"
+    },
+    {
+      "number": 45,
+      "expected": "说这话时，我其实需要第四个人，也就是研究员。",
+      "transcript": "说这话时，我其实需要第四个人，也就是研究员。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "0d095b6746b556b593567fb47fa77e76c5b0adeff6ab62a08e2d27324cb26b3c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 46,
+      "expected": "就是那个能去找到相关公告截图或帖子的人。",
+      "transcript": "就是那个能去找到相关公告截图或帖子的人。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c9bb1086770d91b40eb3a898d8c2d9a0c22b6d68bf3839920f20da15c414ab7b",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 47,
+      "expected": "在X上，或是在能证明我正说明的观点的研究论文里，",
+      "transcript": "在 X 上，或是在能证明我正说明的观点的研究论文里。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "0b0ada2d067ced4d0b3a3f697888664d7813ae6bc7d3d7b939955809141b8946",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 48,
+      "expected": "再把那些东西转成我们说的B-roll。",
+      "transcript": "再把那些东西转成我们说的 B 肉。",
+      "nonempty": true,
+      "similarity": 0.83871,
+      "audio_sha256": "9eb9b1483f14e9063dde42a940c980bcebd873a37675d216ea923c5fcc4bce0d",
+      "status": "needs_review"
+    },
+    {
+      "number": 49,
+      "expected": "就是叠在视频上播放的那些外景素材。",
+      "transcript": "就是叠在视频上播放的那些外景素材。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "dec475636b63ef202d71207f0b58c1f5e6e76aab4bc3c1a9232cc449c5052a61",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 50,
+      "expected": "而干这个的，其实我们每个人的笔记本电脑里都有，就是浏览器。",
+      "transcript": "而干这个的，其实我们每个人的笔记本电脑里都有，就是浏览器。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "5603ffd5b895decb4d79d9bd124178ae3f9ee4dc4e4dbcdb9a029f213dfb13c6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 51,
+      "expected": "所以呢，我用的是谷歌浏览器。",
+      "transcript": "所以呢，我用的是谷歌浏览器。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "470789a2ce2cd3b5373d44fe220d98cf040957c047cde9c949e6b5ec5059a635",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 52,
+      "expected": "然后克劳德就能直接用浏览器去网上做研究。",
+      "transcript": "然后克劳德就能直接用浏览器去网上做研究。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "222e247d7bc0baa037c94fe8524f6f88998b0c737cceee89be95fe904a0828c6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 53,
+      "expected": "同时在后台，克劳德，也就是我的研究员，就能截图",
+      "transcript": "同时，在后台，克劳德（也就是我的研究员）就能截图。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "dc0c72dda38b89993467d06ea5fa6733c143f1607ea1f1e6e9e00e728635a148",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 54,
+      "expected": "或者录下网页往下滑的视频。",
+      "transcript": "或者录下网页往下滑的视频。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "41c1e0bcfe555184352a79b7a50b2110df7b7776b1b1f34f1999efb359b83427",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 55,
+      "expected": "它还能高亮某些行，",
+      "transcript": "它还能高亮某些行。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8b362f99847c27306b0851a28b6ae17e6db087aa285891205887a36e327a09e6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 56,
+      "expected": "或者直接放大页面的特定部分。",
+      "transcript": "或者直接放大页面的特定部分。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "3c1ec249f2e65e7740f0d65f92201ca44697f3f7182e107d8ec1ed4874a1c3e6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 57,
+      "expected": "最棒的是，它只给你看确切的事实。",
+      "transcript": "最棒的是，他只给你看确切的事实。",
+      "nonempty": true,
+      "similarity": 0.928571,
+      "audio_sha256": "53b00cbac9354a6d8cfa2e7531727fe59bed2f46079284957708e3571f9bf276",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 58,
+      "expected": "也就是说，它会直接抓取原始的X帖子或网页本身。",
+      "transcript": "也就是说，他会直接抓取原始的 X 片子或网页本身。",
+      "nonempty": true,
+      "similarity": 0.904762,
+      "audio_sha256": "e976cb388e3e656668e0974f4f563244c640a984da18bf288154ee08b4f881dd",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 59,
+      "expected": "所以我只要说发生了什么，证据就会直接出现在屏幕上。",
+      "transcript": "所以我只要说发生了什么，证据就会直接出现在屏幕上。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c7e16aa68c8ebd51239a36724c3432ae78172bdef01ea9c0413cee5ffe093ae6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 60,
+      "expected": "现在，第五个任务是屏幕剪辑。",
+      "transcript": "现在第五个任务是屏幕剪辑。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "11f2bddc249b93d984bf7bff5f09a658ecd5503cad70b735e4bf55c7ecfdd423",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 61,
+      "expected": "这主要是因为我特爱做点简单的教程，",
+      "transcript": "这主要是因为我特爱做点简单的教程。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "79c389071d536d651822b5e7a2f1fe64fae717ce6f03b5a2c5d720b2173b1a47",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 62,
+      "expected": "教大家怎么用AI工具，怎么用它们赚钱。",
+      "transcript": "教大家怎么用 AI 工具，怎么用它们赚钱。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8ea882c239624965819e1263d73b3f3930a81a944a26c5ed9f0a1f7807efa204",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 63,
+      "expected": "但我经常要共享屏幕。",
+      "transcript": "但我经常要共享屏幕。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "074d78fe55154da4c4cd4ab469a2818d7642bbebbf97941b7574103ce8609e98",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 64,
+      "expected": "所以我才用了一个叫泰拉的工具。",
+      "transcript": "所以我才用了一个叫“泰拉”的工具。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "e30a68e78b04f6122bb52080575397322058089ba56d0ea1757f582808696736",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 65,
+      "expected": "泰拉能同时录下我的脸和我的屏幕。",
+      "transcript": "台拉能同时录下我的脸和我的屏幕。",
+      "nonempty": true,
+      "similarity": 0.933333,
+      "audio_sha256": "da67e4fc3788189dda645ee48ffdb61d18c89a32c859845bc63f877c59078a65",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 66,
+      "expected": "而且因为泰拉有个叫MCP的连接器，",
+      "transcript": "而且因为泰拉有个叫 MCP 的连接器。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "ff008359b8a1d6dd6eee4fb7358e6e827184eb7e6bb0965b796a536249614704",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 67,
+      "expected": "我就能把它直接连到克劳德代码里。",
+      "transcript": "我就能把它直接连到克劳德代码里。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "019e71891c579c46fa8c37d3eb201f648d31d8e9cc101439b4b4152bd3d6adfb",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 68,
+      "expected": "然后它就能在软件里完成所有能做的事。",
+      "transcript": "然后他就能在软件里完成所有能做的事。",
+      "nonempty": true,
+      "similarity": 0.941176,
+      "audio_sha256": "28c24c26ff14bf21aae27ca2f0e0eab4f9933d5e0a0d6bdb6c422db9e18070b6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 69,
+      "expected": "剪辑、缩放、布局、排版，等等。",
+      "transcript": "剪辑、缩放、布局、排版等等。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "7fb0f60f5a5a6005e36ef7ff1edaca692491aaca42243f697f27443bfd4a22f2",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 70,
+      "expected": "这软件里能做的所有事，你都能通过克劳德代码来做。",
+      "transcript": "这软件里能做的所有事，你都能通过克劳德代码来做。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "870f35fd871cee29c9aecdd4842161d0b0c0d61b27102d7437a14626b7ba332a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 71,
+      "expected": "所以我真的只要录一遍，剩下的就全交给它了。",
+      "transcript": "所以我真的只要录一遍，剩下的就全交给他了。",
+      "nonempty": true,
+      "similarity": 0.947368,
+      "audio_sha256": "6491757a072bfd904a2594ca2c747a89684469cf66d2779f6ff17e84c421b569",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 72,
+      "expected": "不过到目前为止，我们聊的都是这个视频的视觉效果。",
+      "transcript": "不过到目前为止，我们聊的都是这个视频的视觉效果。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "cd756e13dc051aa8d145c8292a523dbbae139d74199e80ab2d431ca6432f0b6a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 73,
+      "expected": "每个顶尖的视频团队，都有我们所说的声音设计师。",
+      "transcript": "每个顶尖的视频团队都有我们所说的声音设计师。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "e4665ad9e173664856aa3cc81d9f6919ad0a13b5493589111f0b0f0c3aea4b93",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 74,
+      "expected": "这个人负责决定每段片段配什么音乐，",
+      "transcript": "这个人负责决定每段片段配什么音乐。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "3c5dc16fd48880a258379efc1bd21392e1b57f539243866287bce5c1fe893c4a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 75,
+      "expected": "特定情节出现时加什么音效，",
+      "transcript": "特定情节出现时，加什么音效？",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "26e384701030b51155a651542031994870d6b6b234aff61147054a3fdad6fb83",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 76,
+      "expected": "并确保这些内容符合品牌调性。",
+      "transcript": "并确保这些内容符合品牌调性。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c3b63c5837173c6d01ff249d4b92f621ea145308df1b87d5e709874608c355a5",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 77,
+      "expected": "因为你肯定不希望在讲教程的时候，",
+      "transcript": "因为你肯定不希望在讲教程的时候。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "a15dd8a4c030aa3128dbfe220aa00596b13add7136cd8e0b2cbdfd6b7c59c8c4",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 78,
+      "expected": "用到的音乐风格却让人昏昏欲睡。",
+      "transcript": "用到的音乐风格却让人昏昏欲睡。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "6b2da32350f9195caa6a54c64985ec8f9995b74b61089c5387bc68379f2af2b5",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 79,
+      "expected": "所以这次我用了一个叫艾皮戴米克桑德的声音库。",
+      "transcript": "所以这次我用了一个叫《爱皮大米克桑德》的声音库。",
+      "nonempty": true,
+      "similarity": 0.904762,
+      "audio_sha256": "c4784009d89eceff5e2f302f83ea4664b3678dfc609642605fa9d4a9636d37fe",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 80,
+      "expected": "这得花钱买。",
+      "transcript": "这得花钱买。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8db2e57d46b66beb25edda1642d8e7f56b7c16067cc0ed79b4335eac978a93d0",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 81,
+      "expected": "最后再说价格。",
+      "transcript": "最后再说价格。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "e99028dfd634c488e0b3ab9afc3c0d98fe28bd2e13ac033cd449210cef8cdeec",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 82,
+      "expected": "我还能把它连到克劳德，",
+      "transcript": "我还能把它连到克劳德。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "2c01fd09df6298aae554d44beef5a98574551975754601231015d040670c8015",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 83,
+      "expected": "然后它就能出去搜声音。",
+      "transcript": "然后他就能出去搜声音。",
+      "nonempty": true,
+      "similarity": 0.9,
+      "audio_sha256": "f8869cd495365284b15eae28fbeb64528ea927201860954c806e5f9309b7a2f6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 84,
+      "expected": "最酷的是，我能按自己的喜好来调教它。",
+      "transcript": "最酷的是，我能按自己的喜好来调教它。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "270fad0361f4d449015e5ae4115beb59e603b4d5ef602243ac7a0c38ee24fe79",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 85,
+      "expected": "我一般喜欢让开头那段带点悬念。",
+      "transcript": "我一般喜欢让开头那段带点悬念。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "ca6205eb21ca21b53d15ea823a58e2fa65066a171548124ac2bcd7436391382c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 86,
+      "expected": "接着就切到那种挺轻快的音乐，有点像低保真嘻哈，",
+      "transcript": "接着就切到那种挺轻快的音乐，有点像低保真嘻哈。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8039b9db27f578ce146ed1488d7d70d258cb2d5edcc3e15cb402b27cdfd25061",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 87,
+      "expected": "再把音量压得特别低。",
+      "transcript": "再把音量压得特别低。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "24ed5de464016fb25b8740b4a31e80ede021654ac3370bfc0fa2d901e954dd08",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 88,
+      "expected": "所以嘛，音效也有它自己的规矩。",
+      "transcript": "所以嘛，音效也有他自己的规矩。",
+      "nonempty": true,
+      "similarity": 0.923077,
+      "audio_sha256": "5aadcca030cb87dac568c312497bba3ef604c4b31dd25daffe0d1ff3fe02f673",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 89,
+      "expected": "等会儿我就讲讲这些我都怎么设的。",
+      "transcript": "等会儿我就讲讲这些，我都怎么设的。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "e985247e4871c77f1607ecb7bd072c88ab7857849ad7d0f6dcdfa22bb8cb22d4",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 90,
+      "expected": "现在，团队的第七个成员，其实是收尾的人。",
+      "transcript": "现在团队的第七个成员其实是收尾的人。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "ea4a7f778dd9eaa27da11f556d90e6d34b53aa424f6bd810e4d6dcd97004c50a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 91,
+      "expected": "这人负责把所有片段拼到一起，再检查一遍有没有出错。",
+      "transcript": "这人负责把所有片段拼到一起，再检查一遍有没有出错。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "201f8a0989e8dabaee3e2a914a776099e7d7ee407dda99fba7dcfb9abf3d5529",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 92,
+      "expected": "这个工具叫FFmpeg。",
+      "transcript": "这个工具叫FFMP。",
+      "nonempty": true,
+      "similarity": 0.9,
+      "audio_sha256": "775d71de97817ad49ceee8e675e6a28d3680eb42439197cca97adafa0945ffa1",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 93,
+      "expected": "它免费，而且剪视频已经二十多年了。",
+      "transcript": "他免费，而且剪视频已经二十多年了。",
+      "nonempty": true,
+      "similarity": 0.933333,
+      "audio_sha256": "88fc3e64654a328a8f55745036b4baf0d12eb0103b5a5dff7426e958101b2f21",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 94,
+      "expected": "事实上，现在市面上几乎所有剪辑软件，背后用的都是它。",
+      "transcript": "事实上，现在市面上几乎所有剪辑软件背后用的都是它。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "221355c53eabe1dce96767cf80fc671182f1af6b923f465a6fbf876e7d61e158",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 95,
+      "expected": "所以克劳德就用它来剪掉所有黑屏。",
+      "transcript": "所以克劳德就用它来剪掉所有黑屏。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9ac9c7d67cea06703adc9e364e019b7372b0970b0429ce3ad3dc1dd0b2c9747c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 96,
+      "expected": "在我看到视频之前，得先确认音频同步没问题。",
+      "transcript": "在我看到视频之前，得先确认音频同步没问题。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "7d1aa7e68f3e866e02dcfa1e18c2c167c65a21292190591fd8944d664578e6c3",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 97,
+      "expected": "以上就是必须完成的七种工具或工作。",
+      "transcript": "以上就是必须完成的七种工具和工作。",
+      "nonempty": true,
+      "similarity": 0.9375,
+      "audio_sha256": "5648a084eda7eda26eb84be0c1f52a3cc870cfb19abf5aa56597410ba9da7558",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 98,
+      "expected": "但它们根本不知道我的视频到底该是什么样子。",
+      "transcript": "但他们根本不知道我的视频到底该是什么样子。",
+      "nonempty": true,
+      "similarity": 0.95,
+      "audio_sha256": "04802993aa66d08487d4cd1aacde22cbef7d28c1137102c04fd8d543c7267064",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 99,
+      "expected": "这大概才是最重要的，也就是所谓的“技巧”。",
+      "transcript": "这大概才是最重要的，也就是所谓的技巧。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8478f2d6b71076771ddc078f6fc00ef2c70944316d65abc85018fe49430da057",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 100,
+      "expected": "技巧其实就是一个指令文件，克劳德干活前会先读取它。",
+      "transcript": "技巧其实就是一个指令文件。克劳德干活前会先读取它。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "5795f2ca56da81b9cc03482b56c4811f4dcbd5e06952d4163e07dc8df99557c6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 101,
+      "expected": "这基本就是我的剪辑风格，拆解成了具体细节。",
+      "transcript": "这基本就是我的剪辑风格，拆解成了具体细节。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "a2d5c8717edb6be7b139021eaaaf848080595ab5341557e501ba5e50494833b5",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 102,
+      "expected": "颜色、字体、动画、音效，",
+      "transcript": "颜色、字体、动画、音效。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "87593f5b0d2bcaddd2595233dd630dc0fa4befcbfade8f2062ef2c3a213aafb7",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 103,
+      "expected": "还有一大堆基本上就是我的偏好的细节。",
+      "transcript": "还有一大堆，基本上就是我的偏好的细节。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b7cc1d0856694b1cc26e007daab263984c568dbc6a6ff5f404a09d78bf30a72f",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 104,
+      "expected": "我的这个叫优兔剪辑，大概有1400行。",
+      "transcript": "我的这个叫优图剪辑，大概有一千四百行。",
+      "nonempty": true,
+      "similarity": 0.705882,
+      "audio_sha256": "87f4b14c49df3c00e3c9e212b47feb9184398070933a192e32889fc92431d992",
+      "status": "needs_review"
+    },
+    {
+      "number": 105,
+      "expected": "但最棒的是，克劳德代码居然帮我建好了这一整套东西。",
+      "transcript": "但最棒的是，克劳德代码居然帮我建好了这一整套东西。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "5a2f90b638235c4102825fe190e06cf17250bded6df992739f3742ac52bb3704",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 106,
+      "expected": "所以基本上就是克劳德运行所有工具，然后我再告诉克劳德什么样才算好。",
+      "transcript": "所以基本上就是克劳德运行所有工具，然后我再告诉克劳德什么样才算好。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8983ff67db2765d1af08e73a9c0908d30fca39edc5637fe2e4f9516f04e46fd8",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 107,
+      "expected": "现在，我不是搞技术的，你大概也不是，所以我这就给你演示一下到底该怎么设置。真的超简单。",
+      "transcript": "现在我不是搞技术的，你大概也不是，所以我这就给你演示一下，到底该怎么设置，真的超简单。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "218ec79795470d29cf4b232d4179928d37c76a3eb233cd51e5a356650b576ced",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 108,
+      "expected": "好，那设置的第一步，就是下载克劳德。",
+      "transcript": "好，那设置的第一步就是下载克劳德。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c08e2638226ca2e2af4b237ec2e70ead9232df63c08516c35b7549f84af6595a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 109,
+      "expected": "你可以去安思罗匹克的网站，下载那个桌面应用。",
+      "transcript": "你可以去安斯罗匹克的网站下载那个桌面应用。",
+      "nonempty": true,
+      "similarity": 0.95,
+      "audio_sha256": "5258e9dbb0a4c7113d3b98dad1eff78f5ab2f0496281d7bb905fd208b55d92a4",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 110,
+      "expected": "我推荐的就是它，我自己用的也是它。",
+      "transcript": "我推荐的就是它。我自己用的也是它。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9debde35d76ab77097c94b013be4ed82cb8d3c0d11a3c0cae7a805f5509fca02",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 111,
+      "expected": "装好之后，它就会让你创建账户。",
+      "transcript": "装好之后，它就会让你创建账户。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "958c5f8c3a3eb447c005606668d85313ede75b27b294fb2ec20d590685081b30",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 112,
+      "expected": "你得用谷歌账号，或者用户名和密码来创建。",
+      "transcript": "你得用谷歌账号或者用户名和密码来创建。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b1fe489f981d6f228d04bc83da6cbd35dc8ac5951b00e65e188fd5f82ab680c7",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 113,
+      "expected": "要是你第一次下载克劳德，它会自动帮你配置好。",
+      "transcript": "要是你第一次下载克劳德，他会自动帮你配置好。",
+      "nonempty": true,
+      "similarity": 0.95,
+      "audio_sha256": "b0dd6fd768eb2d99033fb68c8f19d457312a2a987d025de281154f7125d9643c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 114,
+      "expected": "我建议你把这个流程走一遍。",
+      "transcript": "我建议你把这个流程走一遍。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8bffa6c577544b59736981904b799010ef2fa4011d6e406474aa9c8cd75bb4ce",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 115,
+      "expected": "我还有个完整的视频，专门讲怎么正确配置。",
+      "transcript": "我还有个完整的视频，专门讲怎么正确配置。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "bec9b5dbbb050e4a8c279aaf892013ba2f276cdc382382732669da08ea663c6a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 116,
+      "expected": "不过这儿其实用不着那个。",
+      "transcript": "不过，这儿其实用不着那个。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "2d99704ca0f9c56d0d89f9b140b70ac236708752b10401e9c2d15731db29b128",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 117,
+      "expected": "现在，用这个功能你得有个付费套餐。",
+      "transcript": "现在用这个功能，你得有个付费套餐。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "95b3a6de1fcd3b9ae6622ff27ff45d818390529026030bcf9d05cde87f58bcd5",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 118,
+      "expected": "我会升级到20美元那个套餐，目前没必要选比它更高的。",
+      "transcript": "我会升级到二十美元那个套餐。目前没必要选比它更高的。",
+      "nonempty": true,
+      "similarity": 0.916667,
+      "audio_sha256": "01c0ecf4356be3e7b6de51b90f2bf3c6ed273e13ed137b60dd2ef932e0f5c1be",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 119,
+      "expected": "进到主界面后，大概就是这个样子。",
+      "transcript": "进到主界面后，大概就是这个样子。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "82e7ec50482585c73ce872ee216671a5b43fa0dd3a652fdac0e2f6e85f414fef",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 120,
+      "expected": "可能看着会有点不一样，因为东西总在变。",
+      "transcript": "可能看着会有点不一样，因为东西总在变。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "af731fe5c0e297bd0af31891a8f6597f6353f00f1185bf72991de00043d21035",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 121,
+      "expected": "不过基本上，你只要点“新建”，",
+      "transcript": "不过，基本上你只要点新建。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "7ce4ef00ac6d6cbef0367221e689f2686c6617fda3e5116e581eefac94f25a7d",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 122,
+      "expected": "就能在克劳德里开一个新会话。",
+      "transcript": "就能在克劳德里开一个新绘画。",
+      "nonempty": true,
+      "similarity": 0.846154,
+      "audio_sha256": "0eb72ab2539de760ead292f4afec9bd6ec0811becc0d009962cc930bce30d731",
+      "status": "needs_review"
+    },
+    {
+      "number": 123,
+      "expected": "现在，左边这儿是克劳德，也就是普通版，能聊天也能协作。",
+      "transcript": "现在左边这是克劳德，也就是普通版，能聊天也能协作。",
+      "nonempty": true,
+      "similarity": 0.977778,
+      "audio_sha256": "05ad058578f0325934d1a031da7a115e360a3f66c0fe820943676888cd09b455",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 124,
+      "expected": "然后这儿，是克劳德代码。",
+      "transcript": "然后，这儿是克劳德代码。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "81386fedcde78e7ee5544df357223357a6ef2c9743166630693824f57e54d450",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 125,
+      "expected": "所以这个，你得用克劳德代码。",
+      "transcript": "所以这个，你得用克洛的代码。",
+      "nonempty": true,
+      "similarity": 0.833333,
+      "audio_sha256": "9aed6b87028d0c1739eb45545f46bbebb6bb1a9e3a031cd7af8f8f3132acc5cf",
+      "status": "needs_review"
+    },
+    {
+      "number": 126,
+      "expected": "接着，在继续之前，你还得完成几个设置步骤。",
+      "transcript": "接着，在继续之前，你还得完成几个设置步骤。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "baf59fda53e7ac4be27e566fa1e352b7b99c16d68807fddd0cb73ddc417d7731",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 127,
+      "expected": "首先，你得确保用的是本地模式，",
+      "transcript": "首先，你得确保用的是本地模式。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "710e3d130cbdffd5ba987828f2ab3686ca7853bd26543755a7f1f2d5c5915de6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 128,
+      "expected": "也就是用你自己的电脑来处理。",
+      "transcript": "也就是用你自己的电脑来处理。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "568d048d7af12e42c447440ecfdf7ec13b022fecba71f5f93b6b9649f4931deb",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 129,
+      "expected": "接下来，你得确定好你要操作的那个文件夹。",
+      "transcript": "接下来，你得确定好你要操作的那个文件夹。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b3bc253e76da234ea3ff3a2d38009a296303064d5fe59005e824c8b175dd09d9",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 130,
+      "expected": "这个的话，直接点这儿就行。",
+      "transcript": "这个的话，直接点这儿就行。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "fa476197f5f7de76c6ffef7a0ea623fa9eaeddd6fcccbd0a6ef93b614748410d",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 131,
+      "expected": "如你所见，我已经连上了我的克劳德代码文件夹。",
+      "transcript": "如你所见，我已经连上了我的克劳德代码文件夹。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b7a5767179e836f7ac867f611a055d72bd3d1ae0af1425e23aa4d8c47aeae43a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 132,
+      "expected": "但你基本上可以点这个，然后添加一个全新的文件夹。",
+      "transcript": "但你基本上可以点这个，然后添加一个全新的文件夹。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "6a26ddc5a7506462c0096e5702619b40abf8080a0ec650a97c913fd885951896",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 133,
+      "expected": "你可以在这里建一个，然后再把它关联上。",
+      "transcript": "你可以在这里建一个，然后再把它关联上。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "441774d140c39d2f4b358c77b6fc61058018f3b9dcd3ff640b6f9a77ee68ac72",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 134,
+      "expected": "之后，你要把权限改成自动模式，",
+      "transcript": "之后，你要把权限改成自动模式。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "1eb9ce352aaaf9f1f4897cf85fa759e4fd6fdbb3e90cdcde891efebc8de65b89",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 135,
+      "expected": "这样它就能运行，你也不用对成千上万件事来回点“是/否”了。",
+      "transcript": "这样它就能运行。你也不用对成千上万件事来回电是否了。",
+      "nonempty": true,
+      "similarity": 0.958333,
+      "audio_sha256": "49044b20c9418fe8840846e2b132033715b4c66823d37d4fe5fdd1b3207036af",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 136,
+      "expected": "然后，你要把模型换成最新的其中一个，",
+      "transcript": "然后你要把模型换成最新的其中一个。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "5a72c5fe36322e6ac41e9aa1d0631054c1e26fb41feb90696c6a065cc3ec9604",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 137,
+      "expected": "就因为设置这一步很重要。",
+      "transcript": "就因为设置这一步很重要。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "6ad961b84bcaf2dd806f9bcb9a7905e4bc28c2ee4aec866416624b8df3c4ab02",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 138,
+      "expected": "之后，它就能用更便宜的模型运行了。",
+      "transcript": "之后，它就能用更便宜的模型运行了。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "260e8e6ef893fd0b84f5056ed07624e682770aca5c8d12daaa68cc9f5cb3c777",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 139,
+      "expected": "最后，你要到左边这里来，然后进到“设置”里。",
+      "transcript": "最后，你压到左边这里来，然后进到设置里。",
+      "nonempty": true,
+      "similarity": 0.941176,
+      "audio_sha256": "3f15b6cada13094b574746e193c3b1db8742dcec7e12e5996817d9ab18252767",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 140,
+      "expected": "你要进到克劳德代码。",
+      "transcript": "你要进到克劳德代码。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "1727dac216d0c8dd21507f81028baf788466dd268d8e6e407773debff34bdb0c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 141,
+      "expected": "然后这儿，你可以直接复制我这里的设置。",
+      "transcript": "然后这儿，你可以直接复制我这里的设置。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "937d56b019d2c4720dae81007529aa39d2072201ba3a7ba4f068f202b49be738",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 142,
+      "expected": "或者，你也可以直接决定打开——",
+      "transcript": "或者你也可以直接决定打开。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "d858a0b997363f396d7d4db693bd3a4738520863a2eec6cc96575862564bf5cb",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 143,
+      "expected": "有一项对我们上网来说特别重要的设置，",
+      "transcript": "有一项对我们上网来说特别重要的设置。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "97c4455a4194542d0c71a51c0290e96efd51acfa63e181bb740ff8ee7feeffc5",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 144,
+      "expected": "就是把它打开，就在这儿操作。",
+      "transcript": "就是把它打开，就在这儿操作。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "3ff8517e4dbbc5c2cc6335a3319801b541d7ae40399f0295fb5579e6d4bf3fa4",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 145,
+      "expected": "弄好后，你基本可以关掉这个窗口，返回主菜单，点“新建”。",
+      "transcript": "弄好后，你基本可以关掉这个窗口，返回主菜单，点新建。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9f0d5d6ddadf84801e0dcc4454c66e846b5e97d1a5194334851210f436c16acf",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 146,
+      "expected": "然后克劳德代码自己就能很轻松地把这些都设置好。",
+      "transcript": "然后，克劳德代码自己就能很轻松的把这些都设置好。",
+      "nonempty": true,
+      "similarity": 0.954545,
+      "audio_sha256": "df12608f5962352276f74c9ddeca98bf291f1946b80949b356687039ba1365cf",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 147,
+      "expected": "所以这次，我就给它一段这样的提示。",
+      "transcript": "所以这次我就给他一段这样的提示。",
+      "nonempty": true,
+      "similarity": 0.933333,
+      "audio_sha256": "e162966b3261875de3f5d3f00e56d37cac1d4fa20a021bc0eaa671026d1e94c3",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 148,
+      "expected": "“能帮我创建一个视频剪辑系统吗？",
+      "transcript": "能帮我创建一个视频剪辑系统吗？",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "7894b35fb34093a82dfcfd666dabf7ee9afcd1336f5f056a4eeca35664306c38",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 149,
+      "expected": "我想在这个系统里用海珀帧、FFmpeg、泰拉和艾皮戴米克桑德。",
+      "transcript": "我想在这个系统里用海珀珍、FMP、泰拉和艾皮戴米克桑德。",
+      "nonempty": true,
+      "similarity": 0.90566,
+      "audio_sha256": "ce80b5245ade40f46b2a0d1ce340aee02c33d88db485cbc30efe6d0ad2a3572a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 150,
+      "expected": "一步步教我该怎么把它设置好。”",
+      "transcript": "一步步教我该怎么把它设置好。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "89aa5aef8541cbedb7af56ee58b7a5ea43c9c53e8e7c28cc569ca7328c5b366a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 151,
+      "expected": "所以一种方法就是直接让它一步步带你完成整个过程。",
+      "transcript": "所以一种方法就是直接让他一步步带你完成整个过程。",
+      "nonempty": true,
+      "similarity": 0.956522,
+      "audio_sha256": "16ae560a4b01e3309b24428e92dc9a15a1fd114a8719fd9c5eae673701a969a2",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 152,
+      "expected": "那另一种做法呢，",
+      "transcript": "那另一种做法呢？",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "641b94724ad204a47d27aa756b337739928c477a3c44675a1ac111a72f7fad41",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 153,
+      "expected": "克劳德应该能下载并安装它需要的所有东西，它完全可以做到。",
+      "transcript": "克劳德应该能下载并安装他需要的所有东西。他完全可以做到。",
+      "nonempty": true,
+      "similarity": 0.923077,
+      "audio_sha256": "cec314f1bf5f33ee1ed2f20136a3ac8f28a1b72af2d27f1436138d1dc668a023",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 154,
+      "expected": "它还会要求你实际连接上其中几个工具。",
+      "transcript": "他还会要求你实际连接上其中几个工具。",
+      "nonempty": true,
+      "similarity": 0.941176,
+      "audio_sha256": "5427dd7b547aee243520f124cd5174dca218e1c37ebf76cfcbe4fb907d5a45ea",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 155,
+      "expected": "你来到左边这里，然后点“自定义”，",
+      "transcript": "你来到左边这里，然后点自定义。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "93eb424e500538de67a6a8307bdb978c2e23694932885555e2f6a89687ec86ab",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 156,
+      "expected": "再点“连接器”。",
+      "transcript": "再点连接器。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9814c02637c9ac76c9fbd3a4856c45326be28d6774759fe02b0e1a7fafb618f4",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 157,
+      "expected": "然后，你基本上就能选工具了。",
+      "transcript": "然后你基本上就能选工具了。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "0b370e85b2cada7846986b69c9f7086ce032f8757b49c90ab00e948fdc26ed28",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 158,
+      "expected": "所以这次呢，我来找找泰拉，",
+      "transcript": "所以这次呢，我来找找泰拉。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "7b557466caeba2546e24564bc010b6d61c9e73f7fd78a3f45d2137f10bd9fde3",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 159,
+      "expected": "也就是我的屏幕录制设备。",
+      "transcript": "也就是我的屏幕录制设备。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "f82787f2120b7a740e7d80d7ce0dd8cf3ab7cbe1865ab13bdf77809ccb019182",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 160,
+      "expected": "如你所见，我已经连上它了。",
+      "transcript": "如你所见，我已经连上他了。",
+      "nonempty": true,
+      "similarity": 0.909091,
+      "audio_sha256": "928e4cd1132cada0349e87cd15aa53dcb7dc4287b64cb6e7ed6557496c3da35e",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 161,
+      "expected": "不行的话，直接点那儿那个加号就行。",
+      "transcript": "不行的话，直接点那儿那个加号就行。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "bc8ae5d90145eaf1bffda5444c102e1ac2654826736bf222a4d2237df3f23d55",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 162,
+      "expected": "至于艾皮戴米克桑德，也是一样的。",
+      "transcript": "至于 IP 大米，X 三都也是一样的。",
+      "nonempty": true,
+      "similarity": 0.571429,
+      "audio_sha256": "82f8100f999df891f50febc642f01448e3e6a81d3ee5846fa8d92d5f51befc58",
+      "status": "needs_review"
+    },
+    {
+      "number": 163,
+      "expected": "找找艾皮戴米克桑德。",
+      "transcript": "找找 IP 带米克桑德。",
+      "nonempty": true,
+      "similarity": 0.666667,
+      "audio_sha256": "fa08e91ca90b635b798693e8aaf1a7702e50e83471feaad2d5e3b5079ae3e088",
+      "status": "needs_review"
+    },
+    {
+      "number": 164,
+      "expected": "喏，就是这个，是音乐和音效。",
+      "transcript": "那么就是这个是音乐和营销。",
+      "nonempty": true,
+      "similarity": 0.695652,
+      "audio_sha256": "7fdd34d836235453797370b331290dbd248d2fdfec0c7df80b6c964c737b5cc7",
+      "status": "needs_review"
+    },
+    {
+      "number": 165,
+      "expected": "直接把它打开就行。",
+      "transcript": "直接把它打开就行。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "4b0e6801668b3130a75e4345f753649f7b0b5899e9ed6bbec1e8869781e3c071",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 166,
+      "expected": "它会让你换个浏览器登录。",
+      "transcript": "它会让你换个浏览器登录。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8292e7b9ffcf43e26ba01f251849c647cc29c10af444244048d051c69ff01c13",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 167,
+      "expected": "登录完，你就会看到这个对勾。",
+      "transcript": "登录完，你就会看到这个对勾。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "88de94aa220be22530c633bad09fe7b24e1b539bd9341759b56c2bb352ad9488",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 168,
+      "expected": "现在，它需要的其他东西都会自己下载。",
+      "transcript": "现在，他需要的其他东西都会自己下载。",
+      "nonempty": true,
+      "similarity": 0.9375,
+      "audio_sha256": "4b5b6a73602f3342d25f77375b206f5ba16f95064aa12a4ebdc114a240570489",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 169,
+      "expected": "但如果它因为任何原因找不到海珀帧，",
+      "transcript": "但如果他因为任何原因找不到海珀针。",
+      "nonempty": true,
+      "similarity": 0.875,
+      "audio_sha256": "56e04426b67f2d150d4d2fe43437f80926b46144c9d61dba88e45fcd140bc53e",
+      "status": "needs_review"
+    },
+    {
+      "number": 170,
+      "expected": "你直接谷歌“海珀帧”就行。",
+      "transcript": "你直接谷歌海豹真就行。",
+      "nonempty": true,
+      "similarity": 0.8,
+      "audio_sha256": "5eee5d64146b70aab1d6d7df7a2a09ac3186fda41e8eb22eba6c928f532754da",
+      "status": "needs_review"
+    },
+    {
+      "number": 171,
+      "expected": "你会找到仓库的链接。",
+      "transcript": "你会找到仓库的链接。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b72434893ff14720521f7f9f275457d3f4f4cff342da9f8fd4bee1b5fc934301",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 172,
+      "expected": "不过，在连接器里也能找到海珀帧。",
+      "transcript": "不过，在连接器里也能找到海珀针。",
+      "nonempty": true,
+      "similarity": 0.928571,
+      "audio_sha256": "81a509e2b79fb87d906deb292f5fb6bfc9d80b578540973995874b5bb24a406a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 173,
+      "expected": "现在，把这些都连好后，",
+      "transcript": "现在把这些都连好后。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "bf1b7891da7aa2e61b37a03ccbec54da8a75f93813255346b4b10967f2241740",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 174,
+      "expected": "你要确保它把这些东西作为技能保存在你的电脑上。",
+      "transcript": "你要确保他把这些东西作为技能保存在你的电脑上。",
+      "nonempty": true,
+      "similarity": 0.954545,
+      "audio_sha256": "7eb7914205832f0801b368cdf1c36807255725a720452140137ee40b92a0b7c0",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 175,
+      "expected": "等它真正保存在那一个聊天或对话线程里之后，",
+      "transcript": "等它真正保存在那一个聊天或对话现成里之后。",
+      "nonempty": true,
+      "similarity": 0.9,
+      "audio_sha256": "859c1124cfe321df3f7f4e22074e752a2e84c576e2dc23a8c8da6b392af579f2",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 176,
+      "expected": "你就得开一个新线程，给它做个初步测试。",
+      "transcript": "你就得开一个新县城，给他做个初步测试。",
+      "nonempty": true,
+      "similarity": 0.823529,
+      "audio_sha256": "63077ec4f7f2981b4814bbe9f831b0ffd2c4eb984cc92ee3db346b6122a1af97",
+      "status": "needs_review"
+    },
+    {
+      "number": 177,
+      "expected": "现在，如你所见，设置这些东西其实很简单。",
+      "transcript": "现在，如你所见，设置这些东西其实很简单。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "ca8a67573a8fccf3824370735893fc92aa80372dea53d04ad6b45e4e0611e653",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 178,
+      "expected": "真正花时间的是把外观和感觉都微调到位。",
+      "transcript": "真正花时间的是把外观和感觉都微调到位。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "528f198f46dee96743c77c7f5c0a97f36f12f85e3b059a4037a5c92399ce961a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 179,
+      "expected": "如果你想直接下载我的技能来用，",
+      "transcript": "如果你想直接下载我的技能来用。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "fc8d900dc01e2d829d4e18bd8d673eceedfd5c844376be5ed79c65b321a0ce57",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 180,
+      "expected": "随时可以在我的免费社区里操作。",
+      "transcript": "随时可以在我的免费社区里操作。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c21a84b40a8d68066b48b069c70bb8ee985d082e41f7be1824f46de616d61b8a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 181,
+      "expected": "链接在下面。",
+      "transcript": "链接在下面。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "67b9b91b04fe8126e9bbc06149b47556adfdd05dd7f73e5bfda272c4f8274eee",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 182,
+      "expected": "不过现在，咱们直接看我到底是怎么教它的。",
+      "transcript": "不过现在，咱们直接看我到底是怎么教他的。",
+      "nonempty": true,
+      "similarity": 0.944444,
+      "audio_sha256": "795ac57dd6d121ddb556d75d7d227176b4af8b1a10f4c0f6d82d44e6e22e5326",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 183,
+      "expected": "嗯，一开始，我做的每样东西几乎都给它备注了说明。",
+      "transcript": "嗯，一开始我做的每样东西几乎都给他备注了说明。",
+      "nonempty": true,
+      "similarity": 0.952381,
+      "audio_sha256": "8ac871f872c44d9d5274cbc4b852ba39117cfe5e5869655a5e9eb5af99d6ae4b",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 184,
+      "expected": "我先从短片段开始，通常只截视频最吸引人的那部分。",
+      "transcript": "我先从短片段开始，通常只截视频最吸引人的那部分。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "4e78a093f535126ac97ad7bfddb20c6dcd08a75b48c5cdd5a86d630356983d67",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 185,
+      "expected": "等它给出初稿后，",
+      "transcript": "等他给出初稿后。",
+      "nonempty": true,
+      "similarity": 0.857143,
+      "audio_sha256": "7004ae1bebc157e23e4c4bd8d613fae069018bd5b88f54bd24cdbcb2cf2b1584",
+      "status": "needs_review"
+    },
+    {
+      "number": 186,
+      "expected": "我基本上都会给出带时间戳的、非常具体的反馈，",
+      "transcript": "我基本上都会给出带时间戳的非常具体的反馈。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "566826ff27b7124826e0d7edebbe00b293b312855caedbb441a9fd91ced0bed9",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 187,
+      "expected": "针对它完成的工作。",
+      "transcript": "针对他完成的工作。",
+      "nonempty": true,
+      "similarity": 0.875,
+      "audio_sha256": "8573bbd5fde09d168be2793e93269d2c4d9d6fd3f863e0a4d9a6e626169e2921",
+      "status": "needs_review"
+    },
+    {
+      "number": 188,
+      "expected": "十天后，我直接拿其中一个片头，",
+      "transcript": "十天后，我直接拿其中一个片头。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c92379b24b2437dffbb329916360da44b232dfceb760f8f031fab1086e0f54d4",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 189,
+      "expected": "开始给它配上声音。",
+      "transcript": "开始给它配上声音。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "a60ae2c429f11cc79c14b993d559926772fedc06c216fb4602dc7a8ab59ad7cd",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 190,
+      "expected": "我得在一个片头上试好多不同的音效，",
+      "transcript": "我得在一个片头上试好多不同的音效。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "76bae90db4fc287c6db82df6c40459274f8c151c2440b2a745e961931d68051c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 191,
+      "expected": "我得试过大概8到10种不同的声音",
+      "transcript": "我得试过大概八到十种不同的声音。",
+      "nonempty": true,
+      "similarity": 0.83871,
+      "audio_sha256": "483b920ee557f462f1c257e9573a072ad50739c611006ceb6965e99bf1ac721d",
+      "status": "needs_review"
+    },
+    {
+      "number": 192,
+      "expected": "直到找到真正适合我口味的那个。",
+      "transcript": "直到找到真正适合我口味的那个。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b5d03791719549050f55a6a10691a230e190a63864380fcf763ed3eb395505ab",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 193,
+      "expected": "因为它生成的效果对我来说有点太杂了。",
+      "transcript": "因为它生成的效果对我来说有点太杂了。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "7d3c7940bb85dec992f1ca3165e7f4127d1a79febc126e411a25283c8f397c4a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 194,
+      "expected": "所以这个主要是用来做音效的，对吧？",
+      "transcript": "所以这个主要是用来做音效的，对吧？",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "fad9cb5c72afdeb71fd999c4924388993b35f5ded3651fdec4d3f2cee44210a0",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 195,
+      "expected": "有东西弹出来的时候，可以配个“砰”的小声。",
+      "transcript": "有东西弹出来的时候，可以配个“砰”的小声。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "875e076e68b6ba50418c014dbb6a73e35b23f5349670b455070e05404a032688",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 196,
+      "expected": "有人点击的时候，可以配个小小的点击声。",
+      "transcript": "有人点击的时候，可以配个小小的点击声。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "6a866e3e48f7163118d4cdf414b7065e38e6be12592f80a2c5ff71efc133f643",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 197,
+      "expected": "等它开始决定要怎么用",
+      "transcript": "等他开始决定要怎么用。",
+      "nonempty": true,
+      "similarity": 0.9,
+      "audio_sha256": "46f4482da2c7e410e117c47586c76dd2e9e3fd43af0d95ba3c4d6e0630eeebe8",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 198,
+      "expected": "我给它的那些不同声音时，",
+      "transcript": "我给他的那些不同声音时。",
+      "nonempty": true,
+      "similarity": 0.909091,
+      "audio_sha256": "3ba391251d94d7647ca3e411ff6f874dc0b2e9537bf388c12a1c02737ff2074e",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 199,
+      "expected": "我基本上就跟它说：“行，把这个声音调小点。",
+      "transcript": "我基本上就跟他说：“行，把这个声音调小点。”",
+      "nonempty": true,
+      "similarity": 0.941176,
+      "audio_sha256": "797cdd3522de8d0bf9a14722edaa8bd550cf8d28142c7c5fd92abb84ac73d7e2",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 200,
+      "expected": "好吧，我觉得这个声音我一点都不喜欢。”",
+      "transcript": "好吧，我觉得这个声音我一点都不喜欢。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "32d32d17f3663125948d766b30b45ccd56a2037db770dc0f93950d1d02f17d13",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 201,
+      "expected": "直接把它完全去掉。\"",
+      "transcript": "直接把它完全去掉。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c0fe2e26d5a49dae7debe96a6f99abc642ef3a7f16cfefe812708adf6ef452a5",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 202,
+      "expected": "然后，它就这么一点点地，学会了我的喜好。",
+      "transcript": "然后他就这么一点点地学会了我的喜好。",
+      "nonempty": true,
+      "similarity": 0.941176,
+      "audio_sha256": "31522339d2ba9186f1400733fee6c94aa02d49d13ff3654330e3f345206cdd56",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 203,
+      "expected": "现在，这才是整个流程的关键。",
+      "transcript": "现在，这才是整个流程的关键。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c4fd3ef2076d740b5247176582e4f0db35a27c5ef7574ab3a026123435cd67dc",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 204,
+      "expected": "等你真的给了它反馈，在那之后，",
+      "transcript": "等你真的给了他反馈，在那之后。",
+      "nonempty": true,
+      "similarity": 0.923077,
+      "audio_sha256": "f433e948bf0df4be19cf620994866550b70ba1e066532ed390ff3961c9637a0b",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 205,
+      "expected": "你就让它把学到的东西，存到技能本身里去。",
+      "transcript": "你就让他把学到的东西存到技能本身里去。",
+      "nonempty": true,
+      "similarity": 0.944444,
+      "audio_sha256": "f33b67566eda70ffb0337a2c41435b85e8865ba80faf0f5f2cf8e1986058be9a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 206,
+      "expected": "这样，每次新建剪辑时，",
+      "transcript": "这样，每次新建剪辑时。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "fcb9d5763ef8e3eb16fb7322df9ceb5d4a82710495df323b5da449ef677b99a3",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 207,
+      "expected": "你的剪辑系统就会不断进步。",
+      "transcript": "你的剪辑系统就会不断进步。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "87792cd5ce71d9e9314c290ce3ae87f432746513816df6d71db623be5bfbf88b",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 208,
+      "expected": "接着，我开了一个新会话，用上了这个更新后的技能，",
+      "transcript": "接着，我开了一个新绘画，用上了这个更新后的技能。",
+      "nonempty": true,
+      "similarity": 0.904762,
+      "audio_sha256": "7ff0eace174e06cfa1d044db98adadff717f4c2664402d6988cbb062f075dc21",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 209,
+      "expected": "然后我又加上了另一个钩子。",
+      "transcript": "然后我又加上了另一个钩子。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "3d849819dca2bded3cd6e23b05f4eccb0803478a0ff65ea613402101800c7d08",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 210,
+      "expected": "这回，我很满意它居然自己去取了一个特定的徽标。",
+      "transcript": "这回我很满意，他居然自己去取了一个特定的徽标。",
+      "nonempty": true,
+      "similarity": 0.952381,
+      "audio_sha256": "b57cb6825c0e95482ed31f43583a94026351fe210ddd64fb75e232872b29bf9c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 211,
+      "expected": "还用音效把它表现了出来，",
+      "transcript": "还用音效把它表现了出来。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c71c642525b8f133b77128fb25d31741e5f47ae272688382464d98ebc6b0d736",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 212,
+      "expected": "但我希望它显示得再大一点。",
+      "transcript": "但我希望它显示的再大一点。",
+      "nonempty": true,
+      "similarity": 0.916667,
+      "audio_sha256": "59ad9f4e8f2643a6e55883d91edbc5faf9b882e862af4bd319bdb9db134990d1",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 213,
+      "expected": "我也不太喜欢它",
+      "transcript": "我也不太喜欢他。",
+      "nonempty": true,
+      "similarity": 0.857143,
+      "audio_sha256": "a4623f9c3c3a550cdba73b4b58db3c840ad57a44a87aa62fa9457e9e3abbab79",
+      "status": "needs_review"
+    },
+    {
+      "number": 214,
+      "expected": "在某些段落或动画里用的那套配色，",
+      "transcript": "在某些段落或动画里，用的那套配色。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "1e85d9c6306b02ac701ac3282e1969c95ab86245aef033c0e8d8c7b04d81b1fd",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 215,
+      "expected": "所以就决定稍微换一换。",
+      "transcript": "所以就决定稍微换一换。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "043e85157c6cdf22315edecbf67f80bc9cfcd93bcaa11dcff578dfa39f22c5db",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 216,
+      "expected": "后来我做的视频越多、给的反馈越多，效果就越好。",
+      "transcript": "后来我做的视频越多，给的反馈越多，效果就越好。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "0902292e82c50af6b105c86ff751c41d34d206760ba1d56886a169771d8a63bb",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 217,
+      "expected": "现在，我的这套技能有36条必须遵守的规则。",
+      "transcript": "现在我的这套技能有三十六条必须遵守的规则。",
+      "nonempty": true,
+      "similarity": 0.871795,
+      "audio_sha256": "18ce7c26810b0f831aef9369aafd761445199cca93d543c32e1ab7a2435f1b57",
+      "status": "needs_review"
+    },
+    {
+      "number": 218,
+      "expected": "再后来，我发现了一些特别酷的动画效果，",
+      "transcript": "再后来，我发现了一些特别酷的动画效果。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "cc6a93d68700c25d1ffa31693d3a1bfec421b15602e1dca05802ffeec3d3449c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 219,
+      "expected": "就开始琢磨哪些效果合适，",
+      "transcript": "就开始琢磨哪些效果合适。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "512e201373c608b90acc2878029f7afa99d570e95c12809ebd5755984bb178db",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 220,
+      "expected": "能配得上我实际做出来的内容。",
+      "transcript": "能配得上我实际做出来的内容。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "cdc39bdc1655cf8cdb88bc6be5019c03a7f64effac2cd1fb11b54e735b2afcf2",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 221,
+      "expected": "就这么慢慢加多了这些。",
+      "transcript": "就这么慢慢加多了这些。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "21baf62b2eb35aed6b2b48646e17463a0df0859cabab4b13c6741c1ee33d3362",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 222,
+      "expected": "每用一次，我就微调一次。",
+      "transcript": "每用一次，我就微调一次。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "dbe866552e4c1fac19739f05d6830a2379a9149aa09557828aaf78c5684e2a2f",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 223,
+      "expected": "最棒的是，我给它的每一条备注，",
+      "transcript": "最棒的是，我给他的每一条备注。",
+      "nonempty": true,
+      "similarity": 0.923077,
+      "audio_sha256": "53ce68a814e103a54e5b7b97d0c6877f88fbda8fc7ba6771ca906eb9e0730bea",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 224,
+      "expected": "下次它都再没犯过同样的错。",
+      "transcript": "下次他都再没犯过同样的错。",
+      "nonempty": true,
+      "similarity": 0.916667,
+      "audio_sha256": "2856755433dd9bc342a7f303e432171eac60b221a8cfdcec5595796a3cecf81e",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 225,
+      "expected": "也就是说，我基本能得到完全符合预期的输出，",
+      "transcript": "也就是说，我基本能得到完全符合预期的输出。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c105027f544874426a5753601736623c69d0c6302a00ef958f66df323877c39f",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 226,
+      "expected": "正是我想要的那种。",
+      "transcript": "正是我想要的那种。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "f0586401777da0dbc68a92a0b9158661afbe9786c28ad638ea18fbdb2df64eac",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 227,
+      "expected": "好了，各位，不说了。",
+      "transcript": "好了，各位不说了。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "50e10a47c6bca7c951e289b7134188c8daa5f4078c8012fc8d4a9c3be7bbc78f",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 228,
+      "expected": "我来给你们实际演示一下。",
+      "transcript": "我来给你们实际演示一下。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "a628e9eebace703601065fa59ef0a10c6ef9c4bfd93b3b6af153df89c8f8da93",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 229,
+      "expected": "好，我们现在又回到了克劳德代码里。",
+      "transcript": "好，我们现在又回到了克劳德代码里。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8bcf8874d4afda7e591a4d012ec8bedbc5d3bc8f4a83a74e95140c646cfa7723",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 230,
+      "expected": "既然我已经创建好了这个技能，或者说它的第一版，",
+      "transcript": "既然我已经创建好了这个技能，或者说它的第一版。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "95f0324e996e7603b8452534cf01f9120f22c79005dd53b5de19505d510a4722",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 231,
+      "expected": "我随时都能让它跑起来。",
+      "transcript": "我随时都能让他跑起来。",
+      "nonempty": true,
+      "similarity": 0.9,
+      "audio_sha256": "98ef4eae2ebfca32a74620da48d21a57958cbb1687abb39fca42316a3fdd56be",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 232,
+      "expected": "我来这儿。",
+      "transcript": "我来这儿。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "edfea87d4de0ab0c016edf335af4817620f67dc91e1c551f0619b42a67a12820",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 233,
+      "expected": "我主要是要加个原始文件。",
+      "transcript": "我主要是要加个原始文件。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "e88bdab8a53ae206f8a2aeaef44b2cc9a307d79d3be7bdbc526cc9970ab32d77",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 234,
+      "expected": "喏，这儿有个我今天早些时候录的片头，",
+      "transcript": "能，这儿有个我今天早些时候录的片头。",
+      "nonempty": true,
+      "similarity": 0.9375,
+      "audio_sha256": "269b351b487a5f9e4a8da8d9b6f96a8ad32a1c4b8cc44062a90503d28c98cd60",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 235,
+      "expected": "就是给这个视频用的。",
+      "transcript": "就是给这个视频用的。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c13edb397bbec0cfe9d3b7612a873c480b9e7039fe7339ab2274485985b2c1ac",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 236,
+      "expected": "我现在就把它打开。",
+      "transcript": "我现在就把它打开。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "48740972ab4cd72f0c7770ff7763bf0ff16cc3942458e600c729e83c3f1566cd",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 237,
+      "expected": "然后，我要这么跟它说。",
+      "transcript": "然后我要这么跟他说。",
+      "nonempty": true,
+      "similarity": 0.888889,
+      "audio_sha256": "a347d4231b18af9d9c2a32dec241225c8d51e17b265cd4f8f27a682a5d7d2087",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 238,
+      "expected": "用我的优兔剪辑技巧，为我的优兔视频剪辑这个片头。",
+      "transcript": "用我的优兔剪辑技巧，为我的优兔视频剪辑这个片头。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "0a4327cd5226964ae2106b24ef2cbdc1540abd33804c6cd83b39eadc6fc873e5",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 239,
+      "expected": "我还可以选着加一些我想要的东西，",
+      "transcript": "我还可以选择加一些我想要的东西。",
+      "nonempty": true,
+      "similarity": 0.933333,
+      "audio_sha256": "f49b7c0cac96d35b2afe3de26312a79f43cd1b15dbe9020c450248840f959726",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 240,
+      "expected": "要是片头里有些特定的活儿想让它干的话。",
+      "transcript": "要是片头里有些特定的活儿，想让他干的话。",
+      "nonempty": true,
+      "similarity": 0.944444,
+      "audio_sha256": "581ac1c0160c8206c014afe025a9127a03485ad57bc785e99a5a4b1ea2592227",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 241,
+      "expected": "所以这时候，只要我说“缩放”之类的词，",
+      "transcript": "所以这时候，只要我说“缩放”之类的词。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "ec5d4ea48ab050bed3d6aa29c9f3f7fb95cf867d78635fa36af5802644929d90",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 242,
+      "expected": "你就能真的做出缩放效果。",
+      "transcript": "你就能真的做出缩放效果。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "254d15804269bb17cf8c2b61b6974646d52960ceb88955dbfaa565bc57518e75",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 243,
+      "expected": "我说要加个音效，你就能真的配上一个音效。",
+      "transcript": "我说：“要加个音效，你就能真的配上一个音效。”",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "42f46b79cd1dcbdb6b4c51894aa1d1ed119d92ed656788348bd6e1728808c8ba",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 244,
+      "expected": "然后，只要我提到各种动画，",
+      "transcript": "然后，只要我提到各种动画。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9d4bef3b2f675dae70adff132fe2b8cf395cbbb48613a8e6c4fdf133c270c157",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 245,
+      "expected": "你基本上就能展示三种最拿得出手的动画，",
+      "transcript": "你基本上就能展示三种最拿得出手的动画。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "58acbab63a1cee8c8da6e0d56b7200c3a5a0e80a14fb8a222fac46cfd3be58f6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 246,
+      "expected": "要么是我以前做过的，",
+      "transcript": "要么是我以前做过的。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "03e70937d4b044ad5cdd16eff3fe5f009f3b507833ae0199cfbd28591057b3a0",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 247,
+      "expected": "要么是你从技能库里的素材里特别喜欢的。",
+      "transcript": "要么是你从技能库里的素材里特别喜欢的。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "87f90f20a9ee79c44894b54f1920c277ef61df22917d1294677ca5738c8afeb4",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 248,
+      "expected": "这些其实就是我给它的指令，",
+      "transcript": "这些其实就是我给他的指令。",
+      "nonempty": true,
+      "similarity": 0.916667,
+      "audio_sha256": "3aca5fba8a06b00c8b4f586232fd91632d6d3132d1097d01cc5cd244bf2e1c47",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 249,
+      "expected": "因为我知道自己录好的那段片头，",
+      "transcript": "因为我知道自己录好的那张片头。",
+      "nonempty": true,
+      "similarity": 0.928571,
+      "audio_sha256": "e77dcbc36d510839c7c88dd805229d2522844625249a8be94e20b70118f72263",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 250,
+      "expected": "也想顺便把剪辑技巧展示在片头里。",
+      "transcript": "也想顺便把剪辑技巧展示在片头里。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "efd6e6faa9fe05500ac718c0432dc314a2ad52f9665008bde020a8749668d60b",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 251,
+      "expected": "不过你几乎可以给它任何指令。",
+      "transcript": "不过，你几乎可以给他任何质量。",
+      "nonempty": true,
+      "similarity": 0.769231,
+      "audio_sha256": "14c582fc4ad0a48b217237cea4358272a08f29029c85a68393dbd25a9b14bf38",
+      "status": "needs_review"
+    },
+    {
+      "number": 252,
+      "expected": "到这一步，我差不多就直接回车了。",
+      "transcript": "到这一步，我差不多就直接回车了。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "d02fee3c0c40c292869a07c2663bea7dd5875fcd76a69525a1d6e2c8399d5266",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 253,
+      "expected": "然后我们来看看克劳德到底能做什么。",
+      "transcript": "然后我们来看看克劳德到底能做什么。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "69a04d55190605900c80a0ad9f5846b8c8b1b2d79b20b3a01beeb0df35c4f048",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 254,
+      "expected": "运行这个技能，优兔剪辑，就像我说的，它会先找到这个技能，",
+      "transcript": "运行这个技能，U two剪辑，就像我说的，它会先找到这个技能。",
+      "nonempty": true,
+      "similarity": 0.88,
+      "audio_sha256": "4fd38d3e304dbc6f73176657ed8da45427ca63fba57e833174d12f9ad0d91a7f",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 255,
+      "expected": "然后就直接开始运行。",
+      "transcript": "然后就直接开始运行。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "a9f17ce96a4edbcc5f3ccb84b06f0ced54b9f74a2ddd3e81796265a676180b06",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 256,
+      "expected": "正在检测片段并列出内容，明白吗？",
+      "transcript": "正在检测片段，并列出内容。明白吗？",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9b46f24278dcc7459df071c6b9d14b374fc296d429bd0e43f6bd94292be43d8f",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 257,
+      "expected": "现在说清楚一点，这段完全是未经剪辑的。",
+      "transcript": "现在说清楚一点：这段完全是未经剪辑的。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "6357aa01c4067a5382710760260eefd57cbb489c23fc386ae9bcb5729e759aab",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 258,
+      "expected": "所以基本上，我犯了很多错。",
+      "transcript": "所以基本上，我犯了很多错。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b7bf53256effda4b2f6c1559a8ffb0f0b6967170b2c6a469e89854746addbdd6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 259,
+      "expected": "我在高潮部分中途停下来，看一眼我的笔记。",
+      "transcript": "我在高潮部分中途停下来，看一眼我的笔记。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9d93ae053b7675a4448e5d4f6667d38d0a56393f64845ed7d3941a5f84a512b1",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 260,
+      "expected": "它基本上就是把片段切碎，也就是在复制这个片段，",
+      "transcript": "它基本上就是把片段切碎，也就是再复制这个片段。",
+      "nonempty": true,
+      "similarity": 0.952381,
+      "audio_sha256": "9520526683ee9f6fb8cf265dcb38056468e0fe7939b756010e56d3504a4f8ea8",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 261,
+      "expected": "用帕拉基特把它转录出来，",
+      "transcript": "用帕拉吉特把它转录出来。",
+      "nonempty": true,
+      "similarity": 0.909091,
+      "audio_sha256": "b256aa71a7985a2625ea0029f7ff0fe757aa6d2b08863a166ae6641bfc32af30",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 262,
+      "expected": "也就是我们刚才说的那个工具，",
+      "transcript": "也就是我们刚才说的那个工具。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8c6a3960403600d59aa1a53e01642d30b60384d4c611e58c96bd18e1810392ee",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 263,
+      "expected": "它会像我们说的那样，在设置时自动安装。",
+      "transcript": "它会像我们说的那样，在设置时自动安装。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "7865682d07c6cb342196065b6752f8310359b6da71e53ee147f7bd86d945a49a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 264,
+      "expected": "现在，因为整个过程大概要花10到20分钟，",
+      "transcript": "现在，因为整个过程大概要花十到二十分钟。",
+      "nonempty": true,
+      "similarity": 0.810811,
+      "audio_sha256": "5afb6b55abcc83644a52fab01cec7362af42a66c5c18d8b56d42d678177258da",
+      "status": "needs_review"
+    },
+    {
+      "number": 265,
+      "expected": "我先给你们看看这个钩子的V1版本。",
+      "transcript": "我先给你们看看这个钩子的 V V 版本。",
+      "nonempty": true,
+      "similarity": 0.9375,
+      "audio_sha256": "bb31b58ff4e77fc3248297d47005533b1485d4de9542698c2e06d102aed8cd53",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 266,
+      "expected": "视频里所见的一切",
+      "transcript": "视频里所见的一切。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "6ed33e6508d000533eea0478a64a986d258cda10f8e1e43ae2cfab0b32a55e60",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 267,
+      "expected": "都是我在睡觉时，由我的克劳德代码系统剪辑完成的。",
+      "transcript": "都是我在睡觉时由我的克劳德代码系统剪辑完成的。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "0c1aaea8275340bc2f5d286febbb8563f065bdb68c03949571829f8e813c2ccc",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 268,
+      "expected": "每一个剪辑、每一个音效、每一个动画，比如这个，",
+      "transcript": "每一个剪辑，每一个音效，每一个动画，比如这个。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "0d197ab9f4985294be736e30864d38f0da314d06ec47d841edca01f0069b3637",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 269,
+      "expected": "还有这个，或者这个，",
+      "transcript": "还有这个，或者这个。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "0df8b091e3194a7d5de66a76a3a613be2d761395786c354a7f95e8885edd313e",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 270,
+      "expected": "全都是在没动时间轴的情况下完成的。不，我不会写代码。",
+      "transcript": "全都是在没动时间轴的情况下完成的。不，我不会写代码。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "e33c7d395ecef3ee9b8c1aab684c94da72760f1e03885778d4ed1d3d66a4faf9",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 271,
+      "expected": "砰。所以你看，这段里我有几处想改的地方，",
+      "transcript": "碰，所以你看这段里，我有几处想改的地方。",
+      "nonempty": true,
+      "similarity": 0.941176,
+      "audio_sha256": "c4473b6e71d763e4393d901de08459b7de8aab23ed5061e1aa3a24a691061fed",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 272,
+      "expected": "但基本上已经非常准了。",
+      "transcript": "但基本上已经非常准了。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "7bd06e6c6b1260d004c246670320f80c573cfd05b2c35598d67ac132daa705b6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 273,
+      "expected": "它的意思基本上是把2分46秒的原始素材剪成了31秒，",
+      "transcript": "他的意思基本上是把两分四十六秒的原始素材剪成了三十一秒。",
+      "nonempty": true,
+      "similarity": 0.730769,
+      "audio_sha256": "2f0317a89af7e6632cd02e9f0cc1ec3e0f077106cfe79c9e5eb8246cc6040994",
+      "status": "needs_review"
+    },
+    {
+      "number": 274,
+      "expected": "这效果简直太棒了。",
+      "transcript": "这效果简直太棒了！",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9260ca3b82ad90be2e7366645f6c370c0fc37afa67472b6de29ebf2e1d0ec075",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 275,
+      "expected": "然后有几处小地方，对吧，我想再改改。",
+      "transcript": "然后有几处小地方，对吧？我想再改改。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b6b8c0f565b4c05374b4a39cb1985afba30a6b141f1f8fa335b2704be298313a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 276,
+      "expected": "那我大概会这么说。",
+      "transcript": "那我大概会这么说。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "39f81970b9755c1b49b080ba60e42ebea5c5ba0c8cd71beab7edc061092430d4",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 277,
+      "expected": "第一条修改意见大概是这样的：",
+      "transcript": "第一条修改意见大概是这样的。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "b0fa0a317786037a0dba1ea797a1821a665fa4ae5b6f20ed78903849ca940ad8",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 278,
+      "expected": "\"能麻烦你给这段配上点悬疑音效吗？\"",
+      "transcript": "能麻烦你给这段配上点悬疑音效吗？",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "a64d506390f3d957fae244cb7772a864b8d247c1d5fe54fa679a1e676ab97f19",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 279,
+      "expected": "\"我想让你选一首曲子，加到这个钩子部分。\"",
+      "transcript": "我想让你选一首曲子，加到这个钩子部分。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "4027f53197b38ee029246167fd9ad7c413f12f218d6f6f91ca10f5d0a60f06cf",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 280,
+      "expected": "我一般喜欢把整个片段过一遍。",
+      "transcript": "我一般喜欢把整个片段过一遍。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "82c996fad57e809247d4b1315c091f40ee698bb9e4d701217321c8ca5b3135da",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 281,
+      "expected": "然后给它加上时间戳，比如：",
+      "transcript": "然后给他加上事件戳，比如。",
+      "nonempty": true,
+      "similarity": 0.727273,
+      "audio_sha256": "210747bbe30e4a92575853b65658a08311e8a8bf429203f364c4bbc63295d1dc",
+      "status": "needs_review"
+    },
+    {
+      "number": 282,
+      "expected": "“哦，我看到第22秒这儿，是你这么做的。”",
+      "transcript": "哦，我看到第二十二秒，这儿是你这么做的。",
+      "nonempty": true,
+      "similarity": 0.848485,
+      "audio_sha256": "ab857a697809db8c4bbd6e95533f9dfcf785e1755062cb8fcae594e923b861d8",
+      "status": "needs_review"
+    },
+    {
+      "number": 283,
+      "expected": "我希望它能做到那样。",
+      "transcript": "我希望他能做到那样。",
+      "nonempty": true,
+      "similarity": 0.888889,
+      "audio_sha256": "95fa71e93368e77c28a6144f923b5245d1bc316b1498c998412bf7d81df26fee",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 284,
+      "expected": "从画面到声音，什么都可以，",
+      "transcript": "从画面到声音，什么都可以。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "73041c2a0853a1000f2eaefff6499671c452f6b9cbdb6f6b1154c680d8ed2e33",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 285,
+      "expected": "再到整体的感觉，或者它剪辑的方式。",
+      "transcript": "再到整体的感觉，或者他剪辑的方式。",
+      "nonempty": true,
+      "similarity": 0.933333,
+      "audio_sha256": "58c965239a1a7af08778859f2f3833ab51e332eecb1351bee5617a129a88ce09",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 286,
+      "expected": "然后，在所有这些弄完之后，我基本上可以告诉它：",
+      "transcript": "然后在所有这些弄完之后，我基本上可以告诉他。",
+      "nonempty": true,
+      "similarity": 0.95,
+      "audio_sha256": "3d0d7ace563feca996588fb0a1d406759e8d592786754b77688b0a834fd2578e",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 287,
+      "expected": "“嘿，能不能麻烦你，你知道的，把这个再稍微改好一点？”",
+      "transcript": "能不能麻烦你？你知道的，把这个再稍微改好一点。",
+      "nonempty": true,
+      "similarity": 0.97561,
+      "audio_sha256": "366cace9dab7c1ab2f28ecd3ff48acde919f18705d869f30ee5abb4a39b6fa8a",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 288,
+      "expected": "当然，最后一步很酷的是，我可以直接说：",
+      "transcript": "当然，最后一步很酷的是，我可以直接说。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "858f67a459637cd714f9544b44169ee6632086f500d20ecf067a33b4007e450b",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 289,
+      "expected": "嘿，能学学我们刚做的，加进技能里吗？",
+      "transcript": "嗨，能学学我们刚做的加精技能里吗？",
+      "nonempty": true,
+      "similarity": 0.866667,
+      "audio_sha256": "80a2b33246644de7cd70ae8b259130df8d8db9702488851f0a82ec0b7266a0e8",
+      "status": "needs_review"
+    },
+    {
+      "number": 290,
+      "expected": "一次搞定。",
+      "transcript": "一次搞定。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8b7aeacf38113c5af893d8e9e429a8fd0b92744d8f2776f00baac3b06617335e",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 291,
+      "expected": "视频开头你看到的，就是最终成品。",
+      "transcript": "视频开头，你看到的就是最终成品。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "33befc0912334641cb9e4570e84eec8f7effcbac7375f694682a3dd2520935ce",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 292,
+      "expected": "以前呢，我都是一段一段地弄。",
+      "transcript": "以前呢，我都是一段一段的弄。",
+      "nonempty": true,
+      "similarity": 0.916667,
+      "audio_sha256": "8ee806feeb05161407a828f07d2097e2e27a0587c326ef6161083d7ce9e4abd9",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 293,
+      "expected": "现在嘛，我就直接把所有素材全扔进去。",
+      "transcript": "现在嘛，我就直接把所有素材全扔进去。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "3c833e2aa62b55dac246d7af2d5ea3406c740e5a0b3dc62c69dc16c83ea11f2c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 294,
+      "expected": "要是我也在泰拉里录过，",
+      "transcript": "要是我也在泰拉里路过。",
+      "nonempty": true,
+      "similarity": 0.9,
+      "audio_sha256": "7dbac441065c3316e787d7e52078adf7753aa9ad61ce9331638ef229ba176f47",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 295,
+      "expected": "我就会跟它说：“嘿，这些是文件名。”",
+      "transcript": "我就会跟他说：“嘿，这些是文件名。”",
+      "nonempty": true,
+      "similarity": 0.923077,
+      "audio_sha256": "c19f35fa6fa35c12b942e4095774ffcd35476cf45b0822395b4c638370ba6d0c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 296,
+      "expected": "因为它能直接访问，",
+      "transcript": "因为它能直接访问。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "23dbb7ccdee249ee832784ee95d62fdda3af3b803b6a9e0935be994099d67c2f",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 297,
+      "expected": "我就不需要上传实际文件了。",
+      "transcript": "我就不需要上传实际文件了。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "013798dcd99604163e8aa09c31a50da82f49b9e385b02ddf1958b865a562fabd",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 298,
+      "expected": "没错，流程里还是有个人在操作，那个人就是我，而且我还挺喜欢这样。",
+      "transcript": "没错，流程里还是有个人在操作，那个人就是我，而且我还挺喜欢这样。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c9fbb0d1232c45b8e7d89e1345e0143822ebbb7025f241cf16975cfb7a8f50db",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 299,
+      "expected": "现在拍完这个之后，",
+      "transcript": "现在拍完这个之后。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9aee4c75f8993e39b5b68a1667f54fd40644f8bb6dca67ae5e8b3164d8690237",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 300,
+      "expected": "我就把这段原始素材全喂给了克劳德代码。",
+      "transcript": "我就把这段原始素材全喂给了克劳德代码。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "daba56b3dad3eb1feb1116d7083297496ebaca1d1ab0fab17a21c0e964a6b47c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 301,
+      "expected": "明天我一醒来，",
+      "transcript": "明天我一醒来。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "c3ee0fd806cf4055be5500c87c4283ab3a24b9999eee2a9509925b0f12cd1ec3",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 302,
+      "expected": "就能看到跟你屏幕上看到的一模一样的画面。",
+      "transcript": "就能看到跟你屏幕上看到的一模一样的画面。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "0f8e7355886db077d6d901cb53c85d70f0b617e01365f3f470f39b20d5914024",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 303,
+      "expected": "明天早上，我只要看看，提几条意见，就能拿到最终版本了。",
+      "transcript": "明天早上，我只要看看提几条意见，就能拿到最终版本了。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9e0d33507ca0610309b944991605bcffcbd861a5c1155770275a961a1da5f362",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 304,
+      "expected": "所以我是导演，克劳德是剪辑，而我完全不用剪。",
+      "transcript": "所以我是导演，克劳德是剪辑，而我完全不用剪。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "d62222aaee48274095db6ed568ee4bded74090dcea5e8a0bd47a0813322fcba9",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 305,
+      "expected": "这太棒了，因为我根本不会剪辑。",
+      "transcript": "这太棒了，因为我根本不会剪辑。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "874d5d74b46182220928f01dcdfdda301548d803b63d886c7c66edc9d9753f58",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 306,
+      "expected": "说到这儿，大家都问我成本怎么样，那咱们就具体到每一块钱算算。",
+      "transcript": "说到这儿，大家都问我成本怎么样。那咱们就具体到每块钱算算。",
+      "nonempty": true,
+      "similarity": 0.981132,
+      "audio_sha256": "d00e70e1a998f0fafc5c0d6e7ae7fe65664d2c9f9a117db78eaa0e616899030b",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 307,
+      "expected": "首先，我用的是克劳德，是最高套餐，一个月要花200美元。",
+      "transcript": "首先，我用的是克劳德，是最高套餐，一个月要花二零零美元。",
+      "nonempty": true,
+      "similarity": 0.875,
+      "audio_sha256": "113675177faa8c2128fec8d8a57bd4cff87ba2a796f6fa3c5406861969f2c44b",
+      "status": "needs_review"
+    },
+    {
+      "number": 308,
+      "expected": "这是固定费用，但我其实所有工作都用它，不只是剪视频。",
+      "transcript": "这是固定费用，但我其实所有工作都用它，不只是剪视频。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "599af56c4377d33782a80ad92a6ffa48bf8b9a73e6af7b75e9180fd405eace12",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 309,
+      "expected": "所以我让克劳德具体统计了一下它用了多少token，",
+      "transcript": "所以我让克劳德具体统计了一下，他用了多少头啃。",
+      "nonempty": true,
+      "similarity": 0.8,
+      "audio_sha256": "03c8f9998d9a210b0b9ec8e926abc2ac1a07ffeb406df348aec7fd640980aad1",
+      "status": "needs_review"
+    },
+    {
+      "number": 310,
+      "expected": "我每个月是有token数量上限的。",
+      "transcript": "我每个月是有 token 数量上限的。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "8559b96c5e391b221159ad1e372d72a6115dcbe3e7370e3e840da1616db09637",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 311,
+      "expected": "算下来，我上一个视频的制作成本是24美元。",
+      "transcript": "算下来，我上一个视频的制作成本是二十四美元。",
+      "nonempty": true,
+      "similarity": 0.871795,
+      "audio_sha256": "d425285a6c2656aca42ed9cb4b5d1447a636fb9fdb2a0189a73398b1ac3df799",
+      "status": "needs_review"
+    },
+    {
+      "number": 312,
+      "expected": "这还是最多。",
+      "transcript": "这还是最多。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "faf451f34714916acc1c4ee57f006415139c3d1bd2f4d618bdd8abb0ee1076bb",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 313,
+      "expected": "最棒的是，海珀帧和帕拉基特都完全免费，所以这部分不用花钱。",
+      "transcript": "最棒的是，海珀真和帕拉吉特都完全免费，所以这部分不用花钱。",
+      "nonempty": true,
+      "similarity": 0.923077,
+      "audio_sha256": "ce5cc7548055b21220c63a04d26215ddbd73ff1deb2ee694e15a27dd701a69b8",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 314,
+      "expected": "Tele我用的是年付方案，每月13美元，合每个视频大概2美元。",
+      "transcript": "泰勒，我用的是年付方案，每月十三美元，和每个视频大概二美元。",
+      "nonempty": true,
+      "similarity": 0.740741,
+      "audio_sha256": "4e5f2624133b7ed9484ef7d150c433b35da9acc0557e7a2df8705eeddfbc9f3f",
+      "status": "needs_review"
+    },
+    {
+      "number": 315,
+      "expected": "艾皮戴米克桑德是我所有音效和音乐的来源，花了9.99美元。",
+      "transcript": "IP代米克桑德是我所有音效和音乐的来源，花了九点九九美元。",
+      "nonempty": true,
+      "similarity": 0.754717,
+      "audio_sha256": "f3182f59ee52d5fddf52c873b3baa1eba8e0a1b4b63d3c47b3533cecdc4bb733",
+      "status": "needs_review"
+    },
+    {
+      "number": 316,
+      "expected": "同样，我用的是年付方案，那就再加1美元吧。",
+      "transcript": "同样，我用的是年付方案，那就再加一美元吧。",
+      "nonempty": true,
+      "similarity": 0.944444,
+      "audio_sha256": "3e8adab7347c8ecbc0df8399dc49155ef5a4cfd030b1ff03bac9b2c75dfc4a6c",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 317,
+      "expected": "所以总共算下来，每个视频差不多要花27美元。",
+      "transcript": "所以总共算下来，每个视频差不多要花二十七美元。",
+      "nonempty": true,
+      "similarity": 0.878049,
+      "audio_sha256": "b2d85fe29be606acddaa0696a5c5956526a1321cb873440b6c6365770bdbb27a",
+      "status": "needs_review"
+    },
+    {
+      "number": 318,
+      "expected": "但现实是，找优兔剪辑师的话，一个靠谱的剪辑师每个视频要价250到1000多美元。",
+      "transcript": "但现实是，找优兔剪辑师的话，一个靠谱的剪辑师，每个视频要价两百五十到一千多美元。",
+      "nonempty": true,
+      "similarity": 0.821918,
+      "audio_sha256": "9eb8ee3047e5b7ccd9d00147953b4d1d64eca6ccbc753aed946a045c246c3939",
+      "status": "needs_review"
+    },
+    {
+      "number": 319,
+      "expected": "也就是说，每个视频我能省下几百美元。",
+      "transcript": "也就是说，每个视频我能省下几百美元。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "1bfc80f0d2411c012c4c101b027f0c2a90523c033876a1039bad654224fb52b6",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 320,
+      "expected": "但对我来说，最大的好处其实是执行速度。",
+      "transcript": "但对我来说，最大的好处其实是执行速度。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "a2e70b936bdbf13bd202e4308217035c987be0d2bbdb67c73bd691119dcdc134",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 321,
+      "expected": "现在我当天就能策划、拍摄、剪辑并发布视频。",
+      "transcript": "现在我当天就能策划、拍摄、剪辑并发布视频。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "9263bd00c8ae24179f7fe1bb900a931cce80593220c43adbdf6644680518f20e",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 322,
+      "expected": "以前呢，我得花3到7天，具体看跟哪个剪辑师合作。",
+      "transcript": "以前呢，我得花三到七天，具体看跟哪个剪辑师合作。",
+      "nonempty": true,
+      "similarity": 0.904762,
+      "audio_sha256": "bca6750d44373e610fdbfa04c46903e86de161707601abcd50b3c50e868176a8",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 323,
+      "expected": "而且改来改去，总是反反复复。",
+      "transcript": "而且改来改去，总是反反复复。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "a74860f1d42a3eb9eb5ed28d15d32198c51601b5f487017eb002bfc5c42fac2e",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 324,
+      "expected": "还因为人为失误，我常得重做那些我明明已经看过，",
+      "transcript": "还因为人为失误，我常的重做那些我明明已经看过。",
+      "nonempty": true,
+      "similarity": 0.952381,
+      "audio_sha256": "9e00681e2277c92c0ce4caf64fd282851544ba615f0b7164993bb69886ca4e23",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 325,
+      "expected": "但上下个视频里根本没改动的地方。",
+      "transcript": "但上下个视频里根本没改动的地方。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "60afedaa62776c38623fa6a7be5e3e928b84514d18a777aedbc9cfa8cb54a038",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 326,
+      "expected": "现在，我可不想让你们也遭我受过的罪，",
+      "transcript": "现在我可不想让你们也遭我受过的罪。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "10e854e788510159853c84f2415ce924b8e100c77b2702382ae5f27f78819aab",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 327,
+      "expected": "所以我会在我的免费社群里，免费教你们这项技能。",
+      "transcript": "所以我会在我的免费社群里免费教你们这项技能。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "519eecc0209b733b4c1baf73bed585043116dd417830671dcf64a098d411402f",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 328,
+      "expected": "它叫维阿诺扣德，链接就在下面。",
+      "transcript": "它叫维亚诺寇德，链接就在下面。",
+      "nonempty": true,
+      "similarity": 0.846154,
+      "audio_sha256": "87019965126ce97b1e63bbda73fe7a322be47a890d74dff91e90738d31c0d447",
+      "status": "needs_review"
+    },
+    {
+      "number": 329,
+      "expected": "想看看这项剪辑技能在完整视频里的实际运用？",
+      "transcript": "想看看这项剪辑技能在完整视频里的实际运用。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "72d97f36de9a2e76dc2c8a6eec01635f5d1d9188160cd3ce7346695ce427a378",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 330,
+      "expected": "还想详细了解欧盆诶艾开发日都公布了哪些内容，",
+      "transcript": "还想详细了解 Open AI 开发日都公布了哪些内容？",
+      "nonempty": true,
+      "similarity": 0.772727,
+      "audio_sha256": "c25266dccbfb8c4051c71337fc00b36e5bca3cd47ead45f75f927ab50fd051d2",
+      "status": "needs_review"
+    },
+    {
+      "number": 331,
+      "expected": "可以看看这个视频。",
+      "transcript": "可以看看这个视频。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "ff8cf5f4b4113e659efb4a912061a720a940d96024e2279e08d43c0d5fec62ff",
+      "status": "text_match_screen_pass"
+    },
+    {
+      "number": 332,
+      "expected": "希望你们喜欢这个视频，我们下个视频见，走起！",
+      "transcript": "希望你们喜欢这个视频。我们下个视频见，走起。",
+      "nonempty": true,
+      "similarity": 1.0,
+      "audio_sha256": "3ac52ce18181580629a7f2c267b3f60fe058744079157e4153f9ed068a53ea19",
+      "status": "text_match_screen_pass"
+    }
+  ]
+}

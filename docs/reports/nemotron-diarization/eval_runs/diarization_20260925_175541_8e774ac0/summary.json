@@ -1,0 +1,27 @@
+{
+  "status": "pass",
+  "audio_path": "/private/tmp/e0c803_16k.wav",
+  "model": "mlx-community/Nemotron-3-Diarization-8bit",
+  "preset": "offline",
+  "threshold": 0.5,
+  "min_duration": 0.0,
+  "merge_gap": 0.0,
+  "load_time_seconds": 1.591,
+  "infer_time_seconds": 0.072,
+  "total_time_seconds": 1.829,
+  "num_speakers": 3,
+  "speaker_labels": [
+    "S01",
+    "S02",
+    "S03"
+  ],
+  "speaker_indices": [
+    0,
+    1,
+    2
+  ],
+  "segments_count": 9,
+  "total_frames": 4500,
+  "frame_stride_seconds": 0.01,
+  "audio_duration_seconds": 45.0
+}

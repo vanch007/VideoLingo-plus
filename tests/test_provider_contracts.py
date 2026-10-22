@@ -19,10 +19,18 @@ def test_fix_base_url_adds_v1_for_openai_compatible_roots():
     assert fix_base_url("http://127.0.0.1:8000/v1") == "http://127.0.0.1:8000/v1"
 
 
-def test_default_llm_is_requested_siliconflow_glm_model():
-    assert load_key("llm.provider") == "openai_compatible"
-    assert load_key("api.base_url") == "https://api.siliconflow.cn"
-    assert load_key("api.model") == "zai-org/GLM-4.5-Air"
+def test_default_llm_is_local_index_translate():
+    from core.llm_provider import get_llm_provider_config, get_llm_max_workers, get_translation_strategy
+    config = get_llm_provider_config()
+    assert config.name == "omlx"
+    assert config.base_url == "http://127.0.0.1:8000/v1"
+    assert config.model == "Index-Translate-35B-A3B-preview-oQ6e-fp16-mtp"
+    args = build_completion_args(config, [], True)
+    assert args["temperature"] == 0
+    assert args["max_tokens"] == 8192
+    assert args["extra_body"]["chat_template_kwargs"]["enable_thinking"] is False
+    assert get_llm_max_workers() == 1
+    assert get_translation_strategy(config) == "localized"
 
 
 def test_completion_args_skip_json_format_when_provider_does_not_support_it():
@@ -47,6 +55,15 @@ def test_chat_client_receives_provider_timeout():
     )
     client = create_chat_client(cfg)
     assert client.timeout == 12
+
+
+def test_local_omlx_candidate_uses_local_auth_but_remote_provider_requires_a_key():
+    import pytest
+    local = LLMProviderConfig(name="omlx_duration", model="local", base_url="http://127.0.0.1:8000/v1", api_key="")
+    assert create_chat_client(local).api_key == "local"
+    remote = LLMProviderConfig(name="omlx_duration", model="local", base_url="https://example.com/v1", api_key="")
+    with pytest.raises(ValueError,match="API key is missing"):
+        create_chat_client(remote)
 
 
 def test_siliconflow_indextts2_provider_is_removed():

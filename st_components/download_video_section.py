@@ -45,12 +45,18 @@ def download_video_section():
             # 如果没有找到视频文件，继续执行下面的代码
             col1, col2 = st.columns([3, 1])
             with col1:
-                url = st.text_input(t("Enter YouTube link:"))
+                url = st.text_input(
+                    t("Enter YouTube link:"),
+                    placeholder="YouTube / Bilibili / 抖音 / TikTok 等视频链接",
+                )
             with col2:
                 res_dict = {
-                    "360p": "360",
                     "1080p": "1080",
-                    "Best": "best"
+                    "Best (最高画质)": "best",
+                    "2160p (4K)": "2160",
+                    "1440p (2K)": "1440",
+                    "720p": "720",
+                    "360p": "360",
                 }
                 target_res = load_key("ytb_resolution")
                 res_options = list(res_dict.keys())
@@ -70,33 +76,10 @@ def download_video_section():
 
             if st.button(t("Download and Dub"), key="download_and_dub_button", width="stretch"):
                 if url:
-                    # 记录下载开始时间
-                    download_start_time = time.time()
-                    with st.spinner("Downloading video..."):
-                        download_video_ytdlp(url, resolution=res, cutoff_time=get_smoke_cutoff())
-                    # 记录下载耗时
-                    download_elapsed = time.time() - download_start_time
-                    save_timing("下载视频", download_elapsed)
-
-                    # 记录项目总开始时间
-                    project_start_time = time.time()
-                    save_timing("项目开始时间", project_start_time)
-
-                    # 确保视频文件存在后再处理
-                    try:
-                        # 检查视频文件是否存在
-                        find_video_files()
-                        with st.spinner("Processing..."):
-                            from st import process_text, process_audio
-                            process_text(skip_merge_subtitles=True)
-                            process_audio()
-                    except Exception as e:
-                        st.error(f"Error: {str(e)}")
-                        st.info("Please try again or check if the video was downloaded correctly.")
-
-                    # 记录项目总耗时
-                    project_elapsed = time.time() - project_start_time
-                    save_timing("项目总耗时", project_elapsed)
+                    from core.config_utils import update_key
+                    from core.pipeline.job import start_pipeline_job
+                    update_key('ytb_resolution', res)
+                    start_pipeline_job(url)
                     st.rerun()
 
             uploaded_file = st.file_uploader(t("Or upload video"), type=load_key("allowed_video_formats") + load_key("allowed_audio_formats"))
@@ -118,6 +101,9 @@ def download_video_section():
                 if ext.lower() in load_key("allowed_audio_formats"):
                     convert_audio_to_video(os.path.join(OUTPUT_DIR, clean_name))
 
+                from core.step1_ytdlp import ensure_canonical_source_video
+                ensure_canonical_source_video(OUTPUT_DIR)
+
                 # 记录上传耗时
                 upload_elapsed = time.time() - upload_start_time
                 save_timing("上传视频", upload_elapsed)
@@ -130,10 +116,8 @@ def download_video_section():
                 try:
                     # 检查视频文件是否存在
                     find_video_files()
-                    with st.spinner("Processing..."):
-                        from st import process_text, process_audio
-                        process_text(skip_merge_subtitles=True)
-                        process_audio()
+                    from core.pipeline.job import start_pipeline_job
+                    start_pipeline_job(os.path.abspath(find_video_files()))
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
                     st.info("Please try again or check if the video was uploaded correctly.")

@@ -1,0 +1,40 @@
+objc[48544]: Class AVFFrameReceiver is implemented in both /Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/cv2/.dylibs/libavdevice.61.3.100.dylib (0x11afdc3a8) and /Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/av/.dylibs/libavdevice.62.3.101.dylib (0x16cc4c3a8). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+objc[48544]: Class AVFAudioReceiver is implemented in both /Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/cv2/.dylibs/libavdevice.61.3.100.dylib (0x11afdc3f8) and /Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/av/.dylibs/libavdevice.62.3.101.dylib (0x16cc4c3f8). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+objc[48544]: Class AVFFrameReceiver is implemented in both /Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/cv2/.dylibs/libavdevice.61.3.100.dylib (0x11afdc3a8) and /opt/homebrew/Cellar/ffmpeg@7/7.1.5_3/lib/libavdevice.61.3.100.dylib (0x7008e20328). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+objc[48544]: Class AVFAudioReceiver is implemented in both /Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/cv2/.dylibs/libavdevice.61.3.100.dylib (0x11afdc3f8) and /opt/homebrew/Cellar/ffmpeg@7/7.1.5_3/lib/libavdevice.61.3.100.dylib (0x7008e20378). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+[OK] ffmpeg: ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers
+[OK] pip-check: No broken requirements found.
+[OK] python: 3.10.21
+[OK] source-asr:local-aligned: alignment runtime present; model inference not probed
+[OK] diarization:nemotron-mlx: ready
+[OK] import:numpy: ok
+[OK] import:scipy.sparse.linalg: ok
+[OK] import:pandas: ok
+[OK] import:cv2: ok
+[OK] import:torch: ok
+[OK] import:torchaudio: ok
+[OK] import:torchvision: ok
+[OK] import:torchcodec: ok
+[OK] import:librosa: ok
+[OK] import:spacy: ok
+[OK] import:openai: ok
+[OK] import:streamlit: ok
+[OK] import:demucs.api: ok
+[OK] output-writable: output exists or project root is writable
+[OK] speech-readback-command: /Users/vanch/.codex/envs/bluestone-mlx-audio/bin/python
+[OK] secret:api.key: optional; env=VIDEOLINGO_API_KEY,OPENAI_API_KEY
+[OK] secret:llm.providers.omlx.api_key: optional; env=OMLX_API_KEY,VIDEOLINGO_OMLX_API_KEY
+[OK] secret:hf_token: optional; env=VIDEOLINGO_HF_TOKEN,HF_TOKEN
+[OK] omlx-models: 14 models discovered
+[OK] omlx-chat: Index-Translate-35B-A3B-preview-oQ6e-fp16-mtp: Xin chào
+[OK] mlx-tts:indextts2: runtime ready: /Users/vanch/mlx-indextts2
+[OK] mlx-tts:omnivoice: optional backend; runtime ready: /Users/vanch/mlx-omnivoice
+[OK] mlx-tts:qwen3_tts: optional backend; runtime ready: /Users/vanch/mlx-qwen3-tts
+[OK] mlx-tts:voxcpm2: optional backend; runtime ready: /Users/vanch/mlx-voxcpm2
+[WARN] mlx-tts:higgs: optional backend; missing executable: /Users/vanch/mlx-higgs-audio/.venv/bin/python
+[WARN] mlx-tts:dots: optional backend; missing executable: /Users/vanch/mlx-dots.tts/.venv/bin/python
+[WARN] mlx-tts:zonos2: optional backend; service unavailable: HTTPConnectionPool(host='127.0.0.1', port=1920): Max retries exceeded with url: /health (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=1920): Failed to establish a new connection: [Errno 61] Connection refused"))
+[WARN] mlx-tts:moss: optional backend; missing root: /Users/vanch/mlx-MOSS-TTS-Local-Transformer-v1.5
+[WARN] mlx-tts:ming: optional backend; missing required file: /Users/vanch/mlx-Ming-omni-tts/mlx_models/Ming-omni-tts-16.8B-A3B-bf16/mlx_weights.safetensors
+[OK] step-checkpoints: 0/15 completed
+[OK] ffmpeg-path: /opt/homebrew/bin/ffmpeg

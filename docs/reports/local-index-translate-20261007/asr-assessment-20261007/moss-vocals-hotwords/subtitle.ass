@@ -1,0 +1,97 @@
+[Script Info]
+ScriptType: v4.00+
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+PlayResX: 1920
+PlayResY: 1080
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Noto Sans CJK SC,49,&H00FFFFFF,&H000000FF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,3,1,2,48,48,56,1
+Style: Speaker_S01,Noto Sans CJK SC,49,&H00FFFFFF,&H000000FF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,3,1,2,48,48,56,1
+Style: Speaker_S02,Noto Sans CJK SC,49,&H005BE7FF,&H000000FF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,3,1,2,48,48,56,1
+Style: Speaker_S03,Noto Sans CJK SC,49,&H0086F28F,&H000000FF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,3,1,2,48,48,56,1
+Style: Speaker_S04,Noto Sans CJK SC,49,&H00BBA7FF,&H000000FF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,3,1,2,48,48,56,1
+Style: Speaker_S05,Noto Sans CJK SC,49,&H0000D7FF,&H000000FF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,3,1,2,48,48,56,1
+Style: Speaker_S06,Noto Sans CJK SC,49,&H00FFB56B,&H000000FF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,3,1,2,48,48,56,1
+Style: Speaker_S07,Noto Sans CJK SC,49,&H00FF8EDB,&H000000FF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,3,1,2,48,48,56,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:03.11,0:00:04.35,Speaker_S01,,0,0,0,,S01: 胡万
+Dialogue: 0,0:00:05.35,0:00:06.01,Speaker_S02,,0,0,0,,S02: 胡万
+Dialogue: 0,0:00:06.52,0:00:07.55,Speaker_S01,,0,0,0,,S01: 怎么会是胡万
+Dialogue: 0,0:00:08.52,0:00:09.05,Speaker_S03,,0,0,0,,S03: 嘿
+Dialogue: 0,0:00:09.46,0:00:09.99,Speaker_S03,,0,0,0,,S03: 坏了
+Dialogue: 0,0:00:11.56,0:00:12.10,Speaker_S04,,0,0,0,,S04: 四筒
+Dialogue: 0,0:00:12.13,0:00:13.39,Speaker_S01,,0,0,0,,S01: 全是黄家的人
+Dialogue: 0,0:00:13.42,0:00:15.83,Speaker_S01,,0,0,0,,S01: 马匪呢
+Dialogue: 0,0:00:15.86,0:00:18.17,Speaker_S05,,0,0,0,,S05: 胡万就是马匪
+Dialogue: 0,0:00:18.42,0:00:20.73,Speaker_S05,,0,0,0,,S05: 马匪就是胡万
+Dialogue: 0,0:00:21.34,0:00:24.75,Speaker_S05,,0,0,0,,S05: 他县长夫人绑架豪绅
+Dialogue: 0,0:00:25.00,0:00:27.04,Speaker_S05,,0,0,0,,S05: 祸害鹅城百姓
+Dialogue: 0,0:00:27.45,0:00:30.36,Speaker_S05,,0,0,0,,S05: 就是你黄老爷家的胡万
+Dialogue: 0,0:00:30.97,0:00:33.78,Speaker_S05,,0,0,0,,S05: 我说你为什么不出钱剿匪
+Dialogue: 0,0:00:33.99,0:00:36.80,Speaker_S05,,0,0,0,,S05: 原来你是贼喊捉贼呀
+Dialogue: 0,0:00:38.41,0:00:41.92,Speaker_S05,,0,0,0,,S05: 你拿枪指着我
+Dialogue: 0,0:00:43.73,0:00:45.37,Speaker_S05,,0,0,0,,S05: 你想跟我火拼
+Dialogue: 0,0:00:50.28,0:00:51.56,Speaker_S01,,0,0,0,,S01: 你们看到了没有
+Dialogue: 0,0:00:51.69,0:00:53.88,Speaker_S01,,0,0,0,,S01: 这就是当马匪的下场
+Dialogue: 0,0:00:54.13,0:00:56.64,Speaker_S01,,0,0,0,,S01: 就算是我亲爹也得死
+Dialogue: 0,0:00:57.15,0:00:58.28,Speaker_S01,,0,0,0,,S01: 死有余辜
+Dialogue: 0,0:00:59.69,0:01:00.22,Speaker_S01,,0,0,0,,S01: 走
+Dialogue: 0,0:01:04.93,0:01:08.77,Speaker_S05,,0,0,0,,S05: 马匪胡万又让黄老爷枪毙了五回
+Dialogue: 0,0:01:09.02,0:01:09.88,Speaker_S05,,0,0,0,,S05: 大义灭亲
+Dialogue: 0,0:01:10.39,0:01:11.67,Speaker_S05,,0,0,0,,S05: 杀人灭口
+Dialogue: 0,0:01:12.19,0:01:13.47,Speaker_S05,,0,0,0,,S05: 杀人灭口
+Dialogue: 0,0:01:13.72,0:01:15.51,Speaker_S05,,0,0,0,,S05: 你就是马匪的头子
+Dialogue: 0,0:01:15.77,0:01:16.54,Speaker_S05,,0,0,0,,S05: 张麻子
+Dialogue: 0,0:01:17.82,0:01:18.84,Speaker_S05,,0,0,0,,S05: 大义灭亲
+Dialogue: 0,0:01:19.55,0:01:20.08,Speaker_S05,,0,0,0,,S05: 那好
+Dialogue: 0,0:01:21.05,0:01:21.82,Speaker_S05,,0,0,0,,S05: 你出钱
+Dialogue: 0,0:01:21.85,0:01:22.38,Speaker_S05,,0,0,0,,S05: 我剿匪
+Dialogue: 0,0:01:22.79,0:01:23.56,Speaker_S01,,0,0,0,,S01: 好啊
+Dialogue: 0,0:01:24.47,0:01:25.24,Speaker_S01,,0,0,0,,S01: 三天之后
+Dialogue: 0,0:01:26.15,0:01:27.43,Speaker_S01,,0,0,0,,S01: 一定给县长
+Dialogue: 0,0:01:28.24,0:01:28.91,Speaker_S01,,0,0,0,,S01: 一个惊喜
+Dialogue: 0,0:01:29.72,0:01:30.25,Speaker_S05,,0,0,0,,S05: 汤师爷
+Dialogue: 0,0:01:30.96,0:01:32.49,Speaker_S05,,0,0,0,,S05: 他是胡万的恩人
+Dialogue: 0,0:01:32.90,0:01:34.70,Speaker_S05,,0,0,0,,S05: 现在又成了你的恩人
+Dialogue: 0,0:01:35.41,0:01:36.44,Speaker_S05,,0,0,0,,S05: 你给翻译翻译
+Dialogue: 0,0:01:37.47,0:01:38.50,Speaker_S05,,0,0,0,,S05: 什么叫惊喜
+Dialogue: 0,0:01:39.53,0:01:41.84,Speaker_S05,,0,0,0,,S05: 翻译翻译什么叫惊喜
+Dialogue: 0,0:01:41.87,0:01:42.89,Speaker_S02,,0,0,0,,S02: 这还用翻译
+Dialogue: 0,0:01:42.92,0:01:44.56,Speaker_S05,,0,0,0,,S05: 我让你翻译给我听
+Dialogue: 0,0:01:44.59,0:01:46.53,Speaker_S05,,0,0,0,,S05: 什么叫惊喜
+Dialogue: 0,0:01:46.56,0:01:47.84,Speaker_S02,,0,0,0,,S02: 不用翻译就是惊喜
+Dialogue: 0,0:01:47.87,0:01:49.15,Speaker_S06,,0,0,0,,S06: 难道你听不懂什么叫惊喜
+Dialogue: 0,0:01:49.18,0:01:50.46,Speaker_S05,,0,0,0,,S05: 我就想让你翻译翻译
+Dialogue: 0,0:01:50.49,0:01:52.28,Speaker_S05,,0,0,0,,S05: 什么叫惊喜
+Dialogue: 0,0:01:52.31,0:01:52.97,Speaker_S02,,0,0,0,,S02: 惊喜
+Dialogue: 0,0:01:53.00,0:01:54.38,Speaker_S05,,0,0,0,,S05: 翻译出来给我听
+Dialogue: 0,0:01:54.41,0:01:57.07,Speaker_S05,,0,0,0,,S05: 什么他妈的叫惊喜
+Dialogue: 0,0:01:57.10,0:01:57.41,Speaker_S02,,0,0,0,,S02: 什么
+Dialogue: 0,0:01:57.44,0:01:59.23,Speaker_S05,,0,0,0,,S05: 什么他妈的叫
+Dialogue: 0,0:01:59.48,0:02:01.27,Speaker_S05,,0,0,0,,S05: 他妈的惊喜
+Dialogue: 0,0:02:01.30,0:02:03.21,Speaker_S05,,0,0,0,,S05: 什么他妈的叫惊喜啊
+Dialogue: 0,0:02:03.34,0:02:06.41,Speaker_S01,,0,0,0,,S01: 惊喜就是三天之后我出一百八十万
+Dialogue: 0,0:02:06.62,0:02:07.90,Speaker_S01,,0,0,0,,S01: 给你们出城剿匪
+Dialogue: 0,0:02:08.41,0:02:09.28,Speaker_S01,,0,0,0,,S01: 接上他的腿
+Dialogue: 0,0:02:09.79,0:02:10.32,Speaker_S01,,0,0,0,,S01: 明白了吗
+Dialogue: 0,0:02:10.83,0:02:11.86,Speaker_S02,,0,0,0,,S02: 这就是惊喜啊
+Dialogue: 0,0:02:12.47,0:02:13.00,Speaker_S05,,0,0,0,,S05: 翻译翻译
+Dialogue: 0,0:02:17.41,0:02:18.17,Speaker_S05,,0,0,0,,S05: 翻译翻译
+Dialogue: 0,0:02:18.21,0:02:20.12,Speaker_S02,,0,0,0,,S02: 惊喜就是三天之后
+Dialogue: 0,0:02:20.15,0:02:22.28,Speaker_S02,,0,0,0,,S02: 给你一百八十万两银子
+Dialogue: 0,0:02:22.31,0:02:23.69,Speaker_S02,,0,0,0,,S02: 出城剿匪
+Dialogue: 0,0:02:23.82,0:02:24.95,Speaker_S02,,0,0,0,,S02: 接上他的腿
+Dialogue: 0,0:02:26.86,0:02:28.39,Speaker_S05,,0,0,0,,S05: 大哥这他妈是惊喜啊
+Dialogue: 0,0:02:28.70,0:02:30.34,Speaker_S05,,0,0,0,,S05: 小弟我愿意等你三天
+Dialogue: 0,0:02:30.37,0:02:30.88,Speaker_S01,,0,0,0,,S01: 好
+Dialogue: 0,0:02:33.98,0:02:34.75,Speaker_S05,,0,0,0,,S05: 黄老爷
+Dialogue: 0,0:02:35.26,0:02:37.77,Speaker_S05,,0,0,0,,S05: 汤师爷是我的挚爱
+Dialogue: 0,0:02:38.38,0:02:40.99,Speaker_S05,,0,0,0,,S05: 你可不能夺我所爱啊
+Dialogue: 0,0:02:42.10,0:02:43.74,Speaker_S01,,0,0,0,,S01: 了然
+Dialogue: 0,0:02:47.92,0:02:48.68,Speaker_S07,,0,0,0,,S07: 到底是谁
+Dialogue: 0,0:02:48.94,0:02:49.47,Speaker_S07,,0,0,0,,S07: 这个
+Dialogue: 0,0:02:49.98,0:02:50.75,Speaker_S07,,0,0,0,,S07: 你这

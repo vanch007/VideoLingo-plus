@@ -1,0 +1,354 @@
+{
+  "status": "fail",
+  "accepted": false,
+  "workspace": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v12_readability_20261007",
+  "scope": "original 170.85s movie clip; zh to en; subtitles with original audio; no newly generated dubbing",
+  "test_evidence": {
+    "status": "pass",
+    "count": 372,
+    "seconds": 53.74,
+    "path": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/optimization-tests-v12.txt"
+  },
+  "pipeline": {
+    "run_id": "index-quality-v12-readability-20261007",
+    "profile": "subtitle",
+    "source": "zh",
+    "target": "en",
+    "input": "/Users/vanch/VideoLingo-plus/deliverables/e0c803_selected_v9_20260927/source.mp4",
+    "subtitle_only": true,
+    "no_subtitles": false,
+    "llm": "omlx",
+    "tts": "auto",
+    "smoke_seconds": null,
+    "steps": [
+      "import_video",
+      "transcribe",
+      "split_spacy",
+      "split_meaning",
+      "summarize",
+      "translate",
+      "split_subtitle",
+      "timeline",
+      "merge_subtitle"
+    ],
+    "status": "rendered",
+    "quality_status": "pending",
+    "quality_gate_passed": false,
+    "started_at": 1791366047.126642,
+    "completed_steps": [
+      "import_video",
+      "transcribe",
+      "split_spacy",
+      "split_meaning",
+      "summarize",
+      "translate",
+      "split_subtitle",
+      "timeline",
+      "merge_subtitle"
+    ],
+    "failed_step": null
+  },
+  "manifests": {
+    "transcribe": "pass",
+    "split_spacy": "pass",
+    "split_meaning": "pass",
+    "summarize": "pass",
+    "translate": "pass",
+    "split_subtitle": "pass",
+    "timeline": "pass",
+    "merge_subtitle": "pass"
+  },
+  "provenance": {
+    "stale_stages": 0,
+    "warning_stages": 0,
+    "model": "Index-Translate-35B-A3B-preview-oQ6e-fp16-mtp"
+  },
+  "source_coverage": {
+    "status": "pass",
+    "eligible_turns": 60,
+    "covered_turns": 60,
+    "missing_turns": 0,
+    "coverage": 1.0
+  },
+  "source_witness": {
+    "status": "needs_review",
+    "groups": 13,
+    "high_disagreements": 3,
+    "basis": "independent_asr_agreement_not_human_verification"
+  },
+  "dialogue_roles": {
+    "status": "needs_review",
+    "line_count": 45,
+    "assigned_lines": 21,
+    "relations_pending_lines": 28,
+    "basis": "LLM_dialogue_inference_not_verified_identity"
+  },
+  "source_fact_checks": {
+    "status": "pass",
+    "final_conflicts": [],
+    "language_failures": [],
+    "basis": "narrow deterministic invariants; not full semantic acceptance"
+  },
+  "source_fact_normalizations": {
+    "changes": [
+      {
+        "source": "惊喜就是三天之后我出一百八十万给你们出生交费接上我的腿明白了吧",
+        "before": "The surprise is this: in three days, I'll pay 1.8 million to have your leg reattached. Got it?",
+        "after": "The surprise is this: in three days, I'll pay 1.8 million to have my leg reattached. Got it?",
+        "reasons": [
+          "explicit_first_person_possession"
+        ]
+      },
+      {
+        "source": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+        "before": "The surprise is this: in three days, I'll give you 1.8 million taels of silver to go out of town and hunt down bandits, and get his leg reattached.",
+        "after": "The surprise is this: in three days, you'll receive 1.8 million taels of silver to go out of town and hunt down bandits, and get his leg reattached.",
+        "reasons": [
+          "omitted_payer_kept_unspecified"
+        ]
+      }
+    ],
+    "status": "applied_guards_not_semantic_acceptance",
+    "accepted": false
+  },
+  "translation_self_review": {
+    "status": "pass",
+    "review_basis": "same_model_self_review",
+    "review_mode": "audit_only",
+    "total_lines_reviewed": 45,
+    "issues_found_count": 0,
+    "repairs_applied_count": 0,
+    "accepted": false
+  },
+  "subtitle_layout": {
+    "status": "needs_review",
+    "semantic_rows": 45,
+    "display_cues": 57,
+    "issues_before": 16,
+    "issues_after": 12,
+    "padded_lines": 9,
+    "tts_subtitles_byte_identical": true,
+    "translation_byte_identical": true
+  },
+  "quality": {
+    "automatic_checks": {
+      "source_verification": "needs_review",
+      "lexical_boundary_review": "needs_review",
+      "dialogue_role_review": "needs_review",
+      "translation_review": "pass",
+      "subtitle_layout": "needs_review"
+    },
+    "automatic_gate_passed": false,
+    "human_quality": "pending",
+    "accepted": false,
+    "status": "fail",
+    "reference_quality": "fail",
+    "reference_evidence": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/reference-assessment-20261007/reference_translation_assessment.json"
+  },
+  "media": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 640,
+        "height": 270,
+        "duration": "170.795625"
+      },
+      {
+        "codec_name": "aac",
+        "codec_type": "audio",
+        "duration": "170.851995"
+      }
+    ],
+    "format": {
+      "duration": "170.851995",
+      "size": "100671906"
+    }
+  },
+  "source_media": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "av1",
+        "codec_type": "video",
+        "width": 640,
+        "height": 270,
+        "duration": "170.795625"
+      },
+      {
+        "codec_name": "aac",
+        "codec_type": "audio",
+        "duration": "170.852426"
+      }
+    ],
+    "format": {
+      "duration": "170.852426",
+      "size": "5208399"
+    }
+  },
+  "hashes": {
+    "original_source": "6ffc61bb810d2b413c7572d3b7115db53b27dbd6095c921eec8cb6bfdd3ae64e",
+    "pipeline_source": "6ffc61bb810d2b413c7572d3b7115db53b27dbd6095c921eec8cb6bfdd3ae64e",
+    "translation": "0dfef5b045662fefdeede3f7099fdbce6557f81a158e3429dc46bda2a4e55325",
+    "video": "09f47ae04701b18222f89a2b0bedbba8c555fd3b649c9d5270281297f9f8a35c",
+    "preview": "3bb8ede4711262713ad6e5b487c8b8c4df62225e1148df3aff25bb6c733c845f"
+  },
+  "upstream_reuse": {
+    "source_workspace": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v11_validated_20261007",
+    "source_sha256": "6ffc61bb810d2b413c7572d3b7115db53b27dbd6095c921eec8cb6bfdd3ae64e",
+    "reuse": [
+      "transcribe",
+      "split_spacy",
+      "split_meaning",
+      "summarize",
+      "translate",
+      "split_subtitle"
+    ],
+    "rerun": [
+      "timeline",
+      "merge_subtitle"
+    ],
+    "reason": "display-only observed-silence padding; no changes to ASR, role or translation content",
+    "accepted": false
+  },
+  "artifacts": {
+    "video": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v12_readability_20261007/output/AI字幕.mp4",
+    "preview": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v12_readability_20261007/review_preview.mp4",
+    "review": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v12_readability_20261007/review.html",
+    "subtitles": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v12_readability_20261007/output/trans.srt"
+  },
+  "known_limits": [
+    "ASR disagreement is unresolved, including source homophones and the final short answer.",
+    "Only 21 lines have evidence-grounded character hypotheses; correctness is not independently established.",
+    "12 display cues still exceed speed or minimum duration limits.",
+    "Same-model self-review found no issues but does not resolve source or character uncertainty.",
+    "No independent common-source blinded comparison with V9/V13; no global winner established.",
+    "No new dubbing generated in this continuation."
+  ],
+  "external_reference_assessment": {
+    "version": 1,
+    "status": "fail",
+    "accepted": false,
+    "scope": "29 aligned semantic units of the supplied 170.85s clip; current Index lines 1-43. Final uncorroborated lines 44-45 excluded.",
+    "basis": "evidence-guided editorial comparison against independently published scene transcripts and preceding-scene context; not a model self-grade",
+    "acceptance_rule": "Any changed core plot fact or any unresolved major error in the central negotiation fails delivery.",
+    "sources": [
+      {
+        "id": "sina",
+        "url": "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html",
+        "purpose": "scene dialogue"
+      },
+      {
+        "id": "juejin",
+        "url": "https://juejin.cn/post/7197315175644250167",
+        "purpose": "independent scene dialogue"
+      },
+      {
+        "id": "bilibili",
+        "url": "https://www.bilibili.com/opus/922853214827577364",
+        "purpose": "preceding context explains the commercial leg metaphor"
+      },
+      {
+        "id": "wikiquote",
+        "url": "https://zh.wikiquote.org/zh-hans/%E8%AE%A9%E5%AD%90%E5%BC%B9%E9%A3%9E",
+        "purpose": "opening-dialogue corroboration"
+      }
+    ],
+    "versions": {
+      "Index": {
+        "status": "fail",
+        "unit_count": 29,
+        "counts": {
+          "major": 10,
+          "critical": 1,
+          "pass": 8,
+          "minor": 10
+        },
+        "critical_units": [
+          "U03"
+        ],
+        "major_units": [
+          "U01",
+          "U02",
+          "U08",
+          "U10",
+          "U12",
+          "U14",
+          "U16",
+          "U21",
+          "U22",
+          "U25"
+        ],
+        "subtitle": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v12_readability_20261007/output/trans.srt",
+        "sha256": "e0e6ccd6040ce86cce00ae2079214b3503b7d946ee2ab1022d7c38214cf671b5"
+      },
+      "V9": {
+        "status": "fail",
+        "unit_count": 29,
+        "counts": {
+          "minor": 6,
+          "major": 11,
+          "critical": 1,
+          "pass": 11
+        },
+        "critical_units": [
+          "U03"
+        ],
+        "major_units": [
+          "U02",
+          "U07",
+          "U08",
+          "U09",
+          "U10",
+          "U12",
+          "U22",
+          "U24",
+          "U25",
+          "U28",
+          "U29"
+        ],
+        "subtitle": "/Users/vanch/VideoLingo-plus/deliverables/e0c803_selected_v9_20260927/English_Subtitles.srt",
+        "sha256": "af87eb83950f99a5f29848a0b85b0a29b1429a73eb09addd8bd03104158fe2c6"
+      },
+      "V13": {
+        "status": "fail",
+        "unit_count": 29,
+        "counts": {
+          "minor": 10,
+          "major": 12,
+          "critical": 1,
+          "pass": 6
+        },
+        "critical_units": [
+          "U03"
+        ],
+        "major_units": [
+          "U02",
+          "U05",
+          "U06",
+          "U07",
+          "U09",
+          "U12",
+          "U17",
+          "U22",
+          "U24",
+          "U25",
+          "U28",
+          "U29"
+        ],
+        "subtitle": "/Users/vanch/VideoLingo-plus/deliverables/e0c803_final_optimal_version_20260927/English_Subtitles_V13.srt",
+        "sha256": "127a89b754a1a89baaf94f39b89b9b57728d435af0c9611618ee90f0be92f53f"
+      }
+    },
+    "annotations_file": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/reference-assessment-20261007/assessment_annotations.json",
+    "limits": [
+      "Assessment combines transcription and translation failures; it does not isolate model quality on identical source text.",
+      "Public transcripts have wording variants. Judgments concern corroborated meanings; punctuation and variants are not counted as major errors.",
+      "Not a blinded panel review or a dubbing/timbre evaluation."
+    ],
+    "comparison": "Index has one fewer major error than V9, but fewer fully correct units. Neither has a clear overall lead. V13 has the most major errors in this excerpt. All fail delivery."
+  }
+}

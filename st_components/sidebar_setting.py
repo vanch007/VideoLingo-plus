@@ -45,11 +45,12 @@ def page_setting():
         if st.button("Run Doctor", key="run_doctor"):
             from core.doctor import run_checks
             for check in run_checks(include_services=True):
-                icon = "✅" if check.ok else "❌"
+                icon = "✅" if check.ok else "❌" if check.required else "⚠️"
                 st.write(f"{icon} **{check.name}**: {check.detail}")
 
     with st.expander(t("LLM Configuration"), expanded=True):
-        providers = ["openai_compatible"] + list(load_key("llm.providers", {}).keys())
+        providers = ["openai_compatible"] + [name for name, preset in load_key("llm.providers", {}).items()
+                                               if preset.get("purpose") != "speech_duration"]
         current_provider = load_key("llm.provider", "openai_compatible")
         if current_provider not in providers:
             current_provider = "openai_compatible"
@@ -63,8 +64,8 @@ def page_setting():
             update_key("llm.provider", selected_provider)
             st.rerun()
 
-        secret_env_status(t("API_KEY"), "api.key")
         if selected_provider == "openai_compatible":
+            secret_env_status(t("API_KEY"), "api.key")
             config_input(t("BASE_URL"), "api.base_url", help=t("Openai format, will add /v1/chat/completions automatically"))
 
             c1, c2 = st.columns([4, 1])
@@ -80,6 +81,9 @@ def page_setting():
             st.caption(f"Base URL: `{provider_cfg['base_url']}`")
             st.caption(f"API key env: `{provider_cfg.get('api_key_env', 'n/a')}`")
             if selected_provider == "omlx":
+                from core.llm_provider import get_translation_strategy
+                if get_translation_strategy() == "localized":
+                    st.caption("本地翻译：人物与术语分析 → 自然译文 → 事实校审与修复。无需云端 API。")
                 c_omlx1, c_omlx2 = st.columns(2)
                 with c_omlx1:
                     if st.button("List oMLX Models", key="list_omlx_models"):
@@ -153,6 +157,7 @@ def page_setting():
 
         # ASR model selection
         asr_options = {
+            "本地语音识别与时间对齐": "local-aligned",
             "WhisperX (native word alignment)": "local",
             "stable-ts (word timestamps)": "stable-ts",
         }
@@ -165,12 +170,22 @@ def page_setting():
             t("ASR Model"),
             options=asr_display,
             index=current_index,
-            help="Only ASR engines with validated native word timestamps can feed subtitle alignment."
+            help="识别文字后再测量词时间；也可选择 Whisper 自带的词时间。"
         )
         runtime = asr_options[selected_asr]
         if runtime != load_key("whisper.runtime"):
             update_key("whisper.runtime", runtime)
             st.rerun()
+
+        if runtime == "local-aligned":
+            st.caption("先保留识别文字与完整对白，再对齐词时间。词汇提示只能帮助识别，不能代替音频核对。")
+            vocabulary = st.text_area("识别词汇提示（每行一个）",
+                                      value="\n".join(load_key("source_asr.hotwords", []) or []),
+                                      help="可填写本视频的人名、地名和专业词。只提示音频中确实出现的词。")
+            words = list(dict.fromkeys(line.strip() for line in vocabulary.splitlines() if line.strip()))
+            if words != (load_key("source_asr.hotwords", []) or []):
+                update_key("source_asr.hotwords", words)
+                st.rerun()
 
         if runtime == "stable-ts":
             c_sts1, c_sts2 = st.columns(2)
@@ -301,15 +316,16 @@ def page_setting():
             update_key("tts_method", select_tts)
             st.rerun()
 
-        quality_modes = ["subtitle", "dubbing", "high_sync"]
-        current_quality_mode = load_key("dubbing_quality.mode", load_key("quality_mode", "high_sync"))
+        quality_modes = ["fast", "high_sync", "subtitle"]
+        current_quality_mode = load_key("quality_mode", "fast")
         if current_quality_mode not in quality_modes:
-            current_quality_mode = "high_sync"
+            current_quality_mode = "fast"
         selected_quality_mode = st.selectbox(
-            "Quality Mode",
+            "运行与质量模式 (Quality Mode)",
             options=quality_modes,
             index=quality_modes.index(current_quality_mode),
-            help="subtitle skips strict dubbing gates; high_sync enables duration budgets, rewrite retry, and eval."
+            format_func=lambda m: "⚡ 快速模式 (Fast - 推荐)" if m == "fast" else ("🎬 严格模式 (Cinematic / High-Sync)" if m == "high_sync" else "📝 仅字幕模式 (Subtitle Only)"),
+            help="快速模式：精简分句与审核环节，批量翻译与克隆配音，最高 1.25x 加速并支持画面局部延长；严格模式：全量逐句语义与时长多轮审核。"
         )
         if selected_quality_mode != current_quality_mode:
             update_key("quality_mode", selected_quality_mode)

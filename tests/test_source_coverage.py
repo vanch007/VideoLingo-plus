@@ -125,3 +125,18 @@ def test_acoustic_coverage_passes_when_words_overlap_turn():
     report = analyze_acoustic_coverage(result, [{"start": 1.0, "end": 1.8, "speaker": "S01"}])
     assert report["status"] == "pass"
     assert report["missing_turns"] == 0
+
+
+def test_reconcile_source_coverage_marks_verified_non_speech_turn(tmp_path):
+    result = _native([("前", 1.0, 2.0)])
+    acoustic_witness = [{"start": 5.0, "end": 7.0, "speaker": "S01"}]
+    report = reconcile_source_coverage(
+        result,
+        acoustic_witness,
+        lambda _start, _end: {"segments": []},
+        backend="local-aligned",
+        report_path=tmp_path / "coverage.json",
+    )
+    assert report["status"] == "pass"
+    assert report["after"]["missing_turns"] == 0
+    assert report["after"]["turns"][0]["status"] == "verified_non_speech"

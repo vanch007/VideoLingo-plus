@@ -1,0 +1,1 @@
+SPEAKER audio 1 0.070 52.580 <NA> <NA> speaker_0 <NA> <NA>

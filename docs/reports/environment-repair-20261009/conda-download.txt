@@ -1,0 +1,404 @@
+2 channel Terms of Service accepted
+Retrieving notices: - \ | / - \ | / - \ done
+Collecting package metadata (current_repodata.json): / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ done
+Solving environment: / - \ | / - \ | / 
+The environment is inconsistent, please check the package plan carefully
+The following packages are causing the inconsistency:
+
+  - defaults/osx-arm64::numpy==2.2.5=py310h51bfb38_3
+- done
+
+
+==> WARNING: A newer version of conda exists. <==
+  current version: 25.7.0
+  latest version: 26.9.1
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+Or to minimize the number of packages updated during conda update use
+
+     conda install conda=26.9.1
+
+
+
+## Package Plan ##
+
+  environment location: /Users/vanch/pinokio/bin/miniconda/envs/videolingo
+
+  added / updated specs:
+    - numpy=2.2.6
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    ca-certificates-2026.7.22  |       hbd8a1cb_0         129 KB  conda-forge
+    libblas-3.9.0              |1_h9886b1c_netlib         156 KB
+    libcblas-3.9.0             |1_h9886b1c_netlib          43 KB
+    libexpat-2.8.5             |       h6111c0a_0          68 KB  conda-forge
+    liblapack-3.9.0            |1_h9886b1c_netlib         2.2 MB
+    liblzma-5.8.3              |       h8088a28_1          90 KB  conda-forge
+    libsqlite-3.53.4           |     h34a968b_103         916 KB  conda-forge
+    numpy-2.2.6                |  py310h4d83441_0         5.6 MB  conda-forge
+    openssl-3.6.5              |       h55eecbc_0         3.0 MB  conda-forge
+    python-3.10.22             |hac0b6dc_0_cpython        12.3 MB  conda-forge
+    python_abi-3.10            |          6_cp310           7 KB  conda-forge
+    ------------------------------------------------------------
+                                           Total:        24.4 MB
+
+The following NEW packages will be INSTALLED:
+
+  libblas            pkgs/main/osx-arm64::libblas-3.9.0-1_h9886b1c_netlib 
+  libcblas           pkgs/main/osx-arm64::libcblas-3.9.0-1_h9886b1c_netlib 
+  liblapack          pkgs/main/osx-arm64::liblapack-3.9.0-1_h9886b1c_netlib 
+  liblzma            conda-forge/osx-arm64::liblzma-5.8.3-h8088a28_1 
+  libsqlite          conda-forge/osx-arm64::libsqlite-3.53.4-h34a968b_103 
+  python_abi         conda-forge/osx-arm64::python_abi-3.10-6_cp310 
+
+The following packages will be REMOVED:
+
+  blas-1.0-openblas
+  xz-5.8.2-h8bbcb1d_0
+
+The following packages will be UPDATED:
+
+  libexpat             pkgs/main::libexpat-2.8.4-h50f4ffc_0 --> conda-forge::libexpat-2.8.5-h6111c0a_0 
+  numpy              pkgs/main::numpy-2.2.5-py310h51bfb38_3 --> conda-forge::numpy-2.2.6-py310h4d83441_0 
+  openssl               pkgs/main::openssl-3.5.8-ha0b305a_0 --> conda-forge::openssl-3.6.5-h55eecbc_0 
+  python               pkgs/main::python-3.10.21-h478e877_0 --> conda-forge::python-3.10.22-hac0b6dc_0_cpython 
+
+The following packages will be SUPERSEDED by a higher-priority channel:
+
+  ca-certificates    pkgs/main/osx-arm64::ca-certificates-~ --> conda-forge/noarch::ca-certificates-2026.7.22-hbd8a1cb_0 
+
+
+
+Downloading and Extracting Packages: ...working...python-3.10.22       | 12.3 MB   |            |   0% 
+numpy-2.2.6          | 5.6 MB    |            |   0% [A
+
+openssl-3.6.5        | 3.0 MB    |            |   0% [A[A
+
+
+liblapack-3.9.0      | 2.2 MB    |            |   0% [A[A[A
+
+
+
+libsqlite-3.53.4     | 916 KB    |            |   0% [A[A[A[A
+
+
+
+
+libblas-3.9.0        | 156 KB    |            |   0% [A[A[A[A[A
+
+
+
+
+
+ca-certificates-2026 | 129 KB    |            |   0% [A[A[A[A[A[A
+
+
+
+
+
+
+liblzma-5.8.3        | 90 KB     |            |   0% [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+libexpat-2.8.5       | 68 KB     |            |   0% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+libcblas-3.9.0       | 43 KB     |            |   0% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+python_abi-3.10      | 7 KB      |            |   0% [A[A[A[A[A[A[A[A[A[A
+
+
+
+libsqlite-3.53.4     | 916 KB    | 1          |   2% [A[A[A[Apython-3.10.22       | 12.3 MB   |            |   0% 
+
+openssl-3.6.5        | 3.0 MB    |            |   1% [A[A
+numpy-2.2.6          | 5.6 MB    |            |   0% [A
+
+
+
+libsqlite-3.53.4     | 916 KB    | ######1    |  61% [A[A[A[Apython-3.10.22       | 12.3 MB   | 4          |   4% 
+
+openssl-3.6.5        | 3.0 MB    | #5         |  15% [A[A
+numpy-2.2.6          | 5.6 MB    | 8          |   8% [A
+
+
+
+libsqlite-3.53.4     | 916 KB    | ########## | 100% [A[A[A[A
+
+
+
+libsqlite-3.53.4     | 916 KB    | ########## | 100% [A[A[A[A
+
+openssl-3.6.5        | 3.0 MB    | ###        |  30% [A[Apython-3.10.22       | 12.3 MB   | 7          |   7% 
+numpy-2.2.6          | 5.6 MB    | #6         |  17% [A
+
+
+liblapack-3.9.0      | 2.2 MB    |            |   1% [A[A[Apython-3.10.22       | 12.3 MB   | #          |  11% 
+
+openssl-3.6.5        | 3.0 MB    | ####7      |  47% [A[A
+numpy-2.2.6          | 5.6 MB    | ##6        |  27% [A
+
+
+liblapack-3.9.0      | 2.2 MB    | #3         |  14% [A[A[A
+
+
+liblapack-3.9.0      | 2.2 MB    | ##1        |  22% [A[A[Apython-3.10.22       | 12.3 MB   | #4         |  14% 
+numpy-2.2.6          | 5.6 MB    | ###4       |  34% [A
+
+openssl-3.6.5        | 3.0 MB    | ######1    |  61% [A[A
+
+
+
+
+libblas-3.9.0        | 156 KB    | #          |  10% [A[A[A[A[Apython-3.10.22       | 12.3 MB   | #9         |  20% 
+numpy-2.2.6          | 5.6 MB    | #####      |  50% [A
+
+openssl-3.6.5        | 3.0 MB    | ########1  |  82% [A[A
+
+
+liblapack-3.9.0      | 2.2 MB    | ###9       |  40% [A[A[Apython-3.10.22       | 12.3 MB   | ##3        |  23% 
+
+openssl-3.6.5        | 3.0 MB    | #########6 |  96% [A[A
+
+
+
+
+libblas-3.9.0        | 156 KB    | ########## | 100% [A[A[A[A[A
+numpy-2.2.6          | 5.6 MB    | ######4    |  64% [A
+
+
+liblapack-3.9.0      | 2.2 MB    | #####      |  50% [A[A[A
+
+
+
+
+libblas-3.9.0        | 156 KB    | ########## | 100% [A[A[A[A[A
+
+openssl-3.6.5        | 3.0 MB    | ########## | 100% [A[A
+
+
+
+
+libblas-3.9.0        | 156 KB    | ########## | 100% [A[A[A[A[Apython-3.10.22       | 12.3 MB   | ##6        |  27% 
+
+openssl-3.6.5        | 3.0 MB    | ########## | 100% [A[A
+
+
+
+
+
+ca-certificates-2026 | 129 KB    | #2         |  12% [A[A[A[A[A[A
+
+
+
+
+
+
+liblzma-5.8.3        | 90 KB     | #7         |  18% [A[A[A[A[A[A[A
+
+
+
+
+
+
+liblzma-5.8.3        | 90 KB     | ########## | 100% [A[A[A[A[A[A[A
+
+
+liblapack-3.9.0      | 2.2 MB    | #######5   |  76% [A[A[A
+numpy-2.2.6          | 5.6 MB    | #######9   |  80% [A
+
+
+
+
+
+ca-certificates-2026 | 129 KB    | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+
+
+liblzma-5.8.3        | 90 KB     | ########## | 100% [A[A[A[A[A[A[A
+
+
+
+
+
+ca-certificates-2026 | 129 KB    | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+
+
+
+libexpat-2.8.5       | 68 KB     | ##3        |  24% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+libexpat-2.8.5       | 68 KB     | ########## | 100% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+libexpat-2.8.5       | 68 KB     | ########## | 100% [A[A[A[A[A[A[A[Apython-3.10.22       | 12.3 MB   | ###1       |  31% 
+
+
+liblapack-3.9.0      | 2.2 MB    | #########7 |  97% [A[A[A
+numpy-2.2.6          | 5.6 MB    | #########1 |  92% [A
+
+
+liblapack-3.9.0      | 2.2 MB    | ########## | 100% [A[A[A
+
+
+liblapack-3.9.0      | 2.2 MB    | ########## | 100% [A[A[Apython-3.10.22       | 12.3 MB   | ###5       |  35% 
+numpy-2.2.6          | 5.6 MB    | ########## | 100% [A
+
+
+
+
+
+
+
+
+
+python_abi-3.10      | 7 KB      | ########## | 100% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+python_abi-3.10      | 7 KB      | ########## | 100% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+python_abi-3.10      | 7 KB      | ########## | 100% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+libcblas-3.9.0       | 43 KB     | ###7       |  37% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+libcblas-3.9.0       | 43 KB     | ########## | 100% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+libcblas-3.9.0       | 43 KB     | ########## | 100% [A[A[A[A[A[A[A[A[Apython-3.10.22       | 12.3 MB   | ####2      |  42% python-3.10.22       | 12.3 MB   | #####1     |  52% python-3.10.22       | 12.3 MB   | ######2    |  62% 
+numpy-2.2.6          | 5.6 MB    | ########## | 100% [Apython-3.10.22       | 12.3 MB   | ######9    |  69% python-3.10.22       | 12.3 MB   | #######9   |  79% python-3.10.22       | 12.3 MB   | #########  |  90% python-3.10.22       | 12.3 MB   | ########## | 100% python-3.10.22       | 12.3 MB   | ########## | 100% python-3.10.22       | 12.3 MB   | ########## | 100%                                                      
+                                                     [A
+
+                                                     [A[A
+
+
+                                                     [A[A[A
+
+
+
+                                                     [A[A[A[A
+
+
+
+
+                                                     [A[A[A[A[A
+
+
+
+
+
+                                                     [A[A[A[A[A[A
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A
+CondaExitZero: Package caches prepared. UnlinkLinkTransaction cancelled with --download-only option.
+
+ done

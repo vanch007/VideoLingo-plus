@@ -1,0 +1,15 @@
+{
+  "status": "pass",
+  "exit_code": 0,
+  "total_elapsed_seconds": 118.59,
+  "final_video_exists": true,
+  "final_video_size_bytes": 10068616,
+  "bilingual_srt_exists": true,
+  "bilingual_srt_lines": 23,
+  "manifest_exists": true,
+  "timeline_exists": true,
+  "dubbed_units": 4,
+  "total_video_extension_seconds": 0.0,
+  "extended_segments_count": 0,
+  "llm_requests_count": 2
+}

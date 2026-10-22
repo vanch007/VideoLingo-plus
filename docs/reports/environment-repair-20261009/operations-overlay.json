@@ -1,0 +1,21 @@
+{
+  "status": "pass",
+  "numpy": "2.2.6",
+  "scipy_sparse_svd": "pass",
+  "torch_numpy_bridge": "pass",
+  "torchaudio_resample": "pass",
+  "torchvision_native_nms": "pass",
+  "opencv_resize": "pass",
+  "librosa_spectrum": "pass",
+  "spacy_zh_model": "pass",
+  "zh_tokens": [
+    "就算是",
+    "我",
+    "亲爹",
+    "，",
+    "也",
+    "得",
+    "死",
+    "。"
+  ]
+}

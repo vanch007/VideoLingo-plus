@@ -1,0 +1,308 @@
+Warning: The following taps are not trusted:
+  ddalcu/mlx-serve
+  farion1231/ccswitch
+  jakehilborn/jakehilborn
+  jundot/omlx
+  lbjlaq/antigravity-manager
+  runanywhereai/rcli
+  steipete/tap
+  tw93/tap
+
+Homebrew is currently ignoring formulae, casks and commands
+from these taps because tap trust is required.
+Prefer trusting only the specific formulae, casks or commands you need.
+Trust installed formulae from these taps with:
+  brew trust --formula jakehilborn/jakehilborn/displayplacer
+  brew trust --formula jundot/omlx/omlx
+Trust installed casks from these taps with:
+  brew trust --cask farion1231/ccswitch/cc-switch
+Trust other specific commands with:
+  brew trust --command <user>/<tap>/<command>
+Whole-tap trust is broader and includes all current and future formulae,
+casks and commands from the listed taps. Trust whole taps with:
+  brew trust ddalcu/mlx-serve farion1231/ccswitch jakehilborn/jakehilborn jundot/omlx lbjlaq/antigravity-manager runanywhereai/rcli steipete/tap tw93/tap
+Untap them with:
+  brew untap ddalcu/mlx-serve farion1231/ccswitch jakehilborn/jakehilborn jundot/omlx lbjlaq/antigravity-manager runanywhereai/rcli steipete/tap tw93/tap
+For more information, see:
+  https://docs.brew.sh/Tap-Trust
+==> Downloading bottle manifests
+✔︎ Bottle Manifest ffmpeg@7 (7.1.5_3)
+==> Would install 1 formula:
+ffmpeg@7 7.1.5_3
+==> Would install 29 dependencies for ffmpeg@7:
+aribb24
+frei0r
+imath
+libdeflate
+openjph
+openexr
+jpeg-xl
+libudfread
+libbluray
+cjson
+libmicrohttpd
+librist
+libsoxr
+libssh
+libvidstab
+opencore-amr
+rav1e
+libsamplerate
+rubberband
+speex
+srt
+leptonica
+libb2
+libarchive
+tesseract
+xvid
+libsodium
+zeromq
+zimg
+==> Would upgrade 9 dependencies for ffmpeg@7:
+libpng
+pcre2
+glib
+xorgproto
+harfbuzz
+openssl@3
+openjpeg
+sdl3
+sdl2-compat
+==> Fetching downloads for: ffmpeg@7
+✔︎ Bottle Manifest libpng (1.6.59)
+✔︎ Bottle Manifest aribb24 (1.0.4)
+✔︎ Bottle Manifest frei0r (3.6.0)
+✔︎ Bottle Manifest pcre2 (10.49)
+✔︎ Bottle Manifest imath (3.2.3)
+✔︎ Bottle Manifest xorgproto (2026.1)
+✔︎ Bottle Manifest harfbuzz (14.6.0)
+✔︎ Bottle Manifest libdeflate (1.26)
+✔︎ Bottle Manifest openjph (0.32.0)
+✔︎ Bottle Manifest openexr (3.5.2)
+✔︎ Bottle Manifest libudfread (1.2.0)
+✔︎ Bottle Manifest libbluray (1.5.0)
+✔︎ Bottle Manifest cjson (1.7.19)
+✔︎ Bottle Manifest libmicrohttpd (1.0.10)
+✔︎ Bottle Manifest glib (2.90.1)
+✔︎ Bottle Manifest jpeg-xl (0.12.0_1)
+✔︎ Bottle Manifest librist (0.2.20)
+✔︎ Bottle Manifest libsoxr (0.1.3)
+✔︎ Bottle Manifest openssl@3 (3.6.5)
+✔︎ Bottle Manifest libssh (0.12.2)
+✔︎ Bottle Manifest libvidstab (1.1.2)
+✔︎ Bottle Manifest opencore-amr (0.1.6)
+✔︎ Bottle Manifest rav1e (0.8.1)
+✔︎ Bottle Manifest libsamplerate (0.2.2)
+✔︎ Bottle Manifest openjpeg (2.5.4_1)
+✔︎ Bottle aribb24 (1.0.4)
+✔︎ Bottle Manifest rubberband (4.0.0)
+✔︎ Bottle Manifest speex (1.2.1)
+✔︎ Bottle Manifest srt (1.5.7)
+✔︎ Bottle Manifest leptonica (1.87.0)
+✔︎ Bottle imath (3.2.3)
+✔︎ Bottle Manifest libb2 (0.98.1)
+✔︎ Bottle Manifest sdl2-compat (2.32.74)
+✔︎ Bottle openjph (0.32.0)
+✔︎ Bottle Manifest sdl3 (3.4.18)
+✔︎ Bottle Manifest xvid (1.3.7)
+✔︎ Bottle Manifest libsodium (1.0.22)
+✔︎ Bottle libdeflate (1.26)
+✔︎ Bottle libpng (1.6.59)
+✔︎ Bottle Manifest libarchive (3.8.9)
+✔︎ Bottle Manifest zeromq (4.3.5_2)
+✔︎ Bottle Manifest zimg (3.0.6)
+✔︎ Bottle Manifest tesseract (5.5.3)
+✔︎ Bottle libudfread (1.2.0)
+✔︎ Bottle cjson (1.7.19)
+✔︎ Bottle xorgproto (2026.1)
+✔︎ Bottle libbluray (1.5.0)
+✔︎ Bottle frei0r (3.6.0)
+✔︎ Bottle librist (0.2.20)
+✔︎ Bottle libmicrohttpd (1.0.10)
+✔︎ Bottle libsoxr (0.1.3)
+✔︎ Bottle libvidstab (1.1.2)
+✔︎ Bottle libssh (0.12.2)
+✔︎ Bottle pcre2 (10.49)
+✔︎ Bottle opencore-amr (0.1.6)
+✔︎ Bottle openexr (3.5.2)
+✔︎ Bottle libb2 (0.98.1)
+✔︎ Bottle rubberband (4.0.0)
+✔︎ Bottle sdl2-compat (2.32.74)
+✔︎ Bottle xvid (1.3.7)
+✔︎ Bottle speex (1.2.1)
+✔︎ Bottle libsodium (1.0.22)
+✔︎ Bottle harfbuzz (14.6.0)
+✔︎ Bottle openjpeg (2.5.4_1)
+✔︎ Bottle zimg (3.0.6)
+✔︎ Bottle sdl3 (3.4.18)
+✔︎ Bottle leptonica (1.87.0)
+✔︎ Bottle glib (2.90.1)
+✔︎ Bottle libsamplerate (0.2.2)
+✔︎ Bottle libarchive (3.8.9)
+✔︎ Bottle srt (1.5.7)
+✔︎ Bottle zeromq (4.3.5_2)
+✔︎ Bottle rav1e (0.8.1)
+✔︎ Bottle jpeg-xl (0.12.0_1)
+✔︎ Bottle ffmpeg@7 (7.1.5_3)
+✔︎ Bottle openssl@3 (3.6.5)
+✔︎ Bottle tesseract (5.5.3)
+==> Installing dependencies for ffmpeg@7: aribb24, frei0r, imath, libdeflate, openjph, openexr, jpeg-xl, libudfread, libbluray, cjson, libmicrohttpd, librist, libsoxr, libssh, libvidstab, opencore-amr, rav1e, libsamplerate, rubberband, speex, srt, leptonica, libb2, libarchive, tesseract, xvid, libsodium, zeromq and zimg
+==> Installing ffmpeg@7 dependency: aribb24
+==> Pouring aribb24--1.0.4.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/aribb24/1.0.4: 15 files, 211.6KB
+==> Installing ffmpeg@7 dependency: frei0r
+==> Pouring frei0r--3.6.0.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/frei0r/3.6.0: 171 files, 6.2MB
+==> Installing ffmpeg@7 dependency: imath
+==> Pouring imath--3.2.3.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/imath/3.2.3: 50 files, 977.3KB
+==> Installing ffmpeg@7 dependency: libdeflate
+==> Pouring libdeflate--1.26.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libdeflate/1.26: 17 files, 303.3KB
+==> Installing ffmpeg@7 dependency: openjph
+==> Pouring openjph--0.32.0.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/openjph/0.32.0: 25 files, 629.5KB
+==> Installing ffmpeg@7 dependency: openexr
+==> Upgrading openexr dependency: libpng
+==> Pouring libpng--1.6.59.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libpng/1.6.59: 28 files, 1.4MB
+==> Installing openexr
+==> Pouring openexr--3.5.2.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/openexr/3.5.2: 214 files, 4.6MB
+==> Installing ffmpeg@7 dependency: jpeg-xl
+==> Pouring jpeg-xl--0.12.0_1.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/jpeg-xl/0.12.0_1: 65 files, 36.9MB
+==> Installing ffmpeg@7 dependency: libudfread
+==> Pouring libudfread--1.2.0.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libudfread/1.2.0: 13 files, 139.7KB
+==> Installing ffmpeg@7 dependency: libbluray
+==> Pouring libbluray--1.5.0.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libbluray/1.5.0: 22 files, 1.2MB
+==> Installing ffmpeg@7 dependency: cjson
+==> Pouring cjson--1.7.19.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/cjson/1.7.19: 24 files, 247.3KB
+==> Installing ffmpeg@7 dependency: libmicrohttpd
+==> Pouring libmicrohttpd--1.0.10.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libmicrohttpd/1.0.10: 29 files, 1.7MB
+==> Installing ffmpeg@7 dependency: librist
+==> Pouring librist--0.2.20.arm64_golden_gate.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/librist/0.2.20: 34 files, 1.3MB
+==> Installing ffmpeg@7 dependency: libsoxr
+==> Pouring libsoxr--0.1.3.arm64_golden_gate.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/libsoxr/0.1.3: 30 files, 264.3KB
+==> Installing ffmpeg@7 dependency: libssh
+==> Pouring libssh--0.12.2.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libssh/0.12.2: 25 files, 1.7MB
+==> Installing ffmpeg@7 dependency: libvidstab
+==> Pouring libvidstab--1.1.2.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libvidstab/1.1.2: 29 files, 579.6KB
+==> Installing ffmpeg@7 dependency: opencore-amr
+==> Pouring opencore-amr--0.1.6.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/opencore-amr/0.1.6: 18 files, 637.2KB
+==> Installing ffmpeg@7 dependency: rav1e
+==> Pouring rav1e--0.8.1.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/rav1e/0.8.1: 15 files, 52.3MB
+==> Installing ffmpeg@7 dependency: libsamplerate
+==> Pouring libsamplerate--0.2.2.arm64_golden_gate.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/libsamplerate/0.2.2: 33 files, 3.2MB
+==> Installing ffmpeg@7 dependency: rubberband
+==> Pouring rubberband--4.0.0.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/rubberband/4.0.0: 15 files, 2MB
+==> Installing ffmpeg@7 dependency: speex
+==> Pouring speex--1.2.1.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/speex/1.2.1: 26 files, 826.1KB
+==> Installing ffmpeg@7 dependency: srt
+==> Pouring srt--1.5.7.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/srt/1.5.7: 21 files, 5MB
+==> Installing ffmpeg@7 dependency: leptonica
+==> Pouring leptonica--1.87.0.arm64_golden_gate.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/leptonica/1.87.0: 55 files, 7MB
+==> Installing ffmpeg@7 dependency: libb2
+==> Pouring libb2--0.98.1.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libb2/0.98.1: 9 files, 113.6KB
+==> Installing ffmpeg@7 dependency: libarchive
+==> Pouring libarchive--3.8.9.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libarchive/3.8.9: 65 files, 4MB
+==> Installing ffmpeg@7 dependency: tesseract
+==> Pouring tesseract--5.5.3.arm64_golden_gate.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/tesseract/5.5.3: 74 files, 26.3MB
+==> Installing ffmpeg@7 dependency: xvid
+==> Pouring xvid--1.3.7.arm64_golden_gate.bottle.1.tar.gz
+🍺  /opt/homebrew/Cellar/xvid/1.3.7: 12 files, 1.2MB
+==> Installing ffmpeg@7 dependency: libsodium
+==> Pouring libsodium--1.0.22.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/libsodium/1.0.22: 88 files, 1.1MB
+==> Installing ffmpeg@7 dependency: zeromq
+==> Pouring zeromq--4.3.5_2.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/zeromq/4.3.5_2: 85 files, 6.7MB
+==> Installing ffmpeg@7 dependency: zimg
+==> Pouring zimg--3.0.6.arm64_golden_gate.bottle.tar.gz
+🍺  /opt/homebrew/Cellar/zimg/3.0.6: 28 files, 1.2MB
+==> Installing ffmpeg@7
+==> Pouring ffmpeg@7--7.1.5_3.arm64_golden_gate.bottle.tar.gz
+Warning: ffmpeg@7 was installed but not linked because ffmpeg is already linked.
+To link this version, run:
+  brew link ffmpeg@7
+🍺  /opt/homebrew/Cellar/ffmpeg@7/7.1.5_3: 289 files, 53.3MB
+==> Caveats
+==> ffmpeg@7
+ffmpeg@7 is keg-only, which means it was not symlinked into /opt/homebrew,
+because this is an alternate version of another formula.
+
+If you need to have ffmpeg@7 first in your PATH, run:
+  echo 'export PATH=/opt/homebrew/opt/ffmpeg@7/bin:$PATH' >> ~/.zshrc
+
+For compilers to find ffmpeg@7 you may need to set:
+  export LDFLAGS=-L/opt/homebrew/opt/ffmpeg@7/lib
+  export CPPFLAGS=-I/opt/homebrew/opt/ffmpeg@7/include
+
+For pkgconf to find ffmpeg@7 you may need to set:
+  export PKG_CONFIG_PATH=/opt/homebrew/opt/ffmpeg@7/lib/pkgconfig
+
+The following ffmpeg@7 executables are shadowed by other linked Homebrew commands:
+  aviocat (shadowed by /opt/homebrew/bin/aviocat from ffmpeg)
+  bisect-create (shadowed by /opt/homebrew/bin/bisect-create from ffmpeg)
+  check_arm_indent.sh (shadowed by /opt/homebrew/bin/check_arm_indent.sh from ffmpeg)
+  clean-diff (shadowed by /opt/homebrew/bin/clean-diff from ffmpeg)
+  crypto_bench (shadowed by /opt/homebrew/bin/crypto_bench from ffmpeg)
+  cws2fws (shadowed by /opt/homebrew/bin/cws2fws from ffmpeg)
+  dvd2concat (shadowed by /opt/homebrew/bin/dvd2concat from ffmpeg)
+  enc_recon_frame_test (shadowed by /opt/homebrew/bin/enc_recon_frame_test from ffmpeg)
+  enum_options (shadowed by /opt/homebrew/bin/enum_options from ffmpeg)
+  ffescape (shadowed by /opt/homebrew/bin/ffescape from ffmpeg)
+  ffeval (shadowed by /opt/homebrew/bin/ffeval from ffmpeg)
+  ffhash (shadowed by /opt/homebrew/bin/ffhash from ffmpeg)
+  ffmpeg (shadowed by /opt/homebrew/bin/ffmpeg from ffmpeg)
+  ffplay (shadowed by /opt/homebrew/bin/ffplay from ffmpeg)
+  ffprobe (shadowed by /opt/homebrew/bin/ffprobe from ffmpeg)
+  fourcc2pixfmt (shadowed by /opt/homebrew/bin/fourcc2pixfmt from ffmpeg)
+  gen-rc (shadowed by /opt/homebrew/bin/gen-rc from ffmpeg)
+  general_assembly.pl (shadowed by /opt/homebrew/bin/general_assembly.pl from ffmpeg)
+  graph2dot (shadowed by /opt/homebrew/bin/graph2dot from ffmpeg)
+  indent_arm_assembly.pl (shadowed by /opt/homebrew/bin/indent_arm_assembly.pl from ffmpeg)
+  ismindex (shadowed by /opt/homebrew/bin/ismindex from ffmpeg)
+  loudnorm.rb (shadowed by /opt/homebrew/bin/loudnorm.rb from ffmpeg)
+  make_chlayout_test (shadowed by /opt/homebrew/bin/make_chlayout_test from ffmpeg)
+  missing_codec_desc (shadowed by /opt/homebrew/bin/missing_codec_desc from ffmpeg)
+  murge (shadowed by /opt/homebrew/bin/murge from ffmpeg)
+  normalize.py (shadowed by /opt/homebrew/bin/normalize.py from ffmpeg)
+  patcheck (shadowed by /opt/homebrew/bin/patcheck from ffmpeg)
+  pktdumper (shadowed by /opt/homebrew/bin/pktdumper from ffmpeg)
+  plotframes (shadowed by /opt/homebrew/bin/plotframes from ffmpeg)
+  probetest (shadowed by /opt/homebrew/bin/probetest from ffmpeg)
+  qt-faststart (shadowed by /opt/homebrew/bin/qt-faststart from ffmpeg)
+  scale_slice_test (shadowed by /opt/homebrew/bin/scale_slice_test from ffmpeg)
+  seek_print (shadowed by /opt/homebrew/bin/seek_print from ffmpeg)
+  sidxindex (shadowed by /opt/homebrew/bin/sidxindex from ffmpeg)
+  source2c (shadowed by /opt/homebrew/bin/source2c from ffmpeg)
+  target_dec_fate.sh (shadowed by /opt/homebrew/bin/target_dec_fate.sh from ffmpeg)
+  trasher (shadowed by /opt/homebrew/bin/trasher from ffmpeg)
+  uncoded_frame (shadowed by /opt/homebrew/bin/uncoded_frame from ffmpeg)
+  unwrap-diff (shadowed by /opt/homebrew/bin/unwrap-diff from ffmpeg)
+  venc_data_dump (shadowed by /opt/homebrew/bin/venc_data_dump from ffmpeg)
+  zmqshell.py (shadowed by /opt/homebrew/bin/zmqshell.py from ffmpeg)
+Running these by name will not invoke the version provided by this formula.
+Run `brew link ffmpeg@7` to switch the active version to this keg.
+Disable this behaviour by setting `HOMEBREW_NO_PATH_SHADOW_CHECK=1`.
+Hide these hints with `HOMEBREW_NO_ENV_HINTS=1` (see `man brew`).

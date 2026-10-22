@@ -1,0 +1,3061 @@
+{
+  "units": 332,
+  "cues": 335,
+  "max_speed": 1.25,
+  "extension": 0.152,
+  "subtitle_losses": [
+    {
+      "number": 1,
+      "language": "en",
+      "expected": "Everything you're seeing in this video was edited by my Claude Code system while I was asleep.",
+      "actual": "Everything you're seeing in this video was\nedited by my Claude Code system while I"
+    },
+    {
+      "number": 1,
+      "language": "zh",
+      "expected": "你在这段视频里看到的所有内容，都是我在睡觉时，由我的Claude Code系统剪辑完成的。",
+      "actual": "你在这段视频里看到的所有内容，都是我在睡觉时\n，由我的Claude Code系统剪辑完成的"
+    },
+    {
+      "number": 4,
+      "language": "en",
+      "expected": "So today, I'm gonna pull the curtain and show you exactly how I built this expert editor,",
+      "actual": "So today, I'm gonna pull the curtain and\nshow you exactly how I built this expert"
+    },
+    {
+      "number": 9,
+      "language": "en",
+      "expected": "But in my system, every other job goes to a different tool, so I'm gonna break these down for you one by one.",
+      "actual": "But in my system, every other job goes to\na different tool, so I'm gonna break these"
+    },
+    {
+      "number": 12,
+      "language": "en",
+      "expected": "They watch every clip, they pick the ones they like, cut out the ones that they don't,",
+      "actual": "They watch every clip, they pick the ones\nthey like, cut out the ones that they"
+    },
+    {
+      "number": 13,
+      "language": "en",
+      "expected": "decides where every zoom goes, and also figures out the graphics and animations that they want and where.",
+      "actual": "decides where every zoom goes, and also\nfigures out the graphics and animations"
+    },
+    {
+      "number": 17,
+      "language": "en",
+      "expected": "And Claude Code can work locally, which means that it actually uses my computer for me.",
+      "actual": "And Claude Code can work locally, which\nmeans that it actually uses my computer"
+    },
+    {
+      "number": 18,
+      "language": "en",
+      "expected": "It can access the files, it uses other programs, and finally, it's able to put the output",
+      "actual": "It can access the files, it uses other\nprograms, and finally, it's able to put"
+    },
+    {
+      "number": 20,
+      "language": "en",
+      "expected": "Now, that's actually important because Claude actually is the coordinator of all the other tools here.",
+      "actual": "Now, that's actually important because\nClaude actually is the coordinator of all"
+    },
+    {
+      "number": 22,
+      "language": "en",
+      "expected": "So how does it know what I said and where I messed up to be able to cut the whole thing together?",
+      "actual": "So how does it know what I said and where\nI messed up to be able to cut the whole"
+    },
+    {
+      "number": 23,
+      "language": "en",
+      "expected": "Now, that's the second job that we have in this list, it is the job of the transcriber.",
+      "actual": "Now, that's the second job that we have in\nthis list, it is the job of the"
+    },
+    {
+      "number": 24,
+      "language": "en",
+      "expected": "Now, this is the person who listens to all the footage, transforms that, types it out into text,",
+      "actual": "Now, this is the person who listens to all\nthe footage, transforms that, types it out"
+    },
+    {
+      "number": 27,
+      "language": "en",
+      "expected": "It's a completely free tool, and it was built by Nvidia, which is the leading manufacturer of chips.",
+      "actual": "It's a completely free tool, and it was\nbuilt by Nvidia, which is the leading"
+    },
+    {
+      "number": 31,
+      "language": "en",
+      "expected": "So Parakeet does the transcription, and then Claude is able to actually read the timestamps",
+      "actual": "So Parakeet does the transcription, and\nthen Claude is able to actually read the"
+    },
+    {
+      "number": 32,
+      "language": "en",
+      "expected": "and exactly what is being said, and is able to then use that for the next step of the process.",
+      "actual": "and exactly what is being said, and is\nable to then use that for the next step of"
+    },
+    {
+      "number": 33,
+      "language": "en",
+      "expected": "This is how we're able to identify and chop up the footage so that we have the right takes.",
+      "actual": "This is how we're able to identify and\nchop up the footage so that we have the"
+    },
+    {
+      "number": 41,
+      "language": "en",
+      "expected": "Claude writes each animation like a tiny website, and then Hyperframe turns that into a 4K video.",
+      "actual": "Claude writes each animation like a tiny\nwebsite, and then Hyperframe turns that"
+    },
+    {
+      "number": 44,
+      "language": "en",
+      "expected": "However, in videos, sometimes I'll say things like \"OpenAI just announced blah blah blah\",",
+      "actual": "However, in videos, sometimes I'll say\nthings like \"OpenAI just announced blah"
+    },
+    {
+      "number": 46,
+      "language": "en",
+      "expected": "Someone who goes out and is able to find a screenshot of that announcement, or a post.",
+      "actual": "Someone who goes out and is able to find a\nscreenshot of that announcement, or a"
+    },
+    {
+      "number": 50,
+      "language": "en",
+      "expected": "And the thing that does that is something we all actually have already on our laptops, which is a browser.",
+      "actual": "And the thing that does that is something\nwe all actually have already on our"
+    },
+    {
+      "number": 52,
+      "language": "en",
+      "expected": "And then Claude is able to actually use the browser to go out there and do that research.",
+      "actual": "And then Claude is able to actually use\nthe browser to go out there and do that"
+    },
+    {
+      "number": 70,
+      "language": "en",
+      "expected": "Everything that you can do inside this software, you're able to do via Claude code.",
+      "actual": "Everything that you can do inside this\nsoftware, you're able to do via Claude"
+    },
+    {
+      "number": 91,
+      "language": "en",
+      "expected": "This is the person who joins all the pieces together and looks to see if there's no mistakes.",
+      "actual": "This is the person who joins all the\npieces together and looks to see if"
+    },
+    {
+      "number": 94,
+      "language": "en",
+      "expected": "In fact, it's under the hood of pretty much every editing software that exists today.",
+      "actual": "In fact, it's under the hood of pretty\nmuch every editing software that exists"
+    },
+    {
+      "number": 96,
+      "language": "en",
+      "expected": "Check that there's nothing off with Audio Sync before I ever get to even see the video.",
+      "actual": "Check that there's nothing off with Audio\nSync before I ever get to even see the"
+    },
+    {
+      "number": 100,
+      "language": "en",
+      "expected": "A skill is simply just a file of instructions that Claude reads before it does the job.",
+      "actual": "A skill is simply just a file of\ninstructions that Claude reads before it"
+    },
+    {
+      "number": 106,
+      "language": "en",
+      "expected": "So pretty much Claude runs all of the tools and then I tell Claude what good looks like.",
+      "actual": "So pretty much Claude runs all of the\ntools and then I tell Claude what good"
+    },
+    {
+      "number": 107,
+      "language": "en",
+      "expected": "Now, I'm not technical and you probably aren't either, so I'm gonna show you exactly how to set this up. It's super easy.",
+      "actual": "Now, I'm not technical and you probably\naren't either, so I'm gonna show you It's super easy."
+    },
+    {
+      "number": 113,
+      "language": "en",
+      "expected": "And if it is the first time you download Claude in general, it will try to set you up.",
+      "actual": "And if it is the first time you download\nClaude in general, it will try to set you"
+    },
+    {
+      "number": 123,
+      "language": "en",
+      "expected": "Now, up here on the left, we have Claude, which is the normal version, which is chat and cowork.",
+      "actual": "Now, up here on the left, we have Claude,\nwhich is the normal version, which is chat"
+    },
+    {
+      "number": 126,
+      "language": "en",
+      "expected": "And then, there are a couple setup steps you need to do before we actually move forward.",
+      "actual": "And then, there are a couple setup steps\nyou need to do before we actually move"
+    },
+    {
+      "number": 129,
+      "language": "en",
+      "expected": "Next up, you need to actually determine the folder in which you are going to be working.",
+      "actual": "Next up, you need to actually determine\nthe folder in which you are going to be"
+    },
+    {
+      "number": 139,
+      "language": "en",
+      "expected": "And finally, you do wanna come down here to the left and you want to go inside of Settings.",
+      "actual": "And finally, you do wanna come down here\nto the left and you want to go inside of"
+    },
+    {
+      "number": 145,
+      "language": "en",
+      "expected": "When you're done, you can pretty much close this and you can go back to the main menu, click on \"New\".",
+      "actual": "When you're done, you can pretty much\nclose this and you can go back to the main"
+    },
+    {
+      "number": 149,
+      "language": "en",
+      "expected": "I'd like to use hyperframes, FFmpeg, TELLA, and Epidemic sounds for this system.",
+      "actual": "I'd like to use hyperframes, FFmpeg,\nTELLA, and Epidemic sounds for this"
+    },
+    {
+      "number": 149,
+      "language": "zh",
+      "expected": "我想在这个系统里用hyperframes、FFmpeg、TELLA和Epidemic sounds。",
+      "actual": "我想在这个系统里用hyperframes、F\nFmpeg、TELLA和Epidemic s"
+    },
+    {
+      "number": 153,
+      "language": "en",
+      "expected": "Claude should be able to download and install everything that it needs and it can.",
+      "actual": "Claude should be able to download and\ninstall everything that it needs and it"
+    },
+    {
+      "number": 273,
+      "language": "en",
+      "expected": "It basically says that it cut down 2 minutes and 46 of raw footage into 31 seconds,",
+      "actual": "It basically says that it cut down 2\nminutes and 46 of raw footage into 31"
+    },
+    {
+      "number": 303,
+      "language": "en",
+      "expected": "Tomorrow morning, I get to just watch it, give a couple notes and get the final version.",
+      "actual": "Tomorrow morning, I get to just watch it,\ngive a couple notes and get the final"
+    },
+    {
+      "number": 306,
+      "language": "en",
+      "expected": "So at this point, everyone asked me about the cost, so let's break it down to the dollar.",
+      "actual": "So at this point, everyone asked me about\nthe cost, so let's break it down to the"
+    },
+    {
+      "number": 308,
+      "language": "en",
+      "expected": "Now that's a flat fee, but I actually use this for all of my work, not just my video editing.",
+      "actual": "Now that's a flat fee, but I actually use\nthis for all of my work, not just my video"
+    },
+    {
+      "number": 309,
+      "language": "en",
+      "expected": "So what I did is that I got Claude to actually measure the number of tokens that it used,",
+      "actual": "So what I did is that I got Claude to\nactually measure the number of tokens that"
+    },
+    {
+      "number": 313,
+      "language": "en",
+      "expected": "Now, the great thing is that hyperframes is completely for free, so is Parakeet, so nothing to pay for there.",
+      "actual": "Now, the great thing is that hyperframes\nis completely for free, so is Parakeet, so"
+    },
+    {
+      "number": 314,
+      "language": "en",
+      "expected": "For Tele, I'm on the annual plan, it cost me $13 per month, which is roughly $2 per video.",
+      "actual": "For Tele, I'm on the annual plan, it cost\nme $13 per month, which is roughly $2 per"
+    },
+    {
+      "number": 315,
+      "language": "en",
+      "expected": "Epidemic Sounds, which is where I get all of my sound effects and the music as well, cost me $9.99.",
+      "actual": "Epidemic Sounds, which is where I get all\nof my sound effects and the music as well,"
+    },
+    {
+      "number": 318,
+      "language": "en",
+      "expected": "Now, the reality is that for YouTube editors, a good editor costs anywhere between $250 and $1,000 plus per video.",
+      "actual": "Now, the reality is that for YouTube\neditors, a good editor costs anywhere"
+    },
+    {
+      "number": 318,
+      "language": "zh",
+      "expected": "但现实是，找YouTube剪辑师的话，一个靠谱的剪辑师每个视频要价250到1000多美元。",
+      "actual": "但现实是，找YouTube剪辑师的话，一个靠\n谱的剪辑师每个视频要价250到1000多美元"
+    },
+    {
+      "number": 322,
+      "language": "en",
+      "expected": "Whereas before, it took me anywhere between 3 and 7 days, depending on which editor I was working with.",
+      "actual": "Whereas before, it took me anywhere\nbetween 3 and 7 days, depending on which"
+    },
+    {
+      "number": 324,
+      "language": "en",
+      "expected": "And because of human error, I actually oftentimes had to repeat things that I was seeing",
+      "actual": "And because of human error, I actually\noftentimes had to repeat things that I was"
+    }
+  ],
+  "line_cap_violations": [
+    {
+      "number": 9,
+      "language": "zh",
+      "text": "但在我的系统里，其他所有活儿都交给了不同的工具，\n所以接下来我会一个一个地给你拆解。"
+    }
+  ],
+  "physical": [
+    {
+      "number": 1,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/1_0.wav",
+      "sha256": "8cec82c15f73b1199883b887733964870a315d1555733b6514405553a9bc9836",
+      "duration": 5.535192743764172,
+      "rms": 0.1300009082520544,
+      "finite": true
+    },
+    {
+      "number": 2,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/2_0.wav",
+      "sha256": "b1371b11ecbd89b34da175305b1458ff446d4847f190c7ee9cc58de3de8877eb",
+      "duration": 8.301133786848073,
+      "rms": 0.09794627994433233,
+      "finite": true
+    },
+    {
+      "number": 3,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/3_0.wav",
+      "sha256": "c11b2c2bb2841d5ce4476477697762d6b398e0c4593c77e14ebc5987a196f16c",
+      "duration": 3.6687528344671203,
+      "rms": 0.13421760908451064,
+      "finite": true
+    },
+    {
+      "number": 4,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/4_0.wav",
+      "sha256": "877fe83dacd021ebb51d468905afab32f7904e87abad6355a5bcf4935ce45e66",
+      "duration": 4.2549659863945575,
+      "rms": 0.13712929707945565,
+      "finite": true
+    },
+    {
+      "number": 5,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/5_0.wav",
+      "sha256": "0c9c0c7b96211ebed9d8c70a4b05336a27cea85b8126f16b136663d86e83c74a",
+      "duration": 4.090702947845805,
+      "rms": 0.11094740421123939,
+      "finite": true
+    },
+    {
+      "number": 6,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/6_0.wav",
+      "sha256": "26fe9cbf304826e6bf52adfaae82734b11dc120966416dcc4d8c290e6d0ba58c",
+      "duration": 4.0974603174603175,
+      "rms": 0.10301203317475985,
+      "finite": true
+    },
+    {
+      "number": 7,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/7_0.wav",
+      "sha256": "b34ac536fd281a0f901152549db7144a94d438aaff3f5945db42c52b94dcc23c",
+      "duration": 3.0650340136054424,
+      "rms": 0.1424087199116559,
+      "finite": true
+    },
+    {
+      "number": 8,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/8_0.wav",
+      "sha256": "564fb19638ee8176eb9135bcd239989c3ccb24d439e0fc2419353c97dedfcb2f",
+      "duration": 3.9938321995464854,
+      "rms": 0.1334364607193984,
+      "finite": true
+    },
+    {
+      "number": 9,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/9_0.wav",
+      "sha256": "5a04f16181366462850ff7d3876a226f2c6162a5558eeb422e2b6df79ed0f741",
+      "duration": 5.286485260770975,
+      "rms": 0.11313473785814562,
+      "finite": true
+    },
+    {
+      "number": 10,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/10_0.wav",
+      "sha256": "bfd187670eaf5269705216e1bf462ea899abad01fcb48d5eb3a186550e0b7e45",
+      "duration": 1.7419501133786848,
+      "rms": 0.13534466727684552,
+      "finite": true
+    },
+    {
+      "number": 11,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/11_0.wav",
+      "sha256": "284cfbf17af671b8f2bfe0ce61f0fa32390b1037a8e0c8b0ba0c9c5e572f5073",
+      "duration": 3.203764172335601,
+      "rms": 0.12177023080155114,
+      "finite": true
+    },
+    {
+      "number": 12,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/12_0.wav",
+      "sha256": "aa6cbc8bc5db22eeabbba31c35b3e15a9be76b629c304751dc721f6ffb1c3a90",
+      "duration": 4.493696145124717,
+      "rms": 0.14090758645989931,
+      "finite": true
+    },
+    {
+      "number": 13,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/13_0.wav",
+      "sha256": "9ec284b25619807f314e943c7a9da6191b09d5ad859c5bc029dd8901d17c94ea",
+      "duration": 5.027120181405896,
+      "rms": 0.14240805953886554,
+      "finite": true
+    },
+    {
+      "number": 14,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/14_0.wav",
+      "sha256": "174981813031c3b1e5a2fdff70ae9670db3ffb455caf5d8754685abbe06a8a1c",
+      "duration": 3.2319727891156464,
+      "rms": 0.13213626905056108,
+      "finite": true
+    },
+    {
+      "number": 15,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/15_0.wav",
+      "sha256": "91a44e156a00c155b73dfe52ad0ed8785e30e8bdc609909b66d9ec7a185d8fd0",
+      "duration": 2.5541950113378684,
+      "rms": 0.14344761278392565,
+      "finite": true
+    },
+    {
+      "number": 16,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/16_0.wav",
+      "sha256": "1531fc54e060b2d90bb595f8ba5b38776e4c82ee9b9b65d3f65b20993c96920e",
+      "duration": 3.633922902494331,
+      "rms": 0.1284604392851666,
+      "finite": true
+    },
+    {
+      "number": 17,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/17_0.wav",
+      "sha256": "964e3b2854af81dc5bf12ad820e11b363f699abfb12db74d8ab3cdc1c52b1f69",
+      "duration": 4.5859410430839,
+      "rms": 0.11750162694931417,
+      "finite": true
+    },
+    {
+      "number": 18,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/18_0.wav",
+      "sha256": "93417d07ebbf7428f0448dcd0894e01ac4bb900b5f50c0caddbec78755b259c1",
+      "duration": 3.7848526077097504,
+      "rms": 0.1159104052171993,
+      "finite": true
+    },
+    {
+      "number": 19,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/19_0.wav",
+      "sha256": "9674d4986535ff3bf7268c8286636496e9c539170f43da0409dfc287bba866ab",
+      "duration": 1.6718367346938776,
+      "rms": 0.08630839395203363,
+      "finite": true
+    },
+    {
+      "number": 20,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/20_0.wav",
+      "sha256": "4c5e43ec99b4856e3c1c378c1d2b9fbdf2891c76db790a7540246f4f6d42bf57",
+      "duration": 4.272471655328798,
+      "rms": 0.14677010153741124,
+      "finite": true
+    },
+    {
+      "number": 21,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/21_0.wav",
+      "sha256": "89160d37a1a8a3e81ac5005bc03d8a85405280b008c6adbf2d34f444cce74995",
+      "duration": 3.1463038548752835,
+      "rms": 0.11597935551555304,
+      "finite": true
+    },
+    {
+      "number": 22,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/22_0.wav",
+      "sha256": "2c5284b830dbd4be4d625b11777dd1887928a80b1736d5854e65d30878c0437a",
+      "duration": 3.4713832199546486,
+      "rms": 0.1323363690057744,
+      "finite": true
+    },
+    {
+      "number": 23,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/23_0.wav",
+      "sha256": "c370e4d5b9493ec3d77e4eeff2373327cb7ccc649ea78033dfe4713ff989399d",
+      "duration": 3.8312925170068026,
+      "rms": 0.11575917408613605,
+      "finite": true
+    },
+    {
+      "number": 24,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/24_0.wav",
+      "sha256": "6018d88762f1ecc9740193044b83935e4117d3a81ff637c7578a702b5a7ef316",
+      "duration": 3.4249433106575964,
+      "rms": 0.12522593026021075,
+      "finite": true
+    },
+    {
+      "number": 25,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/25_0.wav",
+      "sha256": "880e708b0396830dcb05c332cab9692e4c25bb62e3835d878823f73fa229eed4",
+      "duration": 1.2770975056689342,
+      "rms": 0.08402568698221871,
+      "finite": true
+    },
+    {
+      "number": 26,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/26_0.wav",
+      "sha256": "5dc8a1899e32d718dd4c85350ab495676078f27d6e6fd44c2c08e7cd0c0b0be8",
+      "duration": 2.2291156462585033,
+      "rms": 0.10666018884104073,
+      "finite": true
+    },
+    {
+      "number": 27,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/27_0.wav",
+      "sha256": "bff02edf830afa4a742b0938d99f9ab793349d2d11616be8318b08ff03e0f942",
+      "duration": 4.9642630385487525,
+      "rms": 0.12035150169626106,
+      "finite": true
+    },
+    {
+      "number": 28,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/28_0.wav",
+      "sha256": "5d03147326a260b6f7eb2bebde5435b1efc66cf02ecfabe057350e305a5ebacc",
+      "duration": 3.6932879818594104,
+      "rms": 0.13072573805028498,
+      "finite": true
+    },
+    {
+      "number": 29,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/29_0.wav",
+      "sha256": "bf193bc7bbf782cc501a770d68e6d3cf4d0008b36872ff1210cc630e3a838f92",
+      "duration": 1.3467573696145125,
+      "rms": 0.051215861559996474,
+      "finite": true
+    },
+    {
+      "number": 30,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/30_0.wav",
+      "sha256": "a744ac6f56edae033d6613dc613c06276702c4b09a9d64c477eee06befa96739",
+      "duration": 0.6733786848072563,
+      "rms": 0.07865221582000369,
+      "finite": true
+    },
+    {
+      "number": 31,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/31_0.wav",
+      "sha256": "8318e84fb9c43ee3e3354eac259f8c7416448187f30547e0642a49a91b71fb13",
+      "duration": 4.551111111111111,
+      "rms": 0.13596601311636689,
+      "finite": true
+    },
+    {
+      "number": 32,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/32_0.wav",
+      "sha256": "7307d0ccdd9b3d4ea87ef66549e81441ca8075d8f913060d6cc5eb089f66be47",
+      "duration": 4.272471655328798,
+      "rms": 0.12168844839932026,
+      "finite": true
+    },
+    {
+      "number": 33,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/33_0.wav",
+      "sha256": "b712eee795e12c147e6d6506d11fc7e4f1e9beaeb54e06b227ea6f73109dd016",
+      "duration": 3.5062131519274375,
+      "rms": 0.11774966202894518,
+      "finite": true
+    },
+    {
+      "number": 34,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/34_0.wav",
+      "sha256": "75e3aa3b5144697af1f7f7a7771be665ebf5328a2734bef0991d7ce3fec0cc0d",
+      "duration": 1.9969160997732427,
+      "rms": 0.12830421517943943,
+      "finite": true
+    },
+    {
+      "number": 35,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/35_0.wav",
+      "sha256": "8c922d2b61ce8f3d72536c1f415ee0d3d4772f90b9b407f6e28122e36d09eed4",
+      "duration": 1.787936507936508,
+      "rms": 0.1185341089702482,
+      "finite": true
+    },
+    {
+      "number": 36,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/36_0.wav",
+      "sha256": "ae403bf60e85a62acd068a5432ce0baf33b6283bf6b2608957dda8b956479dd0",
+      "duration": 3.030204081632653,
+      "rms": 0.1302615749295408,
+      "finite": true
+    },
+    {
+      "number": 37,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/37_0.wav",
+      "sha256": "067c7e59f63561debf32b2b8e3d9cbc03f40322d28bd86021272d67c86ba32e3",
+      "duration": 2.0317460317460316,
+      "rms": 0.16256936700657845,
+      "finite": true
+    },
+    {
+      "number": 38,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/38_0.wav",
+      "sha256": "eb0b40673cf6941c2ae67576127c5aed2272c3d0d61f1c991be6d7fd9b3e7967",
+      "duration": 2.589024943310658,
+      "rms": 0.11346485131788933,
+      "finite": true
+    },
+    {
+      "number": 39,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/39_0.wav",
+      "sha256": "336cddbd842bc4125dc4a12a2cd1352040b3b881d2c2cbb350417c46585294f7",
+      "duration": 3.3436734693877552,
+      "rms": 0.11270278482301686,
+      "finite": true
+    },
+    {
+      "number": 40,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/40_0.wav",
+      "sha256": "fc250aad8edfff7a3d267f5008400986ae6b5c20e09a8e35d7c28d9f1385b23e",
+      "duration": 4.191201814058957,
+      "rms": 0.12683578594992437,
+      "finite": true
+    },
+    {
+      "number": 41,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/41_0.wav",
+      "sha256": "bb97ac09259925179f38f6faff944e68e59525b0825f1ce069f0b843348cba72",
+      "duration": 5.746938775510204,
+      "rms": 0.13075002679486267,
+      "finite": true
+    },
+    {
+      "number": 42,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/42_0.wav",
+      "sha256": "0e041dd088c4a50505a99a2b299747acb0ed4b4144e94d85894d2f14699da10b",
+      "duration": 2.5541950113378684,
+      "rms": 0.11072318010572435,
+      "finite": true
+    },
+    {
+      "number": 43,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/43_0.wav",
+      "sha256": "8d65a1b3cb07e0e34a538664232cd1fb25c2d5a73f20e19feb37d0762472dbe4",
+      "duration": 2.7868480725623583,
+      "rms": 0.12045857342428436,
+      "finite": true
+    },
+    {
+      "number": 44,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/44_0.wav",
+      "sha256": "73fd9b22591906ba3eb44e1debcaf38f8a4488cab0e78c5e65e9dd089132e0ac",
+      "duration": 4.307301587301588,
+      "rms": 0.1447201681043508,
+      "finite": true
+    },
+    {
+      "number": 45,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/45_0.wav",
+      "sha256": "0d095b6746b556b593567fb47fa77e76c5b0adeff6ab62a08e2d27324cb26b3c",
+      "duration": 3.9938321995464854,
+      "rms": 0.13816917272172222,
+      "finite": true
+    },
+    {
+      "number": 46,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/46_0.wav",
+      "sha256": "c9bb1086770d91b40eb3a898d8c2d9a0c22b6d68bf3839920f20da15c414ab7b",
+      "duration": 3.5526530612244898,
+      "rms": 0.1459352421588993,
+      "finite": true
+    },
+    {
+      "number": 47,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/47_0.wav",
+      "sha256": "0b0ada2d067ced4d0b3a3f697888664d7813ae6bc7d3d7b939955809141b8946",
+      "duration": 4.1099319727891155,
+      "rms": 0.12171827314574225,
+      "finite": true
+    },
+    {
+      "number": 48,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/48_0.wav",
+      "sha256": "9eb9b1483f14e9063dde42a940c980bcebd873a37675d216ea923c5fcc4bce0d",
+      "duration": 2.2291156462585033,
+      "rms": 0.12048891774580332,
+      "finite": true
+    },
+    {
+      "number": 49,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/49_0.wav",
+      "sha256": "dec475636b63ef202d71207f0b58c1f5e6e76aab4bc3c1a9232cc449c5052a61",
+      "duration": 2.589024943310658,
+      "rms": 0.14154766770187557,
+      "finite": true
+    },
+    {
+      "number": 50,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/50_0.wav",
+      "sha256": "5603ffd5b895decb4d79d9bd124178ae3f9ee4dc4e4dbcdb9a029f213dfb13c6",
+      "duration": 3.7035827664399092,
+      "rms": 0.14176677632595144,
+      "finite": true
+    },
+    {
+      "number": 51,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/51_0.wav",
+      "sha256": "470789a2ce2cd3b5373d44fe220d98cf040957c047cde9c949e6b5ec5059a635",
+      "duration": 1.9156462585034013,
+      "rms": 0.14936229025951636,
+      "finite": true
+    },
+    {
+      "number": 52,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/52_0.wav",
+      "sha256": "222e247d7bc0baa037c94fe8524f6f88998b0c737cceee89be95fe904a0828c6",
+      "duration": 3.6687528344671203,
+      "rms": 0.14942368656787602,
+      "finite": true
+    },
+    {
+      "number": 53,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/53_0.wav",
+      "sha256": "dc0c72dda38b89993467d06ea5fa6733c143f1607ea1f1e6e9e00e728635a148",
+      "duration": 3.5874829931972787,
+      "rms": 0.14439038108463398,
+      "finite": true
+    },
+    {
+      "number": 54,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/54_0.wav",
+      "sha256": "41c1e0bcfe555184352a79b7a50b2110df7b7776b1b1f34f1999efb359b83427",
+      "duration": 2.1130158730158732,
+      "rms": 0.16843496877399505,
+      "finite": true
+    },
+    {
+      "number": 55,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/55_0.wav",
+      "sha256": "8b362f99847c27306b0851a28b6ae17e6db087aa285891205887a36e327a09e6",
+      "duration": 1.5905668934240362,
+      "rms": 0.15655647608084627,
+      "finite": true
+    },
+    {
+      "number": 56,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/56_0.wav",
+      "sha256": "3c1ec249f2e65e7740f0d65f92201ca44697f3f7182e107d8ec1ed4874a1c3e6",
+      "duration": 2.345215419501134,
+      "rms": 0.12907822765828658,
+      "finite": true
+    },
+    {
+      "number": 57,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/57_0.wav",
+      "sha256": "53b00cbac9354a6d8cfa2e7531727fe59bed2f46079284957708e3571f9bf276",
+      "duration": 2.426485260770975,
+      "rms": 0.13116977800600396,
+      "finite": true
+    },
+    {
+      "number": 58,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/58_0.wav",
+      "sha256": "e976cb388e3e656668e0974f4f563244c640a984da18bf288154ee08b4f881dd",
+      "duration": 3.947392290249433,
+      "rms": 0.11548782255813823,
+      "finite": true
+    },
+    {
+      "number": 59,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/59_0.wav",
+      "sha256": "c7e16aa68c8ebd51239a36724c3432ae78172bdef01ea9c0413cee5ffe093ae6",
+      "duration": 3.2024943310657594,
+      "rms": 0.12550951770086122,
+      "finite": true
+    },
+    {
+      "number": 60,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/60_0.wav",
+      "sha256": "11f2bddc249b93d984bf7bff5f09a658ecd5503cad70b735e4bf55c7ecfdd423",
+      "duration": 1.8527437641723357,
+      "rms": 0.12403612802769912,
+      "finite": true
+    },
+    {
+      "number": 61,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/61_0.wav",
+      "sha256": "79c389071d536d651822b5e7a2f1fe64fae717ce6f03b5a2c5d720b2173b1a47",
+      "duration": 2.914104308390023,
+      "rms": 0.14783605420493637,
+      "finite": true
+    },
+    {
+      "number": 62,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/62_0.wav",
+      "sha256": "8ea882c239624965819e1263d73b3f3930a81a944a26c5ed9f0a1f7807efa204",
+      "duration": 2.705124716553288,
+      "rms": 0.12124670561740286,
+      "finite": true
+    },
+    {
+      "number": 63,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/63_0.wav",
+      "sha256": "074d78fe55154da4c4cd4ab469a2818d7642bbebbf97941b7574103ce8609e98",
+      "duration": 1.4280272108843537,
+      "rms": 0.15060468895160795,
+      "finite": true
+    },
+    {
+      "number": 64,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/64_0.wav",
+      "sha256": "e30a68e78b04f6122bb52080575397322058089ba56d0ea1757f582808696736",
+      "duration": 2.342947845804989,
+      "rms": 0.1233636347937336,
+      "finite": true
+    },
+    {
+      "number": 65,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/65_0.wav",
+      "sha256": "da67e4fc3788189dda645ee48ffdb61d18c89a32c859845bc63f877c59078a65",
+      "duration": 2.426485260770975,
+      "rms": 0.13455427442860313,
+      "finite": true
+    },
+    {
+      "number": 66,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/66_0.wav",
+      "sha256": "ff008359b8a1d6dd6eee4fb7358e6e827184eb7e6bb0965b796a536249614704",
+      "duration": 2.6354648526077096,
+      "rms": 0.12976760627287168,
+      "finite": true
+    },
+    {
+      "number": 67,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/67_0.wav",
+      "sha256": "019e71891c579c46fa8c37d3eb201f648d31d8e9cc101439b4b4152bd3d6adfb",
+      "duration": 2.2291156462585033,
+      "rms": 0.13233237462075287,
+      "finite": true
+    },
+    {
+      "number": 68,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/68_0.wav",
+      "sha256": "28c24c26ff14bf21aae27ca2f0e0eab4f9933d5e0a0d6bdb6c422db9e18070b6",
+      "duration": 3.1927437641723357,
+      "rms": 0.1119512755604699,
+      "finite": true
+    },
+    {
+      "number": 69,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/69_0.wav",
+      "sha256": "7fb0f60f5a5a6005e36ef7ff1edaca692491aaca42243f697f27443bfd4a22f2",
+      "duration": 2.066575963718821,
+      "rms": 0.13626273119675014,
+      "finite": true
+    },
+    {
+      "number": 70,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/70_0.wav",
+      "sha256": "870f35fd871cee29c9aecdd4842161d0b0c0d61b27102d7437a14626b7ba332a",
+      "duration": 3.7500226757369615,
+      "rms": 0.13040563332059393,
+      "finite": true
+    },
+    {
+      "number": 71,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/71_0.wav",
+      "sha256": "6491757a072bfd904a2594ca2c747a89684469cf66d2779f6ff17e84c421b569",
+      "duration": 3.274013605442177,
+      "rms": 0.13507396473034292,
+      "finite": true
+    },
+    {
+      "number": 72,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/72_0.wav",
+      "sha256": "cd756e13dc051aa8d145c8292a523dbbae139d74199e80ab2d431ca6432f0b6a",
+      "duration": 3.339591836734694,
+      "rms": 0.11654972080799399,
+      "finite": true
+    },
+    {
+      "number": 73,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/73_0.wav",
+      "sha256": "e4665ad9e173664856aa3cc81d9f6919ad0a13b5493589111f0b0f0c3aea4b93",
+      "duration": 3.4449886621315193,
+      "rms": 0.11139724513106024,
+      "finite": true
+    },
+    {
+      "number": 74,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/74_0.wav",
+      "sha256": "3c5dc16fd48880a258379efc1bd21392e1b57f539243866287bce5c1fe893c4a",
+      "duration": 2.6354648526077096,
+      "rms": 0.13895247312479922,
+      "finite": true
+    },
+    {
+      "number": 75,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/75_0.wav",
+      "sha256": "26e384701030b51155a651542031994870d6b6b234aff61147054a3fdad6fb83",
+      "duration": 2.4729251700680273,
+      "rms": 0.1256112633191177,
+      "finite": true
+    },
+    {
+      "number": 76,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/76_0.wav",
+      "sha256": "c3b63c5837173c6d01ff249d4b92f621ea145308df1b87d5e709874608c355a5",
+      "duration": 2.316235827664399,
+      "rms": 0.1264761632874612,
+      "finite": true
+    },
+    {
+      "number": 77,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/77_0.wav",
+      "sha256": "a15dd8a4c030aa3128dbfe220aa00596b13add7136cd8e0b2cbdfd6b7c59c8c4",
+      "duration": 2.1942857142857144,
+      "rms": 0.16700016646393614,
+      "finite": true
+    },
+    {
+      "number": 78,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/78_0.wav",
+      "sha256": "6b2da32350f9195caa6a54c64985ec8f9995b74b61089c5387bc68379f2af2b5",
+      "duration": 1.846530612244898,
+      "rms": 0.12262161799187878,
+      "finite": true
+    },
+    {
+      "number": 79,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/79_0.wav",
+      "sha256": "c4784009d89eceff5e2f302f83ea4664b3678dfc609642605fa9d4a9636d37fe",
+      "duration": 3.0494784580498866,
+      "rms": 0.12743602482192423,
+      "finite": true
+    },
+    {
+      "number": 80,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/80_0.wav",
+      "sha256": "8db2e57d46b66beb25edda1642d8e7f56b7c16067cc0ed79b4335eac978a93d0",
+      "duration": 0.9520181405895691,
+      "rms": 0.12684955822211952,
+      "finite": true
+    },
+    {
+      "number": 81,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/81_0.wav",
+      "sha256": "e99028dfd634c488e0b3ab9afc3c0d98fe28bd2e13ac033cd449210cef8cdeec",
+      "duration": 0.9520181405895691,
+      "rms": 0.11737685179567776,
+      "finite": true
+    },
+    {
+      "number": 82,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/82_0.wav",
+      "sha256": "2c01fd09df6298aae554d44beef5a98574551975754601231015d040670c8015",
+      "duration": 1.4280272108843537,
+      "rms": 0.1399071526617833,
+      "finite": true
+    },
+    {
+      "number": 83,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/83_0.wav",
+      "sha256": "f8869cd495365284b15eae28fbeb64528ea927201860954c806e5f9309b7a2f6",
+      "duration": 1.787936507936508,
+      "rms": 0.1397214307363441,
+      "finite": true
+    },
+    {
+      "number": 84,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/84_0.wav",
+      "sha256": "270fad0361f4d449015e5ae4115beb59e603b4d5ef602243ac7a0c38ee24fe79",
+      "duration": 2.283265306122449,
+      "rms": 0.14418348808842474,
+      "finite": true
+    },
+    {
+      "number": 85,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/85_0.wav",
+      "sha256": "ca6205eb21ca21b53d15ea823a58e2fa65066a171548124ac2bcd7436391382c",
+      "duration": 2.670294784580499,
+      "rms": 0.14516035522365103,
+      "finite": true
+    },
+    {
+      "number": 86,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/86_0.wav",
+      "sha256": "8039b9db27f578ce146ed1488d7d70d258cb2d5edcc3e15cb402b27cdfd25061",
+      "duration": 3.7500226757369615,
+      "rms": 0.1337597755036473,
+      "finite": true
+    },
+    {
+      "number": 87,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/87_0.wav",
+      "sha256": "24ed5de464016fb25b8740b4a31e80ede021654ac3370bfc0fa2d901e954dd08",
+      "duration": 1.3931972789115645,
+      "rms": 0.11771913979232887,
+      "finite": true
+    },
+    {
+      "number": 88,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/88_0.wav",
+      "sha256": "5aadcca030cb87dac568c312497bba3ef604c4b31dd25daffe0d1ff3fe02f673",
+      "duration": 1.7066666666666668,
+      "rms": 0.13541536537887147,
+      "finite": true
+    },
+    {
+      "number": 89,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/89_0.wav",
+      "sha256": "e985247e4871c77f1607ecb7bd072c88ab7857849ad7d0f6dcdfa22bb8cb22d4",
+      "duration": 1.9504761904761905,
+      "rms": 0.1397729005446612,
+      "finite": true
+    },
+    {
+      "number": 90,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/90_0.wav",
+      "sha256": "ea4a7f778dd9eaa27da11f556d90e6d34b53aa424f6bd810e4d6dcd97004c50a",
+      "duration": 2.5541950113378684,
+      "rms": 0.14474577885384984,
+      "finite": true
+    },
+    {
+      "number": 91,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/91_0.wav",
+      "sha256": "201f8a0989e8dabaee3e2a914a776099e7d7ee407dda99fba7dcfb9abf3d5529",
+      "duration": 4.388571428571429,
+      "rms": 0.12046474852836957,
+      "finite": true
+    },
+    {
+      "number": 92,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/92_0.wav",
+      "sha256": "775d71de97817ad49ceee8e675e6a28d3680eb42439197cca97adafa0945ffa1",
+      "duration": 1.7066666666666668,
+      "rms": 0.15092208676061727,
+      "finite": true
+    },
+    {
+      "number": 93,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/93_0.wav",
+      "sha256": "88fc3e64654a328a8f55745036b4baf0d12eb0103b5a5dff7426e958101b2f21",
+      "duration": 2.2755555555555556,
+      "rms": 0.1349228459729974,
+      "finite": true
+    },
+    {
+      "number": 94,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/94_0.wav",
+      "sha256": "221355c53eabe1dce96767cf80fc671182f1af6b923f465a6fbf876e7d61e158",
+      "duration": 3.6687528344671203,
+      "rms": 0.12867671412854326,
+      "finite": true
+    },
+    {
+      "number": 95,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/95_0.wav",
+      "sha256": "9ac9c7d67cea06703adc9e364e019b7372b0970b0429ce3ad3dc1dd0b2c9747c",
+      "duration": 2.589024943310658,
+      "rms": 0.14750382270010862,
+      "finite": true
+    },
+    {
+      "number": 96,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/96_0.wav",
+      "sha256": "7d1aa7e68f3e866e02dcfa1e18c2c167c65a21292190591fd8944d664578e6c3",
+      "duration": 3.947392290249433,
+      "rms": 0.13917110626577367,
+      "finite": true
+    },
+    {
+      "number": 97,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/97_0.wav",
+      "sha256": "5648a084eda7eda26eb84be0c1f52a3cc870cfb19abf5aa56597410ba9da7558",
+      "duration": 2.2291156462585033,
+      "rms": 0.12942997831767333,
+      "finite": true
+    },
+    {
+      "number": 98,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/98_0.wav",
+      "sha256": "04802993aa66d08487d4cd1aacde22cbef7d28c1137102c04fd8d543c7267064",
+      "duration": 2.948934240362812,
+      "rms": 0.1432028888493359,
+      "finite": true
+    },
+    {
+      "number": 99,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/99_0.wav",
+      "sha256": "8478f2d6b71076771ddc078f6fc00ef2c70944316d65abc85018fe49430da057",
+      "duration": 3.517596371882086,
+      "rms": 0.12001395058855287,
+      "finite": true
+    },
+    {
+      "number": 100,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/100_0.wav",
+      "sha256": "5795f2ca56da81b9cc03482b56c4811f4dcbd5e06952d4163e07dc8df99557c6",
+      "duration": 5.254195011337869,
+      "rms": 0.13377116654002547,
+      "finite": true
+    },
+    {
+      "number": 101,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/101_0.wav",
+      "sha256": "a2d5c8717edb6be7b139021eaaaf848080595ab5341557e501ba5e50494833b5",
+      "duration": 3.5062131519274375,
+      "rms": 0.1340031211987477,
+      "finite": true
+    },
+    {
+      "number": 102,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/102_0.wav",
+      "sha256": "87593f5b0d2bcaddd2595233dd630dc0fa4befcbfade8f2062ef2c3a213aafb7",
+      "duration": 2.0317460317460316,
+      "rms": 0.1350513952481761,
+      "finite": true
+    },
+    {
+      "number": 103,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/103_0.wav",
+      "sha256": "b7cc1d0856694b1cc26e007daab263984c568dbc6a6ff5f404a09d78bf30a72f",
+      "duration": 2.3103854875283445,
+      "rms": 0.10777365574801653,
+      "finite": true
+    },
+    {
+      "number": 104,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/104_0.wav",
+      "sha256": "87f4b14c49df3c00e3c9e212b47feb9184398070933a192e32889fc92431d992",
+      "duration": 2.75156462585034,
+      "rms": 0.12927533414485556,
+      "finite": true
+    },
+    {
+      "number": 105,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/105_0.wav",
+      "sha256": "5a2f90b638235c4102825fe190e06cf17250bded6df992739f3742ac52bb3704",
+      "duration": 3.6007709750566894,
+      "rms": 0.1257375694878437,
+      "finite": true
+    },
+    {
+      "number": 106,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/106_0.wav",
+      "sha256": "8983ff67db2765d1af08e73a9c0908d30fca39edc5637fe2e4f9516f04e46fd8",
+      "duration": 4.285578231292517,
+      "rms": 0.14884478358439998,
+      "finite": true
+    },
+    {
+      "number": 107,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/107_0.wav",
+      "sha256": "218ec79795470d29cf4b232d4179928d37c76a3eb233cd51e5a356650b576ced",
+      "duration": 4.896145124716553,
+      "rms": 0.13646141887612137,
+      "finite": true
+    },
+    {
+      "number": 108,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/108_0.wav",
+      "sha256": "c08e2638226ca2e2af4b237ec2e70ead9232df63c08516c35b7549f84af6595a",
+      "duration": 2.4729251700680273,
+      "rms": 0.15192539579721512,
+      "finite": true
+    },
+    {
+      "number": 109,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/109_0.wav",
+      "sha256": "5258e9dbb0a4c7113d3b98dad1eff78f5ab2f0496281d7bb905fd208b55d92a4",
+      "duration": 3.8312925170068026,
+      "rms": 0.14213170123031288,
+      "finite": true
+    },
+    {
+      "number": 110,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/110_0.wav",
+      "sha256": "9debde35d76ab77097c94b013be4ed82cb8d3c0d11a3c0cae7a805f5509fca02",
+      "duration": 2.09156462585034,
+      "rms": 0.12047599440816435,
+      "finite": true
+    },
+    {
+      "number": 111,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/111_0.wav",
+      "sha256": "958c5f8c3a3eb447c005606668d85313ede75b27b294fb2ec20d590685081b30",
+      "duration": 2.1130158730158732,
+      "rms": 0.1333121534104724,
+      "finite": true
+    },
+    {
+      "number": 112,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/112_0.wav",
+      "sha256": "b1fe489f981d6f228d04bc83da6cbd35dc8ac5951b00e65e188fd5f82ab680c7",
+      "duration": 2.8328344671201813,
+      "rms": 0.09347639172370348,
+      "finite": true
+    },
+    {
+      "number": 113,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/113_0.wav",
+      "sha256": "b0dd6fd768eb2d99033fb68c8f19d457312a2a987d025de281154f7125d9643c",
+      "duration": 3.308843537414966,
+      "rms": 0.1425279114183517,
+      "finite": true
+    },
+    {
+      "number": 114,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/114_0.wav",
+      "sha256": "8bffa6c577544b59736981904b799010ef2fa4011d6e406474aa9c8cd75bb4ce",
+      "duration": 1.5905668934240362,
+      "rms": 0.15018330365907492,
+      "finite": true
+    },
+    {
+      "number": 115,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/115_0.wav",
+      "sha256": "bec9b5dbbb050e4a8c279aaf892013ba2f276cdc382382732669da08ea663c6a",
+      "duration": 2.75156462585034,
+      "rms": 0.15058611156564058,
+      "finite": true
+    },
+    {
+      "number": 116,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/116_0.wav",
+      "sha256": "2d99704ca0f9c56d0d89f9b140b70ac236708752b10401e9c2d15731db29b128",
+      "duration": 1.509297052154195,
+      "rms": 0.12687590787185044,
+      "finite": true
+    },
+    {
+      "number": 117,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/117_0.wav",
+      "sha256": "95b3a6de1fcd3b9ae6622ff27ff45d818390529026030bcf9d05cde87f58bcd5",
+      "duration": 1.9624489795918367,
+      "rms": 0.16677118825179924,
+      "finite": true
+    },
+    {
+      "number": 118,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/118_0.wav",
+      "sha256": "01c0ecf4356be3e7b6de51b90f2bf3c6ed273e13ed137b60dd2ef932e0f5c1be",
+      "duration": 3.7500226757369615,
+      "rms": 0.12860998755085654,
+      "finite": true
+    },
+    {
+      "number": 119,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/119_0.wav",
+      "sha256": "82e7ec50482585c73ce872ee216671a5b43fa0dd3a652fdac0e2f6e85f414fef",
+      "duration": 2.345215419501134,
+      "rms": 0.14838639472665835,
+      "finite": true
+    },
+    {
+      "number": 120,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/120_0.wav",
+      "sha256": "af731fe5c0e297bd0af31891a8f6597f6353f00f1185bf72991de00043d21035",
+      "duration": 2.391655328798186,
+      "rms": 0.10563643278666049,
+      "finite": true
+    },
+    {
+      "number": 121,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/121_0.wav",
+      "sha256": "7ce4ef00ac6d6cbef0367221e689f2686c6617fda3e5116e581eefac94f25a7d",
+      "duration": 1.9156462585034013,
+      "rms": 0.1623898163088221,
+      "finite": true
+    },
+    {
+      "number": 122,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/122_0.wav",
+      "sha256": "0eb72ab2539de760ead292f4afec9bd6ec0811becc0d009962cc930bce30d731",
+      "duration": 1.9504761904761905,
+      "rms": 0.1422476824943147,
+      "finite": true
+    },
+    {
+      "number": 123,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/123_0.wav",
+      "sha256": "05ad058578f0325934d1a031da7a115e360a3f66c0fe820943676888cd09b455",
+      "duration": 4.2260317460317465,
+      "rms": 0.15750264728003432,
+      "finite": true
+    },
+    {
+      "number": 124,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/124_0.wav",
+      "sha256": "81386fedcde78e7ee5544df357223357a6ef2c9743166630693824f57e54d450",
+      "duration": 1.474467120181406,
+      "rms": 0.1398983070492809,
+      "finite": true
+    },
+    {
+      "number": 125,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/125_0.wav",
+      "sha256": "9aed6b87028d0c1739eb45545f46bbebb6bb1a9e3a031cd7af8f8f3132acc5cf",
+      "duration": 1.6718367346938776,
+      "rms": 0.1514380588120852,
+      "finite": true
+    },
+    {
+      "number": 126,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/126_0.wav",
+      "sha256": "baf59fda53e7ac4be27e566fa1e352b7b99c16d68807fddd0cb73ddc417d7731",
+      "duration": 2.670294784580499,
+      "rms": 0.12788177373561074,
+      "finite": true
+    },
+    {
+      "number": 127,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/127_0.wav",
+      "sha256": "710e3d130cbdffd5ba987828f2ab3686ca7853bd26543755a7f1f2d5c5915de6",
+      "duration": 2.75156462585034,
+      "rms": 0.1378808029490225,
+      "finite": true
+    },
+    {
+      "number": 128,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/128_0.wav",
+      "sha256": "568d048d7af12e42c447440ecfdf7ec13b022fecba71f5f93b6b9649f4931deb",
+      "duration": 2.2291156462585033,
+      "rms": 0.12515595642451047,
+      "finite": true
+    },
+    {
+      "number": 129,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/129_0.wav",
+      "sha256": "b3bc253e76da234ea3ff3a2d38009a296303064d5fe59005e824c8b175dd09d9",
+      "duration": 2.8676643990929707,
+      "rms": 0.15470582703766303,
+      "finite": true
+    },
+    {
+      "number": 130,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/130_0.wav",
+      "sha256": "fa476197f5f7de76c6ffef7a0ea623fa9eaeddd6fcccbd0a6ef93b614748410d",
+      "duration": 1.474467120181406,
+      "rms": 0.12327544753759247,
+      "finite": true
+    },
+    {
+      "number": 131,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/131_0.wav",
+      "sha256": "b7a5767179e836f7ac867f611a055d72bd3d1ae0af1425e23aa4d8c47aeae43a",
+      "duration": 3.308843537414966,
+      "rms": 0.12457335959580676,
+      "finite": true
+    },
+    {
+      "number": 132,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/132_0.wav",
+      "sha256": "6a26ddc5a7506462c0096e5702619b40abf8080a0ec650a97c913fd885951896",
+      "duration": 3.2275736961451247,
+      "rms": 0.10852243753605395,
+      "finite": true
+    },
+    {
+      "number": 133,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/133_0.wav",
+      "sha256": "441774d140c39d2f4b358c77b6fc61058018f3b9dcd3ff640b6f9a77ee68ac72",
+      "duration": 2.730521541950113,
+      "rms": 0.10828991775439901,
+      "finite": true
+    },
+    {
+      "number": 134,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/134_0.wav",
+      "sha256": "1eb9ce352aaaf9f1f4897cf85fa759e4fd6fdbb3e90cdcde891efebc8de65b89",
+      "duration": 1.9969160997732427,
+      "rms": 0.14851062226391246,
+      "finite": true
+    },
+    {
+      "number": 135,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/135_0.wav",
+      "sha256": "49044b20c9418fe8840846e2b132033715b4c66823d37d4fe5fdd1b3207036af",
+      "duration": 3.8515192743764173,
+      "rms": 0.13093749331626872,
+      "finite": true
+    },
+    {
+      "number": 136,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/136_0.wav",
+      "sha256": "5a72c5fe36322e6ac41e9aa1d0631054c1e26fb41feb90696c6a065cc3ec9604",
+      "duration": 2.6354648526077096,
+      "rms": 0.16748913462358705,
+      "finite": true
+    },
+    {
+      "number": 137,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/137_0.wav",
+      "sha256": "6ad961b84bcaf2dd806f9bcb9a7905e4bc28c2ee4aec866416624b8df3c4ab02",
+      "duration": 1.4280272108843537,
+      "rms": 0.10711946833843385,
+      "finite": true
+    },
+    {
+      "number": 138,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/138_0.wav",
+      "sha256": "260e8e6ef893fd0b84f5056ed07624e682770aca5c8d12daaa68cc9f5cb3c777",
+      "duration": 2.1942857142857144,
+      "rms": 0.10175763221220897,
+      "finite": true
+    },
+    {
+      "number": 139,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/139_0.wav",
+      "sha256": "3f15b6cada13094b574746e193c3b1db8742dcec7e12e5996817d9ab18252767",
+      "duration": 2.8328344671201813,
+      "rms": 0.15072676959582712,
+      "finite": true
+    },
+    {
+      "number": 140,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/140_0.wav",
+      "sha256": "1727dac216d0c8dd21507f81028baf788466dd268d8e6e407773debff34bdb0c",
+      "duration": 1.474467120181406,
+      "rms": 0.10678418248968205,
+      "finite": true
+    },
+    {
+      "number": 141,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/141_0.wav",
+      "sha256": "937d56b019d2c4720dae81007529aa39d2072201ba3a7ba4f068f202b49be738",
+      "duration": 2.426485260770975,
+      "rms": 0.14340903836430677,
+      "finite": true
+    },
+    {
+      "number": 142,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/142_0.wav",
+      "sha256": "d858a0b997363f396d7d4db693bd3a4738520863a2eec6cc96575862564bf5cb",
+      "duration": 2.1130158730158732,
+      "rms": 0.15580881059454307,
+      "finite": true
+    },
+    {
+      "number": 143,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/143_0.wav",
+      "sha256": "97c4455a4194542d0c71a51c0290e96efd51acfa63e181bb740ff8ee7feeffc5",
+      "duration": 2.6354648526077096,
+      "rms": 0.1498866052665706,
+      "finite": true
+    },
+    {
+      "number": 144,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/144_0.wav",
+      "sha256": "3ff8517e4dbbc5c2cc6335a3319801b541d7ae40399f0295fb5579e6d4bf3fa4",
+      "duration": 2.75156462585034,
+      "rms": 0.09090078698614593,
+      "finite": true
+    },
+    {
+      "number": 145,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/145_0.wav",
+      "sha256": "9f0d5d6ddadf84801e0dcc4454c66e846b5e97d1a5194334851210f436c16acf",
+      "duration": 3.6687528344671203,
+      "rms": 0.11533321121788498,
+      "finite": true
+    },
+    {
+      "number": 146,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/146_0.wav",
+      "sha256": "df12608f5962352276f74c9ddeca98bf291f1946b80949b356687039ba1365cf",
+      "duration": 3.8312925170068026,
+      "rms": 0.12528399535891405,
+      "finite": true
+    },
+    {
+      "number": 147,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/147_0.wav",
+      "sha256": "e162966b3261875de3f5d3f00e56d37cac1d4fa20a021bc0eaa671026d1e94c3",
+      "duration": 2.1130158730158732,
+      "rms": 0.11551042873777086,
+      "finite": true
+    },
+    {
+      "number": 148,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/148_0.wav",
+      "sha256": "7894b35fb34093a82dfcfd666dabf7ee9afcd1336f5f056a4eeca35664306c38",
+      "duration": 2.589024943310658,
+      "rms": 0.14961251462721536,
+      "finite": true
+    },
+    {
+      "number": 149,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/149_0.wav",
+      "sha256": "ce80b5245ade40f46b2a0d1ce340aee02c33d88db485cbc30efe6d0ad2a3572a",
+      "duration": 5.630839002267574,
+      "rms": 0.1388616764389768,
+      "finite": true
+    },
+    {
+      "number": 150,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/150_0.wav",
+      "sha256": "89aa5aef8541cbedb7af56ee58b7a5ea43c9c53e8e7c28cc569ca7328c5b366a",
+      "duration": 1.8343764172335602,
+      "rms": 0.12314713326920776,
+      "finite": true
+    },
+    {
+      "number": 151,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/151_0.wav",
+      "sha256": "16ae560a4b01e3309b24428e92dc9a15a1fd114a8719fd9c5eae673701a969a2",
+      "duration": 2.72140589569161,
+      "rms": 0.12155299974482496,
+      "finite": true
+    },
+    {
+      "number": 152,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/152_0.wav",
+      "sha256": "641b94724ad204a47d27aa756b337739928c477a3c44675a1ac111a72f7fad41",
+      "duration": 0.9984580498866213,
+      "rms": 0.1941067148182694,
+      "finite": true
+    },
+    {
+      "number": 153,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/153_0.wav",
+      "sha256": "cec314f1bf5f33ee1ed2f20136a3ac8f28a1b72af2d27f1436138d1dc668a023",
+      "duration": 3.5310204081632652,
+      "rms": 0.17209584456456914,
+      "finite": true
+    },
+    {
+      "number": 154,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/154_0.wav",
+      "sha256": "5427dd7b547aee243520f124cd5174dca218e1c37ebf76cfcbe4fb907d5a45ea",
+      "duration": 3.274013605442177,
+      "rms": 0.11401964304007348,
+      "finite": true
+    },
+    {
+      "number": 155,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/155_0.wav",
+      "sha256": "93eb424e500538de67a6a8307bdb978c2e23694932885555e2f6a89687ec86ab",
+      "duration": 1.9969160997732427,
+      "rms": 0.09952263504079131,
+      "finite": true
+    },
+    {
+      "number": 156,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/156_0.wav",
+      "sha256": "9814c02637c9ac76c9fbd3a4856c45326be28d6774759fe02b0e1a7fafb618f4",
+      "duration": 1.1145578231292517,
+      "rms": 0.12266136671608481,
+      "finite": true
+    },
+    {
+      "number": 157,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/157_0.wav",
+      "sha256": "0b370e85b2cada7846986b69c9f7086ce032f8757b49c90ab00e948fdc26ed28",
+      "duration": 1.9091156462585035,
+      "rms": 0.13494652192671652,
+      "finite": true
+    },
+    {
+      "number": 158,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/158_0.wav",
+      "sha256": "7b557466caeba2546e24564bc010b6d61c9e73f7fd78a3f45d2137f10bd9fde3",
+      "duration": 1.7531065759637188,
+      "rms": 0.14908500632422067,
+      "finite": true
+    },
+    {
+      "number": 159,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/159_0.wav",
+      "sha256": "f82787f2120b7a740e7d80d7ce0dd8cf3ab7cbe1865ab13bdf77809ccb019182",
+      "duration": 1.5905668934240362,
+      "rms": 0.1199694879972026,
+      "finite": true
+    },
+    {
+      "number": 160,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/160_0.wav",
+      "sha256": "928e4cd1132cada0349e87cd15aa53dcb7dc4287b64cb6e7ed6557496c3da35e",
+      "duration": 1.5905668934240362,
+      "rms": 0.09588837179571348,
+      "finite": true
+    },
+    {
+      "number": 161,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/161_0.wav",
+      "sha256": "bc8ae5d90145eaf1bffda5444c102e1ac2654826736bf222a4d2237df3f23d55",
+      "duration": 2.426485260770975,
+      "rms": 0.11185515309690765,
+      "finite": true
+    },
+    {
+      "number": 162,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/162_0.wav",
+      "sha256": "82f8100f999df891f50febc642f01448e3e6a81d3ee5846fa8d92d5f51befc58",
+      "duration": 1.6718367346938776,
+      "rms": 0.14717076480671987,
+      "finite": true
+    },
+    {
+      "number": 163,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/163_0.wav",
+      "sha256": "fa08e91ca90b635b798693e8aaf1a7702e50e83471feaad2d5e3b5079ae3e088",
+      "duration": 1.6370068027210884,
+      "rms": 0.08457325957148351,
+      "finite": true
+    },
+    {
+      "number": 164,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/164_0.wav",
+      "sha256": "7fdd34d836235453797370b331290dbd248d2fdfec0c7df80b6c964c737b5cc7",
+      "duration": 1.6370068027210884,
+      "rms": 0.08410952912604146,
+      "finite": true
+    },
+    {
+      "number": 165,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/165_0.wav",
+      "sha256": "4b0e6801668b3130a75e4345f753649f7b0b5899e9ed6bbec1e8869781e3c071",
+      "duration": 1.1493877551020408,
+      "rms": 0.06653006924560864,
+      "finite": true
+    },
+    {
+      "number": 166,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/166_0.wav",
+      "sha256": "8292e7b9ffcf43e26ba01f251849c647cc29c10af444244048d051c69ff01c13",
+      "duration": 1.5905668934240362,
+      "rms": 0.1753928268843094,
+      "finite": true
+    },
+    {
+      "number": 167,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/167_0.wav",
+      "sha256": "88de94aa220be22530c633bad09fe7b24e1b539bd9341759b56c2bb352ad9488",
+      "duration": 1.6718367346938776,
+      "rms": 0.11560767261597167,
+      "finite": true
+    },
+    {
+      "number": 168,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/168_0.wav",
+      "sha256": "4b5b6a73602f3342d25f77375b206f5ba16f95064aa12a4ebdc114a240570489",
+      "duration": 2.3345124716553287,
+      "rms": 0.16514165577002718,
+      "finite": true
+    },
+    {
+      "number": 169,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/169_0.wav",
+      "sha256": "56e04426b67f2d150d4d2fe43437f80926b46144c9d61dba88e45fcd140bc53e",
+      "duration": 2.2291156462585033,
+      "rms": 0.14682473537801596,
+      "finite": true
+    },
+    {
+      "number": 170,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/170_0.wav",
+      "sha256": "5eee5d64146b70aab1d6d7df7a2a09ac3186fda41e8eb22eba6c928f532754da",
+      "duration": 1.5905668934240362,
+      "rms": 0.12884745811202064,
+      "finite": true
+    },
+    {
+      "number": 171,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/171_0.wav",
+      "sha256": "b72434893ff14720521f7f9f275457d3f4f4cff342da9f8fd4bee1b5fc934301",
+      "duration": 1.509297052154195,
+      "rms": 0.12833441727338882,
+      "finite": true
+    },
+    {
+      "number": 172,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/172_0.wav",
+      "sha256": "81a509e2b79fb87d906deb292f5fb6bfc9d80b578540973995874b5bb24a406a",
+      "duration": 1.9969160997732427,
+      "rms": 0.08050964328822852,
+      "finite": true
+    },
+    {
+      "number": 173,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/173_0.wav",
+      "sha256": "bf1b7891da7aa2e61b37a03ccbec54da8a75f93813255346b4b10967f2241740",
+      "duration": 1.2770975056689342,
+      "rms": 0.13599932083739316,
+      "finite": true
+    },
+    {
+      "number": 174,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/174_0.wav",
+      "sha256": "7eb7914205832f0801b368cdf1c36807255725a720452140137ee40b92a0b7c0",
+      "duration": 3.6830839002267575,
+      "rms": 0.12912187433436728,
+      "finite": true
+    },
+    {
+      "number": 175,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/175_0.wav",
+      "sha256": "859c1124cfe321df3f7f4e22074e752a2e84c576e2dc23a8c8da6b392af579f2",
+      "duration": 3.6687528344671203,
+      "rms": 0.15071170620728291,
+      "finite": true
+    },
+    {
+      "number": 176,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/176_0.wav",
+      "sha256": "63077ec4f7f2981b4814bbe9f831b0ffd2c4eb984cc92ee3db346b6122a1af97",
+      "duration": 2.5751020408163265,
+      "rms": 0.17301425344097454,
+      "finite": true
+    },
+    {
+      "number": 177,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/177_0.wav",
+      "sha256": "ca8a67573a8fccf3824370735893fc92aa80372dea53d04ad6b45e4e0611e653",
+      "duration": 2.4893877551020407,
+      "rms": 0.1729878507314879,
+      "finite": true
+    },
+    {
+      "number": 178,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/178_0.wav",
+      "sha256": "528f198f46dee96743c77c7f5c0a97f36f12f85e3b059a4037a5c92399ce961a",
+      "duration": 3.633922902494331,
+      "rms": 0.11573270880978426,
+      "finite": true
+    },
+    {
+      "number": 179,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/179_0.wav",
+      "sha256": "fc8d900dc01e2d829d4e18bd8d673eceedfd5c844376be5ed79c65b321a0ce57",
+      "duration": 1.9504761904761905,
+      "rms": 0.19276003820592333,
+      "finite": true
+    },
+    {
+      "number": 180,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/180_0.wav",
+      "sha256": "c21a84b40a8d68066b48b069c70bb8ee985d082e41f7be1824f46de616d61b8a",
+      "duration": 2.1942857142857144,
+      "rms": 0.14245643733287228,
+      "finite": true
+    },
+    {
+      "number": 181,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/181_0.wav",
+      "sha256": "67b9b91b04fe8126e9bbc06149b47556adfdd05dd7f73e5bfda272c4f8274eee",
+      "duration": 0.9171882086167801,
+      "rms": 0.07855744316158997,
+      "finite": true
+    },
+    {
+      "number": 182,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/182_0.wav",
+      "sha256": "795ac57dd6d121ddb556d75d7d227176b4af8b1a10f4c0f6d82d44e6e22e5326",
+      "duration": 2.5541950113378684,
+      "rms": 0.12443109167176672,
+      "finite": true
+    },
+    {
+      "number": 183,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/183_0.wav",
+      "sha256": "8ac871f872c44d9d5274cbc4b852ba39117cfe5e5869655a5e9eb5af99d6ae4b",
+      "duration": 3.8327891156462583,
+      "rms": 0.13351977041938112,
+      "finite": true
+    },
+    {
+      "number": 184,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/184_0.wav",
+      "sha256": "4e78a093f535126ac97ad7bfddb20c6dcd08a75b48c5cdd5a86d630356983d67",
+      "duration": 4.006394557823129,
+      "rms": 0.11892340738870273,
+      "finite": true
+    },
+    {
+      "number": 185,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/185_0.wav",
+      "sha256": "7004ae1bebc157e23e4c4bd8d613fae069018bd5b88f54bd24cdbcb2cf2b1584",
+      "duration": 1.195827664399093,
+      "rms": 0.16700710405320005,
+      "finite": true
+    },
+    {
+      "number": 186,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/186_0.wav",
+      "sha256": "566826ff27b7124826e0d7edebbe00b293b312855caedbb441a9fd91ced0bed9",
+      "duration": 3.4611791383219956,
+      "rms": 0.12002447055897807,
+      "finite": true
+    },
+    {
+      "number": 187,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/187_0.wav",
+      "sha256": "8573bbd5fde09d168be2793e93269d2c4d9d6fd3f863e0a4d9a6e626169e2921",
+      "duration": 1.195827664399093,
+      "rms": 0.09144473122115158,
+      "finite": true
+    },
+    {
+      "number": 188,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/188_0.wav",
+      "sha256": "c92379b24b2437dffbb329916360da44b232dfceb760f8f031fab1086e0f54d4",
+      "duration": 2.1130158730158732,
+      "rms": 0.13440529743348603,
+      "finite": true
+    },
+    {
+      "number": 189,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/189_0.wav",
+      "sha256": "a60ae2c429f11cc79c14b993d559926772fedc06c216fb4602dc7a8ab59ad7cd",
+      "duration": 1.555736961451247,
+      "rms": 0.11049263533043907,
+      "finite": true
+    },
+    {
+      "number": 190,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/190_0.wav",
+      "sha256": "76bae90db4fc287c6db82df6c40459274f8c151c2440b2a745e961931d68051c",
+      "duration": 2.589024943310658,
+      "rms": 0.11273782149436269,
+      "finite": true
+    },
+    {
+      "number": 191,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/191_0.wav",
+      "sha256": "483b920ee557f462f1c257e9573a072ad50739c611006ceb6965e99bf1ac721d",
+      "duration": 2.4974603174603174,
+      "rms": 0.12508742956383043,
+      "finite": true
+    },
+    {
+      "number": 192,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/192_0.wav",
+      "sha256": "b5d03791719549050f55a6a10691a230e190a63864380fcf763ed3eb395505ab",
+      "duration": 2.066575963718821,
+      "rms": 0.11926659041685062,
+      "finite": true
+    },
+    {
+      "number": 193,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/193_0.wav",
+      "sha256": "7d3c7940bb85dec992f1ca3165e7f4127d1a79febc126e411a25283c8f397c4a",
+      "duration": 2.670294784580499,
+      "rms": 0.13476945614294641,
+      "finite": true
+    },
+    {
+      "number": 194,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/194_0.wav",
+      "sha256": "fad9cb5c72afdeb71fd999c4924388993b35f5ded3651fdec4d3f2cee44210a0",
+      "duration": 1.9969160997732427,
+      "rms": 0.13327212327344404,
+      "finite": true
+    },
+    {
+      "number": 195,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/195_0.wav",
+      "sha256": "875e076e68b6ba50418c014dbb6a73e35b23f5349670b455070e05404a032688",
+      "duration": 2.3188208616780046,
+      "rms": 0.09139900660366923,
+      "finite": true
+    },
+    {
+      "number": 196,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/196_0.wav",
+      "sha256": "6a866e3e48f7163118d4cdf414b7065e38e6be12592f80a2c5ff71efc133f643",
+      "duration": 2.5541950113378684,
+      "rms": 0.09690652466397247,
+      "finite": true
+    },
+    {
+      "number": 197,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/197_0.wav",
+      "sha256": "46f4482da2c7e410e117c47586c76dd2e9e3fd43af0d95ba3c4d6e0630eeebe8",
+      "duration": 1.509297052154195,
+      "rms": 0.14746212789861554,
+      "finite": true
+    },
+    {
+      "number": 198,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/198_0.wav",
+      "sha256": "3ba391251d94d7647ca3e411ff6f874dc0b2e9537bf388c12a1c02737ff2074e",
+      "duration": 1.7066666666666668,
+      "rms": 0.11197623849469777,
+      "finite": true
+    },
+    {
+      "number": 199,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/199_0.wav",
+      "sha256": "797cdd3522de8d0bf9a14722edaa8bd550cf8d28142c7c5fd92abb84ac73d7e2",
+      "duration": 2.4729251700680273,
+      "rms": 0.14118510581507557,
+      "finite": true
+    },
+    {
+      "number": 200,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/200_0.wav",
+      "sha256": "32d32d17f3663125948d766b30b45ccd56a2037db770dc0f93950d1d02f17d13",
+      "duration": 2.914104308390023,
+      "rms": 0.13108338640231185,
+      "finite": true
+    },
+    {
+      "number": 201,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/201_0.wav",
+      "sha256": "c0fe2e26d5a49dae7debe96a6f99abc642ef3a7f16cfefe812708adf6ef452a5",
+      "duration": 0.9984580498866213,
+      "rms": 0.0763282725279311,
+      "finite": true
+    },
+    {
+      "number": 202,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/202_0.wav",
+      "sha256": "31522339d2ba9186f1400733fee6c94aa02d49d13ff3654330e3f345206cdd56",
+      "duration": 2.426485260770975,
+      "rms": 0.12413258361895782,
+      "finite": true
+    },
+    {
+      "number": 203,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/203_0.wav",
+      "sha256": "c4fd3ef2076d740b5247176582e4f0db35a27c5ef7574ab3a026123435cd67dc",
+      "duration": 1.8513832199546485,
+      "rms": 0.08379786784045898,
+      "finite": true
+    },
+    {
+      "number": 204,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/204_0.wav",
+      "sha256": "f433e948bf0df4be19cf620994866550b70ba1e066532ed390ff3961c9637a0b",
+      "duration": 2.391655328798186,
+      "rms": 0.12296093758969136,
+      "finite": true
+    },
+    {
+      "number": 205,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/205_0.wav",
+      "sha256": "f33b67566eda70ffb0337a2c41435b85e8865ba80faf0f5f2cf8e1986058be9a",
+      "duration": 3.4713832199546486,
+      "rms": 0.12070001153340003,
+      "finite": true
+    },
+    {
+      "number": 206,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/206_0.wav",
+      "sha256": "fcb9d5763ef8e3eb16fb7322df9ceb5d4a82710495df323b5da449ef677b99a3",
+      "duration": 1.9970975056689342,
+      "rms": 0.12609458485379768,
+      "finite": true
+    },
+    {
+      "number": 207,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/207_0.wav",
+      "sha256": "87792cd5ce71d9e9314c290ce3ae87f432746513816df6d71db623be5bfbf88b",
+      "duration": 1.9969160997732427,
+      "rms": 0.10572967136347235,
+      "finite": true
+    },
+    {
+      "number": 208,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/208_0.wav",
+      "sha256": "7ff0eace174e06cfa1d044db98adadff717f4c2664402d6988cbb062f075dc21",
+      "duration": 3.0282993197278913,
+      "rms": 0.15754061357321972,
+      "finite": true
+    },
+    {
+      "number": 209,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/209_0.wav",
+      "sha256": "3d849819dca2bded3cd6e23b05f4eccb0803478a0ff65ea613402101800c7d08",
+      "duration": 1.7066666666666668,
+      "rms": 0.12390696929334544,
+      "finite": true
+    },
+    {
+      "number": 210,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/210_0.wav",
+      "sha256": "b57cb6825c0e95482ed31f43583a94026351fe210ddd64fb75e232872b29bf9c",
+      "duration": 3.118049886621315,
+      "rms": 0.1474375795713687,
+      "finite": true
+    },
+    {
+      "number": 211,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/211_0.wav",
+      "sha256": "c71c642525b8f133b77128fb25d31741e5f47ae272688382464d98ebc6b0d736",
+      "duration": 1.602312925170068,
+      "rms": 0.15229011604704634,
+      "finite": true
+    },
+    {
+      "number": 212,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/212_0.wav",
+      "sha256": "59ad9f4e8f2643a6e55883d91edbc5faf9b882e862af4bd319bdb9db134990d1",
+      "duration": 2.1130158730158732,
+      "rms": 0.12170424363892114,
+      "finite": true
+    },
+    {
+      "number": 213,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/213_0.wav",
+      "sha256": "a4623f9c3c3a550cdba73b4b58db3c840ad57a44a87aa62fa9457e9e3abbab79",
+      "duration": 1.1145578231292517,
+      "rms": 0.17188826049987393,
+      "finite": true
+    },
+    {
+      "number": 214,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/214_0.wav",
+      "sha256": "1e85d9c6306b02ac701ac3282e1969c95ab86245aef033c0e8d8c7b04d81b1fd",
+      "duration": 2.5541950113378684,
+      "rms": 0.11814329192681032,
+      "finite": true
+    },
+    {
+      "number": 215,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/215_0.wav",
+      "sha256": "043e85157c6cdf22315edecbf67f80bc9cfcd93bcaa11dcff578dfa39f22c5db",
+      "duration": 1.3467573696145125,
+      "rms": 0.10977283916470536,
+      "finite": true
+    },
+    {
+      "number": 216,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/216_0.wav",
+      "sha256": "0902292e82c50af6b105c86ff751c41d34d206760ba1d56886a169771d8a63bb",
+      "duration": 3.4713832199546486,
+      "rms": 0.15332071760980598,
+      "finite": true
+    },
+    {
+      "number": 217,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/217_0.wav",
+      "sha256": "18ce7c26810b0f831aef9369aafd761445199cca93d543c32e1ab7a2435f1b57",
+      "duration": 3.4348299319727893,
+      "rms": 0.12842896974666923,
+      "finite": true
+    },
+    {
+      "number": 218,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/218_0.wav",
+      "sha256": "cc6a93d68700c25d1ffa31693d3a1bfec421b15602e1dca05802ffeec3d3449c",
+      "duration": 2.705124716553288,
+      "rms": 0.14588112070459427,
+      "finite": true
+    },
+    {
+      "number": 219,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/219_0.wav",
+      "sha256": "512e201373c608b90acc2878029f7afa99d570e95c12809ebd5755984bb178db",
+      "duration": 1.5905668934240362,
+      "rms": 0.12335434503897762,
+      "finite": true
+    },
+    {
+      "number": 220,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/220_0.wav",
+      "sha256": "cdc39bdc1655cf8cdb88bc6be5019c03a7f64effac2cd1fb11b54e735b2afcf2",
+      "duration": 1.9504761904761905,
+      "rms": 0.09113045387237716,
+      "finite": true
+    },
+    {
+      "number": 221,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/221_0.wav",
+      "sha256": "21baf62b2eb35aed6b2b48646e17463a0df0859cabab4b13c6741c1ee33d3362",
+      "duration": 1.787936507936508,
+      "rms": 0.1767369223283392,
+      "finite": true
+    },
+    {
+      "number": 222,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/222_0.wav",
+      "sha256": "dbe866552e4c1fac19739f05d6830a2379a9149aa09557828aaf78c5684e2a2f",
+      "duration": 1.9504761904761905,
+      "rms": 0.12369035521465521,
+      "finite": true
+    },
+    {
+      "number": 223,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/223_0.wav",
+      "sha256": "53ce68a814e103a54e5b7b97d0c6877f88fbda8fc7ba6771ca906eb9e0730bea",
+      "duration": 2.3103854875283445,
+      "rms": 0.1353836160659643,
+      "finite": true
+    },
+    {
+      "number": 224,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/224_0.wav",
+      "sha256": "2856755433dd9bc342a7f303e432171eac60b221a8cfdcec5595796a3cecf81e",
+      "duration": 2.2755555555555556,
+      "rms": 0.13842907074648497,
+      "finite": true
+    },
+    {
+      "number": 225,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/225_0.wav",
+      "sha256": "c105027f544874426a5753601736623c69d0c6302a00ef958f66df323877c39f",
+      "duration": 2.8132879818594105,
+      "rms": 0.1189484508784663,
+      "finite": true
+    },
+    {
+      "number": 226,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/226_0.wav",
+      "sha256": "f0586401777da0dbc68a92a0b9158661afbe9786c28ad638ea18fbdb2df64eac",
+      "duration": 0.968843537414966,
+      "rms": 0.1088334620041717,
+      "finite": true
+    },
+    {
+      "number": 227,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/227_0.wav",
+      "sha256": "50e10a47c6bca7c951e289b7134188c8daa5f4078c8012fc8d4a9c3be7bbc78f",
+      "duration": 1.0332879818594105,
+      "rms": 0.14093732468386327,
+      "finite": true
+    },
+    {
+      "number": 228,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/228_0.wav",
+      "sha256": "a628e9eebace703601065fa59ef0a10c6ef9c4bfd93b3b6af153df89c8f8da93",
+      "duration": 1.6718367346938776,
+      "rms": 0.1340683069263609,
+      "finite": true
+    },
+    {
+      "number": 229,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/229_0.wav",
+      "sha256": "8bcf8874d4afda7e591a4d012ec8bedbc5d3bc8f4a83a74e95140c646cfa7723",
+      "duration": 2.0829931972789115,
+      "rms": 0.14668808469395792,
+      "finite": true
+    },
+    {
+      "number": 230,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/230_0.wav",
+      "sha256": "95f0324e996e7603b8452534cf01f9120f22c79005dd53b5de19505d510a4722",
+      "duration": 3.3901133786848074,
+      "rms": 0.14155388558820503,
+      "finite": true
+    },
+    {
+      "number": 231,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/231_0.wav",
+      "sha256": "98ef4eae2ebfca32a74620da48d21a57958cbb1687abb39fca42316a3fdd56be",
+      "duration": 1.6370068027210884,
+      "rms": 0.1271131002912875,
+      "finite": true
+    },
+    {
+      "number": 232,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/232_0.wav",
+      "sha256": "edfea87d4de0ab0c016edf335af4817620f67dc91e1c551f0619b42a67a12820",
+      "duration": 0.47600907029478456,
+      "rms": 0.13959769976458716,
+      "finite": true
+    },
+    {
+      "number": 233,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/233_0.wav",
+      "sha256": "e88bdab8a53ae206f8a2aeaef44b2cc9a307d79d3be7bdbc526cc9970ab32d77",
+      "duration": 2.0317460317460316,
+      "rms": 0.14621987954793153,
+      "finite": true
+    },
+    {
+      "number": 234,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/234_0.wav",
+      "sha256": "269b351b487a5f9e4a8da8d9b6f96a8ad32a1c4b8cc44062a90503d28c98cd60",
+      "duration": 3.8312925170068026,
+      "rms": 0.1411535155226702,
+      "finite": true
+    },
+    {
+      "number": 235,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/235_0.wav",
+      "sha256": "c13edb397bbec0cfe9d3b7612a873c480b9e7039fe7339ab2274485985b2c1ac",
+      "duration": 1.4280272108843537,
+      "rms": 0.12623498193192123,
+      "finite": true
+    },
+    {
+      "number": 236,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/236_0.wav",
+      "sha256": "48740972ab4cd72f0c7770ff7763bf0ff16cc3942458e600c729e83c3f1566cd",
+      "duration": 1.474467120181406,
+      "rms": 0.12330580815968371,
+      "finite": true
+    },
+    {
+      "number": 237,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/237_0.wav",
+      "sha256": "a347d4231b18af9d9c2a32dec241225c8d51e17b265cd4f8f27a682a5d7d2087",
+      "duration": 1.3119274376417234,
+      "rms": 0.14237583295807058,
+      "finite": true
+    },
+    {
+      "number": 238,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/238_0.wav",
+      "sha256": "0a4327cd5226964ae2106b24ef2cbdc1540abd33804c6cd83b39eadc6fc873e5",
+      "duration": 5.143219954648526,
+      "rms": 0.1320031599811312,
+      "finite": true
+    },
+    {
+      "number": 239,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/239_0.wav",
+      "sha256": "f49b7c0cac96d35b2afe3de26312a79f43cd1b15dbe9020c450248840f959726",
+      "duration": 2.066575963718821,
+      "rms": 0.17142963399072428,
+      "finite": true
+    },
+    {
+      "number": 240,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/240_0.wav",
+      "sha256": "581ac1c0160c8206c014afe025a9127a03485ad57bc785e99a5a4b1ea2592227",
+      "duration": 2.8328344671201813,
+      "rms": 0.12650011198352384,
+      "finite": true
+    },
+    {
+      "number": 241,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/241_0.wav",
+      "sha256": "ec5d4ea48ab050bed3d6aa29c9f3f7fb95cf867d78635fa36af5802644929d90",
+      "duration": 2.972018140589569,
+      "rms": 0.18488061044816576,
+      "finite": true
+    },
+    {
+      "number": 242,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/242_0.wav",
+      "sha256": "254d15804269bb17cf8c2b61b6974646d52960ceb88955dbfaa565bc57518e75",
+      "duration": 2.066575963718821,
+      "rms": 0.17608697809095283,
+      "finite": true
+    },
+    {
+      "number": 243,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/243_0.wav",
+      "sha256": "42f46b79cd1dcbdb6b4c51894aa1d1ed119d92ed656788348bd6e1728808c8ba",
+      "duration": 3.7035827664399092,
+      "rms": 0.1440819916726508,
+      "finite": true
+    },
+    {
+      "number": 244,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/244_0.wav",
+      "sha256": "9d4bef3b2f675dae70adff132fe2b8cf395cbbb48613a8e6c4fdf133c270c157",
+      "duration": 1.6718367346938776,
+      "rms": 0.15557905425262844,
+      "finite": true
+    },
+    {
+      "number": 245,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/245_0.wav",
+      "sha256": "58acbab63a1cee8c8da6e0d56b7200c3a5a0e80a14fb8a222fac46cfd3be58f6",
+      "duration": 3.030204081632653,
+      "rms": 0.14334779444395848,
+      "finite": true
+    },
+    {
+      "number": 246,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/246_0.wav",
+      "sha256": "03e70937d4b044ad5cdd16eff3fe5f009f3b507833ae0199cfbd28591057b3a0",
+      "duration": 1.4280272108843537,
+      "rms": 0.16608600671197468,
+      "finite": true
+    },
+    {
+      "number": 247,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/247_0.wav",
+      "sha256": "87f90f20a9ee79c44894b54f1920c277ef61df22917d1294677ca5738c8afeb4",
+      "duration": 3.1463038548752835,
+      "rms": 0.12506161518327327,
+      "finite": true
+    },
+    {
+      "number": 248,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/248_0.wav",
+      "sha256": "3aca5fba8a06b00c8b4f586232fd91632d6d3132d1097d01cc5cd244bf2e1c47",
+      "duration": 1.474467120181406,
+      "rms": 0.14614875137015268,
+      "finite": true
+    },
+    {
+      "number": 249,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/249_0.wav",
+      "sha256": "e77dcbc36d510839c7c88dd805229d2522844625249a8be94e20b70118f72263",
+      "duration": 1.5763718820861679,
+      "rms": 0.15269773173525528,
+      "finite": true
+    },
+    {
+      "number": 250,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/250_0.wav",
+      "sha256": "efd6e6faa9fe05500ac718c0432dc314a2ad52f9665008bde020a8749668d60b",
+      "duration": 3.308843537414966,
+      "rms": 0.146916647289184,
+      "finite": true
+    },
+    {
+      "number": 251,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/251_0.wav",
+      "sha256": "14c582fc4ad0a48b217237cea4358272a08f29029c85a68393dbd25a9b14bf38",
+      "duration": 1.6370068027210884,
+      "rms": 0.155038297303539,
+      "finite": true
+    },
+    {
+      "number": 252,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/252_0.wav",
+      "sha256": "d02fee3c0c40c292869a07c2663bea7dd5875fcd76a69525a1d6e2c8399d5266",
+      "duration": 2.147845804988662,
+      "rms": 0.1337338848347091,
+      "finite": true
+    },
+    {
+      "number": 253,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/253_0.wav",
+      "sha256": "69a04d55190605900c80a0ad9f5846b8c8b1b2d79b20b3a01beeb0df35c4f048",
+      "duration": 2.6465759637188206,
+      "rms": 0.14673264846705117,
+      "finite": true
+    },
+    {
+      "number": 254,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/254_0.wav",
+      "sha256": "4fd38d3e304dbc6f73176657ed8da45427ca63fba57e833174d12f9ad0d91a7f",
+      "duration": 3.924625850340136,
+      "rms": 0.1473897299828614,
+      "finite": true
+    },
+    {
+      "number": 255,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/255_0.wav",
+      "sha256": "a9f17ce96a4edbcc5f3ccb84b06f0ced54b9f74a2ddd3e81796265a676180b06",
+      "duration": 1.3467573696145125,
+      "rms": 0.12759495559427506,
+      "finite": true
+    },
+    {
+      "number": 256,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/256_0.wav",
+      "sha256": "9b46f24278dcc7459df071c6b9d14b374fc296d429bd0e43f6bd94292be43d8f",
+      "duration": 2.269251700680272,
+      "rms": 0.1407829420496349,
+      "finite": true
+    },
+    {
+      "number": 257,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/257_0.wav",
+      "sha256": "6357aa01c4067a5382710760260eefd57cbb489c23fc386ae9bcb5729e759aab",
+      "duration": 4.144761904761904,
+      "rms": 0.1267708556590981,
+      "finite": true
+    },
+    {
+      "number": 258,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/258_0.wav",
+      "sha256": "b7bf53256effda4b2f6c1559a8ffb0f0b6967170b2c6a469e89854746addbdd6",
+      "duration": 1.3467573696145125,
+      "rms": 0.15951734733929068,
+      "finite": true
+    },
+    {
+      "number": 259,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/259_0.wav",
+      "sha256": "9d93ae053b7675a4448e5d4f6667d38d0a56393f64845ed7d3941a5f84a512b1",
+      "duration": 3.771746031746032,
+      "rms": 0.1274910591430549,
+      "finite": true
+    },
+    {
+      "number": 260,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/260_0.wav",
+      "sha256": "9520526683ee9f6fb8cf265dcb38056468e0fe7939b756010e56d3504a4f8ea8",
+      "duration": 2.7313378684807255,
+      "rms": 0.14236330643124875,
+      "finite": true
+    },
+    {
+      "number": 261,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/261_0.wav",
+      "sha256": "b256aa71a7985a2625ea0029f7ff0fe757aa6d2b08863a166ae6641bfc32af30",
+      "duration": 1.7531065759637188,
+      "rms": 0.1486639628626268,
+      "finite": true
+    },
+    {
+      "number": 262,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/262_0.wav",
+      "sha256": "8c6a3960403600d59aa1a53e01642d30b60384d4c611e58c96bd18e1810392ee",
+      "duration": 2.0317460317460316,
+      "rms": 0.12829690408876407,
+      "finite": true
+    },
+    {
+      "number": 263,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/263_0.wav",
+      "sha256": "7865682d07c6cb342196065b6752f8310359b6da71e53ee147f7bd86d945a49a",
+      "duration": 2.75156462585034,
+      "rms": 0.12818317585326877,
+      "finite": true
+    },
+    {
+      "number": 264,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/264_0.wav",
+      "sha256": "5afb6b55abcc83644a52fab01cec7362af42a66c5c18d8b56d42d678177258da",
+      "duration": 2.914104308390023,
+      "rms": 0.13385722334618752,
+      "finite": true
+    },
+    {
+      "number": 265,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/265_0.wav",
+      "sha256": "bb31b58ff4e77fc3248297d47005533b1485d4de9542698c2e06d102aed8cd53",
+      "duration": 1.9230839002267575,
+      "rms": 0.09225233505163981,
+      "finite": true
+    },
+    {
+      "number": 266,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/266_0.wav",
+      "sha256": "6ed33e6508d000533eea0478a64a986d258cda10f8e1e43ae2cfab0b32a55e60",
+      "duration": 1.4280272108843537,
+      "rms": 0.21619534572866542,
+      "finite": true
+    },
+    {
+      "number": 267,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/267_0.wav",
+      "sha256": "0c1aaea8275340bc2f5d286febbb8563f065bdb68c03949571829f8e813c2ccc",
+      "duration": 3.996235827664399,
+      "rms": 0.1568192973235928,
+      "finite": true
+    },
+    {
+      "number": 268,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/268_0.wav",
+      "sha256": "0d197ab9f4985294be736e30864d38f0da314d06ec47d841edca01f0069b3637",
+      "duration": 3.912562358276644,
+      "rms": 0.13187466102167825,
+      "finite": true
+    },
+    {
+      "number": 269,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/269_0.wav",
+      "sha256": "0df8b091e3194a7d5de66a76a3a613be2d761395786c354a7f95e8885edd313e",
+      "duration": 2.914104308390023,
+      "rms": 0.09689956098872736,
+      "finite": true
+    },
+    {
+      "number": 270,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/270_0.wav",
+      "sha256": "e33c7d395ecef3ee9b8c1aab684c94da72760f1e03885778d4ed1d3d66a4faf9",
+      "duration": 3.5874829931972787,
+      "rms": 0.17755423836988085,
+      "finite": true
+    },
+    {
+      "number": 271,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/271_0.wav",
+      "sha256": "c4473b6e71d763e4393d901de08459b7de8aab23ed5061e1aa3a24a691061fed",
+      "duration": 2.6354648526077096,
+      "rms": 0.1279342910910075,
+      "finite": true
+    },
+    {
+      "number": 272,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/272_0.wav",
+      "sha256": "7bd06e6c6b1260d004c246670320f80c573cfd05b2c35598d67ac132daa705b6",
+      "duration": 1.555736961451247,
+      "rms": 0.1059308487882437,
+      "finite": true
+    },
+    {
+      "number": 273,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/273_0.wav",
+      "sha256": "2f0317a89af7e6632cd02e9f0cc1ec3e0f077106cfe79c9e5eb8246cc6040994",
+      "duration": 4.272471655328798,
+      "rms": 0.10386619142549926,
+      "finite": true
+    },
+    {
+      "number": 274,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/274_0.wav",
+      "sha256": "9260ca3b82ad90be2e7366645f6c370c0fc37afa67472b6de29ebf2e1d0ec075",
+      "duration": 1.0332879818594105,
+      "rms": 0.09475779485751283,
+      "finite": true
+    },
+    {
+      "number": 275,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/275_0.wav",
+      "sha256": "b6b8c0f565b4c05374b4a39cb1985afba30a6b141f1f8fa335b2704be298313a",
+      "duration": 2.6354648526077096,
+      "rms": 0.15052159669316165,
+      "finite": true
+    },
+    {
+      "number": 276,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/276_0.wav",
+      "sha256": "39f81970b9755c1b49b080ba60e42ebea5c5ba0c8cd71beab7edc061092430d4",
+      "duration": 1.195827664399093,
+      "rms": 0.12307991457795193,
+      "finite": true
+    },
+    {
+      "number": 277,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/277_0.wav",
+      "sha256": "b0fa0a317786037a0dba1ea797a1821a665fa4ae5b6f20ed78903849ca940ad8",
+      "duration": 1.9156462585034013,
+      "rms": 0.08826159064199018,
+      "finite": true
+    },
+    {
+      "number": 278,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/278_0.wav",
+      "sha256": "a64d506390f3d957fae244cb7772a864b8d247c1d5fe54fa679a1e676ab97f19",
+      "duration": 3.308843537414966,
+      "rms": 0.12632470588318223,
+      "finite": true
+    },
+    {
+      "number": 279,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/279_0.wav",
+      "sha256": "4027f53197b38ee029246167fd9ad7c413f12f218d6f6f91ca10f5d0a60f06cf",
+      "duration": 3.111473922902494,
+      "rms": 0.06754947149672723,
+      "finite": true
+    },
+    {
+      "number": 280,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/280_0.wav",
+      "sha256": "82c996fad57e809247d4b1315c091f40ee698bb9e4d701217321c8ca5b3135da",
+      "duration": 2.1130158730158732,
+      "rms": 0.11307854757528456,
+      "finite": true
+    },
+    {
+      "number": 281,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/281_0.wav",
+      "sha256": "210747bbe30e4a92575853b65658a08311e8a8bf429203f364c4bbc63295d1dc",
+      "duration": 1.7066666666666668,
+      "rms": 0.11509140383539665,
+      "finite": true
+    },
+    {
+      "number": 282,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/282_0.wav",
+      "sha256": "ab857a697809db8c4bbd6e95533f9dfcf785e1755062cb8fcae594e923b861d8",
+      "duration": 2.96453514739229,
+      "rms": 0.11962012965064783,
+      "finite": true
+    },
+    {
+      "number": 283,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/283_0.wav",
+      "sha256": "95fa71e93368e77c28a6144f923b5245d1bc316b1498c998412bf7d81df26fee",
+      "duration": 1.230657596371882,
+      "rms": 0.09442871504229255,
+      "finite": true
+    },
+    {
+      "number": 284,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/284_0.wav",
+      "sha256": "73041c2a0853a1000f2eaefff6499671c452f6b9cbdb6f6b1154c680d8ed2e33",
+      "duration": 2.2755555555555556,
+      "rms": 0.12241177943752403,
+      "finite": true
+    },
+    {
+      "number": 285,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/285_0.wav",
+      "sha256": "58c965239a1a7af08778859f2f3833ab51e332eecb1351bee5617a129a88ce09",
+      "duration": 2.914104308390023,
+      "rms": 0.10529512619628564,
+      "finite": true
+    },
+    {
+      "number": 286,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/286_0.wav",
+      "sha256": "3d0d7ace563feca996588fb0a1d406759e8d592786754b77688b0a834fd2578e",
+      "duration": 2.8815873015873015,
+      "rms": 0.13811425921414391,
+      "finite": true
+    },
+    {
+      "number": 287,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/287_0.wav",
+      "sha256": "366cace9dab7c1ab2f28ecd3ff48acde919f18705d869f30ee5abb4a39b6fa8a",
+      "duration": 3.6890249433106574,
+      "rms": 0.08753814006108995,
+      "finite": true
+    },
+    {
+      "number": 288,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/288_0.wav",
+      "sha256": "858f67a459637cd714f9544b44169ee6632086f500d20ecf067a33b4007e450b",
+      "duration": 2.1130158730158732,
+      "rms": 0.1318473532815902,
+      "finite": true
+    },
+    {
+      "number": 289,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/289_0.wav",
+      "sha256": "80a2b33246644de7cd70ae8b259130df8d8db9702488851f0a82ec0b7266a0e8",
+      "duration": 2.6354648526077096,
+      "rms": 0.11856511383830504,
+      "finite": true
+    },
+    {
+      "number": 290,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/290_0.wav",
+      "sha256": "8b7aeacf38113c5af893d8e9e429a8fd0b92744d8f2776f00baac3b06617335e",
+      "duration": 0.6385487528344671,
+      "rms": 0.20377616509398327,
+      "finite": true
+    },
+    {
+      "number": 291,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/291_0.wav",
+      "sha256": "33befc0912334641cb9e4570e84eec8f7effcbac7375f694682a3dd2520935ce",
+      "duration": 2.507755102040816,
+      "rms": 0.13428046493873155,
+      "finite": true
+    },
+    {
+      "number": 292,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/292_0.wav",
+      "sha256": "8ee806feeb05161407a828f07d2097e2e27a0587c326ef6161083d7ce9e4abd9",
+      "duration": 1.4280272108843537,
+      "rms": 0.1325773530336824,
+      "finite": true
+    },
+    {
+      "number": 293,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/293_0.wav",
+      "sha256": "3c833e2aa62b55dac246d7af2d5ea3406c740e5a0b3dc62c69dc16c83ea11f2c",
+      "duration": 2.914104308390023,
+      "rms": 0.12973204348869538,
+      "finite": true
+    },
+    {
+      "number": 294,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/294_0.wav",
+      "sha256": "7dbac441065c3316e787d7e52078adf7753aa9ad61ce9331638ef229ba176f47",
+      "duration": 1.8343764172335602,
+      "rms": 0.1427762468991057,
+      "finite": true
+    },
+    {
+      "number": 295,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/295_0.wav",
+      "sha256": "c19f35fa6fa35c12b942e4095774ffcd35476cf45b0822395b4c638370ba6d0c",
+      "duration": 2.948934240362812,
+      "rms": 0.1415537360166502,
+      "finite": true
+    },
+    {
+      "number": 296,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/296_0.wav",
+      "sha256": "23dbb7ccdee249ee832784ee95d62fdda3af3b803b6a9e0935be994099d67c2f",
+      "duration": 1.0681179138321995,
+      "rms": 0.12112695014576834,
+      "finite": true
+    },
+    {
+      "number": 297,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/297_0.wav",
+      "sha256": "013798dcd99604163e8aa09c31a50da82f49b9e385b02ddf1958b865a562fabd",
+      "duration": 2.066575963718821,
+      "rms": 0.09259993593058309,
+      "finite": true
+    },
+    {
+      "number": 298,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/298_0.wav",
+      "sha256": "c9fbb0d1232c45b8e7d89e1345e0143822ebbb7025f241cf16975cfb7a8f50db",
+      "duration": 3.537142857142857,
+      "rms": 0.14662860236253464,
+      "finite": true
+    },
+    {
+      "number": 299,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/299_0.wav",
+      "sha256": "9aee4c75f8993e39b5b68a1667f54fd40644f8bb6dca67ae5e8b3164d8690237",
+      "duration": 1.1145578231292517,
+      "rms": 0.14307542568073076,
+      "finite": true
+    },
+    {
+      "number": 300,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/300_0.wav",
+      "sha256": "daba56b3dad3eb1feb1116d7083297496ebaca1d1ab0fab17a21c0e964a6b47c",
+      "duration": 3.044716553287982,
+      "rms": 0.12279380230390846,
+      "finite": true
+    },
+    {
+      "number": 301,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/301_0.wav",
+      "sha256": "c3ee0fd806cf4055be5500c87c4283ab3a24b9999eee2a9509925b0f12cd1ec3",
+      "duration": 0.7894784580498866,
+      "rms": 0.20072370680072735,
+      "finite": true
+    },
+    {
+      "number": 302,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/302_0.wav",
+      "sha256": "0f8e7355886db077d6d901cb53c85d70f0b617e01365f3f470f39b20d5914024",
+      "duration": 2.0954648526077095,
+      "rms": 0.09220238865604072,
+      "finite": true
+    },
+    {
+      "number": 303,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/303_0.wav",
+      "sha256": "9e0d33507ca0610309b944991605bcffcbd861a5c1155770275a961a1da5f362",
+      "duration": 3.4249433106575964,
+      "rms": 0.1358125288462541,
+      "finite": true
+    },
+    {
+      "number": 304,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/304_0.wav",
+      "sha256": "d62222aaee48274095db6ed568ee4bded74090dcea5e8a0bd47a0813322fcba9",
+      "duration": 3.274013605442177,
+      "rms": 0.12054608751010916,
+      "finite": true
+    },
+    {
+      "number": 305,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/305_0.wav",
+      "sha256": "874d5d74b46182220928f01dcdfdda301548d803b63d886c7c66edc9d9753f58",
+      "duration": 1.6718367346938776,
+      "rms": 0.10859599853484206,
+      "finite": true
+    },
+    {
+      "number": 306,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/306_0.wav",
+      "sha256": "d00e70e1a998f0fafc5c0d6e7ae7fe65664d2c9f9a117db78eaa0e616899030b",
+      "duration": 3.617142857142857,
+      "rms": 0.11512116214292437,
+      "finite": true
+    },
+    {
+      "number": 307,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/307_0.wav",
+      "sha256": "113675177faa8c2128fec8d8a57bd4cff87ba2a796f6fa3c5406861969f2c44b",
+      "duration": 4.321043083900227,
+      "rms": 0.13074697978461344,
+      "finite": true
+    },
+    {
+      "number": 308,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/308_0.wav",
+      "sha256": "599af56c4377d33782a80ad92a6ffa48bf8b9a73e6af7b75e9180fd405eace12",
+      "duration": 3.9938321995464854,
+      "rms": 0.12393438387933774,
+      "finite": true
+    },
+    {
+      "number": 309,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/309_0.wav",
+      "sha256": "03c8f9998d9a210b0b9ec8e926abc2ac1a07ffeb406df348aec7fd640980aad1",
+      "duration": 2.995374149659864,
+      "rms": 0.13800300078209246,
+      "finite": true
+    },
+    {
+      "number": 310,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/310_0.wav",
+      "sha256": "8559b96c5e391b221159ad1e372d72a6115dcbe3e7370e3e840da1616db09637",
+      "duration": 2.066575963718821,
+      "rms": 0.11219387093786268,
+      "finite": true
+    },
+    {
+      "number": 311,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/311_0.wav",
+      "sha256": "d425285a6c2656aca42ed9cb4b5d1447a636fb9fdb2a0189a73398b1ac3df799",
+      "duration": 3.308843537414966,
+      "rms": 0.12754162841020866,
+      "finite": true
+    },
+    {
+      "number": 312,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/312_0.wav",
+      "sha256": "faf451f34714916acc1c4ee57f006415139c3d1bd2f4d618bdd8abb0ee1076bb",
+      "duration": 1.1493877551020408,
+      "rms": 0.07871548485051119,
+      "finite": true
+    },
+    {
+      "number": 313,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/313_0.wav",
+      "sha256": "ce5cc7548055b21220c63a04d26215ddbd73ff1deb2ee694e15a27dd701a69b8",
+      "duration": 4.504671201814059,
+      "rms": 0.1239730147070377,
+      "finite": true
+    },
+    {
+      "number": 314,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/314_0.wav",
+      "sha256": "4e5f2624133b7ed9484ef7d150c433b35da9acc0557e7a2df8705eeddfbc9f3f",
+      "duration": 4.748480725623582,
+      "rms": 0.14350437228210552,
+      "finite": true
+    },
+    {
+      "number": 315,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/315_0.wav",
+      "sha256": "f3182f59ee52d5fddf52c873b3baa1eba8e0a1b4b63d3c47b3533cecdc4bb733",
+      "duration": 5.061950113378685,
+      "rms": 0.1265060718397774,
+      "finite": true
+    },
+    {
+      "number": 316,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/316_0.wav",
+      "sha256": "3e8adab7347c8ecbc0df8399dc49155ef5a4cfd030b1ff03bac9b2c75dfc4a6c",
+      "duration": 3.4713832199546486,
+      "rms": 0.1243474637716498,
+      "finite": true
+    },
+    {
+      "number": 317,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/317_0.wav",
+      "sha256": "b2d85fe29be606acddaa0696a5c5956526a1321cb873440b6c6365770bdbb27a",
+      "duration": 3.2936507936507935,
+      "rms": 0.13420341179818132,
+      "finite": true
+    },
+    {
+      "number": 318,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/318_0.wav",
+      "sha256": "9eb8ee3047e5b7ccd9d00147953b4d1d64eca6ccbc753aed946a045c246c3939",
+      "duration": 7.267845804988662,
+      "rms": 0.14528097261065773,
+      "finite": true
+    },
+    {
+      "number": 319,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/319_0.wav",
+      "sha256": "1bfc80f0d2411c012c4c101b027f0c2a90523c033876a1039bad654224fb52b6",
+      "duration": 2.705124716553288,
+      "rms": 0.14461158235726748,
+      "finite": true
+    },
+    {
+      "number": 320,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/320_0.wav",
+      "sha256": "a2e70b936bdbf13bd202e4308217035c987be0d2bbdb67c73bd691119dcdc134",
+      "duration": 2.9617233560090703,
+      "rms": 0.11777997055430676,
+      "finite": true
+    },
+    {
+      "number": 321,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/321_0.wav",
+      "sha256": "9263bd00c8ae24179f7fe1bb900a931cce80593220c43adbdf6644680518f20e",
+      "duration": 4.783310657596372,
+      "rms": 0.13114141066090287,
+      "finite": true
+    },
+    {
+      "number": 322,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/322_0.wav",
+      "sha256": "bca6750d44373e610fdbfa04c46903e86de161707601abcd50b3c50e868176a8",
+      "duration": 4.1099319727891155,
+      "rms": 0.14514502410050312,
+      "finite": true
+    },
+    {
+      "number": 323,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/323_0.wav",
+      "sha256": "a74860f1d42a3eb9eb5ed28d15d32198c51601b5f487017eb002bfc5c42fac2e",
+      "duration": 2.670294784580499,
+      "rms": 0.1278733392388816,
+      "finite": true
+    },
+    {
+      "number": 324,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/324_0.wav",
+      "sha256": "9e00681e2277c92c0ce4caf64fd282851544ba615f0b7164993bb69886ca4e23",
+      "duration": 3.5874829931972787,
+      "rms": 0.12730102311564806,
+      "finite": true
+    },
+    {
+      "number": 325,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/325_0.wav",
+      "sha256": "60afedaa62776c38623fa6a7be5e3e928b84514d18a777aedbc9cfa8cb54a038",
+      "duration": 2.555918367346939,
+      "rms": 0.10903081134850294,
+      "finite": true
+    },
+    {
+      "number": 326,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/326_0.wav",
+      "sha256": "10e854e788510159853c84f2415ce924b8e100c77b2702382ae5f27f78819aab",
+      "duration": 2.507755102040816,
+      "rms": 0.1523503683600351,
+      "finite": true
+    },
+    {
+      "number": 327,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/327_0.wav",
+      "sha256": "519eecc0209b733b4c1baf73bed585043116dd417830671dcf64a098d411402f",
+      "duration": 3.5062131519274375,
+      "rms": 0.13407220989110785,
+      "finite": true
+    },
+    {
+      "number": 328,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/328_0.wav",
+      "sha256": "87019965126ce97b1e63bbda73fe7a322be47a890d74dff91e90738d31c0d447",
+      "duration": 2.2755555555555556,
+      "rms": 0.10810711174238655,
+      "finite": true
+    },
+    {
+      "number": 329,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/329_0.wav",
+      "sha256": "72d97f36de9a2e76dc2c8a6eec01635f5d1d9188160cd3ce7346695ce427a378",
+      "duration": 3.649387755102041,
+      "rms": 0.14791225242317968,
+      "finite": true
+    },
+    {
+      "number": 330,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/330_0.wav",
+      "sha256": "c25266dccbfb8c4051c71337fc00b36e5bca3cd47ead45f75f927ab50fd051d2",
+      "duration": 3.4249433106575964,
+      "rms": 0.15467608490695697,
+      "finite": true
+    },
+    {
+      "number": 331,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/331_0.wav",
+      "sha256": "ff8cf5f4b4113e659efb4a912061a720a940d96024e2279e08d43c0d5fec62ff",
+      "duration": 1.5905668934240362,
+      "rms": 0.08798662899333651,
+      "finite": true
+    },
+    {
+      "number": 332,
+      "path": "/Users/vanch/VideoLingo-plus/run_workspaces/20261018-231604-5b8636/output/audio/segs/332_0.wav",
+      "sha256": "3ac52ce18181580629a7f2c267b3f60fe058744079157e4153f9ed068a53ea19",
+      "duration": 3.912562358276644,
+      "rms": 0.12286432462978786,
+      "finite": true
+    }
+  ],
+  "audio_duration_discrepancies": [
+    {
+      "number": 14,
+      "actual": 3.2319727891156464,
+      "declared": 3.280000000000001,
+      "difference": -0.04802721088435469
+    },
+    {
+      "number": 72,
+      "actual": 3.339591836734694,
+      "declared": 3.3600000000000136,
+      "difference": -0.02040816326531969
+    },
+    {
+      "number": 100,
+      "actual": 5.254195011337869,
+      "declared": 5.279999999999973,
+      "difference": -0.025804988662104122
+    },
+    {
+      "number": 186,
+      "actual": 3.4611791383219956,
+      "declared": 3.4400000000000546,
+      "difference": 0.02117913832194107
+    }
+  ],
+  "fingerprint_mismatches": [
+    5,
+    37,
+    76,
+    80,
+    206,
+    266,
+    281,
+    289,
+    290,
+    329
+  ],
+  "subtitle_reproduction_matches_file": {
+    "en": true,
+    "zh": true
+  },
+  "media": {
+    "AI配音.mp4": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1920,
+          "height": 1080,
+          "r_frame_rate": "30/1",
+          "start_time": "0.000000",
+          "duration": "1018.233333"
+        },
+        {
+          "codec_name": "aac",
+          "codec_type": "audio",
+          "r_frame_rate": "0/0",
+          "start_time": "0.000000",
+          "duration": "1018.197000"
+        }
+      ],
+      "format": {
+        "duration": "1018.233333"
+      }
+    },
+    "source.mp4": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "av1",
+          "codec_type": "video",
+          "width": 1920,
+          "height": 1080,
+          "r_frame_rate": "30/1",
+          "start_time": "0.000000",
+          "duration": "1018.033000"
+        },
+        {
+          "codec_name": "opus",
+          "codec_type": "audio",
+          "r_frame_rate": "0/0",
+          "start_time": "0.000000",
+          "duration": "1018.134000"
+        }
+      ],
+      "format": {
+        "duration": "1018.134000"
+      }
+    }
+  }
+}

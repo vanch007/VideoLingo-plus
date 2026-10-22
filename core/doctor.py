@@ -4,6 +4,7 @@ import shutil
 import socket
 import subprocess
 import sys
+from pathlib import Path
 from dataclasses import dataclass
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,13 +18,19 @@ class CheckResult:
     name: str
     ok: bool
     detail: str
+    required: bool = True
+
+    @property
+    def status(self) -> str:
+        return "OK" if self.ok else "FAIL" if self.required else "WARN"
 
 
-def _run(cmd: list[str]) -> tuple[bool, str]:
+def _run(cmd: list[str], *, all_output: bool = False) -> tuple[bool, str]:
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
         output = (result.stdout or result.stderr).strip().splitlines()
-        return result.returncode == 0, output[0] if output else "no output"
+        detail = "\n".join(output) if all_output else output[0] if output else "no output"
+        return result.returncode == 0, detail
     except Exception as exc:
         return False, str(exc)
 
@@ -60,12 +67,39 @@ def _check_omlx() -> list[CheckResult]:
 
 def _check_mlx_tts() -> list[CheckResult]:
     try:
-        from core.providers.mlx_tts import list_backend_status
+        from core.all_tts_functions.tts_registry import MLX_ROUTER_BACKENDS
+        from core.providers.contracts import TTSRequest
+        from core.providers.mlx_tts import MlxTTSRouter, list_backend_status
 
-        return [
-            CheckResult(f"mlx-tts:{item['name']}", bool(item["ok"]), str(item["detail"]))
-            for item in list_backend_status()
-        ]
+        method = load_key("tts_method", "mlx_router")
+        if method == "mlx_router":
+            router = MlxTTSRouter()
+            language = load_key("target_language", "auto")
+            # Both reference modes can occur in a video. Use the actual router
+            # without synthesis so only reachable automatic routes are required.
+            required = {router.select_backend(TTSRequest(
+                text="", output_path="", language=language, target_language=language,
+                emotion_ref=emotion)) for emotion in (None, "source-emotion-reference")}
+        elif method in MLX_ROUTER_BACKENDS:
+            required = {MLX_ROUTER_BACKENDS[method]}
+        else:
+            return [CheckResult("mlx-tts-route", False, f"unknown TTS method: {method}")]
+
+        checks = []
+        seen = set()
+        for item in list_backend_status():
+            name = item['name']
+            seen.add(name)
+            needed = name in required
+            ok, detail = bool(item['ok']), str(item['detail'])
+            if needed and detail == "disabled by config":
+                ok, detail = False, "selected backend is disabled by config"
+            if not needed:
+                detail = f"optional backend; {detail}"
+            checks.append(CheckResult(f"mlx-tts:{name}", ok, detail, required=needed))
+        checks.extend(CheckResult(f"mlx-tts:{name}", False, "selected backend has no health result")
+                      for name in sorted(required - seen))
+        return checks
     except Exception as exc:
         return [CheckResult("mlx-tts", False, f"{type(exc).__name__}: {exc}")]
 
@@ -96,18 +130,26 @@ def run_checks(include_services: bool = True) -> list[CheckResult]:
     ok, detail = _run(["ffmpeg", "-version"])
     checks.append(CheckResult("ffmpeg", ok, detail))
 
-    ok, detail = _run([sys.executable, "-m", "pip", "check"])
-    if not ok and "demucs" in detail and "torchaudio" in detail:
-        ok = True
-        detail = f"known non-blocking Demucs/Torchaudio metadata conflict: {detail}"
+    ok, detail = _run([sys.executable, "-m", "pip", "check"], all_output=True)
     checks.append(CheckResult("pip-check", ok, detail))
 
     checks.append(CheckResult("python", True, sys.version.split()[0]))
+    language = str(load_key('source_language', load_key('whisper.language', 'en')))
+    spacy_model = dict(load_key('spacy_model_map', {}) or {}).get(language, 'en_core_web_md')
+    checks.append(CheckResult('spacy-model', importlib.util.find_spec(spacy_model) is not None,
+                              f'{language}: {spacy_model}'))
     asr_runtime = load_key("whisper.runtime", "stable-ts")
     if asr_runtime == "stable-ts":
         checks.append(_check_import("stable_whisper"))
     elif asr_runtime == "local":
         checks.append(_check_import("whisperx"))
+    elif asr_runtime in {"qwen3-aligned", "local-aligned"}:
+        prefix = "source_asr" if asr_runtime == "local-aligned" else "qwen3_source"
+        python = Path(str(load_key(f"{prefix}.python", load_key("nemotron_diarization.python", "")))).expanduser()
+        script = Path(__file__).resolve().parents[1] / "scripts/align_source_audio.py"
+        ok = python.is_file() and os.access(python, os.X_OK) and script.is_file()
+        checks.append(CheckResult(f"source-asr:{asr_runtime}", ok,
+                                  "alignment runtime present; model inference not probed" if ok else "missing alignment runtime or entrypoint"))
     else:
         checks.append(CheckResult("source-asr", False, f"ineligible runtime: {asr_runtime}"))
     if load_key("dubbing_quality.asr_readback_backend", "moss-mlx") == "moss-mlx":
@@ -118,11 +160,20 @@ def run_checks(include_services: bool = True) -> list[CheckResult]:
         checks.append(_check_nemotron_diarization())
     if "moss-mlx" in (diar_backend, shadow_backend) and load_key("dubbing_quality.asr_readback_backend", "moss-mlx") != "moss-mlx":
         checks.append(_check_moss_asr())
-    for module in ("openai", "streamlit"):
+    for module in ("numpy", "scipy.sparse.linalg", "pandas", "cv2", "torch", "torchaudio",
+                   "torchvision", "torchcodec", "librosa", "spacy", "openai", "streamlit"):
         checks.append(_check_import(module))
+    if load_key("demucs", False):
+        checks.append(_check_import("demucs.api"))
 
     output_ok = os.path.isdir("output") or os.access(".", os.W_OK)
     checks.append(CheckResult("output-writable", output_ok, "output exists or project root is writable"))
+    if load_key("dubbing_quality.asr_readback", False) and load_key("dubbing_quality.asr_readback_backend", "builtin") == "command":
+        from core.providers.asr_readback import _command_template
+        command = _command_template()
+        executable = command[0] if command else ""
+        ready = bool(executable and (Path(executable).is_file() or shutil.which(executable)))
+        checks.append(CheckResult("speech-readback-command", ready, executable if ready else "readback executable missing"))
 
     tts_method = load_key("tts_method", "mlx_router")
     llm_provider = load_key("llm.provider", "openai_compatible")
@@ -157,10 +208,9 @@ def run_checks(include_services: bool = True) -> list[CheckResult]:
 def print_report() -> int:
     failed = 0
     for check in run_checks():
-        status = "OK" if check.ok else "FAIL"
-        if not check.ok:
+        if not check.ok and check.required:
             failed += 1
-        print(f"[{status}] {check.name}: {check.detail}")
+        print(f"[{check.status}] {check.name}: {check.detail}")
     return 1 if failed else 0
 
 

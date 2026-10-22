@@ -1,0 +1,614 @@
+{
+  "date": "2026-10-07",
+  "model": "Index-Translate-35B-A3B-preview-oQ6e-fp16-mtp",
+  "baseline_regression": {
+    "passed": 300,
+    "seconds": 45.07
+  },
+  "final_regression": {
+    "passed": 324,
+    "seconds": 48.88
+  },
+  "samples": {
+    "evaluation_scope": "integration_and_lexical_checks; human_quality_review_pending",
+    "results": [
+      {
+        "id": "zh_en_facts",
+        "strategy": "localized",
+        "model": "Index-Translate-35B-A3B-preview-oQ6e-fp16-mtp",
+        "source": "zh",
+        "target": "en",
+        "draft": [
+          {
+            "LineID": "L00001",
+            "Speaker": "S01",
+            "Source": "他答应两天后给你五千美元，不是今天。",
+            "Translation": "He promised to give you five thousand dollars in two days, not today."
+          },
+          {
+            "LineID": "L00002",
+            "Speaker": "S02",
+            "Source": "你付款，我才发货；不付款就不发。",
+            "Translation": "I'll ship the goods once you pay. No payment, no shipment."
+          },
+          {
+            "LineID": "L00003",
+            "Speaker": "S01",
+            "Source": "别把退款当成折扣，这两个不是一回事。",
+            "Translation": "Don't treat a refund like a discount. They're not the same thing."
+          },
+          {
+            "LineID": "L00004",
+            "Speaker": "S02",
+            "Source": "行。那就一言为定。",
+            "Translation": "Alright. It's a deal, then."
+          }
+        ],
+        "rows": [
+          {
+            "LineID": "L00001",
+            "Speaker": "S01",
+            "Source": "他答应两天后给你五千美元，不是今天。",
+            "Translation": "He promised to give you five thousand dollars in two days, not today."
+          },
+          {
+            "LineID": "L00002",
+            "Speaker": "S02",
+            "Source": "你付款，我才发货；不付款就不发。",
+            "Translation": "I'll ship the goods once you pay. No payment, no shipment."
+          },
+          {
+            "LineID": "L00003",
+            "Speaker": "S01",
+            "Source": "别把退款当成折扣，这两个不是一回事。",
+            "Translation": "Don't treat a refund like a discount. They're not the same thing."
+          },
+          {
+            "LineID": "L00004",
+            "Speaker": "S02",
+            "Source": "行。那就一言为定。",
+            "Translation": "Alright. It's a deal, then."
+          }
+        ],
+        "review": {
+          "status": "pass",
+          "error": null,
+          "overall_summary": "All lines are semantically faithful, maintain speaker consistency, and accurately convey numbers, negations, and core actions without factual distortion.",
+          "total_lines_reviewed": 4,
+          "review_basis": "same_model_self_review",
+          "review_batch_count": 1,
+          "issues_found_count": 0,
+          "repairs_applied_count": 0,
+          "issues": [],
+          "applied_repairs": []
+        },
+        "checks": [
+          {
+            "row": 0,
+            "pattern": "(?i)he",
+            "pass": true
+          },
+          {
+            "row": 0,
+            "pattern": "(?i)two days|2 days",
+            "pass": true
+          },
+          {
+            "row": 0,
+            "pattern": "5,?000|five thousand",
+            "pass": true
+          },
+          {
+            "row": 0,
+            "pattern": "(?i)not today",
+            "pass": true
+          },
+          {
+            "row": 1,
+            "pattern": "(?i)pay",
+            "pass": true
+          },
+          {
+            "row": 1,
+            "pattern": "(?i)ship|deliver",
+            "pass": true
+          },
+          {
+            "row": 1,
+            "pattern": "(?i)no|not|n't",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "(?i)refund",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "(?i)discount",
+            "pass": true
+          }
+        ],
+        "translation_seconds": 2.089,
+        "structural_pass": true,
+        "status": "pass",
+        "total_seconds": 4.588
+      },
+      {
+        "id": "zh_vi_address",
+        "strategy": "localized",
+        "model": "Index-Translate-35B-A3B-preview-oQ6e-fp16-mtp",
+        "source": "zh",
+        "target": "vi",
+        "draft": [
+          {
+            "LineID": "L00001",
+            "Speaker": "S01",
+            "Source": "叔叔，爸妈让我给您送点茶来。",
+            "Translation": "Chú ơi, bố mẹ cháu nhờ cháu mang ít trà đến cho chú ạ."
+          },
+          {
+            "LineID": "L00002",
+            "Speaker": "S02",
+            "Source": "替我谢谢他们。路上累不累？",
+            "Translation": "Cảm ơn bố mẹ cháu giúp chú nhé. Đi đường có mệt không?"
+          },
+          {
+            "LineID": "L00003",
+            "Speaker": "S01",
+            "Source": "哥，上周多亏你帮我改论文，不然我就过不了答辩了。",
+            "Translation": "Anh ơi, tuần trước may mà có anh giúp em sửa luận văn, không thì em đã không qua được buổi bảo vệ rồi."
+          },
+          {
+            "LineID": "L00004",
+            "Speaker": "S03",
+            "Source": "别客气，你自己也下了不少功夫。",
+            "Translation": "Đừng khách sáo, chính em cũng đã bỏ ra không ít công sức mà."
+          }
+        ],
+        "rows": [
+          {
+            "LineID": "L00001",
+            "Speaker": "S01",
+            "Source": "叔叔，爸妈让我给您送点茶来。",
+            "Translation": "Chú ơi, bố mẹ cháu nhờ cháu mang ít trà đến cho chú ạ."
+          },
+          {
+            "LineID": "L00002",
+            "Speaker": "S02",
+            "Source": "替我谢谢他们。路上累不累？",
+            "Translation": "Cảm ơn bố mẹ cháu giúp chú nhé. Đi đường có mệt không?"
+          },
+          {
+            "LineID": "L00003",
+            "Speaker": "S01",
+            "Source": "哥，上周多亏你帮我改论文，不然我就过不了答辩了。",
+            "Translation": "Anh ơi, tuần trước may mà có anh giúp em sửa luận văn, không thì em đã không qua được buổi bảo vệ rồi."
+          },
+          {
+            "LineID": "L00004",
+            "Speaker": "S03",
+            "Source": "别客气，你自己也下了不少功夫。",
+            "Translation": "Đừng khách sáo, chính em cũng đã bỏ ra không ít công sức mà."
+          }
+        ],
+        "review": {
+          "status": "pass",
+          "error": null,
+          "overall_summary": "Các dòng thoại được dịch chính xác về mặt ngữ nghĩa, vai trò người nói và mối quan hệ giữa các nhân vật. Không phát hiện lỗi thực tế nào.",
+          "total_lines_reviewed": 4,
+          "review_basis": "same_model_self_review",
+          "review_batch_count": 1,
+          "issues_found_count": 0,
+          "repairs_applied_count": 0,
+          "issues": [],
+          "applied_repairs": []
+        },
+        "checks": [
+          {
+            "row": 0,
+            "pattern": "(?i)chú",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "(?i)anh",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "(?i)luận",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "(?i)bảo vệ",
+            "pass": true
+          }
+        ],
+        "translation_seconds": 2.053,
+        "structural_pass": true,
+        "status": "pass",
+        "total_seconds": 4.538
+      },
+      {
+        "id": "zh_en_technical",
+        "strategy": "localized",
+        "model": "Index-Translate-35B-A3B-preview-oQ6e-fp16-mtp",
+        "source": "zh",
+        "target": "en",
+        "draft": [
+          {
+            "LineID": "L00001",
+            "Speaker": "S01",
+            "Source": "把阈值设为0.05，温度保持在20到25摄氏度之间。",
+            "Translation": "Set the threshold to 0.05, and keep the temperature between 20 and 25 degrees Celsius."
+          },
+          {
+            "LineID": "L00002",
+            "Speaker": "S01",
+            "Source": "失败率从2%降到了1%，是下降了1个百分点，不是1%。",
+            "Translation": "The failure rate went down from 2% to 1%. That's a drop of one percentage point, not 1%."
+          },
+          {
+            "LineID": "L00003",
+            "Speaker": "S01",
+            "Source": "请保留占位符{order_id}，不要替换成真实订单号。",
+            "Translation": "Please keep the placeholder {order_id} and don't replace it with a real order number."
+          }
+        ],
+        "rows": [
+          {
+            "LineID": "L00001",
+            "Speaker": "S01",
+            "Source": "把阈值设为0.05，温度保持在20到25摄氏度之间。",
+            "Translation": "Set the threshold to 0.05, and keep the temperature between 20 and 25 degrees Celsius."
+          },
+          {
+            "LineID": "L00002",
+            "Speaker": "S01",
+            "Source": "失败率从2%降到了1%，是下降了1个百分点，不是1%。",
+            "Translation": "The failure rate went down from 2% to 1%. That's a drop of one percentage point, not 1%."
+          },
+          {
+            "LineID": "L00003",
+            "Speaker": "S01",
+            "Source": "请保留占位符{order_id}，不要替换成真实订单号。",
+            "Translation": "Please keep the placeholder {order_id} and don't replace it with a real order number."
+          }
+        ],
+        "review": {
+          "status": "pass",
+          "error": null,
+          "overall_summary": "All three lines are translated with complete semantic fidelity, preserving technical terms, numerical values, and speaker intent. No factual errors, agent/patient reversals, or omissions were found.",
+          "total_lines_reviewed": 3,
+          "review_basis": "same_model_self_review",
+          "review_batch_count": 1,
+          "issues_found_count": 0,
+          "repairs_applied_count": 0,
+          "issues": [],
+          "applied_repairs": []
+        },
+        "checks": [
+          {
+            "row": 0,
+            "pattern": "0\\.05",
+            "pass": true
+          },
+          {
+            "row": 0,
+            "pattern": "20",
+            "pass": true
+          },
+          {
+            "row": 0,
+            "pattern": "25",
+            "pass": true
+          },
+          {
+            "row": 0,
+            "pattern": "(?i)celsius|°C",
+            "pass": true
+          },
+          {
+            "row": 1,
+            "pattern": "(?i)percentage[ -]point",
+            "pass": true
+          },
+          {
+            "row": 1,
+            "pattern": "(?i)not",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "\\{order_id\\}",
+            "pass": true
+          }
+        ],
+        "translation_seconds": 1.857,
+        "structural_pass": true,
+        "status": "pass",
+        "total_seconds": 4.38
+      },
+      {
+        "id": "en_zh_idioms",
+        "strategy": "localized",
+        "model": "Index-Translate-35B-A3B-preview-oQ6e-fp16-mtp",
+        "source": "en",
+        "target": "zh",
+        "draft": [
+          {
+            "LineID": "L00001",
+            "Speaker": "S01",
+            "Source": "Break a leg at your audition tomorrow!",
+            "Translation": "祝你明天试演成功！"
+          },
+          {
+            "LineID": "L00002",
+            "Speaker": "S02",
+            "Source": "Thanks. I won't count my chickens before they hatch.",
+            "Translation": "谢啦。我可不会还没影的事儿就先高兴。"
+          },
+          {
+            "LineID": "L00003",
+            "Speaker": "S01",
+            "Source": "The bank didn't reject the loan; they asked for two more documents.",
+            "Translation": "银行没拒绝贷款，只是让再补两份材料。"
+          }
+        ],
+        "rows": [
+          {
+            "LineID": "L00001",
+            "Speaker": "S01",
+            "Source": "Break a leg at your audition tomorrow!",
+            "Translation": "祝你明天试演成功！"
+          },
+          {
+            "LineID": "L00002",
+            "Speaker": "S02",
+            "Source": "Thanks. I won't count my chickens before they hatch.",
+            "Translation": "谢啦。我可不会还没影的事儿就先高兴。"
+          },
+          {
+            "LineID": "L00003",
+            "Speaker": "S01",
+            "Source": "The bank didn't reject the loan; they asked for two more documents.",
+            "Translation": "银行没拒绝贷款，只是让再补两份材料。"
+          }
+        ],
+        "review": {
+          "status": "pass",
+          "error": null,
+          "overall_summary": "All three lines are translated with semantic fidelity, preserving speaker intent, actions, and quantities without factual distortion. No issues detected.",
+          "total_lines_reviewed": 3,
+          "review_basis": "same_model_self_review",
+          "review_batch_count": 1,
+          "issues_found_count": 0,
+          "repairs_applied_count": 0,
+          "issues": [],
+          "applied_repairs": []
+        },
+        "checks": [
+          {
+            "row": 0,
+            "pattern": "明天",
+            "pass": true
+          },
+          {
+            "row": 0,
+            "pattern": "试镜|试演|面试",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "银行",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "没有|没|并未|并不",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "两|二|2",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "文件|材料|资料",
+            "pass": true
+          }
+        ],
+        "translation_seconds": 2.021,
+        "structural_pass": true,
+        "status": "pass",
+        "total_seconds": 4.405
+      },
+      {
+        "id": "zh_vi_commerce",
+        "strategy": "localized",
+        "model": "Index-Translate-35B-A3B-preview-oQ6e-fp16-mtp",
+        "source": "zh",
+        "target": "vi",
+        "draft": [
+          {
+            "LineID": "L00001",
+            "Speaker": "S01",
+            "Source": "今天这套199元，买一套送一瓶，不是送一整套。",
+            "Translation": "Hôm nay bộ này giá 199 nhân dân tệ, mua một bộ tặng một chai, chứ không phải tặng cả một bộ đâu nhé."
+          },
+          {
+            "LineID": "L00002",
+            "Speaker": "S01",
+            "Source": "敏感肌先做局部测试，不舒服就停用。",
+            "Translation": "Da nhạy cảm thì hãy thử ở một vùng nhỏ trước, nếu thấy không hợp thì ngưng dùng ngay."
+          },
+          {
+            "LineID": "L00003",
+            "Speaker": "S01",
+            "Source": "七天内未拆封可以退，运费由我们承担。",
+            "Translation": "Trong vòng bảy ngày nếu chưa mở niêm phong thì có thể trả hàng, phí vận chuyển do bên mình chịu."
+          }
+        ],
+        "rows": [
+          {
+            "LineID": "L00001",
+            "Speaker": "S01",
+            "Source": "今天这套199元，买一套送一瓶，不是送一整套。",
+            "Translation": "Hôm nay bộ này giá 199 nhân dân tệ, mua một bộ tặng một chai, chứ không phải tặng cả một bộ đâu nhé."
+          },
+          {
+            "LineID": "L00002",
+            "Speaker": "S01",
+            "Source": "敏感肌先做局部测试，不舒服就停用。",
+            "Translation": "Da nhạy cảm thì hãy thử ở một vùng nhỏ trước, nếu thấy không hợp thì ngưng dùng ngay."
+          },
+          {
+            "LineID": "L00003",
+            "Speaker": "S01",
+            "Source": "七天内未拆封可以退，运费由我们承担。",
+            "Translation": "Trong vòng bảy ngày nếu chưa mở niêm phong thì có thể trả hàng, phí vận chuyển do bên mình chịu."
+          }
+        ],
+        "review": {
+          "status": "pass",
+          "error": null,
+          "overall_summary": "Các dòng phụ đề được dịch chính xác về mặt ngữ nghĩa, đảm bảo nhất quán vai trò người nói và các mối quan hệ chỉ hướng. Không có lỗi thực tế nào được phát hiện.",
+          "total_lines_reviewed": 3,
+          "review_basis": "same_model_self_review",
+          "review_batch_count": 1,
+          "issues_found_count": 0,
+          "repairs_applied_count": 0,
+          "issues": [],
+          "applied_repairs": []
+        },
+        "checks": [
+          {
+            "row": 0,
+            "pattern": "199",
+            "pass": true
+          },
+          {
+            "row": 0,
+            "pattern": "(?i)tệ",
+            "pass": true
+          },
+          {
+            "row": 0,
+            "pattern": "(?i)chai",
+            "pass": true
+          },
+          {
+            "row": 0,
+            "pattern": "(?i)không",
+            "pass": true
+          },
+          {
+            "row": 1,
+            "pattern": "(?i)da nhạy cảm",
+            "pass": true
+          },
+          {
+            "row": 1,
+            "pattern": "(?i)ngừng|ngưng|dừng",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "7|bảy",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "(?i)chưa",
+            "pass": true
+          },
+          {
+            "row": 2,
+            "pattern": "(?i)phí",
+            "pass": true
+          }
+        ],
+        "translation_seconds": 1.52,
+        "structural_pass": true,
+        "status": "pass",
+        "total_seconds": 4.098
+      }
+    ]
+  },
+  "negative_control": {
+    "status": "pass",
+    "checks": {
+      "untranslated_word_removed": true,
+      "audition_meaning": true,
+      "negation_retained": true,
+      "two_days_retained": true,
+      "5000_retained": true
+    },
+    "rows": [
+      {
+        "LineID": "L00001",
+        "Speaker": "S01",
+        "Source": "Break a leg at your audition tomorrow!",
+        "Translation": "祝你明天试演成功！"
+      },
+      {
+        "LineID": "L00002",
+        "Speaker": "S02",
+        "Source": "Do not ship today. Wait two days for the five thousand dollars.",
+        "Translation": "今天不要发货。等两天收到五千美元后再发货。"
+      }
+    ],
+    "report": {
+      "status": "pass",
+      "error": null,
+      "overall_summary": "Both lines are translated accurately with no factual errors, agent/patient consistency, or omissions. The translations preserve the source meaning, numbers, and speaker intent completely.",
+      "total_lines_reviewed": 2,
+      "review_basis": "same_model_self_review",
+      "review_batch_count": 2,
+      "issues_found_count": 1,
+      "repairs_applied_count": 2,
+      "issues": [
+        {
+          "line_id": "L00002",
+          "speaker": "S02",
+          "issue_type": "number_mismatch",
+          "severity": "critical",
+          "problem": "The source specifies 'two days' and 'five thousand dollars', but the translation incorrectly states 'one day' and 'two thousand dollars'. Both the timeframe and amount are factually wrong.",
+          "suggested_fix": "今天不要发货。等两天收到五千美元后再发货。"
+        }
+      ],
+      "applied_repairs": [
+        {
+          "line_id": "L00001",
+          "issue_type": "source_copy_repair",
+          "before": "明天 audition 加油啊！",
+          "after": "祝你明天试演成功！"
+        },
+        {
+          "round": 1,
+          "line_id": "L00002",
+          "issue_type": "number_mismatch",
+          "severity": "critical",
+          "problem": "The source specifies 'two days' and 'five thousand dollars', but the translation incorrectly states 'one day' and 'two thousand dollars'. Both the timeframe and amount are factually wrong.",
+          "before": "今天发货，等一天收两千美元。",
+          "after": "今天不要发货。等两天收到五千美元后再发货。"
+        }
+      ]
+    }
+  },
+  "pipeline_excerpt": {
+    "status": "pass",
+    "elapsed_seconds": 34.78,
+    "source_lines": 7,
+    "translated_lines": 7,
+    "subtitle_cues": 7,
+    "model": "Index-Translate-35B-A3B-preview-oQ6e-fp16-mtp",
+    "stale_stage_count": 0,
+    "scope": "Existing 7-line source excerpt, summary through SRT; no ASR rerun, audio synthesis or video render"
+  },
+  "source_copy_scope": "Lowercase Latin words copied into CJK; glossary, names, acronyms, URLs and placeholders protected. Not a general language detector.",
+  "independent_human_quality": "pending"
+}

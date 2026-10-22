@@ -1,0 +1,23 @@
+{
+  "status": "pass",
+  "audio_path": "/Users/vanch/VideoLingo-plus/run_workspaces/shentai_7663115033229379675/output/audio/for_whisper.mp3",
+  "model": "mlx-community/Nemotron-3-Diarization-8bit",
+  "preset": "offline",
+  "threshold": 0.5,
+  "min_duration": 0.0,
+  "merge_gap": 0.0,
+  "load_time_seconds": 8.669,
+  "infer_time_seconds": 0.081,
+  "total_time_seconds": 8.917,
+  "num_speakers": 1,
+  "speaker_labels": [
+    "S01"
+  ],
+  "speaker_indices": [
+    0
+  ],
+  "segments_count": 2,
+  "total_frames": 4027,
+  "frame_stride_seconds": 0.01,
+  "audio_duration_seconds": 40.27
+}

@@ -2,6 +2,7 @@ import os, sys
 import glob
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.step1_ytdlp import find_video_files
+from core.config_utils import load_key
 import shutil
 
 def cleanup(history_dir="history"):
@@ -26,7 +27,16 @@ def cleanup(history_dir="history"):
 
     # Get video file name to create a unique history folder
     try:
-        video_file = find_video_files()
+        # Prefer the original downloaded or imported title over generic 'source'
+        import glob
+        allowed = load_key("allowed_video_formats", ["mp4", "mkv", "webm", "avi", "mov"])
+        v_files = [f for f in glob.glob("output/*") if os.path.splitext(f)[1][1:].lower() in allowed]
+        named_files = [f for f in v_files if os.path.splitext(os.path.basename(f))[0] != "source"
+                       and not os.path.basename(f).startswith(("AI", "output", "_", "dub", "preview"))]
+        if named_files:
+            video_file = named_files[0]
+        else:
+            video_file = find_video_files()
         video_name = os.path.splitext(os.path.basename(video_file))[0]
         video_name = sanitize_filename(video_name)
         print(f"🔍 Using video name for history folder: {video_name}")

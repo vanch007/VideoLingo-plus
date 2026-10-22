@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "status": "fail",
+  "accepted": false,
+  "scope": "29 aligned semantic units of the supplied 170.85s clip; current Index lines 1-43. Final uncorroborated lines 44-45 excluded.",
+  "basis": "evidence-guided editorial comparison against independently published scene transcripts and preceding-scene context; not a model self-grade",
+  "acceptance_rule": "Any changed core plot fact or any unresolved major error in the central negotiation fails delivery.",
+  "sources": [
+    {
+      "id": "sina",
+      "url": "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html",
+      "purpose": "scene dialogue"
+    },
+    {
+      "id": "juejin",
+      "url": "https://juejin.cn/post/7197315175644250167",
+      "purpose": "independent scene dialogue"
+    },
+    {
+      "id": "bilibili",
+      "url": "https://www.bilibili.com/opus/922853214827577364",
+      "purpose": "preceding context explains the commercial leg metaphor"
+    },
+    {
+      "id": "wikiquote",
+      "url": "https://zh.wikiquote.org/zh-hans/%E8%AE%A9%E5%AD%90%E5%BC%B9%E9%A3%9E",
+      "purpose": "opening-dialogue corroboration"
+    }
+  ],
+  "versions": {
+    "Index": {
+      "status": "fail",
+      "unit_count": 29,
+      "counts": {
+        "major": 10,
+        "critical": 1,
+        "pass": 8,
+        "minor": 10
+      },
+      "critical_units": [
+        "U03"
+      ],
+      "major_units": [
+        "U01",
+        "U02",
+        "U08",
+        "U10",
+        "U12",
+        "U14",
+        "U16",
+        "U21",
+        "U22",
+        "U25"
+      ],
+      "subtitle": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v12_readability_20261007/output/trans.srt",
+      "sha256": "e0e6ccd6040ce86cce00ae2079214b3503b7d946ee2ab1022d7c38214cf671b5"
+    },
+    "V9": {
+      "status": "fail",
+      "unit_count": 29,
+      "counts": {
+        "minor": 6,
+        "major": 11,
+        "critical": 1,
+        "pass": 11
+      },
+      "critical_units": [
+        "U03"
+      ],
+      "major_units": [
+        "U02",
+        "U07",
+        "U08",
+        "U09",
+        "U10",
+        "U12",
+        "U22",
+        "U24",
+        "U25",
+        "U28",
+        "U29"
+      ],
+      "subtitle": "/Users/vanch/VideoLingo-plus/deliverables/e0c803_selected_v9_20260927/English_Subtitles.srt",
+      "sha256": "af87eb83950f99a5f29848a0b85b0a29b1429a73eb09addd8bd03104158fe2c6"
+    },
+    "V13": {
+      "status": "fail",
+      "unit_count": 29,
+      "counts": {
+        "minor": 10,
+        "major": 12,
+        "critical": 1,
+        "pass": 6
+      },
+      "critical_units": [
+        "U03"
+      ],
+      "major_units": [
+        "U02",
+        "U05",
+        "U06",
+        "U07",
+        "U09",
+        "U12",
+        "U17",
+        "U22",
+        "U24",
+        "U25",
+        "U28",
+        "U29"
+      ],
+      "subtitle": "/Users/vanch/VideoLingo-plus/deliverables/e0c803_final_optimal_version_20260927/English_Subtitles_V13.srt",
+      "sha256": "127a89b754a1a89baaf94f39b89b9b57728d435af0c9611618ee90f0be92f53f"
+    }
+  },
+  "annotations_file": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/reference-assessment-20261007/assessment_annotations.json",
+  "limits": [
+    "Assessment combines transcription and translation failures; it does not isolate model quality on identical source text.",
+    "Public transcripts have wording variants. Judgments concern corroborated meanings; punctuation and variants are not counted as major errors.",
+    "Not a blinded panel review or a dubbing/timbre evaluation."
+  ],
+  "comparison": "Index has one fewer major error than V9, but fewer fully correct units. Neither has a clear overall lead. V13 has the most major errors in this excerpt. All fail delivery."
+}

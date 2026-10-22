@@ -1,0 +1,21 @@
+{
+  "source_groups": 13,
+  "source_disagreement_groups": 10,
+  "role_lines": 39,
+  "role_context_eligible_lines": 4,
+  "role_pending_lines": 35,
+  "role_identity_verified": false,
+  "translation_lines": 39,
+  "same_as_natural_translation_requests": true,
+  "internal_id_leaks": 0,
+  "translation_review_status": "failed",
+  "translation_review_error": "Review failed in round 1: Still failed after 2 attempts: Validation still failed after 2 attempts: ❎ API response error: Copy an exact translation quote for L00022; do not paraphrase evidence",
+  "review_mode": "audit_only",
+  "automatic_repairs": 0,
+  "preview_subtitle_cues": 54,
+  "preview_layout_pending_cues": 26,
+  "formal_delivery_accepted": false,
+  "test_result": "350 passed in 53.54s",
+  "preview": "review_preview.mp4",
+  "workspace": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_review_20261007"
+}

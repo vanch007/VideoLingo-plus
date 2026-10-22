@@ -65,7 +65,9 @@ def test_timeline_rescue_report_detects_duplicate_and_negative_timing():
     assert report["summary"]["issue_counts"]["negative_tolerance"] == 1
     assert report["summary"]["issue_counts"]["duplicate_window"] == 2
     assert report["clusters"][0]["row_count"] == 2
-    assert report["clusters"][0]["suggested_action"] == "rebuild_monotonic_from_declared_duration"
+    # This legacy candidate would need 1.25x speech; the configured 1.08 cap
+    # requires a rewrite rather than silently speeding up the restored clock.
+    assert report["clusters"][0]["suggested_action"] == "rebuild_monotonic_plus_rewrite"
 
 
 def test_timeline_rescue_report_can_write_json_and_xlsx(tmp_path: Path):

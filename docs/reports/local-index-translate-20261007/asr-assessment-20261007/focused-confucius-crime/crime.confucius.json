@@ -1,0 +1,15 @@
+{
+  "model": "mlx-community/Confucius4-R2T2-8bit",
+  "model_path": "/Users/vanch/.cache/huggingface/hub/models--mlx-community--Confucius4-R2T2-8bit/snapshots/2d6d997c3e09c65a65b1b2576b6b9b7728df8eab",
+  "audio": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/asr-assessment-20261007/focused-original/crime.wav",
+  "language": "Chinese",
+  "text": "就是五万，把县长夫人绑架，豪绅祸害河城百姓，就是你黄老爷家的五万。",
+  "raw_text": "就是五万，把县长夫人绑架，豪绅祸害河城百姓，就是你黄老爷家的五万。",
+  "audio_seconds": 11.0,
+  "processing_seconds": 0.42409816599683836,
+  "generation_tokens": 26,
+  "token_budget_reached": false,
+  "mode": "offline",
+  "timestamps": false,
+  "speaker_labels": false
+}

@@ -1,0 +1,680 @@
+{
+  "status": "pass",
+  "translation_sha256": "sha256:47d4b438baaa4f166daeecb6f2e03a11607ab337a2819b01602df2f5d6f0d4ec",
+  "source_transcript_sha256": "sha256:784c35edc8a0c8b2e01232508f594630fc9400facd7220d907703d38e14737f4",
+  "subtitle_sha256": "sha256:53727eb1dc56bb2eec080f15408099756ec5940efc95cc1c2c22eb33e1147e82",
+  "basis": "Codex reference-dialogue semantic review, separate from Index self-audit; not human blind review",
+  "scope": "Same 29 reference semantic units as historical API V9/V13 and Index v12 assessment, covering new L00001-L00036. L00037-L00038 are reviewed separately as unverified ending fragments.",
+  "criterion": "Pass reference semantics when no core plot error and no major error in the funding/anti-bandit transaction. Minor language/emotion issues are recorded; this does not establish perceptual/dubbing acceptance.",
+  "counts": {
+    "pass": 24,
+    "minor": 5,
+    "major": 0,
+    "core": 0
+  },
+  "sources": {
+    "sina": "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html",
+    "juejin": "https://juejin.cn/post/7197315175644250167",
+    "bilibili": "https://www.bilibili.com/opus/922853214827577364"
+  },
+  "units": [
+    {
+      "id": "U01",
+      "label": "认出胡万与惊讶问句",
+      "reference_meaning": "黄四郎和胡千辨认尸体，黄四郎追问为何死者是胡万。",
+      "sources": [
+        "wikiquote"
+      ],
+      "line_ids": [
+        "L00001",
+        "L00002",
+        "L00003"
+      ],
+      "source": [
+        "哎，胡万！",
+        "胡，胡万？",
+        "怎么会是胡万？"
+      ],
+      "translation": [
+        "Hey, Hu Wan!",
+        "Hu... Hu Wan?",
+        "How could it be Hu Wan?"
+      ],
+      "status": "pass",
+      "reason": "姓名统一为 Hu Wan，辨认和惊讶问句恢复。"
+    },
+    {
+      "id": "U02",
+      "label": "面具与黄家人员",
+      "reference_meaning": "胡千指出四筒面具；黄四郎发现死者属于自己黄家，追问麻匪去向。",
+      "sources": [
+        "wikiquote"
+      ],
+      "line_ids": [
+        "L00004",
+        "L00005",
+        "L00006"
+      ],
+      "source": [
+        "嘿，怪了。四筒啊！",
+        "全是黄家的人，马匪呢？马匪呢？马匪呢？",
+        "马匪呢？"
+      ],
+      "translation": [
+        "Huh, that's weird. The four-dot mask!",
+        "They're all Huang's men. Where are the bandits? Where are the bandits? Where are the bandits?",
+        "Where are the bandits?"
+      ],
+      "status": "pass",
+      "reason": "四筒面具、黄家成员和追问匪徒均保留；公开对白的重复次数不是声学真值。"
+    },
+    {
+      "id": "U03",
+      "label": "胡万的罪行链",
+      "reference_meaning": "张麻子将胡万与麻匪联系，指控杀害县长夫人、绑架地方豪绅、侵害鹅城百姓；胡万属于黄家。",
+      "sources": [
+        "wikiquote"
+      ],
+      "line_ids": [
+        "L00007",
+        "L00008"
+      ],
+      "source": [
+        "胡万就是马匪，马匪就是胡万。",
+        "杀县长夫人绑架豪绅，祸害鹅城百姓，就是你黄老爷家的胡万。"
+      ],
+      "translation": [
+        "Hu Wan is the bandit, and the bandit is Hu Wan.",
+        "Killing the county magistrate's wife, kidnapping the gentry, and terrorizing the people of Goose Town—that's Hu Wan, your man, Master Huang."
+      ],
+      "status": "pass",
+      "reason": "杀害县长夫人、绑架豪绅、侵害百姓及胡万所属黄家均保留。"
+    },
+    {
+      "id": "U04",
+      "label": "不出资与贼喊捉贼",
+      "reference_meaning": "张麻子质问黄四郎为何不出资，指控他自己为匪却喊捉匪。",
+      "sources": [
+        "wikiquote"
+      ],
+      "line_ids": [
+        "L00009"
+      ],
+      "source": [
+        "我说你为什么不出钱剿匪，原来你是贼喊捉贼呀。"
+      ],
+      "translation": [
+        "Now I get why you won't fund the bandit suppression. You're the thief crying \"stop thief!\""
+      ],
+      "status": "minor",
+      "reason": "质问不出资和贼喊捉贼均保留；bandit suppression 偏书面，字幕可更口语。"
+    },
+    {
+      "id": "U05",
+      "label": "举枪与火拼威胁",
+      "reference_meaning": "张麻子重复质问黄四郎拿枪指着自己，并问是否要与自己火拼。",
+      "sources": [
+        "wikiquote"
+      ],
+      "line_ids": [
+        "L00010"
+      ],
+      "source": [
+        "你拿枪指着我，你拿枪指着我，你想跟我火拼？"
+      ],
+      "translation": [
+        "You're pointing a gun at me. You're pointing a gun at me. You wanna go head-to-head with me?"
+      ],
+      "status": "minor",
+      "reason": "举枪和挑衅保留；head-to-head 没有明确说出火拼的枪战含义，威胁强度偏弱。"
+    },
+    {
+      "id": "U06",
+      "label": "黄四郎杀人示众",
+      "reference_meaning": "黄四郎枪击胡万，向众人宣称当麻匪就是这种下场。",
+      "sources": [
+        "wikiquote"
+      ],
+      "line_ids": [
+        "L00011"
+      ],
+      "source": [
+        "你们看到了没有？这就是当马匪的下场，就算是我亲爹也得死，死有余辜。"
+      ],
+      "translation": [
+        "Did you all see that? This is what happens when you're a bandit. Even if he were my own father, he'd still have to die. He deserved it."
+      ],
+      "status": "pass",
+      "reason": "黄四郎枪击胡万并宣示匪徒下场的句意保留。"
+    },
+    {
+      "id": "U07",
+      "label": "亲爹也不能幸免",
+      "reference_meaning": "黄四郎强调亲爹也要死，并称死者罪有应得，末尾有早晚一类嘟囔。",
+      "sources": [
+        "wikiquote",
+        "juejin"
+      ],
+      "line_ids": [
+        "L00011",
+        "L00012"
+      ],
+      "source": [
+        "你们看到了没有？这就是当马匪的下场，就算是我亲爹也得死，死有余辜。",
+        "早晚！"
+      ],
+      "translation": [
+        "Did you all see that? This is what happens when you're a bandit. Even if he were my own father, he'd still have to die. He deserved it.",
+        "Sooner or later!"
+      ],
+      "status": "pass",
+      "reason": "亲爹也得死及罪有应得保留；早晚以片段形式保留。"
+    },
+    {
+      "id": "U08",
+      "label": "胡万被再枪毙五回",
+      "reference_meaning": "张麻子讽刺黄四郎对已死的胡万再次开枪，共五回。",
+      "sources": [
+        "wikiquote"
+      ],
+      "line_ids": [
+        "L00013"
+      ],
+      "source": [
+        "马匪胡万，又让黄老爷枪毙了五回。大义灭亲？杀人灭口？杀人灭口，你就是马匪的头子张麻子！"
+      ],
+      "translation": [
+        "The bandit Hu Wan got shot by Master Huang five more times. Putting justice before family? Or silencing a witness? If it's silencing a witness, then you're the bandit leader, Zhang Mazi!"
+      ],
+      "status": "pass",
+      "reason": "重复枪击五回的讽刺保留。"
+    },
+    {
+      "id": "U09",
+      "label": "灭亲还是灭口的反讽",
+      "reference_meaning": "张麻子反问黄四郎是秉公灭亲还是杀人灭口，并以张麻子头目之名讽刺对方。",
+      "sources": [
+        "wikiquote"
+      ],
+      "line_ids": [
+        "L00013"
+      ],
+      "source": [
+        "马匪胡万，又让黄老爷枪毙了五回。大义灭亲？杀人灭口？杀人灭口，你就是马匪的头子张麻子！"
+      ],
+      "translation": [
+        "The bandit Hu Wan got shot by Master Huang five more times. Putting justice before family? Or silencing a witness? If it's silencing a witness, then you're the bandit leader, Zhang Mazi!"
+      ],
+      "status": "pass",
+      "reason": "灭亲或灭口的问答及条件指控保留。"
+    },
+    {
+      "id": "U10",
+      "label": "出资与剿匪分工",
+      "reference_meaning": "张麻子提出由黄四郎提供钱款、由自己负责剿匪的分工。",
+      "sources": [
+        "wikiquote"
+      ],
+      "line_ids": [
+        "L00014"
+      ],
+      "source": [
+        "要是大义灭亲，那好办，你出钱，我剿匪。"
+      ],
+      "translation": [
+        "If it's about putting justice before family, then it's simple: you provide the money, and I'll wipe out the bandits."
+      ],
+      "status": "pass",
+      "reason": "出资者与剿匪者分工方向正确。"
+    },
+    {
+      "id": "U11",
+      "label": "三天后的惊喜承诺",
+      "reference_meaning": "黄四郎承诺三天后给县长一个惊喜。",
+      "sources": [
+        "sina"
+      ],
+      "line_ids": [
+        "L00015"
+      ],
+      "source": [
+        "好啊，三天之后，一定给县长一个惊喜。"
+      ],
+      "translation": [
+        "Fine. In three days, I'll definitely give the county magistrate a surprise."
+      ],
+      "status": "pass",
+      "reason": "三天之后给县长惊喜的承诺正确。"
+    },
+    {
+      "id": "U12",
+      "label": "称呼汤师爷与恩人指代",
+      "reference_meaning": "张麻子叫汤师爷作答；被称为恩人的是黄四郎，受恩者依次是胡万与汤师爷。",
+      "sources": [
+        "sina"
+      ],
+      "line_ids": [
+        "L00016"
+      ],
+      "source": [
+        "汤师爷，他是胡万的恩人，现在又成了你的恩人，你给翻译翻译，什么叫惊喜？"
+      ],
+      "translation": [
+        "Adviser Tang, he was Hu Wan's benefactor, and now he's become yours too. Why don't you explain to me what this “surprise” is?"
+      ],
+      "status": "pass",
+      "reason": "汤师爷为被称呼者，黄四郎为胡万和汤师爷的恩人，指代正确。"
+    },
+    {
+      "id": "U13",
+      "label": "第一次逼问惊喜含义",
+      "reference_meaning": "张麻子重复要求汤师爷解释黄四郎的惊喜承诺。",
+      "sources": [
+        "sina"
+      ],
+      "line_ids": [
+        "L00016",
+        "L00017"
+      ],
+      "source": [
+        "汤师爷，他是胡万的恩人，现在又成了你的恩人，你给翻译翻译，什么叫惊喜？",
+        "翻译翻译什么叫惊喜。"
+      ],
+      "translation": [
+        "Adviser Tang, he was Hu Wan's benefactor, and now he's become yours too. Why don't you explain to me what this “surprise” is?",
+        "Explain what a “surprise” is."
+      ],
+      "status": "pass",
+      "reason": "反复要求解释惊喜，未改成两个词的释义等同。"
+    },
+    {
+      "id": "U14",
+      "label": "汤师爷觉得无需解释",
+      "reference_meaning": "汤师爷反问如此明白的惊喜还有何可解释。",
+      "sources": [
+        "sina"
+      ],
+      "line_ids": [
+        "L00018"
+      ],
+      "source": [
+        "这还用翻译？"
+      ],
+      "translation": [
+        "Does that even need explaining?"
+      ],
+      "status": "pass",
+      "reason": "反问是否需要解释保留。"
+    },
+    {
+      "id": "U15",
+      "label": "张麻子再次要求解释",
+      "reference_meaning": "张麻子打断回避回答，继续要求解释惊喜；汤师爷随后继续推辞。",
+      "sources": [
+        "sina"
+      ],
+      "line_ids": [
+        "L00019"
+      ],
+      "source": [
+        "我让你翻译给我听，什么叫惊喜？"
+      ],
+      "translation": [
+        "I'm telling you to explain it to me. What exactly is a “surprise”?"
+      ],
+      "status": "pass",
+      "reason": "坚持让对方解释的要求保留。"
+    },
+    {
+      "id": "U16",
+      "label": "惊喜就是惊喜的回避",
+      "reference_meaning": "汤师爷拒绝展开，把惊喜仅重复称为惊喜。",
+      "sources": [
+        "sina"
+      ],
+      "line_ids": [
+        "L00020"
+      ],
+      "source": [
+        "不用翻译，就是惊喜。"
+      ],
+      "translation": [
+        "No need to explain. It's just a surprise."
+      ],
+      "status": "pass",
+      "reason": "不用解释并重复惊喜的回避正确。"
+    },
+    {
+      "id": "U17",
+      "label": "黄四郎反问听不懂吗",
+      "reference_meaning": "黄四郎反问张麻子是否不懂惊喜这个词。",
+      "sources": [
+        "juejin",
+        "bilibili"
+      ],
+      "line_ids": [
+        "L00021"
+      ],
+      "source": [
+        "难道你听不懂什么叫惊喜？"
+      ],
+      "translation": [
+        "Don't you get what a surprise is?"
+      ],
+      "status": "pass",
+      "reason": "反问听不懂惊喜正确。"
+    },
+    {
+      "id": "U18",
+      "label": "只想让你解释的坚持",
+      "reference_meaning": "张麻子坚持只是要汤师爷解释清楚惊喜。",
+      "sources": [
+        "sina"
+      ],
+      "line_ids": [
+        "L00022"
+      ],
+      "source": [
+        "我就想让你翻译翻译，什么叫惊喜？"
+      ],
+      "translation": [
+        "I just want you to explain it to me—what exactly is a surprise?"
+      ],
+      "status": "pass",
+      "reason": "坚持要求解释惊喜正确。"
+    },
+    {
+      "id": "U19",
+      "label": "汤师爷继续敷衍",
+      "reference_meaning": "汤师爷仍只重复惊喜一词。",
+      "sources": [
+        "sina"
+      ],
+      "line_ids": [
+        "L00023"
+      ],
+      "source": [
+        "惊喜嘛。"
+      ],
+      "translation": [
+        "A surprise, you say?"
+      ],
+      "status": "minor",
+      "reason": "重复惊喜的敷衍保留；you say? 增加反问语气。"
+    },
+    {
+      "id": "U20",
+      "label": "张麻子的粗口升级",
+      "reference_meaning": "张麻子连续加重粗口逼问惊喜的实质内容。",
+      "sources": [
+        "sina"
+      ],
+      "line_ids": [
+        "L00024",
+        "L00025",
+        "L00026"
+      ],
+      "source": [
+        "翻译出来给我听，什么他妈的叫惊喜？",
+        "什么？",
+        "什么他妈的叫，他妈的惊喜？"
+      ],
+      "translation": [
+        "Explain it to me. What the hell is a surprise?",
+        "What?",
+        "What the hell do you mean, a surprise?"
+      ],
+      "status": "minor",
+      "reason": "逼问升级仍可读；第二次重复粗口被弱化，情绪力度偏弱。"
+    },
+    {
+      "id": "U21",
+      "label": "汤师爷转向黄四郎逼问",
+      "reference_meaning": "汤师爷被逼得转向黄四郎，用粗口追问惊喜到底是什么。",
+      "sources": [
+        "sina"
+      ],
+      "line_ids": [
+        "L00027"
+      ],
+      "source": [
+        "什么他妈的叫惊喜啊？"
+      ],
+      "translation": [
+        "What the hell is a surprise, huh?"
+      ],
+      "status": "pass",
+      "reason": "带粗口的追问保留，未变成断言。"
+    },
+    {
+      "id": "U22",
+      "label": "黄四郎解释资金与业务修复",
+      "reference_meaning": "黄四郎承诺三天后提供一百八十万，供张麻子一方出城剿匪并恢复被截断的生意通路；腿承接前文烟土生意的比喻。",
+      "sources": [
+        "sina",
+        "bilibili"
+      ],
+      "line_ids": [
+        "L00028"
+      ],
+      "source": [
+        "惊喜就是三天之后，我出一百八十万，给你们出城剿匪，接上我的腿，明白了吗？"
+      ],
+      "translation": [
+        "The surprise is this: in three days, I'll give you 1.8 million to go out of the city and wipe out the bandits, and get my business back on its feet. Got it?"
+      ],
+      "status": "pass",
+      "reason": "金额、时限、剿匪义务与恢复说话者生意均正确；按前文理解腿为业务通路。"
+    },
+    {
+      "id": "U23",
+      "label": "汤师爷这才明白惊喜",
+      "reference_meaning": "汤师爷听到具体承诺后表示这才是惊喜的内容。",
+      "sources": [
+        "sina"
+      ],
+      "line_ids": [
+        "L00029"
+      ],
+      "source": [
+        "这就是惊喜啊。"
+      ],
+      "translation": [
+        "Now that's a surprise."
+      ],
+      "status": "pass",
+      "reason": "听到具体承诺后的惊喜反应正确，格式星号已去除。"
+    },
+    {
+      "id": "U24",
+      "label": "张麻子继续让汤师爷转述",
+      "reference_meaning": "张麻子再次催促汤师爷把刚听到的承诺说清楚。",
+      "sources": [
+        "juejin"
+      ],
+      "line_ids": [
+        "L00030",
+        "L00031"
+      ],
+      "source": [
+        "翻译翻译。",
+        "翻译翻译。"
+      ],
+      "translation": [
+        "Explain it.",
+        "Explain it to me."
+      ],
+      "status": "pass",
+      "reason": "重复催促转述正确。"
+    },
+    {
+      "id": "U25",
+      "label": "汤师爷转述黄四郎的承诺",
+      "reference_meaning": "汤师爷向张麻子转述黄四郎的资金承诺：三天后给一百八十万两银子，剿匪并恢复黄四郎的生意通路。",
+      "sources": [
+        "juejin",
+        "bilibili"
+      ],
+      "line_ids": [
+        "L00032"
+      ],
+      "source": [
+        "惊喜就是三天之后，给你一百八十万两银子，出城剿匪，接上他的腿。"
+      ],
+      "translation": [
+        "The surprise is this: in three days, you'll receive 1.8 million taels of silver to go out of the city and wipe out the bandits, and get his business back on its feet. Got it?"
+      ],
+      "status": "minor",
+      "reason": "三天、180万两银子、出城剿匪和恢复他的生意均保留；多加 Got it?。"
+    },
+    {
+      "id": "U26",
+      "label": "张麻子讽刺地答应等三天",
+      "reference_meaning": "张麻子以兄弟称呼缓和表面气氛，带粗口认可承诺并愿意等三天。",
+      "sources": [
+        "juejin"
+      ],
+      "line_ids": [
+        "L00033"
+      ],
+      "source": [
+        "大哥，这他妈是惊喜啊，小弟我愿意等你三天。"
+      ],
+      "translation": [
+        "Brother, this is what I call a damn surprise! I'm willing to wait three days for you."
+      ],
+      "status": "pass",
+      "reason": "兄弟称呼、粗口、三天等待承诺保留。"
+    },
+    {
+      "id": "U27",
+      "label": "黄四郎简短应允",
+      "reference_meaning": "黄四郎简短答应，随后张麻子开始下一轮讲话。",
+      "sources": [
+        "juejin"
+      ],
+      "line_ids": [
+        "L00034"
+      ],
+      "source": [
+        "好。"
+      ],
+      "translation": [
+        "Fine."
+      ],
+      "status": "pass",
+      "reason": "简短应允单独保留，未混入下一个人的讲话。"
+    },
+    {
+      "id": "U28",
+      "label": "张麻子把汤师爷拉回身边",
+      "reference_meaning": "张麻子对黄四郎强调自己珍视汤师爷，禁止对方夺走汤师爷；带戏谑占有语气。",
+      "sources": [
+        "juejin"
+      ],
+      "line_ids": [
+        "L00035"
+      ],
+      "source": [
+        "黄老爷，汤师爷是我的挚爱，你可不能夺我所爱啊。"
+      ],
+      "translation": [
+        "Master Huang, Adviser Tang is the one I love most. You can't take him away from me."
+      ],
+      "status": "pass",
+      "reason": "称呼黄老爷并强调汤师爷属于我方的戏谑意思正确。"
+    },
+    {
+      "id": "U29",
+      "label": "黄四郎表示明白",
+      "reference_meaning": "黄四郎两次表示已经明白张麻子的意思。",
+      "sources": [
+        "juejin",
+        "sina"
+      ],
+      "line_ids": [
+        "L00036"
+      ],
+      "source": [
+        "了然，了然。"
+      ],
+      "translation": [
+        "Understood. Understood."
+      ],
+      "status": "pass",
+      "reason": "两次表示明白正确，未转为索要人物或评价人物。"
+    }
+  ],
+  "findings": [
+    {
+      "line_ids": [
+        "L00009"
+      ],
+      "severity": "minor",
+      "problem": "质问不出资和贼喊捉贼均保留；bandit suppression 偏书面，字幕可更口语。"
+    },
+    {
+      "line_ids": [
+        "L00010"
+      ],
+      "severity": "minor",
+      "problem": "举枪和挑衅保留；head-to-head 没有明确说出火拼的枪战含义，威胁强度偏弱。"
+    },
+    {
+      "line_ids": [
+        "L00023"
+      ],
+      "severity": "minor",
+      "problem": "重复惊喜的敷衍保留；you say? 增加反问语气。"
+    },
+    {
+      "line_ids": [
+        "L00024",
+        "L00025",
+        "L00026"
+      ],
+      "severity": "minor",
+      "problem": "逼问升级仍可读；第二次重复粗口被弱化，情绪力度偏弱。"
+    },
+    {
+      "line_ids": [
+        "L00032"
+      ],
+      "severity": "minor",
+      "problem": "三天、180万两银子、出城剿匪和恢复他的生意均保留；多加 Got it?。"
+    }
+  ],
+  "unscored_tail": [
+    {
+      "line_ids": [
+        "L00037"
+      ],
+      "source": "到底是谁？",
+      "translation": "Who the hell is it?",
+      "status": "missing_reference",
+      "problem": "未取得对应尾部对白参考；译文额外加粗口，与当前源文不符，属于已观察到的表达缺陷。"
+    },
+    {
+      "line_ids": [
+        "L00038"
+      ],
+      "source": "这个，你这个。",
+      "translation": "This... you here.",
+      "status": "missing_reference",
+      "problem": "片尾截断，不补全缺失台词；需要听原声确认。"
+    }
+  ],
+  "source_reference": {
+    "status": "pass",
+    "cer": 0.0,
+    "critical_fact_failures": 0
+  },
+  "formal_delivery_status": "fail",
+  "accepted": false,
+  "formal_delivery_reasons": [
+    "14 subtitle display cues still violate reading-speed or short-cue thresholds.",
+    "Tail fragments remain unverified and one adds unsupported profanity.",
+    "Character attribution remains inference; no validated identity/emotion evidence for dubbing."
+  ],
+  "comparison_limitation": "End-to-end pipeline comparison after source corrections and supplied case context; not identical-source model ranking. No new dubbing was generated."
+}

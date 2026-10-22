@@ -1,0 +1,70 @@
+{
+  "python": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo/bin/python",
+  "results": [
+    {
+      "module": "numpy",
+      "status": "pass",
+      "version": "1.26.4"
+    },
+    {
+      "module": "scipy",
+      "status": "pass",
+      "version": "1.13.1"
+    },
+    {
+      "module": "scipy.sparse.linalg",
+      "status": "pass",
+      "version": null
+    },
+    {
+      "module": "cv2",
+      "status": "pass",
+      "version": "4.14.0"
+    },
+    {
+      "module": "torch",
+      "status": "pass",
+      "version": "2.3.1"
+    },
+    {
+      "module": "torchaudio",
+      "status": "pass",
+      "version": "2.3.1"
+    },
+    {
+      "module": "torchvision",
+      "status": "fail",
+      "error": "AttributeError: module 'torch.library' has no attribute 'register_fake'"
+    },
+    {
+      "module": "spacy",
+      "status": "pass",
+      "version": "3.8.16"
+    },
+    {
+      "module": "librosa",
+      "status": "pass",
+      "version": "0.10.2.post1"
+    },
+    {
+      "module": "demucs.pretrained",
+      "status": "pass",
+      "version": null
+    },
+    {
+      "module": "whisperx",
+      "status": "pass",
+      "version": null
+    },
+    {
+      "module": "pyannote.audio",
+      "status": "fail",
+      "error": "AttributeError: partially initialized module 'torchvision' has no attribute 'extension' (most likely due to a circular import)"
+    },
+    {
+      "module": "torchcodec",
+      "status": "fail",
+      "error": "ImportError: cannot import name 'register_fake' from 'torch.library' (/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/torch/library.py)"
+    }
+  ]
+}

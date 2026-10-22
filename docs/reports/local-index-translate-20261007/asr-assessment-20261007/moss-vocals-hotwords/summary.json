@@ -1,0 +1,14 @@
+{
+  "model": "/Users/vanch/mlx-MOSS-Transcribe-Diarize/pretrained/mlx-moss-transcribe-diarize-8bit",
+  "audio": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v9_original_audio_20261007/output/audio/vocal.wav",
+  "duration": 170.8524375,
+  "segments": 77,
+  "generation_tokens": 1678,
+  "token_budget_reached": false,
+  "files": {
+    "raw_transcript.txt": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/asr-assessment-20261007/moss-vocals-hotwords/raw_transcript.txt",
+    "segments.json": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/asr-assessment-20261007/moss-vocals-hotwords/segments.json",
+    "subtitle.srt": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/asr-assessment-20261007/moss-vocals-hotwords/subtitle.srt",
+    "subtitle.ass": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/asr-assessment-20261007/moss-vocals-hotwords/subtitle.ass"
+  }
+}

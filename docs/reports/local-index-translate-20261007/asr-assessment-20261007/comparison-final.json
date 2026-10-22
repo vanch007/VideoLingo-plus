@@ -1,0 +1,1600 @@
+{
+  "reference": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/asr-assessment-20261007/reference_checkpoints_v3.json",
+  "reference_sha256": "sha256:a26a9ff1b4acbbb3f0ab3578956af5aef032b4c4e7245df5c1fe172644e67320",
+  "results": {
+    "Whisper25": {
+      "status": "fail",
+      "basis": "external_reference_checkpoints_not_model_self_grade",
+      "method": "time-anchored excerpt text alignment with 1s context; not a timestamp quality score",
+      "scope": "12 selected timed dialogue checkpoints in the supplied 170.85 second movie clip. This is not a whole-file CER or timestamp accuracy score.",
+      "reference_characters": 161,
+      "character_errors": 30,
+      "cer": 0.18633540372670807,
+      "critical_fact_failures": 9,
+      "checkpoints": [
+        {
+          "id": "K01",
+          "start": 11.15,
+          "end": 13.5,
+          "text": "四筒啊全是黄家的人",
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "头传是皇家的人马",
+          "matched_text": "刺头传是皇家的人",
+          "errors": 5,
+          "reference_characters": 9,
+          "cer": 0.5555555555555556,
+          "missing_facts": [],
+          "status": "minor_text_difference"
+        },
+        {
+          "id": "K02",
+          "start": 21.0,
+          "end": 24.8,
+          "text": "杀县长夫人绑架豪绅",
+          "required_facts": [
+            "杀县长夫人",
+            "绑架豪绅"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html",
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "把县长夫人绑架逃生",
+          "matched_text": "把县长夫人绑架逃生",
+          "errors": 3,
+          "reference_characters": 9,
+          "cer": 0.3333333333333333,
+          "missing_facts": [
+            "杀县长夫人",
+            "绑架豪绅"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K03",
+          "start": 25.0,
+          "end": 30.5,
+          "text": "祸害鹅城百姓就是你黄老爷家的胡万",
+          "required_facts": [
+            "鹅城",
+            "胡万"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "祸害河城百姓就是你黄老爷家的五万",
+          "matched_text": "祸害河城百姓就是你黄老爷家的五万",
+          "errors": 2,
+          "reference_characters": 16,
+          "cer": 0.125,
+          "missing_facts": [
+            "鹅城",
+            "胡万"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K04",
+          "start": 80.65,
+          "end": 82.6,
+          "text": "你出钱我剿匪",
+          "required_facts": [
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "出钱我交费",
+          "matched_text": "吧出钱我交费",
+          "errors": 3,
+          "reference_characters": 6,
+          "cer": 0.5,
+          "missing_facts": [
+            "你出钱",
+            "我剿匪"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K05",
+          "start": 90.7,
+          "end": 94.85,
+          "text": "他是胡万的恩人现在又成了你的恩人",
+          "required_facts": [
+            "他是胡万的恩人"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "他是胡安的恩人现在又成了你的恩人",
+          "matched_text": "他是胡安的恩人现在又成了你的恩人",
+          "errors": 1,
+          "reference_characters": 16,
+          "cer": 0.0625,
+          "missing_facts": [
+            "他是胡万的恩人"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K06",
+          "start": 106.45,
+          "end": 107.9,
+          "text": "不用翻译就是惊喜啊",
+          "alternatives": [
+            "不用翻译就是惊喜"
+          ],
+          "required_facts": [
+            "不用翻译",
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "翻译就是惊啊",
+          "matched_text": "不用翻译就是惊啊",
+          "errors": 1,
+          "reference_characters": 9,
+          "cer": 0.1111111111111111,
+          "missing_facts": [
+            "惊喜"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K07",
+          "start": 107.9,
+          "end": 109.25,
+          "text": "难道你听不懂什么叫惊喜",
+          "required_facts": [
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "道你听不懂什么叫惊我就想",
+          "matched_text": "啊道你听不懂什么叫惊我",
+          "errors": 2,
+          "reference_characters": 11,
+          "cer": 0.18181818181818182,
+          "missing_facts": [
+            "惊喜"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K08",
+          "start": 123.1,
+          "end": 130.35,
+          "text": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上我的腿明白了吗",
+          "required_facts": [
+            "我出一百八十万",
+            "出城剿匪",
+            "我的腿"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "惊喜就是三天之后我出一百八十万给你们出生交费接上我的腿明白了吧",
+          "matched_text": "惊喜就是三天之后我出一百八十万给你们出生交费接上我的腿明白了吧",
+          "errors": 4,
+          "reference_characters": 31,
+          "cer": 0.12903225806451613,
+          "missing_facts": [
+            "出城剿匪"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K09",
+          "start": 138.2,
+          "end": 145.0,
+          "text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "required_facts": [
+            "一百八十万两银子",
+            "出城剿匪",
+            "他的腿"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "matched_text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "errors": 0,
+          "reference_characters": 27,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K10",
+          "start": 155.0,
+          "end": 157.85,
+          "text": "汤师爷是我的至爱",
+          "alternatives": [
+            "汤师爷是我的挚爱"
+          ],
+          "required_facts": [
+            "汤师爷是我的"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "汤师爷是我的摯爱",
+          "matched_text": "汤师爷是我的摯爱",
+          "errors": 1,
+          "reference_characters": 8,
+          "cer": 0.125,
+          "missing_facts": [],
+          "status": "minor_text_difference"
+        },
+        {
+          "id": "K11",
+          "start": 161.6,
+          "end": 164.0,
+          "text": "了然了然",
+          "required_facts": [
+            "了然"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "要人要人",
+          "matched_text": "啊要人要",
+          "errors": 4,
+          "reference_characters": 4,
+          "cer": 1.0,
+          "missing_facts": [
+            "了然"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K12",
+          "start": 77.5,
+          "end": 82.6,
+          "text": "要是大义灭亲那好办你出钱我剿匪",
+          "required_facts": [
+            "那好办",
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://www.bilibili.com/opus/922853214827577364"
+          ],
+          "observed": "是大义灭亲那好吧出钱我交费",
+          "matched_text": "要是大义灭亲那好吧出钱我交费",
+          "errors": 4,
+          "reference_characters": 15,
+          "cer": 0.26666666666666666,
+          "missing_facts": [
+            "那好办",
+            "你出钱",
+            "我剿匪"
+          ],
+          "status": "fail"
+        }
+      ],
+      "candidate_file": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v12_readability_20261007/output/log/cleaned_chunks.xlsx",
+      "candidate_sha256": "sha256:6eddcec67bc53da2ad93cef11cc557787809a8d3b735748a22d3c694786a3bfd"
+    },
+    "WhisperFullPreserved": {
+      "status": "fail",
+      "basis": "external_reference_checkpoints_not_model_self_grade",
+      "method": "time-anchored excerpt text alignment with 1s context; not a timestamp quality score",
+      "scope": "12 selected timed dialogue checkpoints in the supplied 170.85 second movie clip. This is not a whole-file CER or timestamp accuracy score.",
+      "reference_characters": 161,
+      "character_errors": 19,
+      "cer": 0.11801242236024845,
+      "critical_fact_failures": 6,
+      "checkpoints": [
+        {
+          "id": "K01",
+          "start": 11.15,
+          "end": 13.5,
+          "text": "四筒啊全是黄家的人",
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "头吗传是皇家的人马",
+          "matched_text": "刺头吗传是皇家的人",
+          "errors": 5,
+          "reference_characters": 9,
+          "cer": 0.5555555555555556,
+          "missing_facts": [],
+          "status": "minor_text_difference"
+        },
+        {
+          "id": "K02",
+          "start": 21.0,
+          "end": 24.8,
+          "text": "杀县长夫人绑架豪绅",
+          "required_facts": [
+            "杀县长夫人",
+            "绑架豪绅"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html",
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "把县长夫人绑架豪绅",
+          "matched_text": "把县长夫人绑架豪绅",
+          "errors": 1,
+          "reference_characters": 9,
+          "cer": 0.1111111111111111,
+          "missing_facts": [
+            "杀县长夫人"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K03",
+          "start": 25.0,
+          "end": 30.5,
+          "text": "祸害鹅城百姓就是你黄老爷家的胡万",
+          "required_facts": [
+            "鹅城",
+            "胡万"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "害河城百姓就是你皇老爷家的胡婉",
+          "matched_text": "祸害河城百姓就是你皇老爷家的胡婉",
+          "errors": 3,
+          "reference_characters": 16,
+          "cer": 0.1875,
+          "missing_facts": [
+            "鹅城",
+            "胡万"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K04",
+          "start": 80.65,
+          "end": 82.6,
+          "text": "你出钱我剿匪",
+          "required_facts": [
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "你出钱我交费",
+          "matched_text": "你出钱我交费",
+          "errors": 2,
+          "reference_characters": 6,
+          "cer": 0.3333333333333333,
+          "missing_facts": [
+            "我剿匪"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K05",
+          "start": 90.7,
+          "end": 94.85,
+          "text": "他是胡万的恩人现在又成了你的恩人",
+          "required_facts": [
+            "他是胡万的恩人"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "他是胡安的恩人现在又成了你的恩人",
+          "matched_text": "他是胡安的恩人现在又成了你的恩人",
+          "errors": 1,
+          "reference_characters": 16,
+          "cer": 0.0625,
+          "missing_facts": [
+            "他是胡万的恩人"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K06",
+          "start": 106.45,
+          "end": 107.9,
+          "text": "不用翻译就是惊喜啊",
+          "alternatives": [
+            "不用翻译就是惊喜"
+          ],
+          "required_facts": [
+            "不用翻译",
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "不用翻译就是惊喜啊难",
+          "matched_text": "不用翻译就是惊喜啊",
+          "errors": 0,
+          "reference_characters": 9,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K07",
+          "start": 107.9,
+          "end": 109.25,
+          "text": "难道你听不懂什么叫惊喜",
+          "required_facts": [
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "道你听不懂什么叫惊喜我就想",
+          "matched_text": "难道你听不懂什么叫惊喜",
+          "errors": 0,
+          "reference_characters": 11,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K08",
+          "start": 123.1,
+          "end": 130.35,
+          "text": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上我的腿明白了吗",
+          "required_facts": [
+            "我出一百八十万",
+            "出城剿匪",
+            "我的腿"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上我的腿明白了吗",
+          "matched_text": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上我的腿明白了吗",
+          "errors": 0,
+          "reference_characters": 31,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K09",
+          "start": 138.2,
+          "end": 145.0,
+          "text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "required_facts": [
+            "一百八十万两银子",
+            "出城剿匪",
+            "他的腿"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿谁",
+          "matched_text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "errors": 0,
+          "reference_characters": 27,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K10",
+          "start": 155.0,
+          "end": 157.85,
+          "text": "汤师爷是我的至爱",
+          "alternatives": [
+            "汤师爷是我的挚爱"
+          ],
+          "required_facts": [
+            "汤师爷是我的"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "汤师爷是我的挚爱",
+          "matched_text": "汤师爷是我的挚爱",
+          "errors": 0,
+          "reference_characters": 8,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K11",
+          "start": 161.6,
+          "end": 164.0,
+          "text": "了然了然",
+          "required_facts": [
+            "了然"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "要人要人",
+          "matched_text": "啊要人要",
+          "errors": 4,
+          "reference_characters": 4,
+          "cer": 1.0,
+          "missing_facts": [
+            "了然"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K12",
+          "start": 77.5,
+          "end": 82.6,
+          "text": "要是大义灭亲那好办你出钱我剿匪",
+          "required_facts": [
+            "那好办",
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://www.bilibili.com/opus/922853214827577364"
+          ],
+          "observed": "是大义灭亲那好吧你出钱我交费",
+          "matched_text": "要是大义灭亲那好吧你出钱我交费",
+          "errors": 3,
+          "reference_characters": 15,
+          "cer": 0.2,
+          "missing_facts": [
+            "那好办",
+            "我剿匪"
+          ],
+          "status": "fail"
+        }
+      ],
+      "candidate_file": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/asr-assessment-20261007/stable-raw/preserved_result.json",
+      "candidate_sha256": "sha256:5bfbce732b097fa9897b85c735b29ecd2f46736f8d29a0b5c497435d6b359865"
+    },
+    "MossOriginal": {
+      "status": "fail",
+      "basis": "external_reference_checkpoints_not_model_self_grade",
+      "method": "time-anchored excerpt text alignment with 1s context; not a timestamp quality score",
+      "scope": "12 selected timed dialogue checkpoints in the supplied 170.85 second movie clip. This is not a whole-file CER or timestamp accuracy score.",
+      "reference_characters": 160,
+      "character_errors": 10,
+      "cer": 0.0625,
+      "critical_fact_failures": 4,
+      "checkpoints": [
+        {
+          "id": "K01",
+          "start": 11.15,
+          "end": 13.5,
+          "text": "四筒啊全是黄家的人",
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "刺头吗俺是黄家的人",
+          "matched_text": "刺头吗俺是黄家的人",
+          "errors": 4,
+          "reference_characters": 9,
+          "cer": 0.4444444444444444,
+          "missing_facts": [],
+          "status": "minor_text_difference"
+        },
+        {
+          "id": "K02",
+          "start": 21.0,
+          "end": 24.8,
+          "text": "杀县长夫人绑架豪绅",
+          "required_facts": [
+            "杀县长夫人",
+            "绑架豪绅"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html",
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "他县长夫人绑架豪绅",
+          "matched_text": "他县长夫人绑架豪绅",
+          "errors": 1,
+          "reference_characters": 9,
+          "cer": 0.1111111111111111,
+          "missing_facts": [
+            "杀县长夫人"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K03",
+          "start": 25.0,
+          "end": 30.5,
+          "text": "祸害鹅城百姓就是你黄老爷家的胡万",
+          "required_facts": [
+            "鹅城",
+            "胡万"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "祸害河城百姓就是你黄老爷家的胡万",
+          "matched_text": "祸害河城百姓就是你黄老爷家的胡万",
+          "errors": 1,
+          "reference_characters": 16,
+          "cer": 0.0625,
+          "missing_facts": [
+            "鹅城"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K04",
+          "start": 80.65,
+          "end": 82.6,
+          "text": "你出钱我剿匪",
+          "required_facts": [
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "你出钱我剿匪",
+          "matched_text": "你出钱我剿匪",
+          "errors": 0,
+          "reference_characters": 6,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K05",
+          "start": 90.7,
+          "end": 94.85,
+          "text": "他是胡万的恩人现在又成了你的恩人",
+          "required_facts": [
+            "他是胡万的恩人"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "他是胡万的恩人现在又成了你的恩人",
+          "matched_text": "他是胡万的恩人现在又成了你的恩人",
+          "errors": 0,
+          "reference_characters": 16,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K06",
+          "start": 106.45,
+          "end": 107.9,
+          "text": "不用翻译就是惊喜啊",
+          "alternatives": [
+            "不用翻译就是惊喜"
+          ],
+          "required_facts": [
+            "不用翻译",
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "不用翻译就是惊喜",
+          "matched_text": "不用翻译就是惊喜",
+          "errors": 0,
+          "reference_characters": 8,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K07",
+          "start": 107.9,
+          "end": 109.25,
+          "text": "难道你听不懂什么叫惊喜",
+          "required_facts": [
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "难道你听不懂什么叫惊喜",
+          "matched_text": "难道你听不懂什么叫惊喜",
+          "errors": 0,
+          "reference_characters": 11,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K08",
+          "start": 123.1,
+          "end": 130.35,
+          "text": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上我的腿明白了吗",
+          "required_facts": [
+            "我出一百八十万",
+            "出城剿匪",
+            "我的腿"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上他的腿明白了吗",
+          "matched_text": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上他的腿明白了吗",
+          "errors": 1,
+          "reference_characters": 31,
+          "cer": 0.03225806451612903,
+          "missing_facts": [
+            "我的腿"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K09",
+          "start": 138.2,
+          "end": 145.0,
+          "text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "required_facts": [
+            "一百八十万两银子",
+            "出城剿匪",
+            "他的腿"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "matched_text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "errors": 0,
+          "reference_characters": 27,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K10",
+          "start": 155.0,
+          "end": 157.85,
+          "text": "汤师爷是我的至爱",
+          "alternatives": [
+            "汤师爷是我的挚爱"
+          ],
+          "required_facts": [
+            "汤师爷是我的"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "汤师爷是我的挚爱",
+          "matched_text": "汤师爷是我的挚爱",
+          "errors": 0,
+          "reference_characters": 8,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K11",
+          "start": 161.6,
+          "end": 164.0,
+          "text": "了然了然",
+          "required_facts": [
+            "了然"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "了然",
+          "matched_text": "了然",
+          "errors": 2,
+          "reference_characters": 4,
+          "cer": 0.5,
+          "missing_facts": [],
+          "status": "minor_text_difference"
+        },
+        {
+          "id": "K12",
+          "start": 77.5,
+          "end": 82.6,
+          "text": "要是大义灭亲那好办你出钱我剿匪",
+          "required_facts": [
+            "那好办",
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://www.bilibili.com/opus/922853214827577364"
+          ],
+          "observed": "要是大义灭亲那好吧你出钱我剿匪",
+          "matched_text": "要是大义灭亲那好吧你出钱我剿匪",
+          "errors": 1,
+          "reference_characters": 15,
+          "cer": 0.06666666666666667,
+          "missing_facts": [
+            "那好办"
+          ],
+          "status": "fail"
+        }
+      ],
+      "candidate_file": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/asr-assessment-20261007/moss-original/segments.json",
+      "candidate_sha256": "sha256:5869961f740729132680f313d54d74da87a4d89b4a249cd54beef443d0d8edfa"
+    },
+    "MossVocalVocabulary": {
+      "status": "fail",
+      "basis": "external_reference_checkpoints_not_model_self_grade",
+      "method": "time-anchored excerpt text alignment with 1s context; not a timestamp quality score",
+      "scope": "12 selected timed dialogue checkpoints in the supplied 170.85 second movie clip. This is not a whole-file CER or timestamp accuracy score.",
+      "reference_characters": 160,
+      "character_errors": 8,
+      "cer": 0.05,
+      "critical_fact_failures": 3,
+      "checkpoints": [
+        {
+          "id": "K01",
+          "start": 11.15,
+          "end": 13.5,
+          "text": "四筒啊全是黄家的人",
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "四筒全是黄家的人",
+          "matched_text": "四筒全是黄家的人",
+          "errors": 1,
+          "reference_characters": 9,
+          "cer": 0.1111111111111111,
+          "missing_facts": [],
+          "status": "minor_text_difference"
+        },
+        {
+          "id": "K02",
+          "start": 21.0,
+          "end": 24.8,
+          "text": "杀县长夫人绑架豪绅",
+          "required_facts": [
+            "杀县长夫人",
+            "绑架豪绅"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html",
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "他县长夫人绑架豪绅",
+          "matched_text": "他县长夫人绑架豪绅",
+          "errors": 1,
+          "reference_characters": 9,
+          "cer": 0.1111111111111111,
+          "missing_facts": [
+            "杀县长夫人"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K03",
+          "start": 25.0,
+          "end": 30.5,
+          "text": "祸害鹅城百姓就是你黄老爷家的胡万",
+          "required_facts": [
+            "鹅城",
+            "胡万"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "祸害鹅城百姓就是你黄老爷家的胡万",
+          "matched_text": "祸害鹅城百姓就是你黄老爷家的胡万",
+          "errors": 0,
+          "reference_characters": 16,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K04",
+          "start": 80.65,
+          "end": 82.6,
+          "text": "你出钱我剿匪",
+          "required_facts": [
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "你出钱我剿匪",
+          "matched_text": "你出钱我剿匪",
+          "errors": 0,
+          "reference_characters": 6,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K05",
+          "start": 90.7,
+          "end": 94.85,
+          "text": "他是胡万的恩人现在又成了你的恩人",
+          "required_facts": [
+            "他是胡万的恩人"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "他是胡万的恩人现在又成了你的恩人",
+          "matched_text": "他是胡万的恩人现在又成了你的恩人",
+          "errors": 0,
+          "reference_characters": 16,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K06",
+          "start": 106.45,
+          "end": 107.9,
+          "text": "不用翻译就是惊喜啊",
+          "alternatives": [
+            "不用翻译就是惊喜"
+          ],
+          "required_facts": [
+            "不用翻译",
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "不用翻译就是惊喜",
+          "matched_text": "不用翻译就是惊喜",
+          "errors": 0,
+          "reference_characters": 8,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K07",
+          "start": 107.9,
+          "end": 109.25,
+          "text": "难道你听不懂什么叫惊喜",
+          "required_facts": [
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "难道你听不懂什么叫惊喜",
+          "matched_text": "难道你听不懂什么叫惊喜",
+          "errors": 0,
+          "reference_characters": 11,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K08",
+          "start": 123.1,
+          "end": 130.35,
+          "text": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上我的腿明白了吗",
+          "required_facts": [
+            "我出一百八十万",
+            "出城剿匪",
+            "我的腿"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上他的腿明白了吗",
+          "matched_text": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上他的腿明白了吗",
+          "errors": 1,
+          "reference_characters": 31,
+          "cer": 0.03225806451612903,
+          "missing_facts": [
+            "我的腿"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K09",
+          "start": 138.2,
+          "end": 145.0,
+          "text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "required_facts": [
+            "一百八十万两银子",
+            "出城剿匪",
+            "他的腿"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "matched_text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "errors": 0,
+          "reference_characters": 27,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K10",
+          "start": 155.0,
+          "end": 157.85,
+          "text": "汤师爷是我的至爱",
+          "alternatives": [
+            "汤师爷是我的挚爱"
+          ],
+          "required_facts": [
+            "汤师爷是我的"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "汤师爷是我的挚爱",
+          "matched_text": "汤师爷是我的挚爱",
+          "errors": 0,
+          "reference_characters": 8,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K11",
+          "start": 161.6,
+          "end": 164.0,
+          "text": "了然了然",
+          "required_facts": [
+            "了然"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "了然",
+          "matched_text": "了然",
+          "errors": 2,
+          "reference_characters": 4,
+          "cer": 0.5,
+          "missing_facts": [],
+          "status": "minor_text_difference"
+        },
+        {
+          "id": "K12",
+          "start": 77.5,
+          "end": 82.6,
+          "text": "要是大义灭亲那好办你出钱我剿匪",
+          "required_facts": [
+            "那好办",
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://www.bilibili.com/opus/922853214827577364"
+          ],
+          "observed": "大义灭亲那好你出钱我剿匪",
+          "matched_text": "大义灭亲那好你出钱我剿匪",
+          "errors": 3,
+          "reference_characters": 15,
+          "cer": 0.2,
+          "missing_facts": [
+            "那好办"
+          ],
+          "status": "fail"
+        }
+      ],
+      "candidate_file": "/Users/vanch/VideoLingo-plus/docs/reports/local-index-translate-20261007/asr-assessment-20261007/moss-vocals-hotwords/segments.json",
+      "candidate_sha256": "sha256:b72c4d966275f9a3c03429be5fe9a81cd465cf8cfa733396b3a147ffed8acc4f"
+    },
+    "MossOriginalVocabulary": {
+      "status": "fail",
+      "basis": "external_reference_checkpoints_not_model_self_grade",
+      "method": "time-anchored excerpt text alignment with 1s context; not a timestamp quality score",
+      "scope": "12 selected timed dialogue checkpoints in the supplied 170.85 second movie clip. This is not a whole-file CER or timestamp accuracy score.",
+      "reference_characters": 160,
+      "character_errors": 15,
+      "cer": 0.09375,
+      "critical_fact_failures": 3,
+      "checkpoints": [
+        {
+          "id": "K01",
+          "start": 11.15,
+          "end": 13.5,
+          "text": "四筒啊全是黄家的人",
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "",
+          "matched_text": "四筒嘛不是俺是黄家的人",
+          "errors": 4,
+          "reference_characters": 9,
+          "cer": 0.4444444444444444,
+          "missing_facts": [],
+          "status": "minor_text_difference"
+        },
+        {
+          "id": "K02",
+          "start": 21.0,
+          "end": 24.8,
+          "text": "杀县长夫人绑架豪绅",
+          "required_facts": [
+            "杀县长夫人",
+            "绑架豪绅"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html",
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "",
+          "matched_text": "",
+          "errors": 9,
+          "reference_characters": 9,
+          "cer": 1.0,
+          "missing_facts": [
+            "杀县长夫人",
+            "绑架豪绅"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K03",
+          "start": 25.0,
+          "end": 30.5,
+          "text": "祸害鹅城百姓就是你黄老爷家的胡万",
+          "required_facts": [
+            "鹅城",
+            "胡万"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "他县长夫人绑架豪绅，祸害鹅城百姓，就是你黄老爷家的胡万。",
+          "matched_text": "祸害鹅城百姓就是你黄老爷家的胡万",
+          "errors": 0,
+          "reference_characters": 16,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K04",
+          "start": 80.65,
+          "end": 82.6,
+          "text": "你出钱我剿匪",
+          "required_facts": [
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "",
+          "matched_text": "你出钱我剿匪",
+          "errors": 0,
+          "reference_characters": 6,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K05",
+          "start": 90.7,
+          "end": 94.85,
+          "text": "他是胡万的恩人现在又成了你的恩人",
+          "required_facts": [
+            "他是胡万的恩人"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "汤师爷，他是胡万的恩人，现在又成了你的恩人，你给翻译翻译，什么叫惊喜？",
+          "matched_text": "他是胡万的恩人现在又成了你的恩人",
+          "errors": 0,
+          "reference_characters": 16,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K06",
+          "start": 106.45,
+          "end": 107.9,
+          "text": "不用翻译就是惊喜啊",
+          "alternatives": [
+            "不用翻译就是惊喜"
+          ],
+          "required_facts": [
+            "不用翻译",
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "不用翻译，就是惊喜。",
+          "matched_text": "不用翻译就是惊喜",
+          "errors": 0,
+          "reference_characters": 8,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K07",
+          "start": 107.9,
+          "end": 109.25,
+          "text": "难道你听不懂什么叫惊喜",
+          "required_facts": [
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "难道你听不懂什么叫惊喜？",
+          "matched_text": "难道你听不懂什么叫惊喜",
+          "errors": 0,
+          "reference_characters": 11,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K08",
+          "start": 123.1,
+          "end": 130.35,
+          "text": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上我的腿明白了吗",
+          "required_facts": [
+            "我出一百八十万",
+            "出城剿匪",
+            "我的腿"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "惊喜就是三天之后，我出一百八十万，给你们出城剿匪，接上他的腿，明白了吗？",
+          "matched_text": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上他的腿明白了吗",
+          "errors": 1,
+          "reference_characters": 31,
+          "cer": 0.03225806451612903,
+          "missing_facts": [
+            "我的腿"
+          ],
+          "status": "fail"
+        },
+        {
+          "id": "K09",
+          "start": 138.2,
+          "end": 145.0,
+          "text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "required_facts": [
+            "一百八十万两银子",
+            "出城剿匪",
+            "他的腿"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "惊喜就是三天之后，给你一百八十万两银子，出城剿匪，接上他的腿。",
+          "matched_text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "errors": 0,
+          "reference_characters": 27,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K10",
+          "start": 155.0,
+          "end": 157.85,
+          "text": "汤师爷是我的至爱",
+          "alternatives": [
+            "汤师爷是我的挚爱"
+          ],
+          "required_facts": [
+            "汤师爷是我的"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "黄老爷，汤师爷是我的挚爱，你可不能夺我所爱啊。",
+          "matched_text": "汤师爷是我的挚爱",
+          "errors": 0,
+          "reference_characters": 8,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K11",
+          "start": 161.6,
+          "end": 164.0,
+          "text": "了然了然",
+          "required_facts": [
+            "了然"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "了然，了然。",
+          "matched_text": "了然了然",
+          "errors": 0,
+          "reference_characters": 4,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K12",
+          "start": 77.5,
+          "end": 82.6,
+          "text": "要是大义灭亲那好办你出钱我剿匪",
+          "required_facts": [
+            "那好办",
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://www.bilibili.com/opus/922853214827577364"
+          ],
+          "observed": "要是大义灭亲，那好吧，你出钱，我剿匪。",
+          "matched_text": "要是大义灭亲那好吧你出钱我剿匪",
+          "errors": 1,
+          "reference_characters": 15,
+          "cer": 0.06666666666666667,
+          "missing_facts": [
+            "那好办"
+          ],
+          "status": "fail"
+        }
+      ],
+      "candidate_file": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v17_asr_optimized_20261007/output/log/local_source_asr/0.000-170.850.raw.json",
+      "candidate_sha256": "sha256:4b8d94ba0eee7910ca3cca2dec0b13626a6ac5189094cb0ab2c3026607f1c3fa"
+    },
+    "MossReviewedAligned": {
+      "status": "pass",
+      "basis": "external_reference_checkpoints_not_model_self_grade",
+      "method": "time-anchored excerpt text alignment with 1s context; not a timestamp quality score",
+      "scope": "12 selected timed dialogue checkpoints in the supplied 170.85 second movie clip. This is not a whole-file CER or timestamp accuracy score.",
+      "reference_characters": 160,
+      "character_errors": 0,
+      "cer": 0.0,
+      "critical_fact_failures": 0,
+      "checkpoints": [
+        {
+          "id": "K01",
+          "start": 11.15,
+          "end": 13.5,
+          "text": "四筒啊全是黄家的人",
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "四筒啊全是黄家的人马",
+          "matched_text": "四筒啊全是黄家的人",
+          "errors": 0,
+          "reference_characters": 9,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K02",
+          "start": 21.0,
+          "end": 24.8,
+          "text": "杀县长夫人绑架豪绅",
+          "required_facts": [
+            "杀县长夫人",
+            "绑架豪绅"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html",
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "杀县长夫人绑架豪绅",
+          "matched_text": "杀县长夫人绑架豪绅",
+          "errors": 0,
+          "reference_characters": 9,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K03",
+          "start": 25.0,
+          "end": 30.5,
+          "text": "祸害鹅城百姓就是你黄老爷家的胡万",
+          "required_facts": [
+            "鹅城",
+            "胡万"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "祸害鹅城百姓就是你黄老爷家的胡万",
+          "matched_text": "祸害鹅城百姓就是你黄老爷家的胡万",
+          "errors": 0,
+          "reference_characters": 16,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K04",
+          "start": 80.65,
+          "end": 82.6,
+          "text": "你出钱我剿匪",
+          "required_facts": [
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "你出钱我剿匪",
+          "matched_text": "你出钱我剿匪",
+          "errors": 0,
+          "reference_characters": 6,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K05",
+          "start": 90.7,
+          "end": 94.85,
+          "text": "他是胡万的恩人现在又成了你的恩人",
+          "required_facts": [
+            "他是胡万的恩人"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "他是胡万的恩人现在又成了你的恩人",
+          "matched_text": "他是胡万的恩人现在又成了你的恩人",
+          "errors": 0,
+          "reference_characters": 16,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K06",
+          "start": 106.45,
+          "end": 107.9,
+          "text": "不用翻译就是惊喜啊",
+          "alternatives": [
+            "不用翻译就是惊喜"
+          ],
+          "required_facts": [
+            "不用翻译",
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "不用翻译就是惊喜难",
+          "matched_text": "不用翻译就是惊喜",
+          "errors": 0,
+          "reference_characters": 8,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K07",
+          "start": 107.9,
+          "end": 109.25,
+          "text": "难道你听不懂什么叫惊喜",
+          "required_facts": [
+            "惊喜"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "道你听不懂什么叫惊喜",
+          "matched_text": "难道你听不懂什么叫惊喜",
+          "errors": 0,
+          "reference_characters": 11,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K08",
+          "start": 123.1,
+          "end": 130.35,
+          "text": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上我的腿明白了吗",
+          "required_facts": [
+            "我出一百八十万",
+            "出城剿匪",
+            "我的腿"
+          ],
+          "evidence": [
+            "https://k.sina.cn/article_5936041758_161d0cf1e019002fsl.html"
+          ],
+          "observed": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上我的腿明白了吗",
+          "matched_text": "惊喜就是三天之后我出一百八十万给你们出城剿匪接上我的腿明白了吗",
+          "errors": 0,
+          "reference_characters": 31,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K09",
+          "start": 138.2,
+          "end": 145.0,
+          "text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "required_facts": [
+            "一百八十万两银子",
+            "出城剿匪",
+            "他的腿"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "matched_text": "惊喜就是三天之后给你一百八十万两银子出城剿匪接上他的腿",
+          "errors": 0,
+          "reference_characters": 27,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K10",
+          "start": 155.0,
+          "end": 157.85,
+          "text": "汤师爷是我的至爱",
+          "alternatives": [
+            "汤师爷是我的挚爱"
+          ],
+          "required_facts": [
+            "汤师爷是我的"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "汤师爷是我的挚爱",
+          "matched_text": "汤师爷是我的挚爱",
+          "errors": 0,
+          "reference_characters": 8,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K11",
+          "start": 161.6,
+          "end": 164.0,
+          "text": "了然了然",
+          "required_facts": [
+            "了然"
+          ],
+          "evidence": [
+            "https://juejin.cn/post/7197315175644250167"
+          ],
+          "observed": "了然了然",
+          "matched_text": "了然了然",
+          "errors": 0,
+          "reference_characters": 4,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        },
+        {
+          "id": "K12",
+          "start": 77.5,
+          "end": 82.6,
+          "text": "要是大义灭亲那好办你出钱我剿匪",
+          "required_facts": [
+            "那好办",
+            "你出钱",
+            "我剿匪"
+          ],
+          "evidence": [
+            "https://www.bilibili.com/opus/922853214827577364"
+          ],
+          "observed": "大义灭亲那好办你出钱我剿匪",
+          "matched_text": "要是大义灭亲那好办你出钱我剿匪",
+          "errors": 0,
+          "reference_characters": 15,
+          "cer": 0.0,
+          "missing_facts": [],
+          "status": "pass"
+        }
+      ],
+      "candidate_file": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v17_asr_optimized_20261007/output/log/cleaned_chunks.xlsx",
+      "candidate_sha256": "sha256:08a21a4ed28bfc1236cf32f7602a54d07ea0f74add434073bd678e0c7c772f05"
+    }
+  }
+}

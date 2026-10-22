@@ -1,0 +1,3 @@
+Using Python 3.13.5 environment at: /Users/vanch/mlx-indextts2/.venv
+Checked 76 packages in 2ms
+All installed packages are compatible

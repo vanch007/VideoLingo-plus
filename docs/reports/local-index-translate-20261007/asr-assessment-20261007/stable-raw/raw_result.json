@@ -1,0 +1,2853 @@
+{
+  "segments": [
+    {
+      "start": 3.14,
+      "end": 4.384,
+      "text": "胡婉",
+      "words": [
+        {
+          "word": "胡",
+          "start": 3.14,
+          "end": 3.82
+        },
+        {
+          "word": "婉",
+          "start": 3.82,
+          "end": 4.384
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 4.768,
+      "end": 5.8,
+      "text": "胡婉",
+      "words": [
+        {
+          "word": "胡",
+          "start": 4.768,
+          "end": 4.96
+        },
+        {
+          "word": "婉",
+          "start": 4.96,
+          "end": 5.8
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 5.8,
+      "end": 7.712,
+      "text": "怎么会是胡婉",
+      "words": [
+        {
+          "word": "怎么",
+          "start": 5.8,
+          "end": 6.52
+        },
+        {
+          "word": "会",
+          "start": 6.56,
+          "end": 6.82
+        },
+        {
+          "word": "是",
+          "start": 6.82,
+          "end": 7.0
+        },
+        {
+          "word": "胡",
+          "start": 7.0,
+          "end": 7.1
+        },
+        {
+          "word": "婉",
+          "start": 7.1,
+          "end": 7.712
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 7.808,
+      "end": 8.928,
+      "text": "怪了",
+      "words": [
+        {
+          "word": "怪",
+          "start": 7.808,
+          "end": 8.72
+        },
+        {
+          "word": "了",
+          "start": 8.72,
+          "end": 8.928
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 9.504,
+      "end": 12.0,
+      "text": "刺头吗",
+      "words": [
+        {
+          "word": "刺",
+          "start": 9.504,
+          "end": 11.66
+        },
+        {
+          "word": "头",
+          "start": 11.66,
+          "end": 11.92
+        },
+        {
+          "word": "吗",
+          "start": 11.92,
+          "end": 12.0
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 12.0,
+      "end": 13.08,
+      "text": "传是皇家的人",
+      "words": [
+        {
+          "word": "传",
+          "start": 12.0,
+          "end": 12.3
+        },
+        {
+          "word": "是",
+          "start": 12.3,
+          "end": 12.5
+        },
+        {
+          "word": "皇",
+          "start": 12.5,
+          "end": 12.66
+        },
+        {
+          "word": "家",
+          "start": 12.66,
+          "end": 12.9
+        },
+        {
+          "word": "的人",
+          "start": 12.9,
+          "end": 13.08
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 13.08,
+      "end": 14.752,
+      "text": "马匪呢 马匪呢",
+      "words": [
+        {
+          "word": "马",
+          "start": 13.08,
+          "end": 13.48
+        },
+        {
+          "word": "匪",
+          "start": 13.48,
+          "end": 13.7
+        },
+        {
+          "word": "呢",
+          "start": 13.7,
+          "end": 13.8
+        },
+        {
+          "word": "马",
+          "start": 13.88,
+          "end": 14.1
+        },
+        {
+          "word": "匪",
+          "start": 14.1,
+          "end": 14.36
+        },
+        {
+          "word": "呢",
+          "start": 14.36,
+          "end": 14.752
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 14.784,
+      "end": 15.32,
+      "text": "马匪呢",
+      "words": [
+        {
+          "word": "马",
+          "start": 14.784,
+          "end": 14.88
+        },
+        {
+          "word": "匪",
+          "start": 14.88,
+          "end": 15.22
+        },
+        {
+          "word": "呢",
+          "start": 15.22,
+          "end": 15.32
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 15.32,
+      "end": 16.64,
+      "text": "胡婉",
+      "words": [
+        {
+          "word": "胡",
+          "start": 15.32,
+          "end": 15.9
+        },
+        {
+          "word": "婉",
+          "start": 15.9,
+          "end": 16.64
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 16.864,
+      "end": 17.92,
+      "text": "就是马匪",
+      "words": [
+        {
+          "word": "就是",
+          "start": 16.864,
+          "end": 16.98
+        },
+        {
+          "word": "马",
+          "start": 16.98,
+          "end": 17.5
+        },
+        {
+          "word": "匪",
+          "start": 17.5,
+          "end": 17.92
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 17.92,
+      "end": 19.2,
+      "text": "马匪",
+      "words": [
+        {
+          "word": "马",
+          "start": 17.92,
+          "end": 18.26
+        },
+        {
+          "word": "匪",
+          "start": 18.26,
+          "end": 19.2
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 19.616,
+      "end": 21.152,
+      "text": "就是胡婉",
+      "words": [
+        {
+          "word": "就是",
+          "start": 19.616,
+          "end": 19.76
+        },
+        {
+          "word": "胡",
+          "start": 19.76,
+          "end": 20.14
+        },
+        {
+          "word": "婉",
+          "start": 20.14,
+          "end": 21.152
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 21.184,
+      "end": 22.72,
+      "text": "把县长夫人",
+      "words": [
+        {
+          "word": "把",
+          "start": 21.184,
+          "end": 21.32
+        },
+        {
+          "word": "县",
+          "start": 21.376,
+          "end": 21.86
+        },
+        {
+          "word": "长",
+          "start": 21.86,
+          "end": 22.1
+        },
+        {
+          "word": "夫",
+          "start": 22.1,
+          "end": 22.28
+        },
+        {
+          "word": "人",
+          "start": 22.28,
+          "end": 22.72
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 23.232,
+      "end": 24.42,
+      "text": "绑架豪绅",
+      "words": [
+        {
+          "word": "绑",
+          "start": 23.232,
+          "end": 23.32
+        },
+        {
+          "word": "架",
+          "start": 23.32,
+          "end": 23.7
+        },
+        {
+          "word": "豪",
+          "start": 23.7,
+          "end": 24.12
+        },
+        {
+          "word": "绅",
+          "start": 24.12,
+          "end": 24.42
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 24.42,
+      "end": 27.264,
+      "text": "祸害河城百姓",
+      "words": [
+        {
+          "word": "祸",
+          "start": 24.42,
+          "end": 25.22
+        },
+        {
+          "word": "害",
+          "start": 25.22,
+          "end": 25.56
+        },
+        {
+          "word": "河",
+          "start": 25.56,
+          "end": 25.92
+        },
+        {
+          "word": "城",
+          "start": 25.92,
+          "end": 26.14
+        },
+        {
+          "word": "百",
+          "start": 26.14,
+          "end": 26.36
+        },
+        {
+          "word": "姓",
+          "start": 26.36,
+          "end": 27.264
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 27.456,
+      "end": 29.26,
+      "text": "就是你皇老爷家的",
+      "words": [
+        {
+          "word": "就是",
+          "start": 27.456,
+          "end": 27.7
+        },
+        {
+          "word": "你",
+          "start": 27.7,
+          "end": 28.04
+        },
+        {
+          "word": "皇",
+          "start": 28.04,
+          "end": 28.3
+        },
+        {
+          "word": "老",
+          "start": 28.3,
+          "end": 28.64
+        },
+        {
+          "word": "爷",
+          "start": 28.64,
+          "end": 28.82
+        },
+        {
+          "word": "家",
+          "start": 28.82,
+          "end": 28.98
+        },
+        {
+          "word": "的",
+          "start": 28.98,
+          "end": 29.26
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 29.26,
+      "end": 30.432,
+      "text": "胡婉",
+      "words": [
+        {
+          "word": "胡",
+          "start": 29.26,
+          "end": 29.92
+        },
+        {
+          "word": "婉",
+          "start": 29.92,
+          "end": 30.432
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 30.528,
+      "end": 33.48,
+      "text": "我说你为什么不出钱剿匪",
+      "words": [
+        {
+          "word": "我",
+          "start": 30.528,
+          "end": 30.9
+        },
+        {
+          "word": "说",
+          "start": 31.04,
+          "end": 31.42
+        },
+        {
+          "word": "你",
+          "start": 31.42,
+          "end": 31.72
+        },
+        {
+          "word": "为什么",
+          "start": 31.72,
+          "end": 32.3
+        },
+        {
+          "word": "不",
+          "start": 32.3,
+          "end": 32.56
+        },
+        {
+          "word": "出",
+          "start": 32.56,
+          "end": 32.76
+        },
+        {
+          "word": "钱",
+          "start": 32.76,
+          "end": 32.96
+        },
+        {
+          "word": "剿",
+          "start": 32.96,
+          "end": 33.24
+        },
+        {
+          "word": "匪",
+          "start": 33.24,
+          "end": 33.48
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 33.48,
+      "end": 36.768,
+      "text": "原来你是贼喊捉贼呀",
+      "words": [
+        {
+          "word": "原",
+          "start": 33.48,
+          "end": 33.9
+        },
+        {
+          "word": "来",
+          "start": 34.048,
+          "end": 34.32
+        },
+        {
+          "word": "你是",
+          "start": 34.32,
+          "end": 34.6
+        },
+        {
+          "word": "贼",
+          "start": 34.6,
+          "end": 35.14
+        },
+        {
+          "word": "喊",
+          "start": 35.14,
+          "end": 35.54
+        },
+        {
+          "word": "捉",
+          "start": 35.54,
+          "end": 35.9
+        },
+        {
+          "word": "贼",
+          "start": 35.9,
+          "end": 36.28
+        },
+        {
+          "word": "呀",
+          "start": 36.28,
+          "end": 36.768
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 37.376,
+      "end": 39.488,
+      "text": "你拿枪指着我",
+      "words": [
+        {
+          "word": "你",
+          "start": 37.376,
+          "end": 38.5
+        },
+        {
+          "word": "拿",
+          "start": 38.528,
+          "end": 38.66
+        },
+        {
+          "word": "枪",
+          "start": 38.66,
+          "end": 38.92
+        },
+        {
+          "word": "指",
+          "start": 38.92,
+          "end": 39.06
+        },
+        {
+          "word": "着",
+          "start": 39.06,
+          "end": 39.18
+        },
+        {
+          "word": "我",
+          "start": 39.18,
+          "end": 39.488
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 39.584,
+      "end": 41.92,
+      "text": "你拿枪指着我",
+      "words": [
+        {
+          "word": "你",
+          "start": 39.584,
+          "end": 40.72
+        },
+        {
+          "word": "拿",
+          "start": 40.896,
+          "end": 41.06
+        },
+        {
+          "word": "枪",
+          "start": 41.06,
+          "end": 41.32
+        },
+        {
+          "word": "指",
+          "start": 41.32,
+          "end": 41.46
+        },
+        {
+          "word": "着",
+          "start": 41.46,
+          "end": 41.64
+        },
+        {
+          "word": "我",
+          "start": 41.64,
+          "end": 41.92
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 43.072,
+      "end": 45.312,
+      "text": "你想跟我火辟",
+      "words": [
+        {
+          "word": "你想",
+          "start": 43.072,
+          "end": 43.86
+        },
+        {
+          "word": "跟我",
+          "start": 43.86,
+          "end": 44.36
+        },
+        {
+          "word": "火",
+          "start": 44.36,
+          "end": 44.76
+        },
+        {
+          "word": "辟",
+          "start": 44.76,
+          "end": 45.312
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 45.408,
+      "end": 51.424,
+      "text": "你们看到了没有",
+      "words": [
+        {
+          "word": "你们",
+          "start": 45.408,
+          "end": 50.16
+        },
+        {
+          "word": "看到",
+          "start": 50.336,
+          "end": 50.72
+        },
+        {
+          "word": "了",
+          "start": 50.72,
+          "end": 50.92
+        },
+        {
+          "word": "没有",
+          "start": 50.92,
+          "end": 51.424
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 51.712,
+      "end": 53.52,
+      "text": "这就是当马匪的下场",
+      "words": [
+        {
+          "word": "这",
+          "start": 51.712,
+          "end": 51.72
+        },
+        {
+          "word": "就是",
+          "start": 51.72,
+          "end": 52.02
+        },
+        {
+          "word": "当",
+          "start": 52.02,
+          "end": 52.3
+        },
+        {
+          "word": "马",
+          "start": 52.3,
+          "end": 52.58
+        },
+        {
+          "word": "匪",
+          "start": 52.58,
+          "end": 52.82
+        },
+        {
+          "word": "的",
+          "start": 52.82,
+          "end": 52.94
+        },
+        {
+          "word": "下",
+          "start": 52.94,
+          "end": 53.14
+        },
+        {
+          "word": "场",
+          "start": 53.14,
+          "end": 53.52
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 53.52,
+      "end": 56.608,
+      "text": "就算是我亲爹也得死",
+      "words": [
+        {
+          "word": "就",
+          "start": 53.52,
+          "end": 54.16
+        },
+        {
+          "word": "算",
+          "start": 54.176,
+          "end": 54.4
+        },
+        {
+          "word": "是我",
+          "start": 54.4,
+          "end": 54.6
+        },
+        {
+          "word": "亲",
+          "start": 54.6,
+          "end": 54.94
+        },
+        {
+          "word": "爹",
+          "start": 54.94,
+          "end": 55.32
+        },
+        {
+          "word": "也",
+          "start": 55.32,
+          "end": 55.58
+        },
+        {
+          "word": "得",
+          "start": 55.58,
+          "end": 55.84
+        },
+        {
+          "word": "死",
+          "start": 55.84,
+          "end": 56.608
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 57.152,
+      "end": 58.368,
+      "text": "死有余辜",
+      "words": [
+        {
+          "word": "死",
+          "start": 57.152,
+          "end": 57.2
+        },
+        {
+          "word": "有",
+          "start": 57.2,
+          "end": 57.52
+        },
+        {
+          "word": "余",
+          "start": 57.52,
+          "end": 57.74
+        },
+        {
+          "word": "辜",
+          "start": 57.74,
+          "end": 58.368
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 58.528,
+      "end": 59.72,
+      "text": "走",
+      "words": [
+        {
+          "word": "走",
+          "start": 58.528,
+          "end": 59.72
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 59.744,
+      "end": 60.02,
+      "text": "遭案",
+      "words": [
+        {
+          "word": "遭",
+          "start": 59.744,
+          "end": 59.98
+        },
+        {
+          "word": "案",
+          "start": 59.98,
+          "end": 60.02
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 64.5,
+      "end": 65.86,
+      "text": "马匪胡案",
+      "words": [
+        {
+          "word": "马",
+          "start": 64.5,
+          "end": 65.02
+        },
+        {
+          "word": "匪",
+          "start": 65.024,
+          "end": 65.36
+        },
+        {
+          "word": "胡",
+          "start": 65.36,
+          "end": 65.58
+        },
+        {
+          "word": "案",
+          "start": 65.58,
+          "end": 65.86
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 65.86,
+      "end": 68.576,
+      "text": "又让黄老爷枪毙了五回",
+      "words": [
+        {
+          "word": "又",
+          "start": 65.86,
+          "end": 66.3
+        },
+        {
+          "word": "让",
+          "start": 66.304,
+          "end": 66.5
+        },
+        {
+          "word": "黄",
+          "start": 66.5,
+          "end": 66.8
+        },
+        {
+          "word": "老",
+          "start": 66.8,
+          "end": 66.96
+        },
+        {
+          "word": "爷",
+          "start": 66.96,
+          "end": 67.22
+        },
+        {
+          "word": "枪",
+          "start": 67.22,
+          "end": 67.68
+        },
+        {
+          "word": "毙",
+          "start": 67.68,
+          "end": 67.9
+        },
+        {
+          "word": "了",
+          "start": 67.9,
+          "end": 68.02
+        },
+        {
+          "word": "五",
+          "start": 68.02,
+          "end": 68.12
+        },
+        {
+          "word": "回",
+          "start": 68.12,
+          "end": 68.576
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 68.8,
+      "end": 69.856,
+      "text": "大义灭亲",
+      "words": [
+        {
+          "word": "大",
+          "start": 68.8,
+          "end": 69.16
+        },
+        {
+          "word": "义",
+          "start": 69.16,
+          "end": 69.32
+        },
+        {
+          "word": "灭",
+          "start": 69.32,
+          "end": 69.5
+        },
+        {
+          "word": "亲",
+          "start": 69.5,
+          "end": 69.856
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 70.368,
+      "end": 71.648,
+      "text": "杀人灭口",
+      "words": [
+        {
+          "word": "杀",
+          "start": 70.368,
+          "end": 70.56
+        },
+        {
+          "word": "人",
+          "start": 70.56,
+          "end": 70.78
+        },
+        {
+          "word": "灭",
+          "start": 70.78,
+          "end": 71.02
+        },
+        {
+          "word": "口",
+          "start": 71.02,
+          "end": 71.648
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 72.128,
+      "end": 73.18,
+      "text": "杀人灭口",
+      "words": [
+        {
+          "word": "杀",
+          "start": 72.128,
+          "end": 72.32
+        },
+        {
+          "word": "人",
+          "start": 72.32,
+          "end": 72.58
+        },
+        {
+          "word": "灭",
+          "start": 72.58,
+          "end": 72.84
+        },
+        {
+          "word": "口",
+          "start": 72.84,
+          "end": 73.18
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 73.18,
+      "end": 75.456,
+      "text": "你就是马匪的头子",
+      "words": [
+        {
+          "word": "你",
+          "start": 73.18,
+          "end": 73.68
+        },
+        {
+          "word": "就是",
+          "start": 73.68,
+          "end": 74.1
+        },
+        {
+          "word": "马",
+          "start": 74.1,
+          "end": 74.38
+        },
+        {
+          "word": "匪",
+          "start": 74.38,
+          "end": 74.78
+        },
+        {
+          "word": "的",
+          "start": 74.78,
+          "end": 74.88
+        },
+        {
+          "word": "头",
+          "start": 74.88,
+          "end": 75.08
+        },
+        {
+          "word": "子",
+          "start": 75.08,
+          "end": 75.456
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 75.808,
+      "end": 76.416,
+      "text": "张麻子",
+      "words": [
+        {
+          "word": "张",
+          "start": 75.808,
+          "end": 75.86
+        },
+        {
+          "word": "麻",
+          "start": 75.86,
+          "end": 76.1
+        },
+        {
+          "word": "子",
+          "start": 76.1,
+          "end": 76.416
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 76.96,
+      "end": 78.912,
+      "text": "要是大义灭亲",
+      "words": [
+        {
+          "word": "要",
+          "start": 76.96,
+          "end": 77.38
+        },
+        {
+          "word": "是",
+          "start": 77.38,
+          "end": 77.66
+        },
+        {
+          "word": "大",
+          "start": 77.664,
+          "end": 77.86
+        },
+        {
+          "word": "义",
+          "start": 77.86,
+          "end": 78.08
+        },
+        {
+          "word": "灭",
+          "start": 78.08,
+          "end": 78.32
+        },
+        {
+          "word": "亲",
+          "start": 78.32,
+          "end": 78.912
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 79.328,
+      "end": 80.48,
+      "text": "那好吧",
+      "words": [
+        {
+          "word": "那",
+          "start": 79.328,
+          "end": 79.48
+        },
+        {
+          "word": "好吧",
+          "start": 79.48,
+          "end": 80.48
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 80.64,
+      "end": 82.272,
+      "text": "你出钱 我交费",
+      "words": [
+        {
+          "word": "你",
+          "start": 80.64,
+          "end": 81.04
+        },
+        {
+          "word": "出",
+          "start": 81.088,
+          "end": 81.24
+        },
+        {
+          "word": "钱",
+          "start": 81.24,
+          "end": 81.42
+        },
+        {
+          "word": "我",
+          "start": 81.42,
+          "end": 81.84
+        },
+        {
+          "word": "交",
+          "start": 81.856,
+          "end": 82.06
+        },
+        {
+          "word": "费",
+          "start": 82.06,
+          "end": 82.272
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 82.816,
+      "end": 83.392,
+      "text": "好啊",
+      "words": [
+        {
+          "word": "好",
+          "start": 82.816,
+          "end": 82.86
+        },
+        {
+          "word": "啊",
+          "start": 82.86,
+          "end": 83.392
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 84.544,
+      "end": 85.28,
+      "text": "三天之后",
+      "words": [
+        {
+          "word": "三",
+          "start": 84.544,
+          "end": 84.56
+        },
+        {
+          "word": "天",
+          "start": 84.56,
+          "end": 84.82
+        },
+        {
+          "word": "之",
+          "start": 84.82,
+          "end": 84.9
+        },
+        {
+          "word": "后",
+          "start": 84.9,
+          "end": 85.28
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 86.176,
+      "end": 87.392,
+      "text": "一定给县长",
+      "words": [
+        {
+          "word": "一定",
+          "start": 86.176,
+          "end": 86.32
+        },
+        {
+          "word": "给",
+          "start": 86.32,
+          "end": 86.72
+        },
+        {
+          "word": "县",
+          "start": 86.72,
+          "end": 87.06
+        },
+        {
+          "word": "长",
+          "start": 87.06,
+          "end": 87.392
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 88.288,
+      "end": 88.896,
+      "text": "你给惊喜",
+      "words": [
+        {
+          "word": "你",
+          "start": 88.288,
+          "end": 88.3
+        },
+        {
+          "word": "给",
+          "start": 88.3,
+          "end": 88.42
+        },
+        {
+          "word": "惊",
+          "start": 88.42,
+          "end": 88.64
+        },
+        {
+          "word": "喜",
+          "start": 88.64,
+          "end": 88.896
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 89.792,
+      "end": 90.176,
+      "text": "汤师爷",
+      "words": [
+        {
+          "word": "汤",
+          "start": 89.792,
+          "end": 89.84
+        },
+        {
+          "word": "师",
+          "start": 89.84,
+          "end": 89.94
+        },
+        {
+          "word": "爷",
+          "start": 89.94,
+          "end": 90.176
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 91.008,
+      "end": 92.288,
+      "text": "他是胡安的恩人",
+      "words": [
+        {
+          "word": "他是",
+          "start": 91.008,
+          "end": 91.18
+        },
+        {
+          "word": "胡",
+          "start": 91.18,
+          "end": 91.62
+        },
+        {
+          "word": "安",
+          "start": 91.648,
+          "end": 91.82
+        },
+        {
+          "word": "的",
+          "start": 91.82,
+          "end": 91.94
+        },
+        {
+          "word": "恩",
+          "start": 91.94,
+          "end": 92.06
+        },
+        {
+          "word": "人",
+          "start": 92.06,
+          "end": 92.288
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 93.024,
+      "end": 94.52,
+      "text": "现在又成了你的恩人",
+      "words": [
+        {
+          "word": "现在",
+          "start": 93.024,
+          "end": 93.14
+        },
+        {
+          "word": "又",
+          "start": 93.14,
+          "end": 93.46
+        },
+        {
+          "word": "成",
+          "start": 93.46,
+          "end": 93.62
+        },
+        {
+          "word": "了",
+          "start": 93.62,
+          "end": 93.84
+        },
+        {
+          "word": "你的",
+          "start": 93.84,
+          "end": 94.06
+        },
+        {
+          "word": "恩",
+          "start": 94.06,
+          "end": 94.32
+        },
+        {
+          "word": "人",
+          "start": 94.32,
+          "end": 94.52
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 95.42,
+      "end": 96.288,
+      "text": "你给翻译翻译",
+      "words": [
+        {
+          "word": "你",
+          "start": 95.42,
+          "end": 95.52
+        },
+        {
+          "word": "给",
+          "start": 95.52,
+          "end": 95.68
+        },
+        {
+          "word": "翻",
+          "start": 95.68,
+          "end": 95.86
+        },
+        {
+          "word": "译",
+          "start": 95.86,
+          "end": 96.0
+        },
+        {
+          "word": "翻",
+          "start": 96.0,
+          "end": 96.1
+        },
+        {
+          "word": "译",
+          "start": 96.1,
+          "end": 96.288
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 97.568,
+      "end": 98.4,
+      "text": "什么叫惊喜",
+      "words": [
+        {
+          "word": "什么",
+          "start": 97.568,
+          "end": 97.58
+        },
+        {
+          "word": "叫",
+          "start": 97.58,
+          "end": 97.86
+        },
+        {
+          "word": "惊",
+          "start": 97.86,
+          "end": 98.1
+        },
+        {
+          "word": "喜",
+          "start": 98.1,
+          "end": 98.4
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 98.976,
+      "end": 101.6,
+      "text": "翻译翻译 什么叫惊喜",
+      "words": [
+        {
+          "word": "翻",
+          "start": 98.976,
+          "end": 99.5
+        },
+        {
+          "word": "译",
+          "start": 99.584,
+          "end": 99.84
+        },
+        {
+          "word": "翻",
+          "start": 99.84,
+          "end": 100.02
+        },
+        {
+          "word": "译",
+          "start": 100.02,
+          "end": 100.26
+        },
+        {
+          "word": "什么",
+          "start": 100.32,
+          "end": 100.5
+        },
+        {
+          "word": "叫",
+          "start": 100.5,
+          "end": 100.86
+        },
+        {
+          "word": "惊",
+          "start": 100.86,
+          "end": 101.26
+        },
+        {
+          "word": "喜",
+          "start": 101.26,
+          "end": 101.6
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 101.888,
+      "end": 102.7,
+      "text": "这还用翻译",
+      "words": [
+        {
+          "word": "这",
+          "start": 101.888,
+          "end": 101.9
+        },
+        {
+          "word": "还",
+          "start": 101.9,
+          "end": 102.1
+        },
+        {
+          "word": "用",
+          "start": 102.1,
+          "end": 102.28
+        },
+        {
+          "word": "翻",
+          "start": 102.28,
+          "end": 102.48
+        },
+        {
+          "word": "译",
+          "start": 102.48,
+          "end": 102.7
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 102.7,
+      "end": 104.34,
+      "text": "我让你翻译给我听",
+      "words": [
+        {
+          "word": "我",
+          "start": 102.7,
+          "end": 102.96
+        },
+        {
+          "word": "让",
+          "start": 102.96,
+          "end": 103.32
+        },
+        {
+          "word": "你",
+          "start": 103.32,
+          "end": 103.36
+        },
+        {
+          "word": "翻",
+          "start": 103.36,
+          "end": 103.62
+        },
+        {
+          "word": "译",
+          "start": 103.62,
+          "end": 103.84
+        },
+        {
+          "word": "给我",
+          "start": 103.84,
+          "end": 104.02
+        },
+        {
+          "word": "听",
+          "start": 104.02,
+          "end": 104.34
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 104.34,
+      "end": 106.26,
+      "text": "什么叫惊喜",
+      "words": [
+        {
+          "word": "什么",
+          "start": 104.34,
+          "end": 104.8
+        },
+        {
+          "word": "叫",
+          "start": 104.8,
+          "end": 105.24
+        },
+        {
+          "word": "惊",
+          "start": 105.24,
+          "end": 105.86
+        },
+        {
+          "word": "喜",
+          "start": 105.86,
+          "end": 106.26
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 106.26,
+      "end": 107.84,
+      "text": "不用翻译 就是惊喜啊",
+      "words": [
+        {
+          "word": "不用",
+          "start": 106.26,
+          "end": 106.64
+        },
+        {
+          "word": "翻",
+          "start": 106.64,
+          "end": 107.06
+        },
+        {
+          "word": "译",
+          "start": 107.06,
+          "end": 107.32
+        },
+        {
+          "word": "就是",
+          "start": 107.32,
+          "end": 107.48
+        },
+        {
+          "word": "惊",
+          "start": 107.48,
+          "end": 107.82
+        },
+        {
+          "word": "喜",
+          "start": 107.82,
+          "end": 107.82
+        },
+        {
+          "word": "啊",
+          "start": 107.82,
+          "end": 107.84
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 107.84,
+      "end": 108.62,
+      "text": "难道你听不懂",
+      "words": [
+        {
+          "word": "难",
+          "start": 107.84,
+          "end": 107.86
+        },
+        {
+          "word": "道",
+          "start": 107.86,
+          "end": 107.98
+        },
+        {
+          "word": "你",
+          "start": 107.98,
+          "end": 108.18
+        },
+        {
+          "word": "听",
+          "start": 108.18,
+          "end": 108.36
+        },
+        {
+          "word": "不",
+          "start": 108.36,
+          "end": 108.48
+        },
+        {
+          "word": "懂",
+          "start": 108.48,
+          "end": 108.62
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 108.62,
+      "end": 108.94,
+      "text": "什么叫惊喜",
+      "words": [
+        {
+          "word": "什么",
+          "start": 108.62,
+          "end": 108.76
+        },
+        {
+          "word": "叫",
+          "start": 108.76,
+          "end": 108.92
+        },
+        {
+          "word": "惊",
+          "start": 108.92,
+          "end": 108.94
+        },
+        {
+          "word": "喜",
+          "start": 108.94,
+          "end": 108.94
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 108.94,
+      "end": 110.32,
+      "text": "我就想让你翻译翻译",
+      "words": [
+        {
+          "word": "我就",
+          "start": 108.94,
+          "end": 109.0
+        },
+        {
+          "word": "想",
+          "start": 109.0,
+          "end": 109.3
+        },
+        {
+          "word": "让",
+          "start": 109.3,
+          "end": 109.48
+        },
+        {
+          "word": "你",
+          "start": 109.48,
+          "end": 109.64
+        },
+        {
+          "word": "翻",
+          "start": 109.64,
+          "end": 109.8
+        },
+        {
+          "word": "译",
+          "start": 109.8,
+          "end": 109.98
+        },
+        {
+          "word": "翻",
+          "start": 109.98,
+          "end": 110.14
+        },
+        {
+          "word": "译",
+          "start": 110.14,
+          "end": 110.32
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 110.32,
+      "end": 112.02,
+      "text": "什么叫惊喜",
+      "words": [
+        {
+          "word": "什么",
+          "start": 110.32,
+          "end": 110.64
+        },
+        {
+          "word": "叫",
+          "start": 111.18,
+          "end": 111.28
+        },
+        {
+          "word": "惊",
+          "start": 111.28,
+          "end": 111.7
+        },
+        {
+          "word": "喜",
+          "start": 111.7,
+          "end": 112.02
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 112.02,
+      "end": 112.72,
+      "text": "惊喜",
+      "words": [
+        {
+          "word": "惊",
+          "start": 112.02,
+          "end": 112.34
+        },
+        {
+          "word": "喜",
+          "start": 112.34,
+          "end": 112.72
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 112.72,
+      "end": 114.336,
+      "text": "翻译出来给我听",
+      "words": [
+        {
+          "word": "翻",
+          "start": 112.72,
+          "end": 112.96
+        },
+        {
+          "word": "译",
+          "start": 112.96,
+          "end": 113.22
+        },
+        {
+          "word": "出来",
+          "start": 113.22,
+          "end": 113.42
+        },
+        {
+          "word": "给我",
+          "start": 113.42,
+          "end": 113.7
+        },
+        {
+          "word": "听",
+          "start": 113.7,
+          "end": 114.336
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 114.528,
+      "end": 116.84,
+      "text": "什么他妈的叫惊喜",
+      "words": [
+        {
+          "word": "什么",
+          "start": 114.528,
+          "end": 114.88
+        },
+        {
+          "word": "他",
+          "start": 114.88,
+          "end": 115.14
+        },
+        {
+          "word": "妈",
+          "start": 115.14,
+          "end": 115.42
+        },
+        {
+          "word": "的",
+          "start": 115.42,
+          "end": 115.62
+        },
+        {
+          "word": "叫",
+          "start": 115.62,
+          "end": 116.1
+        },
+        {
+          "word": "惊",
+          "start": 116.1,
+          "end": 116.5
+        },
+        {
+          "word": "喜",
+          "start": 116.5,
+          "end": 116.84
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 116.84,
+      "end": 117.2,
+      "text": "什么",
+      "words": [
+        {
+          "word": "什么",
+          "start": 116.84,
+          "end": 117.2
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 117.2,
+      "end": 117.52,
+      "text": "你们什么",
+      "words": [
+        {
+          "word": "你们",
+          "start": 117.2,
+          "end": 117.2
+        },
+        {
+          "word": "什么",
+          "start": 117.2,
+          "end": 117.52
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 117.52,
+      "end": 119.0,
+      "text": "他妈的叫",
+      "words": [
+        {
+          "word": "他",
+          "start": 117.52,
+          "end": 118.26
+        },
+        {
+          "word": "妈",
+          "start": 118.272,
+          "end": 118.52
+        },
+        {
+          "word": "的",
+          "start": 118.52,
+          "end": 118.68
+        },
+        {
+          "word": "叫",
+          "start": 118.68,
+          "end": 119.0
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 119.0,
+      "end": 120.192,
+      "text": "他妈的",
+      "words": [
+        {
+          "word": "他",
+          "start": 119.0,
+          "end": 119.48
+        },
+        {
+          "word": "妈",
+          "start": 119.52,
+          "end": 119.74
+        },
+        {
+          "word": "的",
+          "start": 119.74,
+          "end": 120.192
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 120.352,
+      "end": 121.12,
+      "text": "惊喜",
+      "words": [
+        {
+          "word": "惊",
+          "start": 120.352,
+          "end": 120.58
+        },
+        {
+          "word": "喜",
+          "start": 120.58,
+          "end": 121.12
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 121.152,
+      "end": 123.264,
+      "text": "什么他妈的叫惊喜啊",
+      "words": [
+        {
+          "word": "什么",
+          "start": 121.152,
+          "end": 121.4
+        },
+        {
+          "word": "他",
+          "start": 121.4,
+          "end": 121.74
+        },
+        {
+          "word": "妈",
+          "start": 121.74,
+          "end": 122.0
+        },
+        {
+          "word": "的",
+          "start": 122.0,
+          "end": 122.12
+        },
+        {
+          "word": "叫",
+          "start": 122.12,
+          "end": 122.3
+        },
+        {
+          "word": "惊",
+          "start": 122.3,
+          "end": 122.56
+        },
+        {
+          "word": "喜",
+          "start": 122.56,
+          "end": 122.78
+        },
+        {
+          "word": "啊",
+          "start": 122.78,
+          "end": 123.264
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 123.392,
+      "end": 124.78,
+      "text": "惊喜就是三天之后",
+      "words": [
+        {
+          "word": "惊",
+          "start": 123.392,
+          "end": 123.54
+        },
+        {
+          "word": "喜",
+          "start": 123.54,
+          "end": 123.7
+        },
+        {
+          "word": "就是",
+          "start": 123.7,
+          "end": 123.88
+        },
+        {
+          "word": "三",
+          "start": 123.88,
+          "end": 124.14
+        },
+        {
+          "word": "天",
+          "start": 124.14,
+          "end": 124.48
+        },
+        {
+          "word": "之",
+          "start": 124.48,
+          "end": 124.58
+        },
+        {
+          "word": "后",
+          "start": 124.58,
+          "end": 124.78
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 124.78,
+      "end": 126.16,
+      "text": "我出一百八十万",
+      "words": [
+        {
+          "word": "我",
+          "start": 124.78,
+          "end": 124.96
+        },
+        {
+          "word": "出",
+          "start": 124.96,
+          "end": 125.18
+        },
+        {
+          "word": "一",
+          "start": 125.18,
+          "end": 125.3
+        },
+        {
+          "word": "百",
+          "start": 125.3,
+          "end": 125.62
+        },
+        {
+          "word": "八",
+          "start": 125.62,
+          "end": 125.84
+        },
+        {
+          "word": "十",
+          "start": 125.84,
+          "end": 125.96
+        },
+        {
+          "word": "万",
+          "start": 125.96,
+          "end": 126.16
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 126.16,
+      "end": 128.0,
+      "text": "给你们出城剿匪",
+      "words": [
+        {
+          "word": "给",
+          "start": 126.16,
+          "end": 126.62
+        },
+        {
+          "word": "你们",
+          "start": 126.624,
+          "end": 126.86
+        },
+        {
+          "word": "出",
+          "start": 126.86,
+          "end": 127.14
+        },
+        {
+          "word": "城",
+          "start": 127.14,
+          "end": 127.42
+        },
+        {
+          "word": "剿",
+          "start": 127.42,
+          "end": 127.58
+        },
+        {
+          "word": "匪",
+          "start": 127.58,
+          "end": 128.0
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 128.416,
+      "end": 129.28,
+      "text": "接上我的腿",
+      "words": [
+        {
+          "word": "接",
+          "start": 128.416,
+          "end": 128.5
+        },
+        {
+          "word": "上",
+          "start": 128.5,
+          "end": 128.68
+        },
+        {
+          "word": "我的",
+          "start": 128.68,
+          "end": 128.84
+        },
+        {
+          "word": "腿",
+          "start": 128.84,
+          "end": 129.28
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 129.568,
+      "end": 130.12,
+      "text": "明白了吗",
+      "words": [
+        {
+          "word": "明白",
+          "start": 129.568,
+          "end": 129.84
+        },
+        {
+          "word": "了",
+          "start": 129.84,
+          "end": 130.02
+        },
+        {
+          "word": "吗",
+          "start": 130.02,
+          "end": 130.12
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 130.12,
+      "end": 131.66,
+      "text": "这就是惊喜啊",
+      "words": [
+        {
+          "word": "这",
+          "start": 130.12,
+          "end": 130.82
+        },
+        {
+          "word": "就是",
+          "start": 130.848,
+          "end": 131.04
+        },
+        {
+          "word": "惊",
+          "start": 131.04,
+          "end": 131.26
+        },
+        {
+          "word": "喜",
+          "start": 131.26,
+          "end": 131.48
+        },
+        {
+          "word": "啊",
+          "start": 131.48,
+          "end": 131.66
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 131.66,
+      "end": 132.8,
+      "text": "翻一翻",
+      "words": [
+        {
+          "word": "翻",
+          "start": 131.66,
+          "end": 132.48
+        },
+        {
+          "word": "一",
+          "start": 132.512,
+          "end": 132.62
+        },
+        {
+          "word": "翻",
+          "start": 132.62,
+          "end": 132.8
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 132.82,
+      "end": 138.04,
+      "text": "翻一翻",
+      "words": [
+        {
+          "word": "翻",
+          "start": 132.82,
+          "end": 133.3
+        },
+        {
+          "word": "一",
+          "start": 135.424,
+          "end": 137.84
+        },
+        {
+          "word": "翻",
+          "start": 137.84,
+          "end": 138.04
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 138.04,
+      "end": 139.96,
+      "text": "惊喜就是三天之后",
+      "words": [
+        {
+          "word": "惊",
+          "start": 138.04,
+          "end": 138.26
+        },
+        {
+          "word": "喜",
+          "start": 138.26,
+          "end": 138.56
+        },
+        {
+          "word": "就是",
+          "start": 138.56,
+          "end": 138.84
+        },
+        {
+          "word": "三",
+          "start": 138.84,
+          "end": 139.16
+        },
+        {
+          "word": "天",
+          "start": 139.16,
+          "end": 139.48
+        },
+        {
+          "word": "之",
+          "start": 139.48,
+          "end": 139.7
+        },
+        {
+          "word": "后",
+          "start": 139.7,
+          "end": 139.96
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 139.96,
+      "end": 142.208,
+      "text": "给你一百八十万两银子",
+      "words": [
+        {
+          "word": "给",
+          "start": 139.96,
+          "end": 140.24
+        },
+        {
+          "word": "你",
+          "start": 140.24,
+          "end": 140.42
+        },
+        {
+          "word": "一",
+          "start": 140.42,
+          "end": 140.58
+        },
+        {
+          "word": "百",
+          "start": 140.58,
+          "end": 140.82
+        },
+        {
+          "word": "八",
+          "start": 140.82,
+          "end": 141.06
+        },
+        {
+          "word": "十",
+          "start": 141.06,
+          "end": 141.2
+        },
+        {
+          "word": "万",
+          "start": 141.2,
+          "end": 141.38
+        },
+        {
+          "word": "两",
+          "start": 141.38,
+          "end": 141.48
+        },
+        {
+          "word": "银",
+          "start": 141.48,
+          "end": 141.74
+        },
+        {
+          "word": "子",
+          "start": 141.74,
+          "end": 142.208
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 142.368,
+      "end": 143.616,
+      "text": "出城剿匪",
+      "words": [
+        {
+          "word": "出",
+          "start": 142.368,
+          "end": 142.38
+        },
+        {
+          "word": "城",
+          "start": 142.38,
+          "end": 142.76
+        },
+        {
+          "word": "剿",
+          "start": 142.76,
+          "end": 143.06
+        },
+        {
+          "word": "匪",
+          "start": 143.06,
+          "end": 143.616
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 143.872,
+      "end": 144.68,
+      "text": "接上他的腿",
+      "words": [
+        {
+          "word": "接",
+          "start": 143.872,
+          "end": 143.92
+        },
+        {
+          "word": "上",
+          "start": 143.92,
+          "end": 144.16
+        },
+        {
+          "word": "他的",
+          "start": 144.16,
+          "end": 144.3
+        },
+        {
+          "word": "腿",
+          "start": 144.3,
+          "end": 144.68
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 144.68,
+      "end": 144.96,
+      "text": "谁",
+      "words": [
+        {
+          "word": "谁",
+          "start": 144.68,
+          "end": 144.96
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 146.112,
+      "end": 148.224,
+      "text": "大哥 这他们是惊喜啊",
+      "words": [
+        {
+          "word": "大哥",
+          "start": 146.112,
+          "end": 146.88
+        },
+        {
+          "word": "这",
+          "start": 147.14,
+          "end": 147.24
+        },
+        {
+          "word": "他们",
+          "start": 147.24,
+          "end": 147.52
+        },
+        {
+          "word": "是",
+          "start": 147.52,
+          "end": 147.64
+        },
+        {
+          "word": "惊",
+          "start": 147.64,
+          "end": 147.88
+        },
+        {
+          "word": "喜",
+          "start": 147.88,
+          "end": 148.02
+        },
+        {
+          "word": "啊",
+          "start": 148.02,
+          "end": 148.224
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 148.736,
+      "end": 150.18,
+      "text": "小弟 我愿意等你三天",
+      "words": [
+        {
+          "word": "小",
+          "start": 148.736,
+          "end": 148.9
+        },
+        {
+          "word": "弟",
+          "start": 148.9,
+          "end": 149.06
+        },
+        {
+          "word": "我",
+          "start": 149.06,
+          "end": 149.18
+        },
+        {
+          "word": "愿",
+          "start": 149.18,
+          "end": 149.42
+        },
+        {
+          "word": "意",
+          "start": 149.42,
+          "end": 149.52
+        },
+        {
+          "word": "等",
+          "start": 149.52,
+          "end": 149.68
+        },
+        {
+          "word": "你",
+          "start": 149.68,
+          "end": 149.8
+        },
+        {
+          "word": "三",
+          "start": 149.8,
+          "end": 149.96
+        },
+        {
+          "word": "天",
+          "start": 149.96,
+          "end": 150.18
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 150.18,
+      "end": 150.816,
+      "text": "好",
+      "words": [
+        {
+          "word": "好",
+          "start": 150.18,
+          "end": 150.816
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 154.08,
+      "end": 154.528,
+      "text": "黄老爷",
+      "words": [
+        {
+          "word": "黄",
+          "start": 154.08,
+          "end": 154.1
+        },
+        {
+          "word": "老",
+          "start": 154.1,
+          "end": 154.2
+        },
+        {
+          "word": "爷",
+          "start": 154.2,
+          "end": 154.528
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 155.328,
+      "end": 157.52,
+      "text": "汤师爷是我的挚爱",
+      "words": [
+        {
+          "word": "汤",
+          "start": 155.328,
+          "end": 155.46
+        },
+        {
+          "word": "师",
+          "start": 155.46,
+          "end": 155.6
+        },
+        {
+          "word": "爷",
+          "start": 155.6,
+          "end": 155.82
+        },
+        {
+          "word": "是",
+          "start": 156.36,
+          "end": 156.46
+        },
+        {
+          "word": "我的",
+          "start": 156.46,
+          "end": 156.96
+        },
+        {
+          "word": "挚",
+          "start": 156.96,
+          "end": 157.3
+        },
+        {
+          "word": "爱",
+          "start": 157.3,
+          "end": 157.52
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 157.52,
+      "end": 160.768,
+      "text": "你可不能夺我所爱啊",
+      "words": [
+        {
+          "word": "你",
+          "start": 157.52,
+          "end": 158.36
+        },
+        {
+          "word": "可",
+          "start": 158.4,
+          "end": 158.56
+        },
+        {
+          "word": "不能",
+          "start": 158.56,
+          "end": 159.0
+        },
+        {
+          "word": "夺",
+          "start": 159.0,
+          "end": 159.9
+        },
+        {
+          "word": "我",
+          "start": 159.9,
+          "end": 160.06
+        },
+        {
+          "word": "所",
+          "start": 160.06,
+          "end": 160.24
+        },
+        {
+          "word": "爱",
+          "start": 160.24,
+          "end": 160.56
+        },
+        {
+          "word": "啊",
+          "start": 160.56,
+          "end": 160.768
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 162.144,
+      "end": 163.648,
+      "text": "要人 要人",
+      "words": [
+        {
+          "word": "要",
+          "start": 162.144,
+          "end": 162.2
+        },
+        {
+          "word": "人",
+          "start": 162.2,
+          "end": 162.34
+        },
+        {
+          "word": "要",
+          "start": 163.16,
+          "end": 163.26
+        },
+        {
+          "word": "人",
+          "start": 163.26,
+          "end": 163.648
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 166.336,
+      "end": 168.48,
+      "text": "到底谁是谁",
+      "words": [
+        {
+          "word": "到底",
+          "start": 166.336,
+          "end": 167.94
+        },
+        {
+          "word": "谁",
+          "start": 167.968,
+          "end": 168.26
+        },
+        {
+          "word": "是",
+          "start": 168.26,
+          "end": 168.4
+        },
+        {
+          "word": "谁",
+          "start": 168.4,
+          "end": 168.48
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 168.48,
+      "end": 169.2,
+      "text": "你这个",
+      "words": [
+        {
+          "word": "你",
+          "start": 168.48,
+          "end": 168.9
+        },
+        {
+          "word": "这个",
+          "start": 168.9,
+          "end": 169.2
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    },
+    {
+      "start": 169.2,
+      "end": 170.656,
+      "text": "你这个死",
+      "words": [
+        {
+          "word": "你",
+          "start": 169.2,
+          "end": 169.94
+        },
+        {
+          "word": "这个",
+          "start": 169.984,
+          "end": 170.2
+        },
+        {
+          "word": "死",
+          "start": 170.2,
+          "end": 170.656
+        }
+      ],
+      "asr_backend": "stable-ts-mlx",
+      "timestamp_granularity": "word"
+    }
+  ],
+  "language": "zh",
+  "backend": "stable-ts-mlx"
+}

@@ -137,7 +137,11 @@ def text_processing_section():
                     with st.spinner(t("Processing translation and dubbing...")):
                         try:
                             find_video_files()
-                            if run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file, timing_placeholder):
+                            if st.session_state.processing_mode == t("模式一：ASR语音识别"):
+                                from core.pipeline.job import start_pipeline_job
+                                start_pipeline_job(os.path.abspath(find_video_files()))
+                                st.rerun()
+                            elif run_text_processing_pipeline(st.session_state.processing_mode, uploaded_srt_file, timing_placeholder):
                                 process_audio(timing_placeholder)
                             save_timing("项目总耗时", time.time() - project_start_time)
                             timing_placeholder.empty()
@@ -229,12 +233,16 @@ def run_text_processing_pipeline(processing_mode, uploaded_srt_file, timing_plac
 
 def run_translation_pipeline(perform_splitting: bool, timing_placeholder):
     """运行共享的翻译和字幕生成流程，支持断点续传。"""
+    from core.translation_state import guard_translation_artifacts_for_steps
     total_start_time = time.time()
     with timing_placeholder.container():
         display_timing_statistics_component(key_suffix="text_init")
 
     try:
         # Step 3: Conditional Sentence Splitting
+        guard = guard_translation_artifacts_for_steps(["translate"])
+        if not guard["ok"]:
+            raise RuntimeError("已有译文与当前模型/流程不匹配。请先审阅并归档旧译文，再运行新翻译。")
         if perform_splitting:
             if not is_step_completed("split_meaning"):
                 with st.spinner(t("Splitting long sentences...")):
@@ -438,7 +446,11 @@ def audio_processing_section():
                     save_timing("项目开始时间", project_start_time)
                     # 检查视频文件是否存在
                     find_video_files()
-                    process_audio(timing_placeholder)
+                    if st.session_state.get('processing_mode') == t("模式一：ASR语音识别"):
+                        from core.pipeline.job import start_pipeline_job
+                        start_pipeline_job(os.path.abspath(find_video_files()))
+                    else:
+                        process_audio(timing_placeholder)
                     save_timing("项目总耗时", time.time() - project_start_time)
                     st.rerun()
                 except Exception as e:
@@ -457,6 +469,7 @@ def audio_processing_section():
 
 def process_audio(timing_placeholder):
     """处理配音流程，支持断点续传。"""
+    from core.translation_state import guard_translation_artifacts_for_steps
     total_start_time = time.time()
 
     # 显示初始耗时统计
@@ -465,6 +478,9 @@ def process_audio(timing_placeholder):
 
     try:
         # Step 8.1: Generate audio tasks
+        guard = guard_translation_artifacts_for_steps(["gen_audio_task"])
+        if not guard["ok"]:
+            raise RuntimeError("已有译文与当前模型/流程不匹配。请先审阅并归档旧译文，再开始配音。")
         if not is_step_completed("gen_audio_task"):
             with st.spinner(t("Generate audio tasks")):
                 start_time = time.time()
@@ -554,6 +570,99 @@ def process_audio(timing_placeholder):
 
 
 
+@st.fragment(run_every=5)
+def pipeline_job_progress():
+    from core.pipeline.job import job_status
+    job = job_status()
+    if not job.get('pid'):
+        return
+    # Fallback to current state even if run_id updated during resume
+    state = job.get('state') or {}
+    if job['active']:
+        done, steps = len(state.get('completed_steps', [])), state.get('steps', [])
+        step_name = state.get('current_step') or '环境检查'
+        if step_name == 'translate':
+            step_name = '翻译与逐句配音预检'
+        st.progress(done / max(len(steps), 1), text=f"自动运行：{step_name}（{done}/{len(steps)}）")
+        if state.get('current_step') == 'translate' and job.get('workspace'):
+            audit_file = os.path.join(job['workspace'], 'output/log/duration_candidate_semantic_audit.json')
+            try:
+                with open(audit_file, encoding='utf-8') as handle:
+                    candidates = json.load(handle)['candidates']
+                source_count = len({item['source'] for item in candidates})
+                st.caption(f"逐句预检：已写入 {len(candidates)} 条候选语义校验记录，涉及 {source_count} 种原句。记录数不等于验收通过数。")
+                natural_dir = os.path.join(job['workspace'], 'output/audio/preflight')
+                if os.path.isdir(natural_dir):
+                    count = sum(entry.is_file() and entry.name.endswith('.wav') for entry in os.scandir(natural_dir))
+                    st.caption(f"已生成自然配音文件：{count}；完整回读、时长与字幕检查通过后才交付。")
+                takes_file = os.path.join(job['workspace'], 'output/log/translation_speech_candidate_state.json')
+                if os.path.isfile(takes_file):
+                    with open(takes_file, encoding='utf-8') as handle:
+                        speech = json.load(handle)
+                    latest = {take['unit_id']: take for take in speech.get('attempts', [])
+                              if 'natural_seconds' in take}
+                    accepted = sum(take.get('fits') is True and take.get('content_complete') is True
+                                   for take in latest.values())
+                    awaiting_readback = sum(take.get('content_complete') is None for take in latest.values())
+                    total = len(speech.get('candidates', []))
+                    if latest:
+                        st.caption(f"最近一次逐句结果：{accepted}/{total} 句同时通过内容与时长检查；"
+                                   f"{awaiting_readback} 句待回读，其余句子由流程局部重试。最终验收仍以完整报告为准。")
+            except (OSError, ValueError, KeyError, TypeError):
+                # The producer may be writing its next receipt. A partial
+                # progress read must never interrupt the independent job.
+                pass
+    elif state.get('status') == 'failed' or (not job['active'] and state.get('status') not in {'completed', 'accepted', 'rendered'}):
+        failed_step = state.get('failed_step') or '执行'
+        err_msg = state.get('error') or '任务异常退出'
+        st.error(f"流程在 {failed_step} 停止：{err_msg}")
+        c1, c2 = st.columns([1, 1])
+        with c1:
+            if st.button('从检查点继续', key='resume_pipeline_job'):
+                from core.pipeline.job import start_pipeline_job
+                start_pipeline_job(job['input'], subtitle_only=state.get('subtitle_only', False),
+                                   no_subtitles=state.get('no_subtitles', False), workspace=job.get('workspace'))
+                st.rerun()
+        with c2:
+            if st.button('清除此任务状态 (重新在 output 运行)', key='clear_pipeline_job'):
+                from pathlib import Path
+                job_f = Path('output/pipeline_job.json')
+                if job_f.exists(): job_f.unlink()
+                st.rerun()
+    elif state.get('quality_status') == 'fast_basic_pass':
+        st.success('快速模式成片已生成，完整性检查通过。深度语义、回读及音色审核未执行。')
+    elif state.get('quality_gate_passed') is True:
+        st.success('成片已生成，自动质量检查通过。人工观感验收另行确认。')
+    elif state.get('status') in {'rendered', 'completed', 'accepted'}:
+        st.warning('成片已生成，但质量验收尚未通过，请查看报告。')
+    else:
+        st.warning('任务已停止，请查看运行日志。')
+    if job.get('workspace') and state.get('profile') == 'fast':
+        progress_path = os.path.join(job['workspace'], 'output/log/fast_progress.json')
+        try:
+            with open(progress_path, encoding='utf-8') as handle:
+                progress = json.load(handle)
+            st.caption(f"配音：新生成 {progress.get('generated', 0)}，复用 {progress.get('reused', 0)}，"
+                       f"异常 {progress.get('failed', 0)}；耗时 {progress.get('elapsed_seconds', 0):.1f} 秒")
+            manifest_path = os.path.join(job['workspace'], 'output/log/fast_dubbing_manifest.json')
+            if os.path.isfile(manifest_path):
+                with open(manifest_path, encoding='utf-8') as handle:
+                    manifest = json.load(handle)
+                st.caption(f"画面局部延长：{manifest.get('total_video_extension_seconds', 0):.3f} 秒")
+        except (OSError, ValueError, TypeError):
+            pass
+    if job.get('workspace'):
+        st.caption('任务目录：' + job['workspace'])
+        video = os.path.join(job['workspace'], 'output', 'AI配音.mp4')
+        if not job['active'] and os.path.isfile(video):
+            st.video(video)
+    if job.get('log') and os.path.isfile(job['log']):
+        with st.expander('运行日志', expanded=False):
+            st.code(open(job['log'], encoding='utf-8', errors='replace').read()[-6000:])
+    if not job['active'] and st.button('刷新结果', key='refresh_pipeline_result'):
+        st.rerun()
+
+
 def main():
     logo_col, _ = st.columns([1,1])
     with logo_col:
@@ -583,6 +692,11 @@ def main():
             st.success("耗时统计数据已清除")
             st.rerun()
 
+    from core.pipeline.job import job_status
+    pipeline_job_progress()
+    if job_status()['active']:
+        st.info('任务在后台运行，刷新页面不会中断。完成前请勿更改设置或导入另一段视频。')
+        return
     download_video_section()
     text_processing_section()
     audio_processing_section()

@@ -1,0 +1,9 @@
+SPEAKER audio 1 0.000 0.500 <NA> <NA> speaker_0 <NA> <NA>
+SPEAKER audio 1 1.500 2.030 <NA> <NA> speaker_1 <NA> <NA>
+SPEAKER audio 1 4.460 4.420 <NA> <NA> speaker_0 <NA> <NA>
+SPEAKER audio 1 8.360 0.570 <NA> <NA> speaker_1 <NA> <NA>
+SPEAKER audio 1 8.880 20.900 <NA> <NA> speaker_2 <NA> <NA>
+SPEAKER audio 1 31.490 1.010 <NA> <NA> speaker_2 <NA> <NA>
+SPEAKER audio 1 33.830 1.110 <NA> <NA> speaker_2 <NA> <NA>
+SPEAKER audio 1 36.700 1.640 <NA> <NA> speaker_2 <NA> <NA>
+SPEAKER audio 1 43.250 1.750 <NA> <NA> speaker_0 <NA> <NA>

@@ -1,0 +1,16 @@
+[
+  {
+    "index": 0,
+    "start": 0.05,
+    "end": 40.24,
+    "speaker": "S01",
+    "speaker_index": 0
+  },
+  {
+    "index": 1,
+    "start": 40.25,
+    "end": 40.27,
+    "speaker": "S01",
+    "speaker_index": 0
+  }
+]

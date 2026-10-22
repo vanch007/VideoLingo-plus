@@ -1,0 +1,7 @@
+{
+  "status": "pass",
+  "torchcodec": "0.7.0",
+  "decoded_sample_rate": 22050,
+  "decoded_samples": 32512,
+  "native_ffmpeg_library": "/opt/homebrew/opt/ffmpeg@7/lib"
+}

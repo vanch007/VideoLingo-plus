@@ -1,0 +1,70 @@
+{
+  "python": "/tmp/videolingo-envcheck-20261009/bin/python",
+  "results": [
+    {
+      "module": "numpy",
+      "status": "pass",
+      "version": "2.2.6"
+    },
+    {
+      "module": "scipy",
+      "status": "pass",
+      "version": "1.15.3"
+    },
+    {
+      "module": "scipy.sparse.linalg",
+      "status": "pass",
+      "version": null
+    },
+    {
+      "module": "cv2",
+      "status": "pass",
+      "version": "4.14.0"
+    },
+    {
+      "module": "torch",
+      "status": "pass",
+      "version": "2.8.0"
+    },
+    {
+      "module": "torchaudio",
+      "status": "pass",
+      "version": "2.8.0"
+    },
+    {
+      "module": "torchvision",
+      "status": "pass",
+      "version": "0.23.0"
+    },
+    {
+      "module": "spacy",
+      "status": "pass",
+      "version": "3.8.16"
+    },
+    {
+      "module": "librosa",
+      "status": "pass",
+      "version": "0.10.2.post1"
+    },
+    {
+      "module": "demucs.api",
+      "status": "pass",
+      "version": null
+    },
+    {
+      "module": "whisperx",
+      "status": "pass",
+      "version": null
+    },
+    {
+      "module": "pyannote.audio",
+      "status": "pass",
+      "version": "4.0.7"
+    },
+    {
+      "module": "torchcodec",
+      "status": "fail",
+      "error": "RuntimeError: Could not load libtorchcodec. Likely causes:\n          1. FFmpeg is not properly installed in your environment. We support\n             versions 4, 5, 6 and 7.\n          2. The PyTorch version (2.8.0) is not compatible with\n             this version of TorchCodec. Refer to the version compatibility\n             table:\n             https://github.com/pytorch/torchcodec?tab=readme-ov-file#installing-torchcodec.\n          3. Another runtime dependency; see exceptions below.\n        The following exceptions were raised as we tried to load libtorchcodec:\n        \n[start of libtorchcodec loading traceback]\nFFmpeg version 7: dlopen(/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/torchcodec/libtorchcodec_core7.dylib, 0x0006): Library not loaded: @rpath/libavutil.59.dylib\n  Referenced from: <AF25BC1A-0047-3DCC-94F1-9C5BC79D8CCF> /Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/torchcodec/libtorchcodec_core7.dylib\n  Reason: tried: '/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/lib-dynload/../../libavutil.59.dylib' (no such file), '/Users/vanch/pinokio/bin/miniconda/envs/videolingo/bin/../lib/libavutil.59.dylib' (no such file)\nFFmpeg version 6: dlopen(/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/torchcodec/libtorchcodec_core6.dylib, 0x0006): Library not loaded: @rpath/libavutil.58.dylib\n  Referenced from: <31E243C2-D449-342E-8CD7-60F6DC3B2C77> /Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/torchcodec/libtorchcodec_core6.dylib\n  Reason: tried: '/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/lib-dynload/../../libavutil.58.dylib' (no such file), '/Users/vanch/pinokio/bin/miniconda/envs/videolingo/bin/../lib/libavutil.58.dylib' (no such file)\nFFmpeg version 5: dlopen(/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/torchcodec/libtorchcodec_core5.dylib, 0x0006): Library not loaded: @rpath/libavutil.57.dylib\n  Referenced from: <FC60EC29-499A-3249-BB93-34655B4585B6> /Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/torchcodec/libtorchcodec_core5.dylib\n  Reason: tried: '/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/lib-dynload/../../libavutil.57.dylib' (no such file), '/Users/vanch/pinokio/bin/miniconda/envs/videolingo/bin/../lib/libavutil.57.dylib' (no such file)\nFFmpeg version 4: dlopen(/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/torchcodec/libtorchcodec_core4.dylib, 0x0006): Library not loaded: @rpath/libavutil.56.dylib\n  Referenced from: <3F006FCE-1FF7-3B9B-9FB3-997372F03F08> /Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/site-packages/torchcodec/libtorchcodec_core4.dylib\n  Reason: tried: '/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/python3.10/lib-dynload/../../libavutil.56.dylib' (no such file), '/Users/vanch/pinokio/bin/miniconda/envs/videolingo/bin/../lib/libavutil.56.dylib' (no such file)\n[end of libtorchcodec loading traceback]."
+    }
+  ]
+}

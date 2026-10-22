@@ -69,6 +69,17 @@ def _generation_completed() -> bool:
         method = load_key("tts_method", "")
     except (OSError, KeyError):
         return False
+    from core.utterance_plan import plan_active
+    if plan_active():
+        try:
+            from core.utterance_plan import load_plan, validate_tasks
+            from core.atomic_dubbing import verify_preflight_identity
+            plan = load_plan()
+            validate_tasks(pd.read_excel("output/audio/tts_tasks.xlsx"), plan, generated=True)
+            verify_preflight_identity(pd.DataFrame([{"LineID": u["unit_id"], "Source": u["source"], "Translation": u["target"]} for u in plan["units"]]))
+            return plan["status"] == "synthesized"
+        except (OSError, ValueError, KeyError):
+            return False
     if method == "mlx_indextts2":
         from core.tts_reference_plan import reference_plan_is_current
         from core.step10_gen_audio import tts_generation_checkpoint_valid

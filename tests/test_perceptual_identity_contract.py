@@ -11,11 +11,11 @@ from core import step12_merge_dub_to_vid as merge
 from core.dubbing_content_gate import _is_untranscribable_sub_500ms_utterance
 
 
-def media(path, duration, offset=0):
+def media(path, duration, offset=0, audio_duration=None):
     cmd = ['ffmpeg','-v','error','-y','-f','lavfi','-i',f'color=s=160x90:r=25:d={duration}']
     if offset:
         cmd += ['-itsoffset',str(offset)]
-    cmd += ['-f','lavfi','-i',f'sine=frequency=440:sample_rate=48000:duration={duration}', '-c:v','libx264','-c:a','aac',str(path)]
+    cmd += ['-f','lavfi','-i',f'sine=frequency=440:sample_rate=48000:duration={duration if audio_duration is None else audio_duration}', '-c:v','libx264','-c:a','aac',str(path)]
     subprocess.run(cmd,capture_output=True,check=True)
 
 
@@ -59,6 +59,24 @@ def test_three_video_frames_truncation_is_rejected(tmp_path):
     media(source,3);media(out,2.88)
     with pytest.raises(RuntimeError):
         merge.validate_merged_video(str(out),str(source))
+
+
+def test_original_track_tails_are_preserved_without_forcing_audio_truncation(tmp_path):
+    source = tmp_path / 'source.mp4'
+    media(source, 3, audio_duration=3.101)
+    merge.validate_merged_video(str(source), str(source))
+    # No source baseline must still reject this unequal-tail file.
+    with pytest.raises(RuntimeError):
+        merge.validate_merged_video(str(source))
+
+
+@pytest.mark.parametrize('audio_duration', [3., 3.20])
+def test_new_audio_tail_drift_is_rejected_even_when_source_tails_differ(tmp_path, audio_duration):
+    source, out = tmp_path / 'source.mp4', tmp_path / 'out.mp4'
+    media(source, 3, audio_duration=3.101)
+    media(out, 3, audio_duration=audio_duration)
+    with pytest.raises(RuntimeError):
+        merge.validate_merged_video(str(out), str(source))
 
 
 def test_tied_overlap_must_not_commit_single_identity(tmp_path):

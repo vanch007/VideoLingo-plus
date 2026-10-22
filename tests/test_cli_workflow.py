@@ -134,7 +134,7 @@ def test_run_passes_smoke_seconds_to_step_builder(tmp_path, monkeypatch, capsys)
     monkeypatch.chdir(tmp_path)
     seen = {}
 
-    def fake_build_steps(input_value, *, dubbing=True, subtitles=True, smoke_seconds=None):
+    def fake_build_steps(input_value, *, dubbing=True, subtitles=True, smoke_seconds=None, profile=None):
         seen["input"] = input_value
         seen["smoke_seconds"] = smoke_seconds
         return []

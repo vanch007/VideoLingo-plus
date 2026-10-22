@@ -1,0 +1,87 @@
+2 channel Terms of Service accepted
+Retrieving notices: - \ | / - \ | / done
+Collecting package metadata (current_repodata.json): \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | done
+Solving environment: - \ | / - \ | 
+The environment is inconsistent, please check the package plan carefully
+The following packages are causing the inconsistency:
+
+  - defaults/osx-arm64::numpy==2.2.5=py310h51bfb38_3
+/ - \ | / - \ | / - \ | / done
+
+
+==> WARNING: A newer version of conda exists. <==
+  current version: 25.7.0
+  latest version: 26.9.1
+
+Please update conda by running
+
+    $ conda update -n base -c conda-forge conda
+
+Or to minimize the number of packages updated during conda update use
+
+     conda install conda=26.9.1
+
+
+
+## Package Plan ##
+
+  environment location: /Users/vanch/pinokio/bin/miniconda/envs/videolingo
+
+  added / updated specs:
+    - numpy=2.2.6
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    setuptools-84.0.0          |     pyh332efcf_0         512 KB  conda-forge
+    wheel-0.41.3               |     pyhd8ed1ab_0          57 KB  conda-forge
+    ------------------------------------------------------------
+                                           Total:         569 KB
+
+The following NEW packages will be INSTALLED:
+
+  numpy-base         pkgs/main/osx-arm64::numpy-base-2.2.5-py310hb22d27a_3 
+
+The following packages will be REMOVED:
+
+  packaging-26.3-py310hca03da5_0
+
+The following packages will be UPDATED:
+
+  openssl               pkgs/main::openssl-3.5.8-ha0b305a_0 --> conda-forge::openssl-3.6.5-h55eecbc_0 
+  setuptools         pkgs/main/osx-arm64::setuptools-83.0.~ --> conda-forge/noarch::setuptools-84.0.0-pyh332efcf_0 
+
+The following packages will be SUPERSEDED by a higher-priority channel:
+
+  ca-certificates    pkgs/main/osx-arm64::ca-certificates-~ --> conda-forge/noarch::ca-certificates-2026.7.22-hbd8a1cb_0 
+  wheel              pkgs/main/osx-arm64::wheel-0.47.0-py3~ --> conda-forge/noarch::wheel-0.41.3-pyhd8ed1ab_0 
+
+
+
+Downloading and Extracting Packages: ...working...setuptools-84.0.0    | 512 KB    |            |   0% 
+wheel-0.41.3         | 57 KB     |            |   0% [A
+wheel-0.41.3         | 57 KB     | ########## | 100% [Asetuptools-84.0.0    | 512 KB    | ########1  |  81% 
+wheel-0.41.3         | 57 KB     | ########## | 100% [Asetuptools-84.0.0    | 512 KB    | ########## | 100% 
+wheel-0.41.3         | 57 KB     | ########## | 100% [Asetuptools-84.0.0    | 512 KB    | ########## | 100%                                                      
+                                                     [A done
+Preparing transaction: \ done
+Verifying transaction: / - done
+Executing transaction: | / - \ | / - \ | / - \ | / - \ done
+
+Channel "defaults" has the following notices:
+  [warning] -- Wed Sep 30 00:00:00 2026
+  Anaconda will stop building new Python 3.10 packages on the main channel after October 31, 2026. Existing Python 3.10 packages will stay available but will no longer get new builds or security fixes. We recommend upgrading to Python 3.11 or later. Details: https://www.anaconda.com/docs/reference/policies-practices/python-version-support?utm_source=channel_notices
+
+  [info] -- Thu Aug  6 00:00:00 2026
+  main-x (Anaconda's new authenticated channel) is now generally available, with thousands of additional packages from our secure supply chain. Get started at: https://anaconda.com/docs/getting-started/main-x?utm_source=channel_notices
+
+
+Channel "pkgs/main" has the following notices:
+  [warning] -- Wed Sep 30 00:00:00 2026
+  Anaconda will stop building new Python 3.10 packages on the main channel after October 31, 2026. Existing Python 3.10 packages will stay available but will no longer get new builds or security fixes. We recommend upgrading to Python 3.11 or later. Details: https://www.anaconda.com/docs/reference/policies-practices/python-version-support?utm_source=channel_notices
+
+  [info] -- Thu Aug  6 00:00:00 2026
+  main-x (Anaconda's new authenticated channel) is now generally available, with thousands of additional packages from our secure supply chain. Get started at: https://anaconda.com/docs/getting-started/main-x?utm_source=channel_notices
+

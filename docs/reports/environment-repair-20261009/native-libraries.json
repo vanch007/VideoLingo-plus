@@ -1,0 +1,47 @@
+{
+  "python": "3.10.21",
+  "prefix": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo",
+  "numpy": "2.2.6",
+  "ffmpeg7_libraries": [
+    {
+      "path": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/libavcodec.61.dylib",
+      "target": "/opt/homebrew/opt/ffmpeg@7/lib/libavcodec.61.dylib",
+      "exists": true
+    },
+    {
+      "path": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/libavdevice.61.dylib",
+      "target": "/opt/homebrew/opt/ffmpeg@7/lib/libavdevice.61.dylib",
+      "exists": true
+    },
+    {
+      "path": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/libavfilter.10.dylib",
+      "target": "/opt/homebrew/opt/ffmpeg@7/lib/libavfilter.10.dylib",
+      "exists": true
+    },
+    {
+      "path": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/libavformat.61.dylib",
+      "target": "/opt/homebrew/opt/ffmpeg@7/lib/libavformat.61.dylib",
+      "exists": true
+    },
+    {
+      "path": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/libavutil.59.dylib",
+      "target": "/opt/homebrew/opt/ffmpeg@7/lib/libavutil.59.dylib",
+      "exists": true
+    },
+    {
+      "path": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/libpostproc.58.dylib",
+      "target": "/opt/homebrew/opt/ffmpeg@7/lib/libpostproc.58.dylib",
+      "exists": true
+    },
+    {
+      "path": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/libswresample.5.dylib",
+      "target": "/opt/homebrew/opt/ffmpeg@7/lib/libswresample.5.dylib",
+      "exists": true
+    },
+    {
+      "path": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo/lib/libswscale.8.dylib",
+      "target": "/opt/homebrew/opt/ffmpeg@7/lib/libswscale.8.dylib",
+      "exists": true
+    }
+  ]
+}

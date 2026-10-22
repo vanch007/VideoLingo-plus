@@ -240,9 +240,12 @@ def _apply_run_config(args: argparse.Namespace) -> None:
 
 
 def _build_run(args: argparse.Namespace, steps: list) -> PipelineRun:
+    from core.config_utils import load_key
+    prof = args.profile or "fast"
+    is_fast = prof == "fast"
     return PipelineRun(
         run_id=args.run_id or time.strftime("%Y%m%d-%H%M%S"),
-        profile=args.profile or "default",
+        profile=prof,
         source=args.source or "auto",
         target=args.target or "auto",
         input=args.input,
@@ -251,19 +254,43 @@ def _build_run(args: argparse.Namespace, steps: list) -> PipelineRun:
         llm=args.llm,
         tts=args.tts,
         smoke_seconds=args.smoke_seconds,
+        stop_after=getattr(args, "stop_after", None),
         steps=[step.key for step in steps],
+        quality_status="fast_mode" if is_fast else None,
+        quality_gate_passed=None,
     )
 
 
 def _cmd_run(args: argparse.Namespace) -> int:
+    if args.dry_run:
+        return _execute_run(args)
+    from core.pipeline.job import workspace_lock
+    with workspace_lock():
+        return _execute_run(args)
+
+
+def _execute_run(args: argparse.Namespace) -> int:
     steps = build_steps_for_input(
         args.input,
         dubbing=not args.subtitle_only,
         subtitles=not args.no_subtitles,
         smoke_seconds=args.smoke_seconds,
+        profile=args.profile,
     )
+    stop_after = getattr(args, "stop_after", None)
+    if stop_after:
+        keys = [step.key for step in steps]
+        if stop_after not in keys:
+            raise ValueError(f"Unknown stop stage for this input: {stop_after}")
+        steps = steps[:keys.index(stop_after) + 1]
     if not args.dry_run:
         _apply_run_config(args)
+        from core.doctor import run_checks
+        checks = run_checks()
+        failures = [c for c in checks if c.required and not c.ok]
+        if failures:
+            print(json.dumps({'environment': 'failed', 'issues': [c.__dict__ for c in failures]}, ensure_ascii=False))
+            return 2
     from core.translation_state import guard_translation_artifacts_for_steps
 
     translation_guard = guard_translation_artifacts_for_steps(
@@ -280,7 +307,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         payload["planned_config"] = _planned_run_config(args)
         payload["pending_steps"] = [step.key for step in steps if step.key not in result.completed_steps]
     print(json.dumps(payload, ensure_ascii=False, indent=2))
-    return 0
+    return 2 if not args.dry_run and result.quality_status == 'fail' else 0
 
 
 def _fill_resume_args(args: argparse.Namespace, state: dict) -> None:
@@ -288,13 +315,16 @@ def _fill_resume_args(args: argparse.Namespace, state: dict) -> None:
         "input": None,
         "source": None,
         "target": None,
-        "profile": "cinematic",
         "llm": None,
         "tts": "auto",
         "smoke_seconds": None,
     }.items():
         if getattr(args, key) == default and state.get(key) not in (None, ""):
             setattr(args, key, state[key])
+    if getattr(args, "profile", None) is not None and args.profile != (state.get("profile") or "cinematic"):
+        raise ValueError("Resume cannot change the saved profile")
+    if getattr(args, "profile", None) is None:
+        setattr(args, "profile", state.get("profile") or "cinematic")
     for key in ("subtitle_only", "no_subtitles"):
         if not getattr(args, key) and state.get(key):
             setattr(args, key, bool(state[key]))
@@ -337,7 +367,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--input", required=True, help="Video URL, local video path, or SRT path")
     run.add_argument("--source", default=None)
     run.add_argument("--target", default=None)
-    run.add_argument("--profile", default="cinematic")
+    run.add_argument("--profile", default="fast", choices=["fast", "cinematic", "subtitle", "subtitle_only"])
     run.add_argument("--llm", default=None, help="LLM provider. Use 'config' for config.yaml api.base_url/api.model.")
     run.add_argument("--tts", default="auto")
     run.add_argument("--smoke-seconds", type=int, default=None, help="Trim local video input to N seconds for smoke runs")
@@ -347,6 +377,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--no-resume", action="store_true")
     run.add_argument("--auto-archive-stale-translation", action="store_true", help="Move stale translation-derived artifacts to history before running")
     run.add_argument("--dry-run", action="store_true")
+    run.add_argument("--stop-after", default=None, help="Stop after a stage such as transcribe; no final quality claim")
     run.set_defaults(func=_cmd_run)
 
     resume = sub.add_parser("resume", help="Inspect or resume the last run")
@@ -354,7 +385,7 @@ def build_parser() -> argparse.ArgumentParser:
     resume.add_argument("--input", default=None, help="Required only when actually resuming execution")
     resume.add_argument("--source", default=None)
     resume.add_argument("--target", default=None)
-    resume.add_argument("--profile", default="cinematic")
+    resume.add_argument("--profile", default=None, choices=["fast", "cinematic", "subtitle", "subtitle_only"])
     resume.add_argument("--llm", default=None, help="LLM provider. Use 'config' for config.yaml api.base_url/api.model.")
     resume.add_argument("--tts", default="auto")
     resume.add_argument("--smoke-seconds", type=int, default=None, help="Trim local video input to N seconds for smoke runs")
@@ -363,6 +394,7 @@ def build_parser() -> argparse.ArgumentParser:
     resume.add_argument("--no-resume", action="store_true")
     resume.add_argument("--auto-archive-stale-translation", action="store_true", help="Move stale translation-derived artifacts to history before running")
     resume.add_argument("--dry-run", action="store_true")
+    resume.add_argument("--stop-after", default=None, help="Stop after a selected stage")
     resume.set_defaults(func=_cmd_resume)
 
     eval_parser = sub.add_parser("eval", help="Run quality evaluation")

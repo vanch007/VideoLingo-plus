@@ -1,0 +1,3529 @@
+{
+  "status": "pass",
+  "units": 332,
+  "cues": 391,
+  "seconds": 0.008859959023538977,
+  "syntheses": 0,
+  "full_text_preserved": true,
+  "cues_data": [
+    {
+      "index": 1,
+      "start": 0.08,
+      "end": 5.474545454545455,
+      "src": "Everything you're seeing in this video was\nedited by my Claude Code system while I",
+      "tgt": "你在这段视频里看到的所有内容，都是我在睡觉时\n，由我的Claude Code系统剪辑完成的",
+      "unit_id": "L00001.01",
+      "number": 1
+    },
+    {
+      "index": 2,
+      "start": 5.474545454545455,
+      "end": 5.6,
+      "src": "was asleep.",
+      "tgt": "。",
+      "unit_id": "L00001.01",
+      "number": 1
+    },
+    {
+      "index": 3,
+      "start": 5.6,
+      "end": 13.9,
+      "src": "Every cut, every sound, every animation,\nlike this one, or this one, or this one,",
+      "tgt": "每一个剪辑、每一个音效、每一个动画，就像这个\n、这个，还有这个，",
+      "unit_id": "L00002.01",
+      "number": 2
+    },
+    {
+      "index": 4,
+      "start": 15.44,
+      "end": 17.839615384615385,
+      "src": "was made without touching a timeline and\nno",
+      "tgt": "全都是在没碰时间轴的情况下完成的。",
+      "unit_id": "L00003.01",
+      "number": 3
+    },
+    {
+      "index": 5,
+      "start": 17.839615384615385,
+      "end": 19.11,
+      "src": ", I don't know how to code.",
+      "tgt": "不，我不会写代码。",
+      "unit_id": "L00003.01",
+      "number": 3
+    },
+    {
+      "index": 6,
+      "start": 19.11,
+      "end": 21.23,
+      "src": "So today, I'm gonna pull the curtain and\nshow you exactly how I built this expert",
+      "tgt": "所以今天，我就要揭开谜底，向你展示我",
+      "unit_id": "L00004.01",
+      "number": 4
+    },
+    {
+      "index": 7,
+      "start": 21.23,
+      "end": 23.35,
+      "src": "editor,",
+      "tgt": "究竟是怎 么打造出这个专家级剪辑器的，",
+      "unit_id": "L00004.01",
+      "number": 4
+    },
+    {
+      "index": 8,
+      "start": 23.35,
+      "end": 27.43,
+      "src": "step by step, the tools, how to set them\nup, how I taught it my style,",
+      "tgt": "一步步来：用什么工具、怎么设置、怎么教会它我\n的剪辑风格。",
+      "unit_id": "L00005.01",
+      "number": 5
+    },
+    {
+      "index": 9,
+      "start": 27.43,
+      "end": 30.90555555555556,
+      "src": "the exact cost, and how I'm saving\nthousands of dollars a month.",
+      "tgt": "还有确切的花费，以及我每月到底省下了几千美元\n。",
+      "unit_id": "L00006.01",
+      "number": 6
+    },
+    {
+      "index": 10,
+      "start": 30.90555555555556,
+      "end": 31.51,
+      "src": "Let's go.",
+      "tgt": "开始吧。",
+      "unit_id": "L00006.01",
+      "number": 6
+    },
+    {
+      "index": 11,
+      "start": 31.51,
+      "end": 34.58,
+      "src": "Okay, so making a video like this one used\nto take a small team.",
+      "tgt": "好，以前要做出像这样的视频，得靠一个小团队。",
+      "unit_id": "L00007.01",
+      "number": 7
+    },
+    {
+      "index": 12,
+      "start": 34.945,
+      "end": 38.935,
+      "src": "And to be clear, I still have one job to\nhit record and also to provide feedback.",
+      "tgt": "说清楚点，我现在还得负责一件事：开拍，还有给\n出反馈。",
+      "unit_id": "L00008.01",
+      "number": 8
+    },
+    {
+      "index": 13,
+      "start": 39.185,
+      "end": 41.760609756097566,
+      "src": "But in my system, every other job goes to\na different tool, so I'm gonna break these",
+      "tgt": "但在我的系统里，其他所有活儿都交给了不同",
+      "unit_id": "L00009.01",
+      "number": 9
+    },
+    {
+      "index": 14,
+      "start": 41.760609756097566,
+      "end": 44.465,
+      "src": "down for you one by one.",
+      "tgt": "的工 具，所以接下来我会一个一个地给你拆解。",
+      "unit_id": "L00009.01",
+      "number": 9
+    },
+    {
+      "index": 15,
+      "start": 44.465,
+      "end": 46.225,
+      "src": "Now, the first one is the editor.",
+      "tgt": "现在，第一个就是剪辑器。",
+      "unit_id": "L00010.01",
+      "number": 10
+    },
+    {
+      "index": 16,
+      "start": 46.225,
+      "end": 49.425,
+      "src": "That's the person who sits in front of the\ntimeline for hours.",
+      "tgt": "这人就是会守在时间线前好几个小时的人。",
+      "unit_id": "L00010.02",
+      "number": 11
+    },
+    {
+      "index": 17,
+      "start": 49.425,
+      "end": 51.577799999999996,
+      "src": "They watch every clip, they pick the ones\nthey like, cut out the ones that they",
+      "tgt": "他们看完每一段素材，挑出",
+      "unit_id": "L00011.01",
+      "number": 12
+    },
+    {
+      "index": 18,
+      "start": 51.577799999999996,
+      "end": 53.91,
+      "src": "don't,",
+      "tgt": "喜欢的，再把不喜欢的 剪掉，",
+      "unit_id": "L00011.01",
+      "number": 12
+    },
+    {
+      "index": 19,
+      "start": 53.91,
+      "end": 56.425,
+      "src": "decides where every zoom goes, and also\nfigures out the graphics and animations",
+      "tgt": "决定好每一次缩放的位置，还想好要",
+      "unit_id": "L00012.01",
+      "number": 13
+    },
+    {
+      "index": 20,
+      "start": 56.425,
+      "end": 58.94,
+      "src": "that they want and where.",
+      "tgt": "加什么画面和 动画，以及加在哪儿。",
+      "unit_id": "L00012.01",
+      "number": 13
+    },
+    {
+      "index": 21,
+      "start": 59.19,
+      "end": 62.47,
+      "src": "Now, in my system, Claude Code is the tool\nthat does all of that.",
+      "tgt": "在我的系统里，Claude Code就是干这\n些事的工具。",
+      "unit_id": "L00013.01",
+      "number": 14
+    },
+    {
+      "index": 22,
+      "start": 62.47,
+      "end": 65.02,
+      "src": "Think of this role like the project\nmanager of the entire video.",
+      "tgt": "你可以把它当成整个视频的项目经理。",
+      "unit_id": "L00014.01",
+      "number": 15
+    },
+    {
+      "index": 23,
+      "start": 65.99,
+      "end": 69.61999999999999,
+      "src": "Now, I personally use the desktop version\nof Claude, it works perfectly there.",
+      "tgt": "我用的是Claude的桌面版，用起来完全没问\n题。",
+      "unit_id": "L00015.01",
+      "number": 16
+    },
+    {
+      "index": 24,
+      "start": 70.539,
+      "end": 73.37400000000001,
+      "src": "And Claude Code can work locally, which\nmeans that it actually uses my computer",
+      "tgt": "Claude Code还能在本地运行，也就是",
+      "unit_id": "L00016.01",
+      "number": 17
+    },
+    {
+      "index": 25,
+      "start": 73.37400000000001,
+      "end": 75.129,
+      "src": "for me.",
+      "tgt": "说，它直接用我的电脑干活。",
+      "unit_id": "L00016.01",
+      "number": 17
+    },
+    {
+      "index": 26,
+      "start": 75.42,
+      "end": 77.31,
+      "src": "It can access the files, it uses other\nprograms, and finally, it's able to put",
+      "tgt": "它能访问文件，能调用其他",
+      "unit_id": "L00017.01",
+      "number": 18
+    },
+    {
+      "index": 27,
+      "start": 77.31,
+      "end": 79.2,
+      "src": "the output",
+      "tgt": "程序，最后还能把输出 结果",
+      "unit_id": "L00017.01",
+      "number": 18
+    },
+    {
+      "index": 28,
+      "start": 79.899,
+      "end": 81.569,
+      "src": "inside of a folder on my computer.",
+      "tgt": "放到我电脑的一个文件夹里。",
+      "unit_id": "L00018.01",
+      "number": 19
+    },
+    {
+      "index": 29,
+      "start": 81.66,
+      "end": 84.07966666666667,
+      "src": "Now, that's actually important because\nClaude actually is the coordinator of all",
+      "tgt": "这其实很重要，因为Claude才是",
+      "unit_id": "L00019.01",
+      "number": 20
+    },
+    {
+      "index": 30,
+      "start": 84.07966666666667,
+      "end": 85.92999999999999,
+      "src": "the other tools here.",
+      "tgt": "这里所有其 他工具的协调者。",
+      "unit_id": "L00019.01",
+      "number": 20
+    },
+    {
+      "index": 31,
+      "start": 86.46,
+      "end": 89.61,
+      "src": "But there's one catch here, Claude can't\nactually hear my videos.",
+      "tgt": "但有个问题，Claude根本听不到我的视频声\n音。",
+      "unit_id": "L00020.01",
+      "number": 21
+    },
+    {
+      "index": 32,
+      "start": 90.24,
+      "end": 91.9151724137931,
+      "src": "So how does it know what I said and where\nI messed up to be able to cut the whole",
+      "tgt": "那它怎么知道我说了什么、哪儿",
+      "unit_id": "L00021.01",
+      "number": 22
+    },
+    {
+      "index": 33,
+      "start": 91.9151724137931,
+      "end": 93.71,
+      "src": "thing together?",
+      "tgt": "出错了，好把整个 视频剪出来呢？",
+      "unit_id": "L00021.01",
+      "number": 22
+    },
+    {
+      "index": 34,
+      "start": 94.16,
+      "end": 95.99839999999999,
+      "src": "Now, that's the second job that we have in\nthis list, it is the job of the",
+      "tgt": "这就是我们清单上的第二份",
+      "unit_id": "L00022.01",
+      "number": 23
+    },
+    {
+      "index": 35,
+      "start": 95.99839999999999,
+      "end": 97.99,
+      "src": "transcriber.",
+      "tgt": "工作，也就是转录员的 工作。",
+      "unit_id": "L00022.01",
+      "number": 23
+    },
+    {
+      "index": 36,
+      "start": 98.72,
+      "end": 100.34857142857143,
+      "src": "Now, this is the person who listens to all\nthe footage, transforms that, types it out",
+      "tgt": "这个人要听完所有素材",
+      "unit_id": "L00023.01",
+      "number": 24
+    },
+    {
+      "index": 37,
+      "start": 100.34857142857143,
+      "end": 102.14,
+      "src": "into text,",
+      "tgt": "，再把内容转换成文字，",
+      "unit_id": "L00023.01",
+      "number": 24
+    },
+    {
+      "index": 38,
+      "start": 103.36,
+      "end": 104.64,
+      "src": "and puts timestamps on these.",
+      "tgt": "并加上时间戳。",
+      "unit_id": "L00024.01",
+      "number": 25
+    },
+    {
+      "index": 39,
+      "start": 105.28,
+      "end": 107.51,
+      "src": "And the tool that does that is called\nParakeet.",
+      "tgt": "实现这个功能的工具叫Parakeet。",
+      "unit_id": "L00024.02",
+      "number": 26
+    },
+    {
+      "index": 40,
+      "start": 107.615,
+      "end": 109.695,
+      "src": "It's a completely free tool, and it was\nbuilt by Nvidia, which is the leading",
+      "tgt": "这是个完全免费的工具，由芯",
+      "unit_id": "L00025.01",
+      "number": 27
+    },
+    {
+      "index": 41,
+      "start": 109.695,
+      "end": 112.575,
+      "src": "manufacturer of chips.",
+      "tgt": "片行业的领先制造商 Nvidia开发。",
+      "unit_id": "L00025.01",
+      "number": 27
+    },
+    {
+      "index": 42,
+      "start": 112.575,
+      "end": 116.255,
+      "src": "No, not Doritos or Lay's, I mean like the\nchips, right, for AI.",
+      "tgt": "不，不是Doritos或Lay's，我指的是\n给AI用的那种芯片。",
+      "unit_id": "L00026.01",
+      "number": 28
+    },
+    {
+      "index": 43,
+      "start": 116.255,
+      "end": 117.60499999999999,
+      "src": "Hmm, chips.",
+      "tgt": "嗯，芯片。",
+      "unit_id": "L00026.02",
+      "number": 29
+    },
+    {
+      "index": 44,
+      "start": 118.095,
+      "end": 118.765,
+      "src": "Get back to it.",
+      "tgt": "说回正题。",
+      "unit_id": "L00026.03",
+      "number": 30
+    },
+    {
+      "index": 45,
+      "start": 118.895,
+      "end": 121.23893939393939,
+      "src": "So Parakeet does the transcription, and\nthen Claude is able to actually read the",
+      "tgt": "所以Parakeet负责转录，然后",
+      "unit_id": "L00027.01",
+      "number": 31
+    },
+    {
+      "index": 46,
+      "start": 121.23893939393939,
+      "end": 123.445,
+      "src": "timestamps",
+      "tgt": "Claude就能真正读取时间戳，",
+      "unit_id": "L00027.01",
+      "number": 31
+    },
+    {
+      "index": 47,
+      "start": 123.465,
+      "end": 125.52092592592592,
+      "src": "and exactly what is being said, and is\nable to then use that for the next step of",
+      "tgt": "以及具体说了什么，接着就能",
+      "unit_id": "L00028.01",
+      "number": 32
+    },
+    {
+      "index": 48,
+      "start": 125.52092592592592,
+      "end": 127.735,
+      "src": "the process.",
+      "tgt": "把这些信息用到流程 的下一步。",
+      "unit_id": "L00028.01",
+      "number": 32
+    },
+    {
+      "index": 49,
+      "start": 128.104,
+      "end": 129.859,
+      "src": "This is how we're able to identify and\nchop up the footage so that we have the",
+      "tgt": "我们就是这么识别并切分素",
+      "unit_id": "L00029.01",
+      "number": 33
+    },
+    {
+      "index": 50,
+      "start": 129.859,
+      "end": 131.614,
+      "src": "right takes.",
+      "tgt": "材，确保拿到正确的镜 头。",
+      "unit_id": "L00029.01",
+      "number": 33
+    },
+    {
+      "index": 51,
+      "start": 131.945,
+      "end": 133.945,
+      "src": "Job three is actually the animator.",
+      "tgt": "第三个工作，其实是动画师。",
+      "unit_id": "L00030.01",
+      "number": 34
+    },
+    {
+      "index": 52,
+      "start": 134.105,
+      "end": 135.89499999999998,
+      "src": "This is the person who builds every single\ntitle,",
+      "tgt": "这个人要做出每一个标题，",
+      "unit_id": "L00030.02",
+      "number": 35
+    },
+    {
+      "index": 53,
+      "start": 136.745,
+      "end": 139.775,
+      "src": "every logo that pops in, any motion\ngraphics.",
+      "tgt": "每一个弹出的标志，还有所有动态图形。",
+      "unit_id": "L00031.01",
+      "number": 36
+    },
+    {
+      "index": 54,
+      "start": 139.955,
+      "end": 141.985,
+      "src": "And in the old world, this was done with\nAfter Effects.",
+      "tgt": "以前，这都靠 After Effects。",
+      "unit_id": "L00032.01",
+      "number": 37
+    },
+    {
+      "index": 55,
+      "start": 142.275,
+      "end": 144.865,
+      "src": "You literally had to use one tool just to\ndo these things.",
+      "tgt": "你真就得只用一个工具来做这些事。",
+      "unit_id": "L00032.02",
+      "number": 38
+    },
+    {
+      "index": 56,
+      "start": 145.315,
+      "end": 148.655,
+      "src": "And this is exactly where Hyperframes\ncomes in, tool number three.",
+      "tgt": "而这时，Hyperframes就派上用场了，\n也就是第三个工具。",
+      "unit_id": "L00033.01",
+      "number": 39
+    },
+    {
+      "index": 57,
+      "start": 148.755,
+      "end": 152.945,
+      "src": "Now, this again is a free tool developed\nby HeyGen, which is the video platform.",
+      "tgt": "这又是一个免费工具，由视频平台HeyGen开\n发。",
+      "unit_id": "L00034.01",
+      "number": 40
+    },
+    {
+      "index": 58,
+      "start": 153.575,
+      "end": 156.09939024390243,
+      "src": "Claude writes each animation like a tiny\nwebsite, and then Hyperframe turns that",
+      "tgt": "Claude把每个动画都写成一个小网",
+      "unit_id": "L00035.01",
+      "number": 41
+    },
+    {
+      "index": 59,
+      "start": 156.09939024390243,
+      "end": 159.325,
+      "src": "into a 4K video.",
+      "tgt": "站，然后 Hyperframe把它转成4K视\n频。",
+      "unit_id": "L00035.01",
+      "number": 41
+    },
+    {
+      "index": 60,
+      "start": 160.295,
+      "end": 162.845,
+      "src": "So now the animations can look sharp even\non a large TV.",
+      "tgt": "所以现在动画在大电视上看着也很清晰。",
+      "unit_id": "L00036.01",
+      "number": 42
+    },
+    {
+      "index": 61,
+      "start": 163.175,
+      "end": 165.975,
+      "src": "It all runs on my own computer, so it\nactually costs me nothing.",
+      "tgt": "全在我自己的电脑上运行，所以其实不花我一分钱\n。",
+      "unit_id": "L00037.01",
+      "number": 43
+    },
+    {
+      "index": 62,
+      "start": 165.975,
+      "end": 167.69899999999998,
+      "src": "However, in videos, sometimes I'll say\nthings like \"OpenAI just announced blah",
+      "tgt": "不过视频里，我有时会说像",
+      "unit_id": "L00038.01",
+      "number": 44
+    },
+    {
+      "index": 63,
+      "start": 167.69899999999998,
+      "end": 170.285,
+      "src": "blah blah\",",
+      "tgt": "“OpenAI刚宣布 了云云”这种话，",
+      "unit_id": "L00038.01",
+      "number": 44
+    },
+    {
+      "index": 64,
+      "start": 170.86,
+      "end": 174.85000000000002,
+      "src": "and when I say that, I actually need the\nfourth person, which is the researcher.",
+      "tgt": "说这话时，我其实需要第四个人，也就是研究员。",
+      "unit_id": "L00039.01",
+      "number": 45
+    },
+    {
+      "index": 65,
+      "start": 175.42,
+      "end": 177.195,
+      "src": "Someone who goes out and is able to find a\nscreenshot of that announcement, or a post",
+      "tgt": "就是那个能去找到相关",
+      "unit_id": "L00040.01",
+      "number": 46
+    },
+    {
+      "index": 66,
+      "start": 177.195,
+      "end": 178.97,
+      "src": ".",
+      "tgt": "公告截图或帖子的人。",
+      "unit_id": "L00040.01",
+      "number": 46
+    },
+    {
+      "index": 67,
+      "start": 180.0,
+      "end": 184.11,
+      "src": "On X or a research paper that proves the\npoint that I'm actually illustrating",
+      "tgt": "在X上，或是在能证明我正说明的观点的研究论文\n里，",
+      "unit_id": "L00041.01",
+      "number": 47
+    },
+    {
+      "index": 68,
+      "start": 184.48,
+      "end": 186.70999999999998,
+      "src": "and turns that into what we call B-roll.",
+      "tgt": "再把那些东西转成我们说的B-roll。",
+      "unit_id": "L00042.01",
+      "number": 48
+    },
+    {
+      "index": 69,
+      "start": 186.72,
+      "end": 189.31,
+      "src": "Things that you show on top of a video\nthat are basically outside footage.",
+      "tgt": "就是叠在视频上播放的那些外景素材。",
+      "unit_id": "L00043.01",
+      "number": 49
+    },
+    {
+      "index": 70,
+      "start": 190.08,
+      "end": 191.86620689655174,
+      "src": "And the thing that does that is something\nwe all actually have already on our",
+      "tgt": "而干这个的，其实我们每个人的",
+      "unit_id": "L00044.01",
+      "number": 50
+    },
+    {
+      "index": 71,
+      "start": 191.86620689655174,
+      "end": 193.78,
+      "src": "laptops, which is a browser.",
+      "tgt": "笔记本电脑里都有 ，就是浏览器。",
+      "unit_id": "L00044.01",
+      "number": 50
+    },
+    {
+      "index": 72,
+      "start": 194.8,
+      "end": 196.72,
+      "src": "So in my case, I use Google Chrome.",
+      "tgt": "所以呢，我用的是谷歌浏览器。",
+      "unit_id": "L00045.01",
+      "number": 51
+    },
+    {
+      "index": 73,
+      "start": 197.0,
+      "end": 199.23391304347825,
+      "src": "And then Claude is able to actually use\nthe browser to go out there and do that",
+      "tgt": "然后Claude就能直接用浏",
+      "unit_id": "L00046.01",
+      "number": 52
+    },
+    {
+      "index": 74,
+      "start": 199.23391304347825,
+      "end": 200.67,
+      "src": "research.",
+      "tgt": "览器去网上做研究 。",
+      "unit_id": "L00046.01",
+      "number": 52
+    },
+    {
+      "index": 75,
+      "start": 201.56,
+      "end": 205.15,
+      "src": "And in the background, Claude, my\nresearcher, is able to grab screenshots",
+      "tgt": "同时在后台，Claude，也就是我的研究员，\n就能截图",
+      "unit_id": "L00047.01",
+      "number": 53
+    },
+    {
+      "index": 76,
+      "start": 205.48,
+      "end": 207.59,
+      "src": "or record video scrolling down a website.",
+      "tgt": "或者录下网页往下滑的视频。",
+      "unit_id": "L00048.01",
+      "number": 54
+    },
+    {
+      "index": 77,
+      "start": 208.04,
+      "end": 209.63,
+      "src": "And then it could do things like highlight\nlines",
+      "tgt": "它还能高亮某些行，",
+      "unit_id": "L00049.01",
+      "number": 55
+    },
+    {
+      "index": 78,
+      "start": 210.12,
+      "end": 212.47,
+      "src": "or actually zoom into specific sections of\nthose pages.",
+      "tgt": "或者直接放大页面的特定部分。",
+      "unit_id": "L00050.01",
+      "number": 56
+    },
+    {
+      "index": 79,
+      "start": 213.4,
+      "end": 215.83,
+      "src": "And the great thing is that it only shows\nyou exact facts.",
+      "tgt": "最棒的是，它只给你看确切的事实。",
+      "unit_id": "L00051.01",
+      "number": 57
+    },
+    {
+      "index": 80,
+      "start": 216.085,
+      "end": 220.035,
+      "src": "So it's really taking the original X post\nor the actual webpage.",
+      "tgt": "也就是说，它会直接抓取原始的X帖子或网页本身\n。",
+      "unit_id": "L00052.01",
+      "number": 58
+    },
+    {
+      "index": 81,
+      "start": 220.165,
+      "end": 223.365,
+      "src": "So I can just say what happens and the\nproof shows up on screen.",
+      "tgt": "所以我只要说发生了什么，证据就会直接出现在屏\n幕上。",
+      "unit_id": "L00053.01",
+      "number": 59
+    },
+    {
+      "index": 82,
+      "start": 223.365,
+      "end": 225.205,
+      "src": "Now, the fifth job is the screen editor.",
+      "tgt": "现在，第五个任务是屏幕剪辑。",
+      "unit_id": "L00054.01",
+      "number": 60
+    },
+    {
+      "index": 83,
+      "start": 225.205,
+      "end": 228.115,
+      "src": "Now, this is mainly because I love making\nsimple tutorials,",
+      "tgt": "这主要是因为我特爱做点简单的教程，",
+      "unit_id": "L00055.01",
+      "number": 61
+    },
+    {
+      "index": 84,
+      "start": 228.485,
+      "end": 231.19500000000002,
+      "src": "teaching people how to use AI tools, how\nto make money with them.",
+      "tgt": "教大家怎么用AI工具，怎么用它们赚钱。",
+      "unit_id": "L00056.01",
+      "number": 62
+    },
+    {
+      "index": 85,
+      "start": 231.605,
+      "end": 233.035,
+      "src": "But I use screen sharing a lot.",
+      "tgt": "但我经常要共享屏幕。",
+      "unit_id": "L00057.01",
+      "number": 63
+    },
+    {
+      "index": 86,
+      "start": 233.125,
+      "end": 235.46,
+      "src": "And that's why I used a tool called Tella.",
+      "tgt": "所以我才用了一个叫Tella的工具。",
+      "unit_id": "L00058.01",
+      "number": 64
+    },
+    {
+      "index": 87,
+      "start": 235.46,
+      "end": 237.89000000000001,
+      "src": "Tella records my face and my screen at the\nsame time.",
+      "tgt": "Tella能同时录下我的脸和我的屏幕。",
+      "unit_id": "L00059.01",
+      "number": 65
+    },
+    {
+      "index": 88,
+      "start": 238.58,
+      "end": 241.22,
+      "src": "And because Tella has a connector called\nan MCP,",
+      "tgt": "而且因为Tella有个叫MCP的连接器，",
+      "unit_id": "L00060.01",
+      "number": 66
+    },
+    {
+      "index": 89,
+      "start": 241.22,
+      "end": 243.45,
+      "src": "I can connect it directly into Claude code\n.",
+      "tgt": "我就能把它直接连到Claude code里。",
+      "unit_id": "L00061.01",
+      "number": 67
+    },
+    {
+      "index": 90,
+      "start": 243.62,
+      "end": 246.81,
+      "src": "And it's able to do all the things it does\ninside of the software.",
+      "tgt": "然后它就能在软件里完成所有能做的事。",
+      "unit_id": "L00062.01",
+      "number": 68
+    },
+    {
+      "index": 91,
+      "start": 247.38,
+      "end": 249.45,
+      "src": "The cuts, the zooms, the layout, the\nformatting, yada, yada.",
+      "tgt": "剪辑、缩放、布局、排版，等等。",
+      "unit_id": "L00063.01",
+      "number": 69
+    },
+    {
+      "index": 92,
+      "start": 250.34,
+      "end": 251.63310344827588,
+      "src": "Everything that you can do inside this\nsoftware, you're able to do via Claude",
+      "tgt": "这软件里能做的所有事",
+      "unit_id": "L00064.01",
+      "number": 70
+    },
+    {
+      "index": 93,
+      "start": 251.63310344827588,
+      "end": 254.09,
+      "src": "code.",
+      "tgt": "，你都能通过Claude code来做。",
+      "unit_id": "L00064.01",
+      "number": 70
+    },
+    {
+      "index": 94,
+      "start": 254.265,
+      "end": 257.53499999999997,
+      "src": "So I literally only just have to record\nthrough it and it does the rest.",
+      "tgt": "所以我真的只要录一遍，剩下的就全交给它了。",
+      "unit_id": "L00065.01",
+      "number": 71
+    },
+    {
+      "index": 95,
+      "start": 258.265,
+      "end": 261.625,
+      "src": "But up until now, we've just been talking\nabout the visuals of this video.",
+      "tgt": "不过到目前为止，我们聊的都是这个视频的视觉效\n果。",
+      "unit_id": "L00066.01",
+      "number": 72
+    },
+    {
+      "index": 96,
+      "start": 261.625,
+      "end": 265.065,
+      "src": "Every great video team has what we call a\nsound designer.",
+      "tgt": "每个顶尖的视频团队，都有我们所说的声音设计师\n。",
+      "unit_id": "L00067.01",
+      "number": 73
+    },
+    {
+      "index": 97,
+      "start": 265.065,
+      "end": 267.705,
+      "src": "This is a person who decides what music\ngoes on each clip,",
+      "tgt": "这个人负责决定每段片段配什么音乐，",
+      "unit_id": "L00068.01",
+      "number": 74
+    },
+    {
+      "index": 98,
+      "start": 268.025,
+      "end": 270.495,
+      "src": "what sound effects go in when specific\nthings happen,",
+      "tgt": "特定情节出现时加什么音效，",
+      "unit_id": "L00069.01",
+      "number": 75
+    },
+    {
+      "index": 99,
+      "start": 271.225,
+      "end": 273.525,
+      "src": "and make sure that these are also on brand\n.",
+      "tgt": "并确保这些内容符合品牌调性。",
+      "unit_id": "L00070.01",
+      "number": 76
+    },
+    {
+      "index": 100,
+      "start": 273.525,
+      "end": 275.715,
+      "src": "Because you probably don't want music\nstyles that make you want to sleep",
+      "tgt": "因为你肯定不希望在讲教程的时候，",
+      "unit_id": "L00071.01",
+      "number": 77
+    },
+    {
+      "index": 101,
+      "start": 276.405,
+      "end": 278.245,
+      "src": "when you're teaching a tutorial, for\nexample.",
+      "tgt": "用到的音乐风格却让人昏昏欲睡。",
+      "unit_id": "L00072.01",
+      "number": 78
+    },
+    {
+      "index": 102,
+      "start": 278.245,
+      "end": 281.285,
+      "src": "So for this, I have a sound base called\nEpidemic Sound.",
+      "tgt": "所以这次我用了一个叫Epidemic\nSound的声音库。",
+      "unit_id": "L00073.01",
+      "number": 79
+    },
+    {
+      "index": 103,
+      "start": 281.285,
+      "end": 282.235,
+      "src": "It is something I pay for.",
+      "tgt": "这得花钱买。",
+      "unit_id": "L00074.01",
+      "number": 80
+    },
+    {
+      "index": 104,
+      "start": 282.565,
+      "end": 283.515,
+      "src": "We'll talk about pricing at the end.",
+      "tgt": "最后再说价格。",
+      "unit_id": "L00074.02",
+      "number": 81
+    },
+    {
+      "index": 105,
+      "start": 284.245,
+      "end": 285.675,
+      "src": "And I'm also able to connect it to Claude,",
+      "tgt": "我还能把它连到Claude，",
+      "unit_id": "L00075.01",
+      "number": 82
+    },
+    {
+      "index": 106,
+      "start": 286.245,
+      "end": 288.035,
+      "src": "and it's going to be able to go out,\nsearch for sounds.",
+      "tgt": "然后它就能出去搜声音。",
+      "unit_id": "L00076.01",
+      "number": 83
+    },
+    {
+      "index": 107,
+      "start": 288.725,
+      "end": 291.0,
+      "src": "And the cool thing is that I can train it\non what I like.",
+      "tgt": "最酷的是，我能按自己的喜好来调教它。",
+      "unit_id": "L00077.01",
+      "number": 84
+    },
+    {
+      "index": 108,
+      "start": 291.0,
+      "end": 293.67,
+      "src": "Usually, I like having the hook be a\nlittle bit suspenseful.",
+      "tgt": "我一般喜欢让开头那段带点悬念。",
+      "unit_id": "L00078.01",
+      "number": 85
+    },
+    {
+      "index": 109,
+      "start": 293.72,
+      "end": 297.47,
+      "src": "And then I go into some kind of upbeat\nmusic that's kind of like lo-fi hip hop",
+      "tgt": "接着就切到那种挺轻快的音乐，有点像低保真嘻哈\n，",
+      "unit_id": "L00079.01",
+      "number": 86
+    },
+    {
+      "index": 110,
+      "start": 297.8,
+      "end": 299.19,
+      "src": "and have it very, very low.",
+      "tgt": "再把音量压得特别低。",
+      "unit_id": "L00080.01",
+      "number": 87
+    },
+    {
+      "index": 111,
+      "start": 299.32,
+      "end": 301.03,
+      "src": "And so, yeah, sound effects also have\ntheir own rules.",
+      "tgt": "所以嘛，音效也有它自己的规矩。",
+      "unit_id": "L00081.01",
+      "number": 88
+    },
+    {
+      "index": 112,
+      "start": 301.48,
+      "end": 303.43,
+      "src": "I'll talk about how I set up all of this\nright after.",
+      "tgt": "等会儿我就讲讲这些我都怎么设的。",
+      "unit_id": "L00082.01",
+      "number": 89
+    },
+    {
+      "index": 113,
+      "start": 303.8,
+      "end": 306.35,
+      "src": "And now, the seventh member of the team is\nactually the finisher.",
+      "tgt": "现在，团队的第七个成员，其实是收尾的人。",
+      "unit_id": "L00083.01",
+      "number": 90
+    },
+    {
+      "index": 114,
+      "start": 306.6,
+      "end": 308.7024,
+      "src": "This is the person who joins all the\npieces together and looks to see if",
+      "tgt": "这人负责把所有片段拼到一",
+      "unit_id": "L00084.01",
+      "number": 91
+    },
+    {
+      "index": 115,
+      "start": 308.7024,
+      "end": 310.98,
+      "src": "there's no mistakes.",
+      "tgt": "起，再检查一遍有没有 出错。",
+      "unit_id": "L00084.01",
+      "number": 91
+    },
+    {
+      "index": 116,
+      "start": 310.98,
+      "end": 312.69,
+      "src": "This tool is called FFmpeg.",
+      "tgt": "这个工具叫FFmpeg。",
+      "unit_id": "L00085.01",
+      "number": 92
+    },
+    {
+      "index": 117,
+      "start": 313.06,
+      "end": 315.34,
+      "src": "It's free and it's been cutting videos for\nmore than 20 years.",
+      "tgt": "它免费，而且剪视频已经二十多年了。",
+      "unit_id": "L00086.01",
+      "number": 93
+    },
+    {
+      "index": 118,
+      "start": 316.1,
+      "end": 317.93500000000006,
+      "src": "In fact, it's under the hood of pretty\nmuch every editing software that exists",
+      "tgt": "事实上，现在市面上几乎所有",
+      "unit_id": "L00087.01",
+      "number": 94
+    },
+    {
+      "index": 119,
+      "start": 317.93500000000006,
+      "end": 319.77000000000004,
+      "src": "today.",
+      "tgt": "剪辑软件，背后用的 都是它。",
+      "unit_id": "L00087.01",
+      "number": 94
+    },
+    {
+      "index": 120,
+      "start": 319.94,
+      "end": 322.53,
+      "src": "So Claude uses it and it's responsible for\ncutting out any black screens.",
+      "tgt": "所以Claude就用它来剪掉所有黑屏。",
+      "unit_id": "L00088.01",
+      "number": 95
+    },
+    {
+      "index": 121,
+      "start": 323.78,
+      "end": 325.6609523809523,
+      "src": "Check that there's nothing off with Audio\nSync before I ever get to even see the",
+      "tgt": "在我看到视频之前，得",
+      "unit_id": "L00089.01",
+      "number": 96
+    },
+    {
+      "index": 122,
+      "start": 325.6609523809523,
+      "end": 327.72999999999996,
+      "src": "video.",
+      "tgt": "先确认音频同步没问题。",
+      "unit_id": "L00089.01",
+      "number": 96
+    },
+    {
+      "index": 123,
+      "start": 328.179,
+      "end": 330.409,
+      "src": "So those are the seven tools or jobs that\nhave to be done.",
+      "tgt": "以上就是必须完成的七种工具或工作。",
+      "unit_id": "L00090.01",
+      "number": 97
+    },
+    {
+      "index": 124,
+      "start": 330.9,
+      "end": 333.84999999999997,
+      "src": "But none of those actually know what my\nvideo is supposed to look like.",
+      "tgt": "但它们根本不知道我的视频到底该是什么样子。",
+      "unit_id": "L00091.01",
+      "number": 98
+    },
+    {
+      "index": 125,
+      "start": 334.02,
+      "end": 337.54,
+      "src": "That's probably the most important thing,\nand it's called the skill.",
+      "tgt": "这大概才是最重要的，也就是所谓的“技巧”。",
+      "unit_id": "L00092.01",
+      "number": 99
+    },
+    {
+      "index": 126,
+      "start": 337.54,
+      "end": 339.6142857142857,
+      "src": "A skill is simply just a file of\ninstructions that Claude reads before it",
+      "tgt": "技巧其实就是一个指令文",
+      "unit_id": "L00093.01",
+      "number": 100
+    },
+    {
+      "index": 127,
+      "start": 339.6142857142857,
+      "end": 342.82,
+      "src": "does the job.",
+      "tgt": "件，Claude干活前 会先读取它。",
+      "unit_id": "L00093.01",
+      "number": 100
+    },
+    {
+      "index": 128,
+      "start": 342.82,
+      "end": 346.33,
+      "src": "And it's pretty much my editing style\nbroken down into specifics.",
+      "tgt": "这基本就是我的剪辑风格，拆解成了具体细节。",
+      "unit_id": "L00094.01",
+      "number": 101
+    },
+    {
+      "index": 129,
+      "start": 346.58,
+      "end": 348.60999999999996,
+      "src": "The colors, the fonts, the animations, the\nsounds,",
+      "tgt": "颜色、字体、动画、音效，",
+      "unit_id": "L00095.01",
+      "number": 102
+    },
+    {
+      "index": 130,
+      "start": 349.71,
+      "end": 352.02,
+      "src": "with a bunch of details that are basically\nmy preferences.",
+      "tgt": "还有一大堆基本上就是我的偏好的细节。",
+      "unit_id": "L00096.01",
+      "number": 103
+    },
+    {
+      "index": 131,
+      "start": 352.35,
+      "end": 355.1,
+      "src": "Mine is called YouTube Edit, and it's\nabout 1,400 lines.",
+      "tgt": "我的这个叫YouTube Edit，大概有\n1400行。",
+      "unit_id": "L00097.01",
+      "number": 104
+    },
+    {
+      "index": 132,
+      "start": 355.87,
+      "end": 359.47,
+      "src": "But the great thing is that Claude code\nactually built this whole thing for me.",
+      "tgt": "但最棒的是，Claude code居然帮我建\n好了这一整套东西。",
+      "unit_id": "L00098.01",
+      "number": 105
+    },
+    {
+      "index": 133,
+      "start": 359.47,
+      "end": 361.56,
+      "src": "So pretty much Claude runs all of the\ntools and then I tell Claude what good",
+      "tgt": "所以基本上就是Claude运行所有工具",
+      "unit_id": "L00099.01__L00100.01",
+      "number": 106
+    },
+    {
+      "index": 134,
+      "start": 361.56,
+      "end": 363.76,
+      "src": "looks like.",
+      "tgt": "，然后 我再告诉Claude什么样才算好。",
+      "unit_id": "L00099.01__L00100.01",
+      "number": 106
+    },
+    {
+      "index": 135,
+      "start": 363.76,
+      "end": 365.8027906976744,
+      "src": "Now, I'm not technical and you probably\naren't either, so I'm gonna show you",
+      "tgt": "现在，我不是搞技术的，你大概也不是，",
+      "unit_id": "L00101.01__L00102.01",
+      "number": 107
+    },
+    {
+      "index": 136,
+      "start": 365.8027906976744,
+      "end": 367.95906976744186,
+      "src": "exactly how to set this up.",
+      "tgt": "所以我这 就给你演示一下到底该怎么设置。",
+      "unit_id": "L00101.01__L00102.01",
+      "number": 107
+    },
+    {
+      "index": 137,
+      "start": 367.95906976744186,
+      "end": 368.64,
+      "src": "It's super easy.",
+      "tgt": "真的超简单。",
+      "unit_id": "L00101.01__L00102.01",
+      "number": 107
+    },
+    {
+      "index": 138,
+      "start": 368.64,
+      "end": 371.11,
+      "src": "Okay, so the first step to set this up is\nto download Claude.",
+      "tgt": "好，那设置的第一步，就是下载Claude。",
+      "unit_id": "L00103.01",
+      "number": 108
+    },
+    {
+      "index": 139,
+      "start": 371.84,
+      "end": 375.66999999999996,
+      "src": "Now, you can go to Anthropic's website and\nyou can download the desktop app.",
+      "tgt": "你可以去Anthropic的网站，下载那个桌\n面应用。",
+      "unit_id": "L00104.01",
+      "number": 109
+    },
+    {
+      "index": 140,
+      "start": 375.84,
+      "end": 377.925,
+      "src": "That's what I recommend, that's what I use\n.",
+      "tgt": "我推荐的就是它，我自己用的也是它。",
+      "unit_id": "L00105.01",
+      "number": 110
+    },
+    {
+      "index": 141,
+      "start": 377.925,
+      "end": 380.035,
+      "src": "And once you've properly installed that,\nit's gonna ask you to create an account.",
+      "tgt": "装好之后，它就会让你创建账户。",
+      "unit_id": "L00106.01",
+      "number": 111
+    },
+    {
+      "index": 142,
+      "start": 381.045,
+      "end": 383.875,
+      "src": "You're gonna have to use either Google or\nyour username and password to do that.",
+      "tgt": "你得用谷歌账号，或者用户名和密码来创建。",
+      "unit_id": "L00107.01",
+      "number": 112
+    },
+    {
+      "index": 143,
+      "start": 385.045,
+      "end": 387.031,
+      "src": "And if it is the first time you download\nClaude in general, it will try to set you",
+      "tgt": "要是你第一次下载Claude，",
+      "unit_id": "L00108.01",
+      "number": 113
+    },
+    {
+      "index": 144,
+      "start": 387.031,
+      "end": 388.355,
+      "src": "up.",
+      "tgt": "它会自动帮你配 置好。",
+      "unit_id": "L00108.01",
+      "number": 113
+    },
+    {
+      "index": 145,
+      "start": 389.365,
+      "end": 390.955,
+      "src": "I do recommend you go through that.",
+      "tgt": "我建议你把这个流程走一遍。",
+      "unit_id": "L00109.01",
+      "number": 114
+    },
+    {
+      "index": 146,
+      "start": 390.965,
+      "end": 393.715,
+      "src": "I have a full other video on how to get\nset up properly.",
+      "tgt": "我还有个完整的视频，专门讲怎么正确配置。",
+      "unit_id": "L00110.01",
+      "number": 115
+    },
+    {
+      "index": 147,
+      "start": 393.845,
+      "end": 395.355,
+      "src": "You don't actually need that here.",
+      "tgt": "不过这儿其实用不着那个。",
+      "unit_id": "L00111.01",
+      "number": 116
+    },
+    {
+      "index": 148,
+      "start": 395.445,
+      "end": 397.4,
+      "src": "Now, for this, you do need to have a paid\nplan.",
+      "tgt": "现在，用这个功能你得有个付费套餐。",
+      "unit_id": "L00112.01",
+      "number": 117
+    },
+    {
+      "index": 149,
+      "start": 397.4,
+      "end": 401.15,
+      "src": "I would upgrade to the $20 plan, no need\nto go for higher than that at this point.",
+      "tgt": "我会升级到20美元那个套餐，目前没必要选比它\n更高的。",
+      "unit_id": "L00113.01",
+      "number": 118
+    },
+    {
+      "index": 150,
+      "start": 401.8,
+      "end": 404.15000000000003,
+      "src": "And when you hit the main interface, it's\ngonna look something like this.",
+      "tgt": "进到主界面后，大概就是这个样子。",
+      "unit_id": "L00114.01",
+      "number": 119
+    },
+    {
+      "index": 151,
+      "start": 404.84,
+      "end": 407.22999999999996,
+      "src": "It might look a little different just\nbecause things change constantly.",
+      "tgt": "可能看着会有点不一样，因为东西总在变。",
+      "unit_id": "L00115.01",
+      "number": 120
+    },
+    {
+      "index": 152,
+      "start": 407.88,
+      "end": 409.8,
+      "src": "But basically, if you click on \"New\",",
+      "tgt": "不过基本上，你只要点“新建”，",
+      "unit_id": "L00116.01",
+      "number": 121
+    },
+    {
+      "index": 153,
+      "start": 409.8,
+      "end": 411.75,
+      "src": "you're gonna be able to start a new\nsession inside of Claude.",
+      "tgt": "就能在Claude里开一个新会话。",
+      "unit_id": "L00117.01",
+      "number": 122
+    },
+    {
+      "index": 154,
+      "start": 413.08,
+      "end": 415.477,
+      "src": "Now, up here on the left, we have Claude,\nwhich is the normal version, which is chat",
+      "tgt": "现在，左边这儿是Claude，也就",
+      "unit_id": "L00118.01",
+      "number": 123
+    },
+    {
+      "index": 155,
+      "start": 415.477,
+      "end": 417.31,
+      "src": "and cowork.",
+      "tgt": "是普通版， 能聊天也能协作。",
+      "unit_id": "L00118.01",
+      "number": 123
+    },
+    {
+      "index": 156,
+      "start": 418.36,
+      "end": 419.83000000000004,
+      "src": "And right here, we have Claude Code.",
+      "tgt": "然后这儿，是Claude Code。",
+      "unit_id": "L00119.01",
+      "number": 124
+    },
+    {
+      "index": 157,
+      "start": 420.44,
+      "end": 422.11,
+      "src": "So for this, you wanna be on Claude Code.",
+      "tgt": "所以这个，你得用Claude Code。",
+      "unit_id": "L00120.01",
+      "number": 125
+    },
+    {
+      "index": 158,
+      "start": 422.76,
+      "end": 424.0314285714286,
+      "src": "And then, there are a couple setup steps\nyou need to do before we actually move",
+      "tgt": "接着，在继续之前，你",
+      "unit_id": "L00121.01",
+      "number": 126
+    },
+    {
+      "index": 159,
+      "start": 424.0314285714286,
+      "end": 425.43,
+      "src": "forward.",
+      "tgt": "还得完成几个设置步骤。",
+      "unit_id": "L00121.01",
+      "number": 126
+    },
+    {
+      "index": 160,
+      "start": 426.2,
+      "end": 428.95,
+      "src": "First off, you wanna make sure that you\nare on local,",
+      "tgt": "首先，你得确保用的是本地模式，",
+      "unit_id": "L00122.01",
+      "number": 127
+    },
+    {
+      "index": 161,
+      "start": 429.24,
+      "end": 431.47,
+      "src": "meaning that it's using your computer to\ndo this.",
+      "tgt": "也就是用你自己的电脑来处理。",
+      "unit_id": "L00123.01",
+      "number": 128
+    },
+    {
+      "index": 162,
+      "start": 431.665,
+      "end": 433.1,
+      "src": "Next up, you need to actually determine\nthe folder in which you are going to be",
+      "tgt": "接下来，你得确定好你",
+      "unit_id": "L00124.01",
+      "number": 129
+    },
+    {
+      "index": 163,
+      "start": 433.1,
+      "end": 434.535,
+      "src": "working.",
+      "tgt": "要操作的那个文件夹。",
+      "unit_id": "L00124.01",
+      "number": 129
+    },
+    {
+      "index": 164,
+      "start": 435.985,
+      "end": 437.45500000000004,
+      "src": "For this, you can just click on this.",
+      "tgt": "这个的话，直接点这儿就行。",
+      "unit_id": "L00125.01",
+      "number": 130
+    },
+    {
+      "index": 165,
+      "start": 437.745,
+      "end": 441.055,
+      "src": "As you can see, I'm already connected to\nmy Claude Code folder.",
+      "tgt": "如你所见，我已经连上了我的Claude\nCode文件夹。",
+      "unit_id": "L00126.01",
+      "number": 131
+    },
+    {
+      "index": 166,
+      "start": 441.105,
+      "end": 444.33500000000004,
+      "src": "But you can basically click on this one\nand you can add a completely new folder.",
+      "tgt": "但你基本上可以点这个，然后添加一个全新的文件\n夹。",
+      "unit_id": "L00127.01",
+      "number": 132
+    },
+    {
+      "index": 167,
+      "start": 444.945,
+      "end": 447.665,
+      "src": "You can create one here and then you\nattach it.",
+      "tgt": "你可以在这里建一个，然后再把它关联上。",
+      "unit_id": "L00128.01",
+      "number": 133
+    },
+    {
+      "index": 168,
+      "start": 447.665,
+      "end": 449.665,
+      "src": "After that, you wanna turn the permissions\non auto",
+      "tgt": "之后，你要把权限改成自动模式，",
+      "unit_id": "L00129.01",
+      "number": 134
+    },
+    {
+      "index": 169,
+      "start": 449.96,
+      "end": 453.8,
+      "src": "so that it can run without you having to\nsay yes/no to thousands of things.",
+      "tgt": "这样它就能运行，你也不用对成千上万件事来回点\n“是/否”了。",
+      "unit_id": "L00130.01",
+      "number": 135
+    },
+    {
+      "index": 170,
+      "start": 453.8,
+      "end": 456.44,
+      "src": "And then, you're gonna wanna switch the\nmodel to one of the latest models",
+      "tgt": "然后，你要把模型换成最新的其中一个，",
+      "unit_id": "L00131.01",
+      "number": 136
+    },
+    {
+      "index": 171,
+      "start": 457.08,
+      "end": 458.51,
+      "src": "just because the setup is an important\nstep.",
+      "tgt": "就因为设置这一步很重要。",
+      "unit_id": "L00132.01",
+      "number": 137
+    },
+    {
+      "index": 172,
+      "start": 459.16,
+      "end": 461.35,
+      "src": "After that, it will be able to run on a\ncheaper model.",
+      "tgt": "之后，它就能用更便宜的模型运行了。",
+      "unit_id": "L00133.01",
+      "number": 138
+    },
+    {
+      "index": 173,
+      "start": 461.56,
+      "end": 462.975,
+      "src": "And finally, you do wanna come down here\nto the left and you want to go inside of",
+      "tgt": "最后，你要到左边这里来",
+      "unit_id": "L00134.01",
+      "number": 139
+    },
+    {
+      "index": 174,
+      "start": 462.975,
+      "end": 464.39,
+      "src": "Settings.",
+      "tgt": "，然后进到“设置”里。",
+      "unit_id": "L00134.01",
+      "number": 139
+    },
+    {
+      "index": 175,
+      "start": 466.12,
+      "end": 467.59000000000003,
+      "src": "You need to go to Claude Code.",
+      "tgt": "你要进到Claude Code。",
+      "unit_id": "L00135.01",
+      "number": 140
+    },
+    {
+      "index": 176,
+      "start": 468.41,
+      "end": 470.84000000000003,
+      "src": "And here, you can copy the exact settings\nthat I have here.",
+      "tgt": "然后这儿，你可以直接复制我这里的设置。",
+      "unit_id": "L00136.01",
+      "number": 141
+    },
+    {
+      "index": 177,
+      "start": 471.53,
+      "end": 473.64,
+      "src": "Or, you can just decide to basically turn\non",
+      "tgt": "或者，你也可以直接决定打开——",
+      "unit_id": "L00137.01",
+      "number": 142
+    },
+    {
+      "index": 178,
+      "start": 474.65,
+      "end": 477.28999999999996,
+      "src": "one very important thing for us to be able\nto browse the internet,",
+      "tgt": "有一项对我们上网来说特别重要的设置，",
+      "unit_id": "L00138.01",
+      "number": 143
+    },
+    {
+      "index": 179,
+      "start": 478.01,
+      "end": 480.76,
+      "src": "which is to turn that on, and that's done\nright here.",
+      "tgt": "就是把它打开，就在这儿操作。",
+      "unit_id": "L00139.01",
+      "number": 144
+    },
+    {
+      "index": 180,
+      "start": 482.01,
+      "end": 483.845,
+      "src": "When you're done, you can pretty much\nclose this and you can go back to the main",
+      "tgt": "弄好后，你基本可以关掉这个窗",
+      "unit_id": "L00140.01",
+      "number": 145
+    },
+    {
+      "index": 181,
+      "start": 483.845,
+      "end": 485.68,
+      "src": "menu, click on \"New\".",
+      "tgt": "口，返回主菜单， 点“新建”。",
+      "unit_id": "L00140.01",
+      "number": 145
+    },
+    {
+      "index": 182,
+      "start": 486.8,
+      "end": 490.63,
+      "src": "Then Claude Code is actually gonna be very\ngood at setting this up itself.",
+      "tgt": "然后Claude Code自己就能很轻松地把\n这些都设置好。",
+      "unit_id": "L00141.01",
+      "number": 146
+    },
+    {
+      "index": 183,
+      "start": 490.72,
+      "end": 492.83000000000004,
+      "src": "So in this case, I'll give it a prompt\nlike this.",
+      "tgt": "所以这次，我就给它一段这样的提示。",
+      "unit_id": "L00142.01",
+      "number": 147
+    },
+    {
+      "index": 184,
+      "start": 493.2,
+      "end": 495.78999999999996,
+      "src": "\"Could you please create a video editing\nsystem for me?",
+      "tgt": "“能帮我创建一个视频剪辑系统吗？",
+      "unit_id": "L00143.01",
+      "number": 148
+    },
+    {
+      "index": 185,
+      "start": 496.32,
+      "end": 501.1457142857143,
+      "src": "I'd like to use hyperframes, FFmpeg,",
+      "tgt": "我想在这个系统里用hyperframes、\nFFmpeg、TELLA和Epidemic",
+      "unit_id": "L00144.01",
+      "number": 149
+    },
+    {
+      "index": 186,
+      "start": 501.1457142857143,
+      "end": 501.95,
+      "src": "TELLA , and Epidemic sounds for this\nsystem.",
+      "tgt": "sounds。",
+      "unit_id": "L00144.01",
+      "number": 149
+    },
+    {
+      "index": 187,
+      "start": 502.96,
+      "end": 504.66799999999995,
+      "src": "Run me through how to set",
+      "tgt": "一步步教我该怎么把它设置好。",
+      "unit_id": "L00145.01",
+      "number": 150
+    },
+    {
+      "index": 188,
+      "start": 504.66799999999995,
+      "end": 504.78999999999996,
+      "src": "it up step by step.\"",
+      "tgt": "”",
+      "unit_id": "L00145.01",
+      "number": 150
+    },
+    {
+      "index": 189,
+      "start": 506.25,
+      "end": 508.97,
+      "src": "So one route is simply to get it to guide\nyou through the process.",
+      "tgt": "所以一种方法就是直接让它一步步带你完成整个过\n程。",
+      "unit_id": "L00146.01",
+      "number": 151
+    },
+    {
+      "index": 190,
+      "start": 508.97,
+      "end": 509.97,
+      "src": "Now, the other way to do this,",
+      "tgt": "那另一种做法呢，",
+      "unit_id": "L00147.01",
+      "number": 152
+    },
+    {
+      "index": 191,
+      "start": 510.17,
+      "end": 512.213870967742,
+      "src": "Claude should be able to download and\ninstall everything that it needs and it",
+      "tgt": "Claude应该能下载并安装它需要的",
+      "unit_id": "L00148.01",
+      "number": 153
+    },
+    {
+      "index": 192,
+      "start": 512.213870967742,
+      "end": 513.69,
+      "src": "can.",
+      "tgt": "所有东西 ，它完全可以做到。",
+      "unit_id": "L00148.01",
+      "number": 153
+    },
+    {
+      "index": 193,
+      "start": 513.69,
+      "end": 516.96,
+      "src": "It will ask you to actually connect a\ncouple of these tools as well.",
+      "tgt": "它还会要求你实际连接上其中几个工具。",
+      "unit_id": "L00149.01",
+      "number": 154
+    },
+    {
+      "index": 194,
+      "start": 517.53,
+      "end": 519.53,
+      "src": "You come here to the left and you go into\nCustomize,",
+      "tgt": "你来到左边这里，然后点“自定义”，",
+      "unit_id": "L00150.01",
+      "number": 155
+    },
+    {
+      "index": 195,
+      "start": 520.33,
+      "end": 521.44,
+      "src": "and you go into Connectors.",
+      "tgt": "再点“连接器”。",
+      "unit_id": "L00151.01",
+      "number": 156
+    },
+    {
+      "index": 196,
+      "start": 522.409,
+      "end": 524.31,
+      "src": "And then, you can pretty much select the\ntool.",
+      "tgt": "然后，你基本上就能选工具了。",
+      "unit_id": "L00152.01",
+      "number": 157
+    },
+    {
+      "index": 197,
+      "start": 524.31,
+      "end": 526.06,
+      "src": "So in this case, I'll go and look for\nTELLA,",
+      "tgt": "所以这次呢，我来找找TELLA，",
+      "unit_id": "L00153.01",
+      "number": 158
+    },
+    {
+      "index": 198,
+      "start": 526.77,
+      "end": 528.36,
+      "src": "which is my screen recording device.",
+      "tgt": "也就是我的屏幕录制设备。",
+      "unit_id": "L00154.01",
+      "number": 159
+    },
+    {
+      "index": 199,
+      "start": 528.45,
+      "end": 530.0400000000001,
+      "src": "As you can see, I've already attached this\n.",
+      "tgt": "如你所见，我已经连上它了。",
+      "unit_id": "L00155.01",
+      "number": 160
+    },
+    {
+      "index": 200,
+      "start": 530.45,
+      "end": 532.88,
+      "src": "If not, you can just click on the plus\nbutton right there.",
+      "tgt": "不行的话，直接点那儿那个加号就行。",
+      "unit_id": "L00156.01",
+      "number": 161
+    },
+    {
+      "index": 201,
+      "start": 533.41,
+      "end": 535.0799999999999,
+      "src": "And for Epidemic sounds, it's the same\nthing.",
+      "tgt": "至于Epidemic sounds，也是一样\n的。",
+      "unit_id": "L00157.01",
+      "number": 162
+    },
+    {
+      "index": 202,
+      "start": 535.17,
+      "end": 536.81,
+      "src": "Look for Epidemic sounds.",
+      "tgt": "找找Epidemic sounds。",
+      "unit_id": "L00158.01",
+      "number": 163
+    },
+    {
+      "index": 203,
+      "start": 537.25,
+      "end": 538.89,
+      "src": "There you go, it is the music and sound\neffects.",
+      "tgt": "喏，就是这个，是音乐和音效。",
+      "unit_id": "L00159.01",
+      "number": 164
+    },
+    {
+      "index": 204,
+      "start": 540.0,
+      "end": 541.15,
+      "src": "Go ahead and turn this on.",
+      "tgt": "直接把它打开就行。",
+      "unit_id": "L00160.01",
+      "number": 165
+    },
+    {
+      "index": 205,
+      "start": 541.2,
+      "end": 542.7900000000001,
+      "src": "It'll ask you to log in in a separate\nbrowser.",
+      "tgt": "它会让你换个浏览器登录。",
+      "unit_id": "L00161.01",
+      "number": 166
+    },
+    {
+      "index": 206,
+      "start": 543.04,
+      "end": 544.7099999999999,
+      "src": "Once you've done that, you'll see this\ncheck mark.",
+      "tgt": "登录完，你就会看到这个对勾。",
+      "unit_id": "L00162.01",
+      "number": 167
+    },
+    {
+      "index": 207,
+      "start": 545.12,
+      "end": 547.44,
+      "src": "Now, all the other things it needs, it'll\ndownload itself.",
+      "tgt": "现在，它需要的其他东西都会自己下载。",
+      "unit_id": "L00163.01",
+      "number": 168
+    },
+    {
+      "index": 208,
+      "start": 547.44,
+      "end": 549.6700000000001,
+      "src": "But if it doesn't find hyperframes for any\nreason,",
+      "tgt": "但如果它因为任何原因找不到\nhyperframes，",
+      "unit_id": "L00164.01",
+      "number": 169
+    },
+    {
+      "index": 209,
+      "start": 550.4,
+      "end": 551.99,
+      "src": "you can simply Google \"hyperframes\",",
+      "tgt": "你直接谷歌“hyperframes”就行。",
+      "unit_id": "L00165.01",
+      "number": 170
+    },
+    {
+      "index": 210,
+      "start": 552.08,
+      "end": 553.59,
+      "src": "you'll find the link to the repo.",
+      "tgt": "你会找到仓库的链接。",
+      "unit_id": "L00166.01",
+      "number": 171
+    },
+    {
+      "index": 211,
+      "start": 554.08,
+      "end": 556.08,
+      "src": "But you can also find hyperframes inside\nof the connectors too.",
+      "tgt": "不过，在连接器里也能找到\nhyperframes。",
+      "unit_id": "L00167.01",
+      "number": 172
+    },
+    {
+      "index": 212,
+      "start": 557.28,
+      "end": 558.56,
+      "src": "Now, once you've connected all those\nthings,",
+      "tgt": "现在，把这些都连好后，",
+      "unit_id": "L00168.01",
+      "number": 173
+    },
+    {
+      "index": 213,
+      "start": 558.787,
+      "end": 562.455,
+      "src": "you want to make sure that it saves them\nas a skill on your computer.",
+      "tgt": "你要确保它把这些东西作为技能保存在你的电脑上\n。",
+      "unit_id": "L00169.01",
+      "number": 174
+    },
+    {
+      "index": 214,
+      "start": 562.455,
+      "end": 566.125,
+      "src": "And once that has actually saved inside\nthat one chat or thread,",
+      "tgt": "等它真正保存在那一个聊天或对话线程里之后，",
+      "unit_id": "L00170.01",
+      "number": 175
+    },
+    {
+      "index": 215,
+      "start": 566.295,
+      "end": 568.855,
+      "src": "you want to open a new thread and give it\na first test.",
+      "tgt": "你就得开一个新线程，给它做个初步测试。",
+      "unit_id": "L00171.01",
+      "number": 176
+    },
+    {
+      "index": 216,
+      "start": 568.855,
+      "end": 571.335,
+      "src": "Now, as you can see, setting these things\nup is pretty straightforward.",
+      "tgt": "现在，如你所见，设置这些东西其实很简单。",
+      "unit_id": "L00172.01",
+      "number": 177
+    },
+    {
+      "index": 217,
+      "start": 571.335,
+      "end": 574.965,
+      "src": "What takes time is to basically fine-tune\nthe look and feel.",
+      "tgt": "真正花时间的是把外观和感觉都微调到位。",
+      "unit_id": "L00173.01",
+      "number": 178
+    },
+    {
+      "index": 218,
+      "start": 575.095,
+      "end": 577.0450000000001,
+      "src": "And if you'd like to just download my\nskill and use that,",
+      "tgt": "如果你想直接下载我的技能来用，",
+      "unit_id": "L00174.01",
+      "number": 179
+    },
+    {
+      "index": 219,
+      "start": 577.49,
+      "end": 579.6800000000001,
+      "src": "you can feel free to do so inside my free\ncommunity.",
+      "tgt": "随时可以在我的免费社区里操作。",
+      "unit_id": "L00175.01",
+      "number": 180
+    },
+    {
+      "index": 220,
+      "start": 579.81,
+      "end": 580.7299999999999,
+      "src": "Link is below.",
+      "tgt": "链接在下面。",
+      "unit_id": "L00176.01",
+      "number": 181
+    },
+    {
+      "index": 221,
+      "start": 581.01,
+      "end": 583.56,
+      "src": "But now, let's jump into how I actually\ntaught it my style.",
+      "tgt": "不过现在，咱们直接看我到底是怎么教它的。",
+      "unit_id": "L00177.01",
+      "number": 182
+    },
+    {
+      "index": 222,
+      "start": 583.569,
+      "end": 587.41,
+      "src": "Well, at first, I pretty much gave it\nnotes on every single thing I made.",
+      "tgt": "嗯，一开始，我做的每样东西几乎都给它备注了说\n明。",
+      "unit_id": "L00178.01",
+      "number": 183
+    },
+    {
+      "index": 223,
+      "start": 587.41,
+      "end": 591.4019999999999,
+      "src": "And I started with small clips, usually\njust the hook of a video.",
+      "tgt": "我先从短片段开始，通常只截视频最吸引人的那部\n分。",
+      "unit_id": "L00179.01",
+      "number": 184
+    },
+    {
+      "index": 224,
+      "start": 591.4019999999999,
+      "end": 592.602,
+      "src": "And when it gave me a first edit,",
+      "tgt": "等它给出初稿后，",
+      "unit_id": "L00180.01",
+      "number": 185
+    },
+    {
+      "index": 225,
+      "start": 592.6819999999999,
+      "end": 596.122,
+      "src": "I would basically give it very specific\ntimestamped feedback",
+      "tgt": "我基本上都会给出带时间戳的、非常具体的反馈，",
+      "unit_id": "L00181.01",
+      "number": 186
+    },
+    {
+      "index": 226,
+      "start": 596.122,
+      "end": 597.322,
+      "src": "on the work it had done.",
+      "tgt": "针对它完成的工作。",
+      "unit_id": "L00182.01",
+      "number": 187
+    },
+    {
+      "index": 227,
+      "start": 597.3319999999999,
+      "end": 599.4419999999999,
+      "src": "And then 10 days in, I actually took one\nof the hooks",
+      "tgt": "十天后，我直接拿其中一个片头，",
+      "unit_id": "L00183.01",
+      "number": 188
+    },
+    {
+      "index": 228,
+      "start": 599.8119999999999,
+      "end": 601.3719999999998,
+      "src": "and started just implementing sound.",
+      "tgt": "开始给它配上声音。",
+      "unit_id": "L00184.01",
+      "number": 189
+    },
+    {
+      "index": 229,
+      "start": 602.0519999999999,
+      "end": 604.6419999999999,
+      "src": "I had to try a bunch of different sound\neffects on one hook,",
+      "tgt": "我得在一个片头上试好多不同的音效，",
+      "unit_id": "L00185.01",
+      "number": 190
+    },
+    {
+      "index": 230,
+      "start": 604.9319999999999,
+      "end": 607.4119999999999,
+      "src": "and I had to go through about 8 to 10\ndifferent sounds",
+      "tgt": "我得试过大概8到10种不同的声音",
+      "unit_id": "L00186.01",
+      "number": 191
+    },
+    {
+      "index": 231,
+      "start": 607.4119999999999,
+      "end": 609.482,
+      "src": "until I found something that really worked\nfor what I enjoyed.",
+      "tgt": "直到找到真正适合我口味的那个。",
+      "unit_id": "L00187.01",
+      "number": 192
+    },
+    {
+      "index": 232,
+      "start": 610.2919999999999,
+      "end": 612.9619999999999,
+      "src": "Because what it had made was a little too\nbusy for my liking.",
+      "tgt": "因为它生成的效果对我来说有点太杂了。",
+      "unit_id": "L00188.01",
+      "number": 193
+    },
+    {
+      "index": 233,
+      "start": 613.4119999999999,
+      "end": 615.4119999999999,
+      "src": "So this was mainly used for sound effects,\nright?",
+      "tgt": "所以这个主要是用来做音效的，对吧？",
+      "unit_id": "L00189.01",
+      "number": 194
+    },
+    {
+      "index": 234,
+      "start": 615.6489999999999,
+      "end": 617.967,
+      "src": "When something pops up, you could have a\nlittle pop.",
+      "tgt": "有东西弹出来的时候，可以配个“砰”的小声。",
+      "unit_id": "L00190.01",
+      "number": 195
+    },
+    {
+      "index": 235,
+      "start": 617.967,
+      "end": 620.5169999999999,
+      "src": "When something's clicked on, you can have\nthe little clicking sound.",
+      "tgt": "有人点击的时候，可以配个小小的点击声。",
+      "unit_id": "L00191.01",
+      "number": 196
+    },
+    {
+      "index": 236,
+      "start": 620.607,
+      "end": 622.117,
+      "src": "And as it started making decisions on how\nto use",
+      "tgt": "等它开始决定要怎么用",
+      "unit_id": "L00192.01",
+      "number": 197
+    },
+    {
+      "index": 237,
+      "start": 622.7669999999999,
+      "end": 624.477,
+      "src": "the different sounds I gave it access to,",
+      "tgt": "我给它的那些不同声音时，",
+      "unit_id": "L00193.01",
+      "number": 198
+    },
+    {
+      "index": 238,
+      "start": 624.6869999999999,
+      "end": 627.1569999999999,
+      "src": "I basically told it, \"Okay, let's reduce\nthe sound of that.",
+      "tgt": "我基本上就跟它说：“行，把这个声音调小点。",
+      "unit_id": "L00194.01",
+      "number": 199
+    },
+    {
+      "index": 239,
+      "start": 627.4069999999999,
+      "end": 630.163842105263,
+      "src": "Okay, I think that I",
+      "tgt": "好吧，我觉得这个声音我一点都不喜欢。",
+      "unit_id": "L00195.01",
+      "number": 200
+    },
+    {
+      "index": 240,
+      "start": 630.163842105263,
+      "end": 630.3169999999999,
+      "src": "don't like this sound at all.",
+      "tgt": "”",
+      "unit_id": "L00195.01",
+      "number": 200
+    },
+    {
+      "index": 241,
+      "start": 630.4469999999999,
+      "end": 631.3469999999999,
+      "src": "Just take it",
+      "tgt": "直接把它完全去掉。",
+      "unit_id": "L00196.01",
+      "number": 201
+    },
+    {
+      "index": 242,
+      "start": 631.3469999999999,
+      "end": 631.4469999999999,
+      "src": "completely out.\"",
+      "tgt": "\"",
+      "unit_id": "L00196.01",
+      "number": 201
+    },
+    {
+      "index": 243,
+      "start": 631.887,
+      "end": 634.3169999999999,
+      "src": "And slowly but surely, it was learning\nexactly what I liked.",
+      "tgt": "然后，它就这么一点点地，学会了我的喜好。",
+      "unit_id": "L00197.01",
+      "number": 202
+    },
+    {
+      "index": 244,
+      "start": 634.8069999999999,
+      "end": 636.6469999999999,
+      "src": "Now, here's the absolute key to all of\nthis.",
+      "tgt": "现在，这才是整个流程的关键。",
+      "unit_id": "L00198.01",
+      "number": 203
+    },
+    {
+      "index": 245,
+      "start": 636.6469999999999,
+      "end": 639.0369999999999,
+      "src": "When you actually give it feedback and\nafter that,",
+      "tgt": "等你真的给了它反馈，在那之后，",
+      "unit_id": "L00199.01",
+      "number": 204
+    },
+    {
+      "index": 246,
+      "start": 639.4469999999999,
+      "end": 642.9169999999999,
+      "src": "you tell it to save what it's learned to\nthe actual skill itself.",
+      "tgt": "你就让它把学到的东西，存到技能本身里去。",
+      "unit_id": "L00200.01",
+      "number": 205
+    },
+    {
+      "index": 247,
+      "start": 643.367,
+      "end": 645.367,
+      "src": "That way, when you create a new edit,",
+      "tgt": "这样，每次新建剪辑时，",
+      "unit_id": "L00201.01",
+      "number": 206
+    },
+    {
+      "index": 248,
+      "start": 645.367,
+      "end": 647.367,
+      "src": "you'll constantly be improving your\nediting system.",
+      "tgt": "你的剪辑系统就会不断进步。",
+      "unit_id": "L00202.01",
+      "number": 207
+    },
+    {
+      "index": 249,
+      "start": 648.007,
+      "end": 651.0469999999999,
+      "src": "Then, I created a new session where I had\nthis updated skill,",
+      "tgt": "接着，我开了一个新会话，用上了这个更新后的技\n能，",
+      "unit_id": "L00203.01",
+      "number": 208
+    },
+    {
+      "index": 250,
+      "start": 651.0469999999999,
+      "end": 652.757,
+      "src": "and I basically put another hook.",
+      "tgt": "然后我又加上了另一个钩子。",
+      "unit_id": "L00204.01",
+      "number": 209
+    },
+    {
+      "index": 251,
+      "start": 652.967,
+      "end": 656.0869999999999,
+      "src": "This time, I loved that it had gone out\nand grabbed a specific logo",
+      "tgt": "这回，我很满意它居然自己去取了一个特定的徽标\n。",
+      "unit_id": "L00205.01",
+      "number": 210
+    },
+    {
+      "index": 252,
+      "start": 656.0869999999999,
+      "end": 657.6869999999999,
+      "src": "and used the sound effect to show it,",
+      "tgt": "还用音效把它表现了出来，",
+      "unit_id": "L00206.01",
+      "number": 211
+    },
+    {
+      "index": 253,
+      "start": 657.6869999999999,
+      "end": 659.7969999999999,
+      "src": "but I wanted it to be shown slightly\nlarger.",
+      "tgt": "但我希望它显示得再大一点。",
+      "unit_id": "L00207.01",
+      "number": 212
+    },
+    {
+      "index": 254,
+      "start": 660.4069999999999,
+      "end": 661.5169999999999,
+      "src": "I also didn't really like the color\npalette",
+      "tgt": "我也不太喜欢它",
+      "unit_id": "L00208.01",
+      "number": 213
+    },
+    {
+      "index": 255,
+      "start": 662.247,
+      "end": 664.7969999999999,
+      "src": "it was using for some sections or some\nanimations,",
+      "tgt": "在某些段落或动画里用的那套配色，",
+      "unit_id": "L00209.01",
+      "number": 214
+    },
+    {
+      "index": 256,
+      "start": 665.2869999999999,
+      "end": 666.637,
+      "src": "so I decided to switch it up a little bit.",
+      "tgt": "所以就决定稍微换一换。",
+      "unit_id": "L00210.01",
+      "number": 215
+    },
+    {
+      "index": 257,
+      "start": 667.127,
+      "end": 670.597,
+      "src": "And the more videos I made and provided\nfeedback on, the better it got.",
+      "tgt": "后来我做的视频越多、给的反馈越多，效果就越好\n。",
+      "unit_id": "L00211.01",
+      "number": 216
+    },
+    {
+      "index": 258,
+      "start": 670.722,
+      "end": 674.1619999999999,
+      "src": "And today, my skill has 36 different rules\nthat it has to abide to.",
+      "tgt": "现在，我的这套技能有36条必须遵守的规则。",
+      "unit_id": "L00212.01",
+      "number": 217
+    },
+    {
+      "index": 259,
+      "start": 674.1619999999999,
+      "end": 676.872,
+      "src": "Then, I started discovering really cool\nnew animations,",
+      "tgt": "再后来，我发现了一些特别酷的动画效果，",
+      "unit_id": "L00213.01",
+      "number": 218
+    },
+    {
+      "index": 260,
+      "start": 676.882,
+      "end": 678.472,
+      "src": "and I started deciding which ones would\nmake sense",
+      "tgt": "就开始琢磨哪些效果合适，",
+      "unit_id": "L00214.01",
+      "number": 219
+    },
+    {
+      "index": 261,
+      "start": 678.8019999999999,
+      "end": 680.752,
+      "src": "for the content that I actually made.",
+      "tgt": "能配得上我实际做出来的内容。",
+      "unit_id": "L00215.01",
+      "number": 220
+    },
+    {
+      "index": 262,
+      "start": 680.882,
+      "end": 682.6719999999999,
+      "src": "And so slowly, I started adding more of\nthese.",
+      "tgt": "就这么慢慢加多了这些。",
+      "unit_id": "L00216.01",
+      "number": 221
+    },
+    {
+      "index": 263,
+      "start": 683.2819999999999,
+      "end": 685.232,
+      "src": "Every time I used them, I would fine-tune\nthem.",
+      "tgt": "每用一次，我就微调一次。",
+      "unit_id": "L00217.01",
+      "number": 222
+    },
+    {
+      "index": 264,
+      "start": 686.002,
+      "end": 688.3119999999999,
+      "src": "And the awesome thing is that every note\nthat I gave it,",
+      "tgt": "最棒的是，我给它的每一条备注，",
+      "unit_id": "L00218.01",
+      "number": 223
+    },
+    {
+      "index": 265,
+      "start": 688.487,
+      "end": 690.7669999999999,
+      "src": "the next time, it never made that same\nmistake again.",
+      "tgt": "下次它都再没犯过同样的错。",
+      "unit_id": "L00219.01",
+      "number": 224
+    },
+    {
+      "index": 266,
+      "start": 691.0469999999999,
+      "end": 693.847,
+      "src": "Meaning that I basically was getting\nexactly the output",
+      "tgt": "也就是说，我基本能得到完全符合预期的输出，",
+      "unit_id": "L00220.01",
+      "number": 225
+    },
+    {
+      "index": 267,
+      "start": 693.8459999999999,
+      "end": 694.8069999999999,
+      "src": "that I was looking for.",
+      "tgt": "正是我想要的那种。",
+      "unit_id": "L00221.01",
+      "number": 226
+    },
+    {
+      "index": 268,
+      "start": 694.8069999999999,
+      "end": 695.8369999999999,
+      "src": "Alright, my friends, enough talking.",
+      "tgt": "好了，各位，不说了。",
+      "unit_id": "L00222.01",
+      "number": 227
+    },
+    {
+      "index": 269,
+      "start": 696.247,
+      "end": 697.9169999999999,
+      "src": "Let me actually show you this in action.",
+      "tgt": "我来给你们实际演示一下。",
+      "unit_id": "L00223.01",
+      "number": 228
+    },
+    {
+      "index": 270,
+      "start": 698.3269999999999,
+      "end": 700.4069999999999,
+      "src": "Okay, so we're back inside Claude Code now\n.",
+      "tgt": "好，我们现在又回到了Claude Code里\n。",
+      "unit_id": "L00224.01",
+      "number": 229
+    },
+    {
+      "index": 271,
+      "start": 700.4069999999999,
+      "end": 703.7969999999999,
+      "src": "And since I've already created the skill\nor a first version of it,",
+      "tgt": "既然我已经创建好了这个技能，或者说它的第一版\n，",
+      "unit_id": "L00225.01",
+      "number": 230
+    },
+    {
+      "index": 272,
+      "start": 703.9269999999999,
+      "end": 705.5669999999999,
+      "src": "I can pretty much run it at any time.",
+      "tgt": "我随时都能让它跑起来。",
+      "unit_id": "L00226.01",
+      "number": 231
+    },
+    {
+      "index": 273,
+      "start": 705.8069999999999,
+      "end": 706.2869999999999,
+      "src": "I'll come here.",
+      "tgt": "我来这儿。",
+      "unit_id": "L00227.01",
+      "number": 232
+    },
+    {
+      "index": 274,
+      "start": 707.007,
+      "end": 709.0369999999999,
+      "src": "I'm gonna basically add a raw file.",
+      "tgt": "我主要是要加个原始文件。",
+      "unit_id": "L00228.01",
+      "number": 233
+    },
+    {
+      "index": 275,
+      "start": 709.1669999999999,
+      "end": 712.997,
+      "src": "So here, I have a hook that I recorded\nearlier today",
+      "tgt": "喏，这儿有个我今天早些时候录的片头，",
+      "unit_id": "L00229.01",
+      "number": 234
+    },
+    {
+      "index": 276,
+      "start": 713.727,
+      "end": 715.1569999999999,
+      "src": "for this specific video.",
+      "tgt": "就是给这个视频用的。",
+      "unit_id": "L00230.01",
+      "number": 235
+    },
+    {
+      "index": 277,
+      "start": 715.247,
+      "end": 716.717,
+      "src": "I'm gonna go ahead and open this one.",
+      "tgt": "我现在就把它打开。",
+      "unit_id": "L00231.01",
+      "number": 236
+    },
+    {
+      "index": 278,
+      "start": 717.6469999999999,
+      "end": 718.9569999999999,
+      "src": "Then, I'm gonna tell it this.",
+      "tgt": "然后，我要这么跟它说。",
+      "unit_id": "L00232.01",
+      "number": 237
+    },
+    {
+      "index": 279,
+      "start": 720.1519999999999,
+      "end": 725.2919999999999,
+      "src": "Use my YouTube editing skill to edit this\nhook for my YouTube video.",
+      "tgt": "用我的YouTube剪辑技巧，为我的\nYouTube视频剪辑这个片头。",
+      "unit_id": "L00233.01",
+      "number": 238
+    },
+    {
+      "index": 280,
+      "start": 725.352,
+      "end": 727.422,
+      "src": "I can also choose to add any additional\nthings I'd like,",
+      "tgt": "我还可以选着加一些我想要的东西，",
+      "unit_id": "L00234.01",
+      "number": 239
+    },
+    {
+      "index": 281,
+      "start": 728.0719999999999,
+      "end": 730.9019999999999,
+      "src": "if there are specific things I'd like it\nto do inside the hook.",
+      "tgt": "要是片头里有些特定的活儿想让它干的话。",
+      "unit_id": "L00235.01",
+      "number": 240
+    },
+    {
+      "index": 282,
+      "start": 730.9519999999999,
+      "end": 733.9119999999999,
+      "src": "So in this case, when I say things like\nzoom,",
+      "tgt": "所以这时候，只要我说“缩放”之类的词，",
+      "unit_id": "L00236.01",
+      "number": 241
+    },
+    {
+      "index": 283,
+      "start": 733.9119999999999,
+      "end": 735.982,
+      "src": "you can actually show a zoom.",
+      "tgt": "你就能真的做出缩放效果。",
+      "unit_id": "L00237.01",
+      "number": 242
+    },
+    {
+      "index": 284,
+      "start": 736.012,
+      "end": 739.712,
+      "src": "When I talk about a sound effect, you can\nmake a sound effect.",
+      "tgt": "我说要加个音效，你就能真的配上一个音效。",
+      "unit_id": "L00238.01",
+      "number": 243
+    },
+    {
+      "index": 285,
+      "start": 740.3319999999999,
+      "end": 742.0019999999998,
+      "src": "And then when I talk about the different\nanimations,",
+      "tgt": "然后，只要我提到各种动画，",
+      "unit_id": "L00239.01",
+      "number": 244
+    },
+    {
+      "index": 286,
+      "start": 743.132,
+      "end": 746.1619999999999,
+      "src": "you can basically showcase three of the\nmost impressive animations,",
+      "tgt": "你基本上就能展示三种最拿得出手的动画，",
+      "unit_id": "L00240.01",
+      "number": 245
+    },
+    {
+      "index": 287,
+      "start": 746.8919999999999,
+      "end": 748.3219999999999,
+      "src": "either that I've already done in the past",
+      "tgt": "要么是我以前做过的，",
+      "unit_id": "L00241.01",
+      "number": 246
+    },
+    {
+      "index": 288,
+      "start": 748.6519999999999,
+      "end": 751.8019999999999,
+      "src": "or that you really like from the library\nthat we have inside the skill.",
+      "tgt": "要么是你从技能库里的素材里特别喜欢的。",
+      "unit_id": "L00242.01",
+      "number": 247
+    },
+    {
+      "index": 289,
+      "start": 752.5719999999999,
+      "end": 754.0419999999999,
+      "src": "So those are just instructions that I'm\ngiving it",
+      "tgt": "这些其实就是我给它的指令，",
+      "unit_id": "L00243.01",
+      "number": 248
+    },
+    {
+      "index": 290,
+      "start": 754.1719999999999,
+      "end": 755.732,
+      "src": "because I know the hook I recorded",
+      "tgt": "因为我知道自己录好的那段片头，",
+      "unit_id": "L00244.01",
+      "number": 249
+    },
+    {
+      "index": 291,
+      "start": 755.732,
+      "end": 759.0419999999999,
+      "src": "and I'd like to actually show the editing\nskill inside the hook as well.",
+      "tgt": "也想顺便把剪辑技巧展示在片头里。",
+      "unit_id": "L00245.01",
+      "number": 250
+    },
+    {
+      "index": 292,
+      "start": 759.8919999999999,
+      "end": 761.5319999999999,
+      "src": "But you could give it pretty much any\ninstructions.",
+      "tgt": "不过你几乎可以给它任何指令。",
+      "unit_id": "L00246.01",
+      "number": 251
+    },
+    {
+      "index": 293,
+      "start": 761.732,
+      "end": 763.882,
+      "src": "At this point, I'm gonna pretty much just\npress Enter.",
+      "tgt": "到这一步，我差不多就直接回车了。",
+      "unit_id": "L00247.01",
+      "number": 252
+    },
+    {
+      "index": 294,
+      "start": 764.132,
+      "end": 766.7719999999999,
+      "src": "And let's see what Claude actually does.",
+      "tgt": "然后我们来看看Claude到底能做什么。",
+      "unit_id": "L00248.01",
+      "number": 253
+    },
+    {
+      "index": 295,
+      "start": 766.7719999999999,
+      "end": 770.6919999999999,
+      "src": "Running the skill, YouTube edits, as I\nsaid, so it finds the skill",
+      "tgt": "运行这个技能，YouTube edits，就\n像我说的，它会先找到这个技能，",
+      "unit_id": "L00249.01",
+      "number": 254
+    },
+    {
+      "index": 296,
+      "start": 770.6919999999999,
+      "end": 772.0419999999999,
+      "src": "and it just starts running it.",
+      "tgt": "然后就直接开始运行。",
+      "unit_id": "L00250.01",
+      "number": 255
+    },
+    {
+      "index": 297,
+      "start": 772.0519999999999,
+      "end": 774.3119999999999,
+      "src": "Probing the clip and listing, okay?",
+      "tgt": "正在检测片段并列出内容，明白吗？",
+      "unit_id": "L00251.01",
+      "number": 256
+    },
+    {
+      "index": 298,
+      "start": 774.3119999999999,
+      "end": 778.4519999999999,
+      "src": "Now, just to be clear, this is a\ncompletely unedited thing.",
+      "tgt": "现在说清楚一点，这段完全是未经剪辑的。",
+      "unit_id": "L00252.01",
+      "number": 257
+    },
+    {
+      "index": 299,
+      "start": 778.472,
+      "end": 779.822,
+      "src": "So basically, I make lots of mistakes.",
+      "tgt": "所以基本上，我犯了很多错。",
+      "unit_id": "L00253.01",
+      "number": 258
+    },
+    {
+      "index": 300,
+      "start": 779.9119999999999,
+      "end": 783.6719999999999,
+      "src": "I stop in the middle of the hook and look\nat my notes.",
+      "tgt": "我在高潮部分中途停下来，看一眼我的笔记。",
+      "unit_id": "L00254.01",
+      "number": 259
+    },
+    {
+      "index": 301,
+      "start": 783.6719999999999,
+      "end": 786.3919999999999,
+      "src": "It is basically cutting it up, so it's\ncopying the clip,",
+      "tgt": "它基本上就是把片段切碎，也就是在复制这个片段\n，",
+      "unit_id": "L00255.01",
+      "number": 260
+    },
+    {
+      "index": 302,
+      "start": 786.3919999999999,
+      "end": 788.1419999999999,
+      "src": "transcribing it using Parakeet,",
+      "tgt": "用Parakeet把它转录出来，",
+      "unit_id": "L00256.01",
+      "number": 261
+    },
+    {
+      "index": 303,
+      "start": 788.3919999999999,
+      "end": 790.4219999999999,
+      "src": "which is the tool that we talked about\nearlier now,",
+      "tgt": "也就是我们刚才说的那个工具，",
+      "unit_id": "L00257.01",
+      "number": 262
+    },
+    {
+      "index": 304,
+      "start": 790.9519999999999,
+      "end": 793.7019999999999,
+      "src": "that will install automatically in the\nsetup as we talked about.",
+      "tgt": "它会像我们说的那样，在设置时自动安装。",
+      "unit_id": "L00258.01",
+      "number": 263
+    },
+    {
+      "index": 305,
+      "start": 793.872,
+      "end": 796.7819999999999,
+      "src": "Now, because this process will take\nanywhere from 10 to maybe 20 minutes,",
+      "tgt": "现在，因为整个过程大概要花10到20分钟，",
+      "unit_id": "L00259.01",
+      "number": 264
+    },
+    {
+      "index": 306,
+      "start": 797.5519999999999,
+      "end": 799.4709999999999,
+      "src": "I'll show you the V1 of the hook.",
+      "tgt": "我先给你们看看这个钩子的V1版本。",
+      "unit_id": "L00260.01",
+      "number": 265
+    },
+    {
+      "index": 307,
+      "start": 799.4709999999999,
+      "end": 800.9009999999998,
+      "src": "Everything you're seeing in this video",
+      "tgt": "视频里所见的一切",
+      "unit_id": "L00261.01",
+      "number": 266
+    },
+    {
+      "index": 308,
+      "start": 800.9119999999999,
+      "end": 804.9119999999999,
+      "src": "was edited by my Claude code system while\nI was asleep.",
+      "tgt": "都是我在睡觉时，由我的Claude code\n系统剪辑完成的。",
+      "unit_id": "L00262.01",
+      "number": 267
+    },
+    {
+      "index": 309,
+      "start": 804.9119999999999,
+      "end": 808.8219999999999,
+      "src": "Every cut, every sound, every animation,\nlike this one,",
+      "tgt": "每一个剪辑、每一个音效、每一个动画，比如这个\n，",
+      "unit_id": "L00263.01",
+      "number": 268
+    },
+    {
+      "index": 310,
+      "start": 810.112,
+      "end": 813.0219999999999,
+      "src": "or this one, or this one,",
+      "tgt": "还有这个，或者这个，",
+      "unit_id": "L00264.01",
+      "number": 269
+    },
+    {
+      "index": 311,
+      "start": 814.7819999999999,
+      "end": 817.1293076923076,
+      "src": "was made without touching a timeline and\nno",
+      "tgt": "全都是在没动时间轴的情况下完成的。",
+      "unit_id": "L00265.01",
+      "number": 270
+    },
+    {
+      "index": 312,
+      "start": 817.1293076923076,
+      "end": 818.372,
+      "src": ", I don't know how to code.",
+      "tgt": "不，我不会写代码。",
+      "unit_id": "L00265.01",
+      "number": 270
+    },
+    {
+      "index": 313,
+      "start": 818.5419999999999,
+      "end": 818.8059999999999,
+      "src": "Boom.",
+      "tgt": "砰。",
+      "unit_id": "L00266.01",
+      "number": 271
+    },
+    {
+      "index": 314,
+      "start": 818.8059999999999,
+      "end": 821.1819999999999,
+      "src": "So as you see, there's a couple of things\nI would change from this,",
+      "tgt": "所以你看，这段里我有几处想改的地方，",
+      "unit_id": "L00266.01",
+      "number": 271
+    },
+    {
+      "index": 315,
+      "start": 821.262,
+      "end": 822.8219999999999,
+      "src": "but it's pretty much spot on.",
+      "tgt": "但基本上已经非常准了。",
+      "unit_id": "L00267.01",
+      "number": 272
+    },
+    {
+      "index": 316,
+      "start": 823.102,
+      "end": 825.237,
+      "src": "It basically says that it cut down 2\nminutes and 46 of raw footage into 31",
+      "tgt": "它的意思基本上是把2分46",
+      "unit_id": "L00268.01",
+      "number": 273
+    },
+    {
+      "index": 317,
+      "start": 825.237,
+      "end": 827.372,
+      "src": "seconds,",
+      "tgt": "秒的原始素材剪成了 31秒，",
+      "unit_id": "L00268.01",
+      "number": 273
+    },
+    {
+      "index": 318,
+      "start": 828.4619999999999,
+      "end": 829.4919999999998,
+      "src": "which is absolutely great.",
+      "tgt": "这效果简直太棒了。",
+      "unit_id": "L00269.01",
+      "number": 274
+    },
+    {
+      "index": 319,
+      "start": 829.8219999999999,
+      "end": 832.4619999999999,
+      "src": "And there are some little edits, right,\nthat I want to make.",
+      "tgt": "然后有几处小地方，对吧，我想再改改。",
+      "unit_id": "L00270.01",
+      "number": 275
+    },
+    {
+      "index": 320,
+      "start": 832.6519999999999,
+      "end": 833.852,
+      "src": "So basically, what I'll say are things\nlike this.",
+      "tgt": "那我大概会这么说。",
+      "unit_id": "L00271.01",
+      "number": 276
+    },
+    {
+      "index": 321,
+      "start": 835.2919999999999,
+      "end": 837.2119999999999,
+      "src": "Edit number one will be something like,",
+      "tgt": "第一条修改意见大概是这样的：",
+      "unit_id": "L00272.01",
+      "number": 277
+    },
+    {
+      "index": 322,
+      "start": 838.092,
+      "end": 841.218111111111,
+      "src": "\"Could you please add",
+      "tgt": "\"能麻烦你给这段配上点悬疑音效吗？",
+      "unit_id": "L00273.01",
+      "number": 278
+    },
+    {
+      "index": 323,
+      "start": 841.218111111111,
+      "end": 841.4019999999999,
+      "src": "some suspense sound throughout this?",
+      "tgt": "\"",
+      "unit_id": "L00273.01",
+      "number": 278
+    },
+    {
+      "index": 324,
+      "start": 841.612,
+      "end": 844.5739047619047,
+      "src": "I'd like for you to pick a track",
+      "tgt": "\"我想让你选一首曲子，加到这个钩子部分。",
+      "unit_id": "L00274.01",
+      "number": 279
+    },
+    {
+      "index": 325,
+      "start": 844.5739047619047,
+      "end": 844.722,
+      "src": "and add it to this hook.\"",
+      "tgt": "\"",
+      "unit_id": "L00274.01",
+      "number": 279
+    },
+    {
+      "index": 326,
+      "start": 845.7719999999999,
+      "end": 847.882,
+      "src": "I usually like to go through the entire\nclip",
+      "tgt": "我一般喜欢把整个片段过一遍。",
+      "unit_id": "L00275.01",
+      "number": 280
+    },
+    {
+      "index": 327,
+      "start": 848.1719999999999,
+      "end": 849.882,
+      "src": "and basically give it timestamps like,",
+      "tgt": "然后给它加上时间戳，比如：",
+      "unit_id": "L00276.01",
+      "number": 281
+    },
+    {
+      "index": 328,
+      "start": 850.012,
+      "end": 852.8310476190476,
+      "src": "\"Oh, I saw the second",
+      "tgt": "“哦，我看到第22秒这儿，是你这么做的。",
+      "unit_id": "L00277.01",
+      "number": 282
+    },
+    {
+      "index": 329,
+      "start": 852.8310476190476,
+      "end": 852.972,
+      "src": "22, you did this.\"",
+      "tgt": "”",
+      "unit_id": "L00277.01",
+      "number": 282
+    },
+    {
+      "index": 330,
+      "start": 852.972,
+      "end": 854.202,
+      "src": "I'd like for it to be like that.",
+      "tgt": "我希望它能做到那样。",
+      "unit_id": "L00278.01",
+      "number": 283
+    },
+    {
+      "index": 331,
+      "start": 854.492,
+      "end": 856.7719999999999,
+      "src": "It could be anything from the look to\nsound",
+      "tgt": "从画面到声音，什么都可以，",
+      "unit_id": "L00279.01",
+      "number": 284
+    },
+    {
+      "index": 332,
+      "start": 857.0519999999999,
+      "end": 859.9619999999999,
+      "src": "to kind of the overall feel or the way\nit's cutting things.",
+      "tgt": "再到整体的感觉，或者它剪辑的方式。",
+      "unit_id": "L00280.01",
+      "number": 285
+    },
+    {
+      "index": 333,
+      "start": 860.5719999999999,
+      "end": 863.4519999999999,
+      "src": "And again, at the end of all this, I can\nbasically tell it,",
+      "tgt": "然后，在所有这些弄完之后，我基本上可以告诉它\n：",
+      "unit_id": "L00281.01",
+      "number": 286
+    },
+    {
+      "index": 334,
+      "start": 863.4519999999999,
+      "end": 866.9957037037036,
+      "src": "\"Hey, could you please, you know",
+      "tgt": "“嘿，能不能麻烦你，你知道的，把这个再稍微改\n好一点？",
+      "unit_id": "L00282.01",
+      "number": 287
+    },
+    {
+      "index": 335,
+      "start": 866.9957037037036,
+      "end": 867.132,
+      "src": ", make this a little bit better?\"",
+      "tgt": "”",
+      "unit_id": "L00282.01",
+      "number": 287
+    },
+    {
+      "index": 336,
+      "start": 867.132,
+      "end": 869.242,
+      "src": "And of course, at the end of this, what's\ncool is I can just say,",
+      "tgt": "当然，最后一步很酷的是，我可以直接说：",
+      "unit_id": "L00283.01",
+      "number": 288
+    },
+    {
+      "index": 337,
+      "start": 869.2919999999999,
+      "end": 871.9319999999999,
+      "src": "\"Hey, can you learn from what we just did\nand add it to the skill?\"",
+      "tgt": "嘿，能学学我们刚做的，加进技能里吗？",
+      "unit_id": "L00284.01",
+      "number": 289
+    },
+    {
+      "index": 338,
+      "start": 872.3319999999999,
+      "end": 872.9719999999999,
+      "src": "So that was a one-shot.",
+      "tgt": "一次搞定。",
+      "unit_id": "L00285.01",
+      "number": 290
+    },
+    {
+      "index": 339,
+      "start": 873.2919999999999,
+      "end": 875.8019999999999,
+      "src": "What you see at the beginning of this\nvideo is the actual final product.",
+      "tgt": "视频开头你看到的，就是最终成品。",
+      "unit_id": "L00286.01",
+      "number": 291
+    },
+    {
+      "index": 340,
+      "start": 876.6519999999999,
+      "end": 878.0819999999999,
+      "src": "And before, I used to do this by sections.",
+      "tgt": "以前呢，我都是一段一段地弄。",
+      "unit_id": "L00287.01",
+      "number": 292
+    },
+    {
+      "index": 341,
+      "start": 878.1719999999999,
+      "end": 881.0819999999999,
+      "src": "Now I do this, I just dump the entire\nfootage inside.",
+      "tgt": "现在嘛，我就直接把所有素材全扔进去。",
+      "unit_id": "L00288.01",
+      "number": 293
+    },
+    {
+      "index": 342,
+      "start": 881.132,
+      "end": 882.962,
+      "src": "And if I've also recorded inside of Tella,",
+      "tgt": "要是我也在Tella里录过，",
+      "unit_id": "L00289.01",
+      "number": 294
+    },
+    {
+      "index": 343,
+      "start": 884.3319999999999,
+      "end": 887.118111111111,
+      "src": "I'm gonna tell it, \"Hey,",
+      "tgt": "我就会跟它说：“嘿，这些是文件名。",
+      "unit_id": "L00290.01",
+      "number": 295
+    },
+    {
+      "index": 344,
+      "start": 887.118111111111,
+      "end": 887.2819999999999,
+      "src": "here are the names of the files.\"",
+      "tgt": "”",
+      "unit_id": "L00290.01",
+      "number": 295
+    },
+    {
+      "index": 345,
+      "start": 887.372,
+      "end": 888.442,
+      "src": "Because since it has direct access,",
+      "tgt": "因为它能直接访问，",
+      "unit_id": "L00291.01",
+      "number": 296
+    },
+    {
+      "index": 346,
+      "start": 888.9709999999999,
+      "end": 891.0409999999999,
+      "src": "I don't need to upload the actual\ndocuments.",
+      "tgt": "我就不需要上传实际文件了。",
+      "unit_id": "L00292.01",
+      "number": 297
+    },
+    {
+      "index": 347,
+      "start": 891.2919999999999,
+      "end": 894.8119999999999,
+      "src": "Because yes, there is a human in the loop\nand it's me and I actually love it.",
+      "tgt": "没错，流程里还是有个人在操作，那个人就是我，\n而且我还挺喜欢这样。",
+      "unit_id": "L00293.01",
+      "number": 298
+    },
+    {
+      "index": 348,
+      "start": 894.8119999999999,
+      "end": 895.9219999999999,
+      "src": "And after shooting this right now,",
+      "tgt": "现在拍完这个之后，",
+      "unit_id": "L00294.01",
+      "number": 299
+    },
+    {
+      "index": 349,
+      "start": 896.012,
+      "end": 899.0519999999999,
+      "src": "I fed this entire raw footage to Claude\nCode.",
+      "tgt": "我就把这段原始素材全喂给了Claude\nCode。",
+      "unit_id": "L00295.01",
+      "number": 300
+    },
+    {
+      "index": 350,
+      "start": 899.0519999999999,
+      "end": 899.8419999999999,
+      "src": "And tomorrow, I'm gonna wake up",
+      "tgt": "明天我一醒来，",
+      "unit_id": "L00296.01",
+      "number": 301
+    },
+    {
+      "index": 351,
+      "start": 900.1519999999999,
+      "end": 902.232,
+      "src": "And see exactly what you've seen on screen\n.",
+      "tgt": "就能看到跟你屏幕上看到的一模一样的画面。",
+      "unit_id": "L00297.01",
+      "number": 302
+    },
+    {
+      "index": 352,
+      "start": 902.232,
+      "end": 903.8786666666666,
+      "src": "Tomorrow morning, I get to just watch it,\ngive a couple notes and get the final",
+      "tgt": "明天早上，我只要看看，提几",
+      "unit_id": "L00298.01",
+      "number": 303
+    },
+    {
+      "index": 353,
+      "start": 903.8786666666666,
+      "end": 905.6519999999999,
+      "src": "version.",
+      "tgt": "条意见，就能拿到最 终版本了。",
+      "unit_id": "L00298.01",
+      "number": 303
+    },
+    {
+      "index": 354,
+      "start": 906.0719999999999,
+      "end": 909.3419999999999,
+      "src": "So I'm the director, Claude's the editor,\nand I didn't have to edit any.",
+      "tgt": "所以我是导演，Claude是剪辑，而我完全不\n用剪。",
+      "unit_id": "L00299.01",
+      "number": 304
+    },
+    {
+      "index": 355,
+      "start": 909.512,
+      "end": 911.1819999999999,
+      "src": "Which is great, because I actually don't\nknow how to edit at all.",
+      "tgt": "这太棒了，因为我根本不会剪辑。",
+      "unit_id": "L00300.01",
+      "number": 305
+    },
+    {
+      "index": 356,
+      "start": 911.9119999999999,
+      "end": 913.712,
+      "src": "So at this point, everyone asked me about\nthe cost, so let's break it down to the",
+      "tgt": "说到这儿，大家都问我成本怎么样",
+      "unit_id": "L00301.01",
+      "number": 306
+    },
+    {
+      "index": 357,
+      "start": 913.712,
+      "end": 915.512,
+      "src": "dollar.",
+      "tgt": "，那咱们就具体 到每一块钱算算。",
+      "unit_id": "L00301.01",
+      "number": 306
+    },
+    {
+      "index": 358,
+      "start": 915.512,
+      "end": 919.8269999999999,
+      "src": "First off, I'm on Claude, I'm on the max\nplan, it cost me $200 a month.",
+      "tgt": "首先，我用的是Claude，是最高套餐，一个\n月要花200美元。",
+      "unit_id": "L00302.01",
+      "number": 307
+    },
+    {
+      "index": 359,
+      "start": 919.8269999999999,
+      "end": 921.8219999999999,
+      "src": "Now that's a flat fee, but I actually use\nthis for all of my work, not just my video",
+      "tgt": "这是固定费用，但我其实所有",
+      "unit_id": "L00303.01",
+      "number": 308
+    },
+    {
+      "index": 360,
+      "start": 921.8219999999999,
+      "end": 923.8169999999999,
+      "src": "editing.",
+      "tgt": "工作都用它，不只是 剪视频。",
+      "unit_id": "L00303.01",
+      "number": 308
+    },
+    {
+      "index": 361,
+      "start": 924.1469999999999,
+      "end": 925.6469999999999,
+      "src": "So what I did is that I got Claude to\nactually measure the number of tokens that",
+      "tgt": "所以我让Claude具体统计",
+      "unit_id": "L00304.01",
+      "number": 309
+    },
+    {
+      "index": 362,
+      "start": 925.6469999999999,
+      "end": 927.1469999999999,
+      "src": "it used,",
+      "tgt": "了一下它用了多少 token，",
+      "unit_id": "L00304.01",
+      "number": 309
+    },
+    {
+      "index": 363,
+      "start": 927.747,
+      "end": 929.817,
+      "src": "and I have a certain limit of tokens per\nmonth.",
+      "tgt": "我每个月是有token数量上限的。",
+      "unit_id": "L00305.01",
+      "number": 310
+    },
+    {
+      "index": 364,
+      "start": 930.3069999999999,
+      "end": 933.6169999999998,
+      "src": "Now, my last video after calculations cost\nme $24 to build.",
+      "tgt": "算下来，我上一个视频的制作成本是24美元。",
+      "unit_id": "L00306.01",
+      "number": 311
+    },
+    {
+      "index": 365,
+      "start": 934.387,
+      "end": 935.5369999999999,
+      "src": "And that's at most.",
+      "tgt": "这还是最多。",
+      "unit_id": "L00307.01",
+      "number": 312
+    },
+    {
+      "index": 366,
+      "start": 935.6819999999999,
+      "end": 939.9624878048779,
+      "src": "Now, the great thing is that hyperframes\nis completely for free, so is Parakeet, so",
+      "tgt": "最棒的是，hyperframes和\nParakeet都完全免费，所以这部分不用花",
+      "unit_id": "L00308.01",
+      "number": 313
+    },
+    {
+      "index": 367,
+      "start": 939.9624878048779,
+      "end": 940.1819999999999,
+      "src": "nothing to pay for there.",
+      "tgt": "钱。",
+      "unit_id": "L00308.01",
+      "number": 313
+    },
+    {
+      "index": 368,
+      "start": 940.9619999999999,
+      "end": 943.5668387096773,
+      "src": "For Tele, I'm on the annual plan, it cost\nme $13 per month, which is roughly $2 per",
+      "tgt": "Tele我用的是年付方案，每月13",
+      "unit_id": "L00309.01",
+      "number": 314
+    },
+    {
+      "index": 369,
+      "start": 943.5668387096773,
+      "end": 945.7119999999999,
+      "src": "video.",
+      "tgt": "美元，合每 个视频大概2美元。",
+      "unit_id": "L00309.01",
+      "number": 314
+    },
+    {
+      "index": 370,
+      "start": 946.6419999999999,
+      "end": 949.7342222222221,
+      "src": "Epidemic Sounds, which is where I get all\nof my sound effects and the music as well,",
+      "tgt": "Epidemic Sounds是我所有音效和\n音",
+      "unit_id": "L00310.01",
+      "number": 315
+    },
+    {
+      "index": 371,
+      "start": 949.7342222222221,
+      "end": 951.7019999999999,
+      "src": "cost me $9.99.",
+      "tgt": "乐的来源，花了9.99美元。",
+      "unit_id": "L00310.01",
+      "number": 315
+    },
+    {
+      "index": 372,
+      "start": 952.857,
+      "end": 956.327,
+      "src": "Again, I'm on the annual plan, so let's\nadd an extra dollar to that.",
+      "tgt": "同样，我用的是年付方案，那就再加1美元吧。",
+      "unit_id": "L00311.01",
+      "number": 316
+    },
+    {
+      "index": 373,
+      "start": 956.7769999999999,
+      "end": 960.0569999999999,
+      "src": "So all in, I'm pretty much paying $27 per\nvideo.",
+      "tgt": "所以总共算下来，每个视频差不多要花27美元。",
+      "unit_id": "L00312.01",
+      "number": 317
+    },
+    {
+      "index": 374,
+      "start": 960.0569999999999,
+      "end": 967.1654444444443,
+      "src": "Now, the reality is that for YouTube\neditors, a good editor costs anywhere",
+      "tgt": "但现实是，找YouTube剪辑师的话，一个靠\n谱的剪辑师每个视频要价250到1000多美元",
+      "unit_id": "L00313.01",
+      "number": 318
+    },
+    {
+      "index": 375,
+      "start": 967.1654444444443,
+      "end": 967.3269999999999,
+      "src": "between $250 and $1,000 plus per video.",
+      "tgt": "。",
+      "unit_id": "L00313.01",
+      "number": 318
+    },
+    {
+      "index": 376,
+      "start": 967.977,
+      "end": 970.687,
+      "src": "Meaning that I'm saving hundreds of\ndollars per video.",
+      "tgt": "也就是说，每个视频我能省下几百美元。",
+      "unit_id": "L00314.01",
+      "number": 319
+    },
+    {
+      "index": 377,
+      "start": 970.747,
+      "end": 973.7069999999999,
+      "src": "But the huge benefit for me is actually\nthe speed of execution.",
+      "tgt": "但对我来说，最大的好处其实是执行速度。",
+      "unit_id": "L00315.01",
+      "number": 320
+    },
+    {
+      "index": 378,
+      "start": 973.7069999999999,
+      "end": 978.4869999999999,
+      "src": "I'm now able to plan, shoot, edit and\nrelease a video same day.",
+      "tgt": "现在我当天就能策划、拍摄、剪辑并发布视频。",
+      "unit_id": "L00316.01",
+      "number": 321
+    },
+    {
+      "index": 379,
+      "start": 978.747,
+      "end": 980.8019999999999,
+      "src": "Whereas before, it took me anywhere\nbetween 3 and 7 days, depending on which",
+      "tgt": "以前呢，我得花3到7天，",
+      "unit_id": "L00317.01",
+      "number": 322
+    },
+    {
+      "index": 380,
+      "start": 980.8019999999999,
+      "end": 982.857,
+      "src": "editor I was working with.",
+      "tgt": "具体看跟哪个剪辑师合 作。",
+      "unit_id": "L00317.01",
+      "number": 322
+    },
+    {
+      "index": 381,
+      "start": 984.8269999999999,
+      "end": 987.4969999999998,
+      "src": "And the revisions usually went back, forth\n, back, forth.",
+      "tgt": "而且改来改去，总是反反复复。",
+      "unit_id": "L00318.01",
+      "number": 323
+    },
+    {
+      "index": 382,
+      "start": 988.0569999999999,
+      "end": 989.773956521739,
+      "src": "And because of human error, I actually\noftentimes had to repeat things that I was",
+      "tgt": "还因为人为失误，我常得",
+      "unit_id": "L00319.01",
+      "number": 324
+    },
+    {
+      "index": 383,
+      "start": 989.773956521739,
+      "end": 991.6469999999999,
+      "src": "seeing",
+      "tgt": "重做那些我明明已经看过 ，",
+      "unit_id": "L00319.01",
+      "number": 324
+    },
+    {
+      "index": 384,
+      "start": 992.2969999999999,
+      "end": 994.857,
+      "src": "that hadn't been changed from one video to\nthe next.",
+      "tgt": "但上下个视频里根本没改动的地方。",
+      "unit_id": "L00320.01",
+      "number": 325
+    },
+    {
+      "index": 385,
+      "start": 994.857,
+      "end": 997.367,
+      "src": "Now, because I don't want you to suffer\nthrough all the same things I did,",
+      "tgt": "现在，我可不想让你们也遭我受过的罪，",
+      "unit_id": "L00321.01",
+      "number": 326
+    },
+    {
+      "index": 386,
+      "start": 997.8969999999999,
+      "end": 1001.4069999999999,
+      "src": "I'm gonna be giving you this skill for\nfree inside of my free community.",
+      "tgt": "所以我会在我的免费社群里，免费教你们这项技能\n。",
+      "unit_id": "L00322.01",
+      "number": 327
+    },
+    {
+      "index": 387,
+      "start": 1001.5769999999999,
+      "end": 1003.8569999999999,
+      "src": "It's called We Are No Code, you can find\nthe link below.",
+      "tgt": "它叫We Are No Code，链接就在下\n面。",
+      "unit_id": "L00323.01",
+      "number": 328
+    },
+    {
+      "index": 388,
+      "start": 1004.217,
+      "end": 1007.857,
+      "src": "Now, if you want to both see the editing\nskill in action for a full video",
+      "tgt": "想看看这项剪辑技能在完整视频里的实际运用？",
+      "unit_id": "L00324.01",
+      "number": 329
+    },
+    {
+      "index": 389,
+      "start": 1007.857,
+      "end": 1011.2769999999999,
+      "src": "and also get a full breakdown of what was\nannounced for OpenAI Dev Day,",
+      "tgt": "还想详细了解OpenAI开发日都公布了哪些内\n容，",
+      "unit_id": "L00325.01",
+      "number": 330
+    },
+    {
+      "index": 390,
+      "start": 1011.617,
+      "end": 1013.207,
+      "src": "you can check out this video right here.",
+      "tgt": "可以看看这个视频。",
+      "unit_id": "L00326.01",
+      "number": 331
+    },
+    {
+      "index": 391,
+      "start": 1014.097,
+      "end": 1018.007,
+      "src": "Hope you enjoyed this video, I'll see you\nguys in the next one, let's go!",
+      "tgt": "希望你们喜欢这个视频，我们下个视频见，走起！",
+      "unit_id": "L00327.01",
+      "number": 332
+    }
+  ]
+}

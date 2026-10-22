@@ -1,0 +1,759 @@
+{
+  "status": "witness_not_ground_truth",
+  "model": "mlx-community/whisper-large-v3-mlx",
+  "basis": "contextual_reprobe_of_same_ASR_family",
+  "source_audio": "/Users/vanch/VideoLingo-plus/run_workspaces/index_quality_v11_validated_20261007/output/audio/raw_master.wav",
+  "source_sha256": "177f18efd9094352fc2240c336d294031c32f5d270d35708645eb3fee95d8b5a",
+  "clip_sha256": "94ea2e2b2988f7a8ccdd90b010553029792340b9c4746a8954b716ccf0b53dd1",
+  "start": 3,
+  "end": 32,
+  "text": "胡婉胡 胡婉怎么会是胡婉怪了刺头吗全是皇家的人马匪呢 马匪呢马匪呢 马匪呢胡婉就是马匪马匪就是胡婉把县长夫人绑架豪绅祸害河城百姓就是你黄老爷家的胡婉我说你",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.76,
+      "end": 1.12,
+      "text": "胡婉",
+      "tokens": [
+        50403,
+        43861,
+        26112,
+        231,
+        50437
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "胡",
+          "start": 0.5399999999999997,
+          "end": 0.86,
+          "probability": 0.96875
+        },
+        {
+          "word": "婉",
+          "start": 0.86,
+          "end": 1.12,
+          "probability": 0.6787109375
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "seek": 0,
+      "start": 1.8800000000000001,
+      "end": 2.8,
+      "text": "胡 胡婉",
+      "tokens": [
+        50459,
+        43861,
+        220,
+        43861,
+        26112,
+        231,
+        50521
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "胡",
+          "start": 1.6599999999999997,
+          "end": 1.98,
+          "probability": 0.7548828125
+        },
+        {
+          "word": " 胡",
+          "start": 2.12,
+          "end": 2.56,
+          "probability": 0.998046875
+        },
+        {
+          "word": "婉",
+          "start": 2.56,
+          "end": 2.8,
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "seek": 0,
+      "start": 3.48,
+      "end": 4.4,
+      "text": "怎么会是胡婉",
+      "tokens": [
+        50539,
+        15282,
+        12949,
+        1541,
+        43861,
+        26112,
+        231,
+        50597
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "怎么",
+          "start": 3.2199999999999998,
+          "end": 3.54,
+          "probability": 0.377685546875
+        },
+        {
+          "word": "会",
+          "start": 3.54,
+          "end": 3.84,
+          "probability": 0.95703125
+        },
+        {
+          "word": "是",
+          "start": 3.84,
+          "end": 4.0,
+          "probability": 0.99951171875
+        },
+        {
+          "word": "胡",
+          "start": 4.0,
+          "end": 4.12,
+          "probability": 0.99951171875
+        },
+        {
+          "word": "婉",
+          "start": 4.12,
+          "end": 4.4,
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "seek": 0,
+      "start": 5.439999999999999,
+      "end": 6.72,
+      "text": "怪了",
+      "tokens": [
+        50685,
+        26798,
+        2289,
+        50715
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "怪",
+          "start": 5.439999999999999,
+          "end": 6.079999999999999,
+          "probability": 0.0657958984375
+        },
+        {
+          "word": "了",
+          "start": 6.079999999999999,
+          "end": 6.72,
+          "probability": 0.9228515625
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "seek": 0,
+      "start": 8.02,
+      "end": 9.0,
+      "text": "刺头吗",
+      "tokens": [
+        50791,
+        2437,
+        118,
+        39862,
+        14769,
+        50825
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "刺",
+          "start": 8.02,
+          "end": 8.66,
+          "probability": 0.576171875
+        },
+        {
+          "word": "头",
+          "start": 8.66,
+          "end": 8.9,
+          "probability": 0.20166015625
+        },
+        {
+          "word": "吗",
+          "start": 8.9,
+          "end": 9.0,
+          "probability": 0.320068359375
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "seek": 0,
+      "start": 9.0,
+      "end": 10.08,
+      "text": "全是皇家的人",
+      "tokens": [
+        50825,
+        11319,
+        1541,
+        41393,
+        5155,
+        29979,
+        50887
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "全",
+          "start": 9.0,
+          "end": 9.2,
+          "probability": 0.111083984375
+        },
+        {
+          "word": "是",
+          "start": 9.2,
+          "end": 9.5,
+          "probability": 0.994140625
+        },
+        {
+          "word": "皇",
+          "start": 9.5,
+          "end": 9.66,
+          "probability": 0.87353515625
+        },
+        {
+          "word": "家",
+          "start": 9.66,
+          "end": 9.88,
+          "probability": 0.99658203125
+        },
+        {
+          "word": "的人",
+          "start": 9.88,
+          "end": 10.08,
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "seek": 0,
+      "start": 10.08,
+      "end": 11.56,
+      "text": "马匪呢 马匪呢",
+      "tokens": [
+        50887,
+        49970,
+        9937,
+        103,
+        6240,
+        220,
+        49970,
+        9937,
+        103,
+        6240,
+        50953
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "马",
+          "start": 10.08,
+          "end": 10.48,
+          "probability": 0.85546875
+        },
+        {
+          "word": "匪",
+          "start": 10.48,
+          "end": 10.72,
+          "probability": 0.9990234375
+        },
+        {
+          "word": "呢",
+          "start": 10.72,
+          "end": 10.8,
+          "probability": 0.97119140625
+        },
+        {
+          "word": " 马",
+          "start": 10.88,
+          "end": 11.1,
+          "probability": 0.998046875
+        },
+        {
+          "word": "匪",
+          "start": 11.1,
+          "end": 11.36,
+          "probability": 1.0
+        },
+        {
+          "word": "呢",
+          "start": 11.36,
+          "end": 11.56,
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "seek": 0,
+      "start": 11.56,
+      "end": 12.78,
+      "text": "马匪呢 马匪呢",
+      "tokens": [
+        50953,
+        49970,
+        9937,
+        103,
+        6240,
+        220,
+        49970,
+        9937,
+        103,
+        6240,
+        51009
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "马",
+          "start": 11.56,
+          "end": 11.88,
+          "probability": 0.701171875
+        },
+        {
+          "word": "匪",
+          "start": 11.88,
+          "end": 12.22,
+          "probability": 1.0
+        },
+        {
+          "word": "呢",
+          "start": 12.22,
+          "end": 12.34,
+          "probability": 0.99169921875
+        },
+        {
+          "word": " 马",
+          "start": 12.34,
+          "end": 12.56,
+          "probability": 0.9951171875
+        },
+        {
+          "word": "匪",
+          "start": 12.56,
+          "end": 12.64,
+          "probability": 1.0
+        },
+        {
+          "word": "呢",
+          "start": 12.64,
+          "end": 12.78,
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "seek": 0,
+      "start": 12.78,
+      "end": 14.92,
+      "text": "胡婉就是马匪",
+      "tokens": [
+        51009,
+        43861,
+        26112,
+        231,
+        5620,
+        49970,
+        9937,
+        103,
+        51123
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "胡",
+          "start": 12.78,
+          "end": 12.9,
+          "probability": 0.83740234375
+        },
+        {
+          "word": "婉",
+          "start": 12.9,
+          "end": 13.38,
+          "probability": 0.9970703125
+        },
+        {
+          "word": "就是",
+          "start": 13.38,
+          "end": 14.0,
+          "probability": 0.84814453125
+        },
+        {
+          "word": "马",
+          "start": 14.0,
+          "end": 14.5,
+          "probability": 0.98193359375
+        },
+        {
+          "word": "匪",
+          "start": 14.5,
+          "end": 14.92,
+          "probability": 1.0
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "seek": 0,
+      "start": 14.92,
+      "end": 17.54,
+      "text": "马匪就是胡婉",
+      "tokens": [
+        51137,
+        49970,
+        9937,
+        103,
+        5620,
+        43861,
+        26112,
+        231,
+        51255
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "马",
+          "start": 14.92,
+          "end": 15.24,
+          "probability": 0.60400390625
+        },
+        {
+          "word": "匪",
+          "start": 15.24,
+          "end": 15.98,
+          "probability": 0.9990234375
+        },
+        {
+          "word": "就是",
+          "start": 15.98,
+          "end": 16.76,
+          "probability": 0.9697265625
+        },
+        {
+          "word": "胡",
+          "start": 16.76,
+          "end": 17.14,
+          "probability": 0.99951171875
+        },
+        {
+          "word": "婉",
+          "start": 17.14,
+          "end": 17.54,
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "seek": 0,
+      "start": 17.54,
+      "end": 21.42,
+      "text": "把县长夫人绑架豪绅",
+      "tokens": [
+        51281,
+        16075,
+        5014,
+        123,
+        32271,
+        26364,
+        4035,
+        10115,
+        239,
+        7360,
+        114,
+        19517,
+        103,
+        10115,
+        227,
+        51453
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "把",
+          "start": 17.54,
+          "end": 18.3,
+          "probability": 0.417236328125
+        },
+        {
+          "word": "县",
+          "start": 18.3,
+          "end": 18.86,
+          "probability": 0.9990234375
+        },
+        {
+          "word": "长",
+          "start": 18.86,
+          "end": 19.1,
+          "probability": 0.99755859375
+        },
+        {
+          "word": "夫",
+          "start": 19.1,
+          "end": 19.28,
+          "probability": 0.99951171875
+        },
+        {
+          "word": "人",
+          "start": 19.28,
+          "end": 19.48,
+          "probability": 1.0
+        },
+        {
+          "word": "绑",
+          "start": 19.48,
+          "end": 20.34,
+          "probability": 0.990234375
+        },
+        {
+          "word": "架",
+          "start": 20.34,
+          "end": 20.74,
+          "probability": 1.0
+        },
+        {
+          "word": "豪",
+          "start": 20.74,
+          "end": 21.12,
+          "probability": 0.818359375
+        },
+        {
+          "word": "绅",
+          "start": 21.12,
+          "end": 21.42,
+          "probability": 0.7919921875
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "seek": 0,
+      "start": 22.0,
+      "end": 23.78,
+      "text": "祸害河城百姓",
+      "tokens": [
+        51465,
+        163,
+        10798,
+        14694,
+        3308,
+        111,
+        45277,
+        31906,
+        7795,
+        241,
+        51569
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "祸",
+          "start": 21.9,
+          "end": 22.22,
+          "probability": 0.68359375
+        },
+        {
+          "word": "害",
+          "start": 22.22,
+          "end": 22.58,
+          "probability": 1.0
+        },
+        {
+          "word": "河",
+          "start": 22.58,
+          "end": 22.92,
+          "probability": 0.86376953125
+        },
+        {
+          "word": "城",
+          "start": 22.92,
+          "end": 23.16,
+          "probability": 0.99560546875
+        },
+        {
+          "word": "百",
+          "start": 23.16,
+          "end": 23.36,
+          "probability": 0.9990234375
+        },
+        {
+          "word": "姓",
+          "start": 23.36,
+          "end": 23.78,
+          "probability": 1.0
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "seek": 0,
+      "start": 24.400000000000002,
+      "end": 27.12,
+      "text": "就是你黄老爷家的胡婉",
+      "tokens": [
+        51585,
+        5620,
+        2166,
+        6173,
+        226,
+        10439,
+        43725,
+        5155,
+        1546,
+        43861,
+        26112,
+        231,
+        51737
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "就是",
+          "start": 24.38,
+          "end": 24.7,
+          "probability": 0.9951171875
+        },
+        {
+          "word": "你",
+          "start": 24.7,
+          "end": 25.04,
+          "probability": 0.9970703125
+        },
+        {
+          "word": "黄",
+          "start": 25.04,
+          "end": 25.42,
+          "probability": 0.85107421875
+        },
+        {
+          "word": "老",
+          "start": 25.42,
+          "end": 25.64,
+          "probability": 0.9931640625
+        },
+        {
+          "word": "爷",
+          "start": 25.64,
+          "end": 25.82,
+          "probability": 0.99462890625
+        },
+        {
+          "word": "家",
+          "start": 25.82,
+          "end": 26.0,
+          "probability": 0.9990234375
+        },
+        {
+          "word": "的",
+          "start": 26.0,
+          "end": 26.24,
+          "probability": 0.998046875
+        },
+        {
+          "word": "胡",
+          "start": 26.24,
+          "end": 26.8,
+          "probability": 0.99658203125
+        },
+        {
+          "word": "婉",
+          "start": 26.8,
+          "end": 27.12,
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "seek": 0,
+      "start": 27.12,
+      "end": 28.78,
+      "text": "我说你",
+      "tokens": [
+        51763,
+        1654,
+        8090,
+        2166,
+        51815
+      ],
+      "temperature": 0.0,
+      "avg_logprob": -0.35701016681950265,
+      "compression_ratio": 1.3975155279503106,
+      "no_speech_prob": 0.23521369695663452,
+      "words": [
+        {
+          "word": "我",
+          "start": 27.12,
+          "end": 27.84,
+          "probability": 0.90234375
+        },
+        {
+          "word": "说",
+          "start": 27.84,
+          "end": 28.46,
+          "probability": 0.99951171875
+        },
+        {
+          "word": "你",
+          "start": 28.46,
+          "end": 28.78,
+          "probability": 0.96923828125
+        }
+      ]
+    }
+  ]
+}

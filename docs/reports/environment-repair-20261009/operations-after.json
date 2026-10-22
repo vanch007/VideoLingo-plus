@@ -1,0 +1,86 @@
+{
+  "python": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo/bin/python",
+  "platform": "macOS-27.2-arm64-arm-64bit",
+  "operations": [
+    {
+      "name": "numpy_scipy",
+      "status": "pass",
+      "detail": {
+        "largest_singular_value": 3.0
+      }
+    },
+    {
+      "name": "torch_numpy",
+      "status": "pass",
+      "detail": {
+        "sum": 8.0
+      }
+    },
+    {
+      "name": "torchaudio_resample",
+      "status": "pass",
+      "detail": {
+        "samples": 22050
+      }
+    },
+    {
+      "name": "torchvision_native_nms",
+      "status": "pass",
+      "detail": {
+        "indices": [
+          0
+        ]
+      }
+    },
+    {
+      "name": "opencv_resize",
+      "status": "pass",
+      "detail": {
+        "shape": [
+          8,
+          8,
+          3
+        ]
+      }
+    },
+    {
+      "name": "librosa_audio",
+      "status": "pass",
+      "detail": {
+        "rms_shape": [
+          1,
+          32
+        ]
+      }
+    },
+    {
+      "name": "spacy_zh_model",
+      "status": "pass",
+      "detail": {
+        "tokens": [
+          "本地",
+          "翻译",
+          "和",
+          "配音",
+          "。"
+        ]
+      }
+    },
+    {
+      "name": "torchcodec_decode",
+      "status": "pass",
+      "detail": {
+        "decoded_sample_rate": 22050,
+        "decoded_samples": 22050
+      }
+    },
+    {
+      "name": "pyannote_audio_decode",
+      "status": "pass",
+      "detail": {
+        "sample_rate": 16000,
+        "samples": 16000
+      }
+    }
+  ]
+}

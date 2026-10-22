@@ -1,5 +1,6 @@
 from ruamel.yaml import YAML
 from typing import Any
+from copy import deepcopy
 import os, sys
 from pathlib import Path
 import threading
@@ -45,6 +46,8 @@ config_lock = threading.Lock()
 
 yaml = YAML()
 yaml.preserve_quotes = True
+_config_cache_signature = None
+_config_cache_data = None
 
 ENV_OVERRIDES = {
     "hf_token": ("VIDEOLINGO_HF_TOKEN", "HF_TOKEN"),
@@ -70,12 +73,30 @@ def _env_value(key_path: str):
             return value
     return None
 
+def _load_config_locked():
+    """Return cached file contents while the caller holds config_lock.
+
+    Cache only file contents, never environment overrides. Include inode and
+    change time so atomic saves and same-size rewrites invalidate immediately.
+    Public readers copy their result before releasing the lock.
+    """
+    global _config_cache_signature, _config_cache_data
+    path_to_open = CONFIG_PATH if os.path.isfile(CONFIG_PATH) else _resolve_config_path()
+    path = Path(path_to_open).resolve()
+    stat = path.stat()
+    signature = (str(path), stat.st_dev, stat.st_ino, stat.st_size,
+                 stat.st_mtime_ns, stat.st_ctime_ns)
+    if signature != _config_cache_signature:
+        with path.open('r', encoding='utf-8') as file:
+            _config_cache_data = yaml.load(file)
+        _config_cache_signature = signature
+    return _config_cache_data
+
+
 def load_config():
-    """Load the config.yaml file into a dictionary."""
+    """Return a private snapshot of the current configuration."""
     with config_lock:
-        path_to_open = CONFIG_PATH if os.path.isfile(CONFIG_PATH) else _resolve_config_path()
-        with open(path_to_open, 'r', encoding='utf-8') as file:
-            return yaml.load(file)
+        return deepcopy(_load_config_locked())
 
 def load_key(key_path: str, default=None):
     """Load a specific key's value from the config.yaml file.
@@ -91,17 +112,16 @@ def load_key(key_path: str, default=None):
     if env_override is not None:
         return env_override
 
-    config = load_config()
-    keys = key_path.split('.')
-    value = config
-    try:
-        for key in keys:
-            value = value[key]
-        return value
-    except (KeyError, TypeError):
-        if default is not None:
-            return default
-        raise KeyError(f"Key '{key_path}' not found in config")
+    with config_lock:
+        value = _load_config_locked()
+        try:
+            for key in key_path.split('.'):
+                value = value[key]
+            return deepcopy(value)
+        except (KeyError, TypeError):
+            if default is not None:
+                return default
+            raise KeyError(f"Key '{key_path}' not found in config")
 
 
 def get_env_names(key_path: str) -> tuple[str, ...]:

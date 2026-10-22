@@ -1,0 +1,151 @@
+{
+  "formulae": [
+    {
+      "name": "ffmpeg@7",
+      "full_name": "ffmpeg@7",
+      "tap": "homebrew/core",
+      "oldnames": [],
+      "aliases": [],
+      "versioned_formulae": [
+        "ffmpeg@8",
+        "ffmpeg@6",
+        "ffmpeg@5",
+        "ffmpeg@4",
+        "ffmpeg@2.8"
+      ],
+      "desc": "Play, record, convert, and stream audio and video",
+      "license": "GPL-3.0-or-later",
+      "homepage": "https://ffmpeg.org/",
+      "versions": {
+        "stable": "7.1.5",
+        "head": null,
+        "bottle": true
+      },
+      "urls": {
+        "stable": {
+          "url": "https://ffmpeg.org/releases/ffmpeg-7.1.5.tar.xz",
+          "tag": null,
+          "revision": null,
+          "using": null,
+          "checksum": "de668509caf9e35e3cd162473441fdb29538c6d96ed080292b3cf9e6fc5d558f"
+        }
+      },
+      "patches": [],
+      "revision": 3,
+      "version_scheme": 0,
+      "compatibility_version": null,
+      "autobump": true,
+      "no_autobump_message": null,
+      "skip_livecheck": false,
+      "bottle": {
+        "stable": {
+          "rebuild": 0,
+          "root_url": "https://ghcr.io/v2/homebrew/core",
+          "files": {
+            "arm64_golden_gate": {
+              "cellar": "/opt/homebrew/Cellar",
+              "url": "https://ghcr.io/v2/homebrew/core/ffmpeg/7/blobs/sha256:e8ce99d17ed208844f5315c6aaa44c3b32917fb2669a86af74d03bc72d49748c",
+              "sha256": "e8ce99d17ed208844f5315c6aaa44c3b32917fb2669a86af74d03bc72d49748c"
+            }
+          }
+        }
+      },
+      "pour_bottle_only_if": null,
+      "keg_only": true,
+      "keg_only_reason": {
+        "reason": ":versioned_formula",
+        "explanation": ""
+      },
+      "options": [],
+      "build_dependencies": [
+        "pkgconf"
+      ],
+      "dependencies": [
+        "aom",
+        "aribb24",
+        "dav1d",
+        "fontconfig",
+        "freetype",
+        "frei0r",
+        "gnutls",
+        "harfbuzz",
+        "jpeg-xl",
+        "lame",
+        "libass",
+        "libbluray",
+        "librist",
+        "libsoxr",
+        "libssh",
+        "libvidstab",
+        "libvmaf",
+        "libvorbis",
+        "libvpx",
+        "libx11",
+        "libxcb",
+        "opencore-amr",
+        "openjpeg",
+        "opus",
+        "rav1e",
+        "rubberband",
+        "sdl2-compat",
+        "snappy",
+        "speex",
+        "srt",
+        "svt-av1",
+        "tesseract",
+        "theora",
+        "webp",
+        "x264",
+        "x265",
+        "xvid",
+        "xz",
+        "zeromq",
+        "zimg",
+        "libarchive",
+        "libogg",
+        "libsamplerate"
+      ],
+      "test_dependencies": [],
+      "recommended_dependencies": [],
+      "optional_dependencies": [],
+      "uses_from_macos": [
+        "bzip2",
+        "libxml2"
+      ],
+      "uses_from_macos_bounds": [
+        {},
+        {}
+      ],
+      "requirements": [],
+      "conflicts_with": [],
+      "conflicts_with_reasons": [],
+      "link_overwrite": [],
+      "caveats": null,
+      "installed": [],
+      "linked_keg": null,
+      "pinned": false,
+      "outdated": false,
+      "deprecated": false,
+      "deprecation_date": null,
+      "deprecation_reason": null,
+      "deprecation_replacement_formula": null,
+      "deprecation_replacement_cask": null,
+      "deprecate_args": null,
+      "disabled": false,
+      "disable_date": null,
+      "disable_reason": null,
+      "disable_replacement_formula": null,
+      "disable_replacement_cask": null,
+      "disable_args": null,
+      "post_install_steps": [],
+      "post_install_defined": false,
+      "service": null,
+      "tap_git_head": "86ac82d6700c6c4fc2b0ea7caff656280f940cb7",
+      "ruby_source_path": "Formula/f/ffmpeg@7.rb",
+      "ruby_source_checksum": {
+        "sha256": "79acec3ead3737b748597c407ce8d46771f7040a9153a2c7e5ed5340da2f86e5"
+      }
+    }
+  ],
+  "casks": []
+}

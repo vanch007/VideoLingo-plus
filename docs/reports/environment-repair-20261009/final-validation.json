@@ -1,0 +1,41 @@
+{
+  "status": "pass",
+  "environment": "/Users/vanch/pinokio/bin/miniconda/envs/videolingo",
+  "python": "3.10.21",
+  "required_pip_check": "pass",
+  "requirements_install": "pass",
+  "native_imports": "pass",
+  "audio_decode_operations": "pass",
+  "default_route_doctor": {
+    "status": "pass",
+    "exit_code": 0,
+    "optional_backend_warnings": 5
+  },
+  "full_regression": {
+    "status": "pass",
+    "passed": 609,
+    "elapsed_seconds": 159.61
+  },
+  "final_targeted_regression": {
+    "status": "pass",
+    "passed": 49,
+    "elapsed_seconds": 6.14
+  },
+  "compileall": "pass",
+  "git_diff_check": "pass",
+  "asr_readback_env_pip_check": "pass",
+  "indextts2_env_pip_check": "pass",
+  "remaining_warnings": [
+    "unconfigured optional TTS backends",
+    "macOS mixed FFmpeg AVFoundation native class duplication"
+  ],
+  "not_executed": [
+    "fresh complete environment installation",
+    "new full-video model inference/render"
+  ],
+  "fresh_environment_dependency_solve": {
+    "status": "pass",
+    "exit_code": 0,
+    "installation_performed": false
+  }
+}

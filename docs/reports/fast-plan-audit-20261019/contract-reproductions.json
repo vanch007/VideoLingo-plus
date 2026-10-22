@@ -1,0 +1,17 @@
+{
+  "fast_then_cinematic": {
+    "quality_mode": "high_sync",
+    "translation.strict_review_gate": false,
+    "translation.review_mode": "none",
+    "mlx_tts.backends.indextts2.profile": "v25",
+    "mlx_tts.backends.indextts2.chinese_profile": "v25"
+  },
+  "new_web_job_requested_config_fast_actual_cli_profile": "cinematic",
+  "plan_reconstructed_tasks": 332,
+  "plan_reconstructed_has_reuse_fingerprint": false,
+  "empty_asr_existing_script_score": 1.0,
+  "english_wrap_input": "This is an extremely long English sentence that exceeds the forty-two characters threshold and must be formatted across two lines cleanly",
+  "english_wrap_output": "This is an extremely long English sentence\nthat exceeds the forty-two characters",
+  "production_mutations": false,
+  "subprocesses_launched": false
+}
