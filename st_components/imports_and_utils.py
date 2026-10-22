@@ -94,18 +94,6 @@ button_style = """
     width: 350px;
 }
 
-/* Ensure main content is centered when sidebar is collapsed or expanded */
-.main .block-container,
-[data-testid="block-container"],
-[data-testid="stMainBlockContainer"] {
-    max-width: 860px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
-    padding-top: 2rem !important;
-}
-
 div.stButton > button:first-child {
     display: block;
     padding: 0.5em 1em;

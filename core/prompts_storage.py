@@ -55,7 +55,7 @@ def get_summary_prompt(source_content, custom_terms_json=None, speaker_ids=None)
     return f"""请分析这段{src}对白，为翻译成{tgt}建立场景、术语和人物线索。只输出 JSON。
 返回一个 JSON 对象，topic、terms、characters 必须在同一对象内；不要输出对象数组或第二个 JSON。
 1. topic 用两句话概括冲突，不补充电影背景。
-2. terms 提取确实出现在原文且含义清楚的术语、名字、反复出现的词。tgt 只写自然简洁的译法，解释放 note。
+2. terms 最多提取 5 到 12 个最核心确实出现在原文且含义清楚的专有名词或术语（严禁无限罗列或死循环重复提取）。tgt 只写自然简洁的译法，解释放 note。
    对有识别分歧的专名不要猜出确定译名，不要同时把两种 ASR 拼写锁定为不同人物或地点。
 3. characters 根据整段问答、称呼和行为区分真实对话角色，使用独立 C01、C02 等编号。
    为避免误导，已隐藏声纹标签；speaker_profiles 不能等同于人物身份。只根据对白的语义和交互推断。
