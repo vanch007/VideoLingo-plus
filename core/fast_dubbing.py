@@ -278,6 +278,7 @@ def run_fast_dubbing() -> None:
 
     with ThreadPoolExecutor(max_workers=min(8, os.cpu_count() or 4)) as executor:
         results = list(executor.map(_process_single_item, items))
+    extensions = plan_audio_timeline(results, source_duration, fps)
     for row in results:
         row['start_time']=seconds_to_srt_time(row['final_start']);row['end_time']=seconds_to_srt_time(row['final_end'])
     extension=sum(e['extend_by'] for e in extensions)

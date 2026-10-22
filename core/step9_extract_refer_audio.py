@@ -24,7 +24,11 @@ def extract_audio(audio_data, sr, start_time, end_time, out_file):
         rprint(f"[bold red]Warning: Invalid time slice for {out_file}. Start: {start_time}, End: {end_time}. Skipping.[/bold red]")
         return
     end = min(end, len(audio_data))
-    sf.write(out_file, audio_data[start:end], sr)
+    slice_data = audio_data[start:end]
+    min_samples = int(sr * 0.5)
+    if len(slice_data) < min_samples:
+        slice_data = np.pad(slice_data, (0, min_samples - len(slice_data)), mode='edge')
+    sf.write(out_file, slice_data, sr)
 
 
 def extract_refer_audio_main():
