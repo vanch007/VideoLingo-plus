@@ -303,6 +303,13 @@ def pre_merge_short_chunks(df):
     return new_df
 
 def gen_dub_chunks():
+    from core.config_utils import load_key
+    from core.utterance_plan import plan_active, load_plan, validate_tasks
+    if plan_active():
+        is_fast = (load_key("quality_mode") == "fast") or bool(load_key("fast_mode.enabled", False))
+        validate_tasks(pd.read_excel(INPUT_EXCEL), load_plan(), generated=not is_fast)
+        rprint("[green]Locked utterances retained one-to-one; no dubbing rewrite or merge.[/green]")
+        return
     rprint("[🎬 Starting] Generating dubbing chunks...")
     df = pd.read_excel(INPUT_EXCEL)
     # Note: Filtering is now done in step8_1, so df is already clean

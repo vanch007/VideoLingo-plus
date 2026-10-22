@@ -193,6 +193,21 @@ def save_to_srt(df, srt_path):
     rprint(f"[bold green]✅ Synced rewritten subtitles to {srt_path}[/bold green]")
 
 def gen_audio_task_main():
+    from pathlib import Path
+    from core.config_utils import load_key
+    from core.utterance_plan import plan_active, load_plan, tasks_from_plan
+    if plan_active():
+        if (load_key("quality_mode") == "fast") or bool(load_key("fast_mode.enabled", False)):
+            plan = load_plan()
+            tasks = tasks_from_plan(plan)
+            path = Path("output/audio/tts_tasks.xlsx")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tasks.to_excel(path, index=False)
+            rprint(f"[green]⚡ Fast Mode: Generated {len(tasks)} TTS tasks from plan.[/green]")
+            return
+        from core.atomic_dubbing import create_tasks
+        create_tasks()
+        return
     if os.path.exists(TTS_TASKS_FILE):
         rprint(Panel(f"{TTS_TASKS_FILE} already exists, skip.", title="Info", border_style="blue"))
     else:

@@ -35,6 +35,18 @@ def _tokens(text: str) -> list[str]:
     return re.findall(r"[\w\u00c0-\u024f\u1e00-\u1eff\u4e00-\u9fff]+", (text or "").lower())
 
 
+def _readback_tokens(text: str) -> list[str]:
+    from decimal import Decimal
+    from core.translation_invariants import number_annotations
+    for item in reversed(number_annotations(text or "")):
+        canonical = format(Decimal(item["value"]).normalize(), "f")
+        text = re.sub(r"(?<!\w)" + re.escape(item["text"]) + r"(?!\w)", canonical, text, flags=re.I)
+    # CJK words do not have whitespace boundaries. Treating a complete Chinese
+    # clause as one token makes an ASR comma look like extra spoken content,
+    # and hides genuine lost openings/tails. Latin words remain whole tokens.
+    return _tokens(re.sub(r"([\u3400-\u4dbf\u4e00-\u9fff])", r" \1 ", text))
+
+
 def _normalize_phonetic_token(token: str) -> str:
     t = (token or "").lower().strip()
     t = re.sub(r"^who\b", "hu", t)
@@ -46,6 +58,11 @@ def _normalize_phonetic_token(token: str) -> str:
 def _token_matches(left: str, right: str) -> bool:
     if left == right:
         return True
+    if (re.fullmatch(r"[\u3400-\u4dbf\u4e00-\u9fff]", left)
+            and re.fullmatch(r"[\u3400-\u4dbf\u4e00-\u9fff]", right)):
+        from core.providers.quality import mandarin_reading
+        reading = mandarin_reading(left)
+        return reading is not None and reading == mandarin_reading(right)
     nl = _normalize_phonetic_token(left)
     nr = _normalize_phonetic_token(right)
     if nl == nr or (len(nl) >= 3 and len(nr) >= 3 and (nl in nr or nr in nl)):
@@ -55,31 +72,55 @@ def _token_matches(left: str, right: str) -> bool:
     return SequenceMatcher(None, nl, nr).ratio() >= 0.65
 
 
+def _aligned_token_pairs(expected: list[str], actual: list[str]) -> list[tuple[int, int]]:
+    """Align the whole sequence; an inserted filler must not steal a later match."""
+    scores = [[(0, 0)] * (len(actual) + 1) for _ in range(len(expected) + 1)]
+    for i in range(len(expected) - 1, -1, -1):
+        for j in range(len(actual) - 1, -1, -1):
+            best = max(scores[i + 1][j], scores[i][j + 1])
+            if _token_matches(expected[i], actual[j]):
+                count, exact = scores[i + 1][j + 1]
+                best = max(best, (count + 1, exact + int(expected[i] == actual[j])))
+            scores[i][j] = best
+    pairs, i, j = [], 0, 0
+    while i < len(expected) and j < len(actual):
+        count, exact = scores[i + 1][j + 1]
+        match = (count + 1, exact + int(expected[i] == actual[j]))
+        if _token_matches(expected[i], actual[j]) and scores[i][j] == match:
+            pairs.append((i, j))
+            i += 1
+            j += 1
+        elif scores[i][j + 1] >= scores[i + 1][j]:
+            j += 1
+        else:
+            i += 1
+    return pairs
+
+
+def unexpected_boundary_speech(expected: str, transcript: str) -> bool:
+    """Extra lexical speech cannot be hidden by a high sentence-wide score."""
+    expected_tokens, actual_tokens = _readback_tokens(expected), _readback_tokens(transcript)
+    if not expected_tokens or not actual_tokens:
+        return False
+    pairs = _aligned_token_pairs(expected_tokens, actual_tokens)
+    if not pairs:
+        return False
+    extra = []
+    if pairs[0][0] == 0:
+        extra.extend(actual_tokens[:pairs[0][1]])
+    if pairs[-1][0] == len(expected_tokens) - 1:
+        extra.extend(actual_tokens[pairs[-1][1] + 1:])
+    return any(token not in NON_LEXICAL_INTERJECTIONS for token in extra)
+
+
 def probable_tail_truncation(expected: str, transcript: str) -> bool:
     """Detect prefix-like ASR output that is missing the expected sentence tail."""
-    expected_tokens = _tokens(expected)
-    actual_tokens = _tokens(transcript)
-    if not expected_tokens or not actual_tokens or len(actual_tokens) >= len(expected_tokens):
+    expected_tokens = _readback_tokens(expected)
+    actual_tokens = _readback_tokens(transcript)
+    if not expected_tokens or not actual_tokens:
         return False
 
-    # Greedily align heard tokens in order. This tolerates an accented name in
-    # the middle while proving that the take ends before the expected final
-    # token. Merely searching for the tail word fails when it occurs twice.
-    expected_cursor = 0
-    matched_positions: list[int] = []
-    for actual_token in actual_tokens:
-        match_position = next(
-            (
-                position
-                for position in range(expected_cursor, len(expected_tokens))
-                if _token_matches(expected_tokens[position], actual_token)
-            ),
-            None,
-        )
-        if match_position is None:
-            continue
-        matched_positions.append(match_position)
-        expected_cursor = match_position + 1
+    matched_positions = [i for i, _ in _aligned_token_pairs(expected_tokens, actual_tokens)]
 
     minimum_matches = max(2, math.ceil(len(actual_tokens) * 0.65))
     prefix_like = len(matched_positions) >= minimum_matches and matched_positions[0] <= 1
@@ -95,26 +136,12 @@ def probable_tail_truncation(expected: str, transcript: str) -> bool:
 
 def probable_prefix_truncation(expected: str, transcript: str) -> bool:
     """Detect suffix-like ASR output that is missing the expected opening words."""
-    expected_tokens = _tokens(expected)
-    actual_tokens = _tokens(transcript)
-    if not expected_tokens or not actual_tokens or len(actual_tokens) >= len(expected_tokens):
+    expected_tokens = _readback_tokens(expected)
+    actual_tokens = _readback_tokens(transcript)
+    if not expected_tokens or not actual_tokens:
         return False
 
-    expected_cursor = 0
-    matched_positions: list[int] = []
-    for actual_token in actual_tokens:
-        match_position = next(
-            (
-                position
-                for position in range(expected_cursor, len(expected_tokens))
-                if _token_matches(expected_tokens[position], actual_token)
-            ),
-            None,
-        )
-        if match_position is None:
-            continue
-        matched_positions.append(match_position)
-        expected_cursor = match_position + 1
+    matched_positions = [i for i, _ in _aligned_token_pairs(expected_tokens, actual_tokens)]
 
     minimum_matches = max(2, math.ceil(len(actual_tokens) * 0.65))
     suffix_like = (
@@ -124,7 +151,8 @@ def probable_prefix_truncation(expected: str, transcript: str) -> bool:
     unstressed_leading = {"you", "i", "we", "he", "she", "it", "they", "a", "an", "the", "oh", "ah", "well", "so"}
     misses_expected_start = bool(matched_positions) and (
         matched_positions[0] >= 2
-        or (matched_positions[0] == 1 and expected_tokens[0] not in unstressed_leading)
+        or (matched_positions[0] == 1 and len(actual_tokens) < len(expected_tokens)
+            and expected_tokens[0] not in unstressed_leading)
     )
     return suffix_like and misses_expected_start
 
@@ -136,7 +164,7 @@ def _row_has_tail_truncation(row: pd.Series) -> bool:
     # openings and missing endings are now hard incomplete-speech failures.
     return probable_tail_truncation(expected, transcript) or probable_prefix_truncation(
         expected, transcript
-    )
+    ) or unexpected_boundary_speech(expected, transcript)
 
 
 def _clean_transcript_text(transcript: Any) -> str:

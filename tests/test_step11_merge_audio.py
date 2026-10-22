@@ -93,3 +93,24 @@ def test_merge_audio_segments_only_trims_encoding_rounding_tail(monkeypatch, tmp
     issues = json.loads(issues_path.read_text(encoding="utf-8"))
     assert issues[0]["error"] == "trimmed_encoding_rounding_tail"
     assert issues[0]["overflow_ms"] == 4
+
+
+def test_merge_audio_segments_applies_dynamic_energy_alignment(monkeypatch, tmp_path):
+    import pandas as pd
+    from pydub.generators import Sine
+    ref_audio = tmp_path / "ref.wav"
+    gen_audio = tmp_path / "gen.wav"
+    # Create ref with lower volume (-20dB) and gen with higher volume (-10dB)
+    Sine(440).to_audio_segment(duration=1000).apply_gain(-20).export(str(ref_audio), format="wav")
+    Sine(440).to_audio_segment(duration=1000).apply_gain(-10).export(str(gen_audio), format="wav")
+    tasks = pd.DataFrame([{"resolved_emotion_ref": str(ref_audio)}])
+    original_load = step11_merge_full_audio.load_key
+    def mock_load(key, default=None):
+        if key == "dubbing_quality.dynamic_energy_alignment":
+            return {"enabled": True, "ratio": 1.0, "max_gain_db": 6.0, "min_gain_db": -6.0}
+        return original_load(key, default)
+    monkeypatch.setattr(step11_merge_full_audio, "load_key", mock_load)
+    monkeypatch.setattr(step11_merge_full_audio, "get_quality_config", lambda: SimpleNamespace(allow_silence_fallback=False))
+    merged = step11_merge_full_audio.merge_audio_segments([str(gen_audio)], [[0.0, 1.0]], 16000, tasks_df=tasks)
+    # The generated segment (-13dBFS) should have been attenuated by min_gain_db (-6dB) toward ref (-23dBFS)
+    assert merged.dBFS < -18.0

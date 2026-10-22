@@ -376,6 +376,7 @@ def test_english_shorten_allows_fewer_lines_for_tight_window(monkeypatch):
 
 
 def test_english_shorten_uses_compact_fallback_after_invalid_llm(monkeypatch, tmp_path):
+    monkeypatch.setattr(dubbing_rewrite, 'effective_target_language', lambda default='en': 'en')
     class Quality:
         max_natural_speed_factor = 1.12
 

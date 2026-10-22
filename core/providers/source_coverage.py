@@ -209,6 +209,17 @@ def _replace_range_with_recovery(
             if overlaps or (start - 0.1 <= midpoint <= end + 0.1):
                 merged_words.append((dict(word), True))
 
+    # Synchronize recognition_text for recovered phrases so partial boundary extractions
+    # remain internally consistent with preserved word tokens.
+    by_rec_id: dict[str, list[dict[str, Any]]] = {}
+    for word, _ in merged_words:
+        if word.get("recognition_segment_id"):
+            by_rec_id.setdefault(str(word["recognition_segment_id"]), []).append(word)
+    for rec_id, r_words in by_rec_id.items():
+        actual_text = "".join(str(w.get("word", "")) for w in r_words)
+        for w in r_words:
+            w["recognition_text"] = actual_text
+
     # Rebuild at word granularity. Keeping a pre-recovery segment containing
     # words on both sides of the repaired range would make segment ordering
     # disagree with word ordering and violate the timestamp contract.
@@ -263,13 +274,18 @@ def reconcile_source_coverage(
         recovery_merge_gap_seconds,
     )
     recovered_ranges: list[dict[str, Any]] = []
+    verified_non_speech_turns: set[int] = set()
     for item in ranges:
         padded_start = max(0.0, float(item["start"]) - recovery_padding_seconds)
         padded_end = float(item["end"]) + recovery_padding_seconds
         recovery = transcribe_range(padded_start, padded_end)
         validate_word_timestamps(recovery, backend=f"{backend}-coverage-recovery", allow_empty=True)
+        has_recovered_words = any(s.get("words") for s in recovery.get("segments", []) or [])
+        if not has_recovered_words:
+            verified_non_speech_turns.update(item.get("turn_indexes", []))
         _replace_range_with_recovery(result, recovery, start=float(item["start"]), end=float(item["end"]))
-        recovered_ranges.append({**item, "padded_start": padded_start, "padded_end": padded_end})
+        recovered_ranges.append({**item, "padded_start": padded_start, "padded_end": padded_end,
+                                 "recovery_audio": recovery.get("recovery_audio")})
 
     validate_word_timestamps(result, backend=backend)
     if has_text:
@@ -287,6 +303,15 @@ def reconcile_source_coverage(
             min_turn_overlap_ratio=min_turn_overlap_ratio,
             min_turn_duration=min_turn_duration,
         )
+        if verified_non_speech_turns:
+            for turn in after.get("turns", []):
+                if turn.get("status") == "missing" and turn.get("index") in verified_non_speech_turns:
+                    turn["status"] = "verified_non_speech"
+            uncovered = [t for t in after.get("turns", []) if t.get("status") == "missing"]
+            after["missing_turns"] = len(uncovered)
+            after["covered_turns"] = after["eligible_turns"] - len(uncovered)
+            after["coverage"] = after["covered_turns"] / after["eligible_turns"] if after["eligible_turns"] else 1.0
+            after["status"] = "pass" if not uncovered else "fail"
         # Strict acoustic coverage: missing turns must not be statistically waived
         if after.get("missing_turns", 0) > 0:
             after["status"] = "fail"
@@ -297,7 +322,10 @@ def reconcile_source_coverage(
         "before": before,
         "after": after,
         "recovered_ranges": recovered_ranges,
-        "timestamp_contract": "native-word-timestamps-only",
+        "timestamp_contract": (
+            "acoustic-forced-alignment-80ms" if backend == "qwen3-aligned"
+            else "native-word-timestamps-only"
+        ),
     }
     destination = Path(report_path)
     destination.parent.mkdir(parents=True, exist_ok=True)

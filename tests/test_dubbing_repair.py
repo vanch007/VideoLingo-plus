@@ -109,7 +109,7 @@ def test_over_duration_speed_fit_uses_existing_audio_action():
         "status": "warn",
         "reason": "over_duration",
         "text": "xin chao",
-        "duration_ratio": 1.2,
+        "duration_ratio": 1.08,
     }
     action = choose_repair_action(eval_row, _task_row())
     assert action.action == "speed_fit_existing_audio"
@@ -311,13 +311,14 @@ def test_build_repair_plan_can_filter_by_action():
 
 
 def test_over_duration_report_classifies_triage_buckets():
-    assert classify_over_duration({"duration_ratio": 1.2}) == OVER_DURATION_SPEED_FIT
+    assert classify_over_duration({"duration_ratio": 1.08}) == OVER_DURATION_SPEED_FIT
+    assert classify_over_duration({"duration_ratio": 1.2}) == OVER_DURATION_REWRITE
     assert classify_over_duration({"duration_ratio": 1.6}) == OVER_DURATION_REWRITE
     assert classify_over_duration({"duration_ratio": 3.0}) == OVER_DURATION_MANUAL
 
     tasks_df = pd.DataFrame([_task_row(number=1), _task_row(number=2), _task_row(number=3)])
     eval_df = pd.DataFrame([
-        {"number": 1, "status": "warn", "reason": "over_duration", "text": "a", "duration_ratio": 1.2},
+        {"number": 1, "status": "warn", "reason": "over_duration", "text": "a", "duration_ratio": 1.08},
         {"number": 2, "status": "warn", "reason": "over_duration", "text": "b", "duration_ratio": 1.6},
         {"number": 3, "status": "warn", "reason": "over_duration", "text": "c", "duration_ratio": 3.0},
     ])

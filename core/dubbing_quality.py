@@ -277,16 +277,20 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
     if tasks_df is None:
         tasks_df = pd.read_excel(TTS_TASKS_FILE)
 
+    from core.atomic_dubbing import preflight_validated_units
+    validated_units = preflight_validated_units(tasks_df)
+
     rows = []
     for _, row in tasks_df.iterrows():
         number = int(row["number"])
         lines = normalize_lines(row.get("lines", row.get("text", ""))) or [str(row.get("text", ""))]
         new_times = _flatten_times(row, "new_sub_times")
-        source_start = row_start_seconds(row)
-        source_end = row_end_seconds(row)
+        window_start, window_end = row_start_seconds(row), row_end_seconds(row)
+        source_start = float(row["source_start"]) if pd.notna(row.get("source_start")) else window_start
+        source_end = float(row["source_end"]) if pd.notna(row.get("source_end")) else window_end
         tolerance = float(row.get("tolerance", 0) or 0)
-        target_start = source_start
-        target_end = source_end + tolerance
+        target_start = window_start
+        target_end = window_end + tolerance
         available = row_available_duration(row)
         real_dur = float(row.get("real_dur", 0) or 0)
         actual_start = new_times[0][0] if new_times else None
@@ -400,10 +404,22 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
             (acoustic_end_drift is not None and acoustic_end_drift > quality.max_end_drift)
             or (acoustic_window_drift is not None and acoustic_window_drift > quality.max_end_drift)
         )
+        locked_complete = (
+            str(row.get("unit_id", "")) in validated_units
+            and row.get("asr_status") == "ok"
+            and content_score is not None and pd.notna(content_score)
+            and float(content_score) >= quality.content_score_min
+        )
+        if locked_complete:
+            # Different languages have different phrase lengths. A complete
+            # natural take may finish early; its planned silence does not imply
+            # missing speech. Source-relative end drift remains visible below.
+            ends_too_early = acoustic_ends_too_early = False
+            acoustic_ends_too_late = acoustic_window_drift is not None and acoustic_window_drift > quality.max_end_drift
         if duration_ratio > quality.max_duration_ratio:
             status = "warn" if status == "ok" else status
             reasons.append("over_duration")
-        if (0 < duration_ratio < quality.min_duration_ratio) or ends_too_early or acoustic_ends_too_early:
+        if (not locked_complete and 0 < duration_ratio < quality.min_duration_ratio) or ends_too_early or acoustic_ends_too_early:
             status = "warn" if status == "ok" else status
             reasons.append("under_duration")
         if (start_drift is not None and abs(start_drift) > quality.max_start_drift) or (
@@ -415,7 +431,8 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
             status = "warn" if status == "ok" else status
             reasons.append("over_duration")
         row_tolerance = float(row.get("tolerance", 0.0) or 0.0)
-        unexplained_tail_padding = max(0.0, (acoustic_tail_padding or 0.0) - row_tolerance)
+        declared_padding = float(row.get("planned_trailing_silence", 0.) or 0.) if locked_complete else 0.
+        unexplained_tail_padding = max(0.0, (acoustic_tail_padding or 0.0) - row_tolerance - declared_padding)
         if unexplained_tail_padding > 0.5 and (
             final_audio_dur > 0 and (unexplained_tail_padding / final_audio_dur) > 0.25
         ):
@@ -460,6 +477,8 @@ def evaluate_dubbing(tasks_df: pd.DataFrame | None = None) -> tuple[pd.DataFrame
             "voice_similarity": voice_sim,
             "emotion_fidelity": emo_fid,
             "four_layer_timing": four_layer_timing,
+            "translation_speech_validated": locked_complete,
+            "planned_trailing_silence": declared_padding,
             "duration": float(row.get("duration", 0) or 0),
             "available_duration": available,
             "target_duration": row_target_duration(row),

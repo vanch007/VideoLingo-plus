@@ -30,7 +30,10 @@ def tts_main(text, save_as, number, task_df, task_row=None, line_index=0, target
         return
 
     print(f"Generating <{text}...>")
-    task_row = task_row or {}
+    if task_row is None:
+        task_row = {}
+    elif hasattr(task_row, "to_dict"):
+        task_row = task_row.to_dict()
     row_tts_method = task_row.get("tts_method")
     row_tts_method = str(row_tts_method).strip() if row_tts_method is not None else ""
     if row_tts_method.lower() in {"", "nan", "<na>", "none"}:

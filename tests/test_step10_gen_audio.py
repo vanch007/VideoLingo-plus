@@ -671,6 +671,8 @@ def test_content_rewrite_provider_failure_is_nonfatal_and_returns_no_change(monk
 
 
 def test_gen_audio_runs_content_gate_before_writing_tasks(monkeypatch):
+    from core import utterance_plan
+    monkeypatch.setattr(utterance_plan, "plan_active", lambda: False)
     calls = []
     tasks = pd.DataFrame([{"number": 1, "text": "Complete."}])
     monkeypatch.setattr(step10_gen_audio, "prepare_reference_plan", lambda df: df)

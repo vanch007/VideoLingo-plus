@@ -5,6 +5,8 @@ inputs; they deliberately do not claim perceptual voice/emotion quality.
 """
 from __future__ import annotations
 
+from core.tts_pronunciation import synthesis_text
+
 import hashlib
 import json
 import math
@@ -57,8 +59,8 @@ def validate_emotion_alpha(value):
 
 def _source_emotion_clip(row, tasks, root, *, materialize=True):
     """Cut the original utterance without the speaker-reference +/-1s padding."""
-    start = srt_time_to_seconds(str(row["start_time"]))
-    end = srt_time_to_seconds(str(row["end_time"]))
+    start = float(row["source_start"]) if clean_value(row.get("source_start")) else srt_time_to_seconds(str(row["start_time"]))
+    end = float(row["source_end"]) if clean_value(row.get("source_end")) else srt_time_to_seconds(str(row["end_time"]))
     if not math.isfinite(start + end) or start < 0 or end <= start:
         raise ValueError(f"Invalid emotion source window for row {row['number']}")
     # A dubbed window is not permission to borrow neighbouring delivery.
@@ -66,8 +68,8 @@ def _source_emotion_clip(row, tasks, root, *, materialize=True):
         for _, other in tasks.iterrows():
             if int(other["number"]) == int(row["number"]):
                 continue
-            a = srt_time_to_seconds(str(other["start_time"]))
-            b = srt_time_to_seconds(str(other["end_time"]))
+            a = float(other["source_start"]) if clean_value(other.get("source_start")) else srt_time_to_seconds(str(other["start_time"]))
+            b = float(other["source_end"]) if clean_value(other.get("source_end")) else srt_time_to_seconds(str(other["end_time"]))
             if min(end, b) - max(start, a) > 0.01:
                 raise ValueError(f"Overlapping source rows: cannot isolate emotion for row {row['number']}")
     source = root / "vocal.wav"
@@ -251,8 +253,12 @@ def write_conditioning_receipt(request, backend: str | None = None):
         receipt = {
             "reference_plan": plan,
             "text": request.text,
+            "synthesis_text": (synthesis_text(request) if effective_backend == 'indextts2'
+                               else request.metadata.get('synthesis_text', request.text)),
+            "pronunciation_guidance": request.metadata.get("pronunciation_guidance", []),
             "language": request.language,
             "target_duration": request.target_duration,
+            "generation_settings": request.metadata.get("generation_settings"),
             "backend": effective_backend,
             "native_audio": native_audio_id,
             "transform_history": [],
@@ -297,8 +303,13 @@ def conditioning_receipt_matches(request):
             and receipt["audio"] == audio_identity(path)
             and receipt["reference_plan"]["fingerprint"] == request.metadata["reference_plan"]["fingerprint"]
             and receipt["text"] == request.text
+            and receipt.get("synthesis_text", receipt["text"]) == (
+                synthesis_text(request) if request.metadata.get('backend') == 'indextts2'
+                else request.metadata.get('synthesis_text', request.text))
+            and receipt.get("pronunciation_guidance", []) == request.metadata.get("pronunciation_guidance", [])
             and receipt["language"] == request.language
             and receipt["target_duration"] == request.target_duration
+            and receipt.get("generation_settings") == request.metadata.get("generation_settings")
             and receipt.get("backend") == request.metadata.get("backend")
         )
     except (OSError, ValueError, KeyError):

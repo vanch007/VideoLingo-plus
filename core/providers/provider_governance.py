@@ -57,19 +57,20 @@ def _llm_status(provider_name: str, provider: dict[str, Any]) -> tuple[str, list
 
 
 def list_llm_provider_records() -> list[ProviderRecord]:
+    selected = load_key("llm.provider", "openai_compatible")
     records = [
         ProviderRecord(
             name="openai_compatible",
             kind="llm",
             status="stable",
             implemented=True,
-            recommended=True,
+            recommended=selected == "openai_compatible",
             model=str(load_key("api.model", "")),
             base_url=fix_base_url(str(load_key("api.base_url", ""))),
             api_key_env="/".join(get_env_names("api.key")) or None,
             supports_json_object=str(load_key("api.model", "")) in (load_key("llm_support_json", []) or []),
             requires_api_key=True,
-            notes=["Default route; reads api.base_url and api.model."],
+            notes=["Generic route; reads api.base_url and api.model. Selected only when llm.provider is openai_compatible."],
         )
     ]
     providers = load_key("llm.providers", {}) or {}
@@ -84,7 +85,7 @@ def list_llm_provider_records() -> list[ProviderRecord]:
                 kind="llm",
                 status=status,
                 implemented=provider.get("type", "openai_compatible") == "openai_compatible",
-                recommended=False,
+                recommended=provider_name == selected,
                 model=str(provider.get("model", "")),
                 base_url=fix_base_url(str(provider.get("base_url", ""))),
                 api_key_env=str(env_key) if env_key else None,

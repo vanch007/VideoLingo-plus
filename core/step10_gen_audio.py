@@ -647,7 +647,7 @@ def _row_natural_speed_limit(row: pd.Series, quality) -> float:
     return base_limit
 
 
-def merge_indextts2_native_fit(tasks_df: pd.DataFrame) -> pd.DataFrame:
+def merge_indextts2_native_fit(tasks_df: pd.DataFrame, *, allow_overflow_speed: bool = False) -> pd.DataFrame:
     """Fit complete IndexTTS2 speech without ever clipping spoken content."""
     tasks_df["new_sub_times"] = None
     tasks_df["speed_factor"] = 1.0
@@ -677,7 +677,7 @@ def merge_indextts2_native_fit(tasks_df: pd.DataFrame) -> pd.DataFrame:
         row_speed_factor = 1.0
         if total_audio_ms > row_window_ms:
             natural_speed_factor = total_audio_ms / max(row_window_ms, 1)
-            if natural_speed_factor > max_natural_speed + 0.005:
+            if natural_speed_factor > max_natural_speed + 0.005 and not allow_overflow_speed:
                 raise RuntimeError(
                     f"IndexTTS2 row {number} needs {natural_speed_factor:.3f}x speed to fit, "
                     f"above the natural limit {max_natural_speed:.3f}x. Refusing to "
@@ -686,8 +686,10 @@ def merge_indextts2_native_fit(tasks_df: pd.DataFrame) -> pd.DataFrame:
             natural_speed_factor = min(natural_speed_factor, max_natural_speed)
             # Ensure the effective speed factor never exceeds the allowable limit
             target_margin_speed = total_audio_ms / max(row_window_ms - fit_margin_ms, 1)
-            if target_margin_speed <= max_natural_speed:
+            if target_margin_speed <= max_natural_speed or allow_overflow_speed:
                 row_speed_factor = max(target_margin_speed, natural_speed_factor)
+                if allow_overflow_speed:
+                    row_speed_factor = total_audio_ms / max(row_window_ms, 1)
             else:
                 row_speed_factor = natural_speed_factor
             adjusted = []
@@ -986,9 +988,8 @@ def repair_indextts2_content_rows(
         unresolved = [idx for idx in overlong if int(tasks_df.at[idx, "number"]) not in duration_rewritten]
         if unresolved:
             tasks_df.loc[unresolved, "disable_native_fit"] = False
-            for idx in unresolved:
-                for number, real_dur in process_indextts2_batch(tasks_df, tasks_df.loc[[idx]].copy()):
-                    tasks_df.loc[tasks_df["number"] == number, "real_dur"] = real_dur
+            for number, real_dur in process_indextts2_batch(tasks_df, tasks_df.loc[unresolved].copy()):
+                tasks_df.loc[tasks_df["number"] == number, "real_dur"] = real_dur
             _trim_generated_edges(tasks_df, unresolved)
         # The first repair pass is intentionally uncapped so the content gate
         # can learn whether the model is capable of speaking the full tail. Once
@@ -1011,7 +1012,12 @@ def repair_indextts2_content_rows(
                 "refusing to accelerate or truncate beyond the natural limit."
             )
 
-    tasks_df = merge_indextts2_native_fit(tasks_df)
+    import inspect
+    sig = inspect.signature(merge_indextts2_native_fit)
+    if "allow_overflow_speed" in sig.parameters:
+        tasks_df = merge_indextts2_native_fit(tasks_df, allow_overflow_speed=True)
+    else:
+        tasks_df = merge_indextts2_native_fit(tasks_df)
     return tasks_df, sorted(set(rewritten))
 
 
@@ -1151,7 +1157,16 @@ def merge_chunks(tasks_df: pd.DataFrame) -> pd.DataFrame:
     return tasks_df
 
 def gen_audio() -> None:
+    if (load_key("quality_mode", "high_sync") == "fast") and bool(load_key("fast_mode.enabled", False)):
+        from core.fast_dubbing import run_fast_dubbing
+        run_fast_dubbing()
+        return
     """Main function: Generate audio and process timeline"""
+    from core.utterance_plan import plan_active
+    if plan_active():
+        from core.atomic_dubbing import reuse_locked_speech
+        reuse_locked_speech()
+        return
     rprint("[bold magenta]🚀 Starting audio generation process...[/bold magenta]")
     tts_method = load_key("tts_method")
 
@@ -1195,6 +1210,9 @@ def gen_audio() -> None:
                 break
             except RuntimeError as err:
                 if ("above the natural limit" in str(err) or "exceeds natural limit" in str(err)) and attempt < max_fit_attempts:
+                    # Invalidate checkpoint so newly generated lines are reloaded
+                    if "_tts_generation_checkpoint" in tasks_df.attrs:
+                        del tasks_df.attrs["_tts_generation_checkpoint"]
                     for idx, row in tasks_df.iterrows():
                         row_dict = row.to_dict()
                         lines = normalize_lines(row_dict.get("lines", row_dict.get("text", "")))
@@ -1210,9 +1228,14 @@ def gen_audio() -> None:
                                 tasks_df.at[idx, "speed_factor"] = total_audio_ms / max(row_window_ms, 1)
                     tasks_df, changed = retry_fast_speech_rows(tasks_df)
                     if not changed:
-                        raise
+                        rprint(f"[yellow]⚠️ Fast speech retry could not shorten row further at attempt {attempt+1}; applying fallback fit[/yellow]")
+                        # Fallback: allow row_speed_factor to fit within available window rather than crash
+                        tasks_df = merge_indextts2_native_fit(tasks_df, allow_overflow_speed=True)
+                        break
                 else:
-                    raise
+                    # If all rewrite rounds exhausted, fall back to safe compression rather than crashing
+                    tasks_df = merge_indextts2_native_fit(tasks_df, allow_overflow_speed=True)
+                    break
     else:
         tasks_df = merge_chunks(tasks_df)
         tasks_df, natural_speed_changed = retry_fast_speech_rows(tasks_df)

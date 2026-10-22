@@ -61,6 +61,28 @@ def test_source_or_timing_change_invalidates_content_addressed_emotion(scene):
     assert before["emotion_reference"] != after["emotion_reference"]
 
 
+def test_pause_reserve_changes_dub_clock_without_borrowing_emotion_from_the_pause(scene):
+    _, tasks, _ = scene
+    row = {**tasks.iloc[0].to_dict(), "start_time":"00:00:00.880", "end_time":"00:00:02.350",
+           "source_start":1., "source_end":2.}
+    plan = refs.resolve_reference_plan(row, tasks)
+    assert plan["emotion_source_window"]["start"] == 1.
+    assert plan["emotion_source_window"]["end"] == 2.
+    assert sf.info(plan["emotion_reference"]["path"]).duration == pytest.approx(1.)
+
+
+def test_natural_take_cache_binds_the_actual_sampling_seed(scene):
+    root, tasks, _ = scene
+    out = root / "take.wav"
+    sf.write(out, np.ones(16000) * .05, 16000)
+    request = mlx_router.build_mlx_tts_request("Hello", str(out), 1, tasks, tasks.iloc[0].to_dict())
+    request.metadata["generation_settings"] = {"seed":42,"fit_duration":False}
+    refs.write_conditioning_receipt(request)
+    assert refs.conditioning_receipt_matches(request)
+    request.metadata["generation_settings"] = {"seed":43,"fit_duration":False}
+    assert not refs.conditioning_receipt_matches(request)
+
+
 def test_explicit_reference_and_weight_survive_rewrite(scene):
     root, tasks, _ = scene
     row = {**tasks.iloc[1].to_dict(), "emotion_ref": str(root / "refers/2.wav"), "emo_alpha": 0.85}

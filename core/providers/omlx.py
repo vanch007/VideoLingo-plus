@@ -17,7 +17,7 @@ class OmlxModel:
 
 
 def _auth_headers() -> dict[str, str]:
-    api_key = load_key("llm.providers.omlx.api_key", load_key("llm.providers.omlx.default_api_key", "1234"))
+    api_key = load_key("llm.providers.omlx.api_key", load_key("llm.providers.omlx.default_api_key", ""))
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"

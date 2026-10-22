@@ -42,6 +42,7 @@ def build_mlx_tts_request(
     task_row = task_row or {}
     speaker = _clean_optional(task_row.get("speaker"))
     reference_plan = resolve_reference_plan({**task_row, "number": number}, task_df)
+    # Dynamic voice cloning from original video speech切片
     ref_audio = reference_plan["speaker_reference"]["path"]
     ref_number = reference_plan["speaker_reference_number"]
     ref_text = _clean_optional(task_row.get("ref_text")) or get_prompt_text_from_df(task_df, ref_number, fallback_text="")

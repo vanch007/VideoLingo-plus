@@ -60,6 +60,48 @@ def test_probable_prefix_truncation_catches_missing_opening_clause():
     )
 
 
+@pytest.mark.parametrize('heard', [
+    'The witness identified your man. Who am I?',
+    'The witness identified your man. Who is it?',
+])
+def test_replaced_tail_cannot_hide_behind_an_equal_or_longer_transcript(heard):
+    assert dubbing_content_gate.probable_tail_truncation(
+        'The witness identified your man, Hu Wan.', heard)
+
+
+def test_longer_readback_with_a_replaced_opening_still_requires_review():
+    assert dubbing_content_gate.probable_prefix_truncation(
+        'Stand tall. The magistrate has to pay the gentry.',
+        'Well now then. The magistrate has to pay the gentry.')
+
+
+def test_extra_lexical_boundary_speech_is_not_a_homophone_or_emotional_filler():
+    expected='The witness identified your man, Hu Wan.'
+    assert dubbing_content_gate.unexpected_boundary_speech(expected,expected+' Or not.')
+    assert dubbing_content_gate.unexpected_boundary_speech(expected,'No. '+expected)
+    assert not dubbing_content_gate.unexpected_boundary_speech(expected,expected+' Uh.')
+    assert not dubbing_content_gate.unexpected_boundary_speech(expected,expected)
+
+
+@pytest.mark.parametrize(("expected", "heard"), [
+    ("接着它还能高亮某些行，", "接着，它还能高亮某些行。"),
+    ("现在，这其实很重要，因为它能协调其他工具。", "现在这其实很重要因为它能协调其他工具"),
+    ("我就能把它直接连到Claude Code里。", "我就能把它直接连到 Claude Code 里。"),
+])
+def test_chinese_readback_boundaries_ignore_only_unspoken_punctuation(expected, heard):
+    assert not dubbing_content_gate.unexpected_boundary_speech(expected, heard)
+    assert not dubbing_content_gate.probable_prefix_truncation(expected, heard)
+    assert not dubbing_content_gate.probable_tail_truncation(expected, heard)
+
+
+def test_chinese_boundary_checks_still_reject_real_extra_or_missing_speech():
+    expected = "这个工具不能删除原始视频。"
+    assert dubbing_content_gate.unexpected_boundary_speech(expected, "不用管了。" + expected)
+    assert dubbing_content_gate.unexpected_boundary_speech(expected, expected + "直接删除。")
+    assert dubbing_content_gate.probable_prefix_truncation(expected, "不能删除原始视频。")
+    assert dubbing_content_gate.probable_tail_truncation(expected, "这个工具不能删除原始。")
+
+
 def test_high_score_missing_prefix_is_repaired_even_above_severe_threshold():
     tasks = pd.DataFrame([{
         "number": 42,

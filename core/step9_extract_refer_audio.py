@@ -29,6 +29,16 @@ def extract_audio(audio_data, sr, start_time, end_time, out_file):
 
 def extract_refer_audio_main():
     """提取参考音频的主函数"""
+    from core.config_utils import load_key
+    from core.utterance_plan import plan_active, load_plan, validate_tasks
+    is_fast = (load_key("quality_mode") == "fast") or bool(load_key("fast_mode.enabled", False))
+    if plan_active() and not is_fast:
+        from core.tts_reference_plan import reference_plan_is_current
+        tasks = pd.read_excel(TTS_TASKS_FILE)
+        validate_tasks(tasks, load_plan(), generated=True)
+        if not reference_plan_is_current(tasks):
+            raise ValueError("Locked speech conditioning changed; repeat translation speech preflight")
+        return
     demucs_main()  # 确保 demucs 已运行
 
     os.makedirs(REFERS_DIR, exist_ok=True)
