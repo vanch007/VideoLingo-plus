@@ -693,10 +693,10 @@ def main():
             st.rerun()
 
     from core.pipeline.job import job_status
-    pipeline_job_progress()
-    if job_status()['active']:
-        st.info('任务在后台运行，刷新页面不会中断。完成前请勿更改设置或导入另一段视频。')
-        return
+    if job_status().get('pid'):
+        with st.container(border=True):
+            pipeline_job_progress()
+        st.divider()
     download_video_section()
     text_processing_section()
     audio_processing_section()
