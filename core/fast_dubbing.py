@@ -258,23 +258,26 @@ def run_fast_dubbing() -> None:
         ledger.data['rewrites'][uid]['text'] = text; ledger.save()
         rewritten.append(item)
     generate(rewritten)
-    results=[]
-    for item in items:
-        entry=ledger.data['entries'][item['uid']]; raw=Path(entry['path'])
-        # Process a separate file: never apply gain repeatedly to cached natural audio.
-        processed=SEGS_DIR/f"{item['number']}_gain.wav"; final=SEGS_DIR/f"{item['number']}_0.wav"
-        shutil.copy2(raw,processed)
-        _adjust_volume_to_reference(processed,item['request'].ref_audio)
-        duration=sf.info(processed).duration
-        speed=min(1.25,max(1.,duration/item['budget']))
-        _apply_atempo(processed,final,speed)
-        if not valid_audio(final): raise ValueError(f'Invalid processed audio: {final}')
-        results.append(dict(item['row'],number=item['number'],unit_id=item['uid'],origin=item['origin'],
-            text=item['text'],spoken_text=item['spoken'],orig_start=item['start'],orig_end=item['end'],
-            borrow_gap=item['borrow'],target_duration=item['budget'],raw_duration=duration,speed_factor=speed,
-            audio_path=str(final),audio_sha256=file_hash(final),natural_sha256=entry['sha256'],
-            fingerprint=entry['identity'],base_text=item['base_text']))
-    extensions=plan_audio_timeline(results,source_duration,fps)
+    from concurrent.futures import ThreadPoolExecutor
+
+    def _process_single_item(item):
+        entry = ledger.data['entries'][item['uid']]; raw = Path(entry['path'])
+        processed = SEGS_DIR / f"{item['number']}_gain.wav"; final = SEGS_DIR / f"{item['number']}_0.wav"
+        shutil.copy2(raw, processed)
+        _adjust_volume_to_reference(processed, item['request'].ref_audio)
+        duration = sf.info(processed).duration
+        speed = min(1.25, max(1., duration / item['budget']))
+        _apply_atempo(processed, final, speed)
+        if not valid_audio(final):
+            raise ValueError(f'Invalid processed audio: {final}')
+        return dict(item['row'], number=item['number'], unit_id=item['uid'], origin=item['origin'],
+            text=item['text'], spoken_text=item['spoken'], orig_start=item['start'], orig_end=item['end'],
+            borrow_gap=item['borrow'], target_duration=item['budget'], raw_duration=duration, speed_factor=speed,
+            audio_path=str(final), audio_sha256=file_hash(final), natural_sha256=entry['sha256'],
+            fingerprint=entry['identity'], base_text=item['base_text'])
+
+    with ThreadPoolExecutor(max_workers=min(8, os.cpu_count() or 4)) as executor:
+        results = list(executor.map(_process_single_item, items))
     for row in results:
         row['start_time']=seconds_to_srt_time(row['final_start']);row['end_time']=seconds_to_srt_time(row['final_end'])
     extension=sum(e['extend_by'] for e in extensions)
