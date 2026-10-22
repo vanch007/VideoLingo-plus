@@ -1,0 +1,11 @@
+name: videolingo
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - numpy=2.2.6
+  # TorchCodec 0.7 loads the FFmpeg 7 shared libraries from this environment.
+  - ffmpeg>=7,<8
+  - pip:
+      - -r requirements.txt

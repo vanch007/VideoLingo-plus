@@ -1,9 +1,11 @@
 import os, sys
 import platform
 import subprocess
+from pathlib import Path
+import re
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-ascii_logo = """
+ascii_logo = r"""
 __     ___     _            _     _                    
 \ \   / (_) __| | ___  ___ | |   (_)_ __   __ _  ___  
  \ \ / /| |/ _` |/ _ \/ _ \| |   | | '_ \ / _` |/ _ \ 
@@ -13,7 +15,40 @@ __     ___     _            _     _
 """
 
 def install_package(*packages):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", *packages])
+    constraints = Path(__file__).resolve().parent / "constraints.txt"
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-c", str(constraints), *packages])
+
+
+def configure_ffmpeg_libraries():
+    """Expose keg-only FFmpeg 7 libraries to macOS Python's native loader."""
+    if platform.system() != "Darwin":
+        return []
+    library_dir = Path(sys.prefix) / "lib"
+    sources = (Path("/opt/homebrew/opt/ffmpeg@7/lib"), Path("/usr/local/opt/ffmpeg@7/lib"))
+    source = next((p for p in sources if p.is_dir()), None)
+    if source is None:
+        return []  # Conda's environment.yml can supply these libraries directly.
+    library_dir.mkdir(parents=True, exist_ok=True)
+    linked = []
+    for path in sorted(source.glob("*.dylib")):
+        if not re.fullmatch(r"lib(?:av\w+|swresample|swscale|postproc)\.\d+\.dylib", path.name):
+            continue
+        target = library_dir / path.name
+        if os.path.lexists(target):
+            continue  # Never replace a library already owned by this environment.
+        target.symlink_to(path)
+        linked.append(str(target))
+    return linked
+
+
+def install_runtime_dependencies():
+    requirements = Path(__file__).resolve().parent / "requirements.txt"
+    install_package("-r", str(requirements))
+    configure_ffmpeg_libraries()
+    subprocess.check_call([sys.executable, "-m", "pip", "check"])
+    subprocess.check_call([sys.executable, "-c",
+                           "import numpy, scipy.sparse.linalg, cv2, torch, torchaudio, torchvision, "
+                           "torchcodec, spacy, librosa; import demucs.api"])
 
 def check_nvidia_gpu():
     install_package("pynvml")
@@ -118,25 +153,10 @@ def main():
     # Detect system and GPU
     has_gpu = platform.system() != 'Darwin' and check_nvidia_gpu()
     if has_gpu:
-        console.print(Panel(t("🎮 NVIDIA GPU detected, installing CUDA version of PyTorch..."), style="cyan"))
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "torch==2.0.0", "torchaudio==2.0.0", "--index-url", "https://download.pytorch.org/whl/cu118"])
+        console.print(Panel(t("🎮 NVIDIA GPU detected, installing the validated PyTorch dependencies..."), style="cyan"))
     else:
         system_name = "🍎 MacOS" if platform.system() == 'Darwin' else "💻 No NVIDIA GPU"
-        console.print(Panel(t(f"{system_name} detected, installing CPU version of PyTorch... Note: it might be slow during whisperX transcription."), style="cyan"))
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "torch==2.1.2", "torchaudio==2.1.2"])
-
-    def install_requirements():
-        try:
-            subprocess.check_call([
-                sys.executable, 
-                "-m", 
-                "pip", 
-                "install", 
-                "-r", 
-                "requirements.txt"
-            ], env={**os.environ, "PIP_NO_CACHE_DIR": "0", "PYTHONIOENCODING": "utf-8"})
-        except subprocess.CalledProcessError as e:
-            console.print(Panel(t("❌ Failed to install requirements:") + str(e), style="red"))
+        console.print(Panel(t(f"{system_name} detected, installing the validated PyTorch dependencies."), style="cyan"))
 
     def install_noto_font():
         # Detect Linux distribution type
@@ -162,41 +182,11 @@ def main():
         install_noto_font()
     
     console.print(Panel(t("Installing requirements using `pip install -r requirements.txt`"), style="cyan"))
-    install_requirements()
-    
-    # Install stable-ts and its dependencies
-    def install_stable_ts():
-        console.print(Panel("[bold cyan]Installing stable-ts and dependencies...[/bold cyan]", style="cyan"))
-        
-        # Install stable-whisper from GitHub
-        console.print("[cyan]Installing stable-whisper from GitHub...[/cyan]")
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "git+https://github.com/jianfch/stable-ts.git"])
-            console.print("[green]✓ Successfully installed stable-whisper from GitHub![/green]")
-        except subprocess.CalledProcessError:
-            console.print("[yellow]⚠️ Failed to install stable-whisper from GitHub. You can install it manually later.[/yellow]")
-        
-        # Install additional dependencies
-        stable_ts_deps = ["librosa", "ffmpeg-python"]
-        for dep in stable_ts_deps:
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", dep], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                console.print(f"[green]✓ {dep} installed.[/green]")
-            except subprocess.CalledProcessError:
-                console.print(f"[yellow]⚠️ Failed to install {dep}.[/yellow]")
-        
-        # Check for Apple Silicon and install MLX if needed
-        if platform.system() == "darwin" or (platform.system() == "Darwin"):
-            import os as os_mod
-            if "arm" in os_mod.uname().machine:
-                console.print("[cyan]Detected Apple Silicon. Installing MLX for acceleration...[/cyan]")
-                try:
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", "mlx", "mlx-whisper"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    console.print("[green]✓ MLX installed for Apple Silicon acceleration![/green]")
-                except subprocess.CalledProcessError:
-                    console.print("[yellow]⚠️ Failed to install MLX. stable-ts will still work without acceleration.[/yellow]")
-    
-    install_stable_ts()
+    try:
+        install_runtime_dependencies()
+    except subprocess.CalledProcessError as exc:
+        console.print(Panel(t("❌ Failed to install requirements:") + str(exc), style="red"))
+        raise SystemExit(1) from exc
     
     
 

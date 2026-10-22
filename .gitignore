@@ -156,6 +156,13 @@ cython_debug/
 _model_cache/
 models/
 
+# Generated media and experiment workspaces are not source snapshots
+/run_workspaces/
+/redub_runs/
+/redub_assets/
+/deliverables/
+/output_archive_old/
+
 batch/input/
 batch/output/
 batch/tasks_setting.xlsx

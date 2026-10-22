@@ -1,0 +1,16 @@
+# Validated Python 3.10 scientific/audio stack. Update together and run the
+# core.cli doctor + project regression suite before accepting new versions.
+numpy==2.2.6
+scipy==1.15.3
+torch==2.8.0
+torchaudio==2.8.0
+torchvision==0.23.0
+torchcodec==0.7.0
+opencv-python==4.14.0.94
+whisperx==3.8.6
+stable-ts==2.19.1
+pyannote-audio==4.0.7
+pyannote-core==6.0.1
+pyannote-metrics==4.1
+spacy==3.8.16
+packaging==26.3
