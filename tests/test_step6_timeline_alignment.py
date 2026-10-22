@@ -54,7 +54,8 @@ def test_timeline_rejects_distant_repeated_match_when_similarity_is_not_strong()
     assert timestamps[2][0] < 12.0
 
 
-def test_timeline_rejects_sentence_crossing_speaker_boundary():
+def test_timeline_rejects_sentence_crossing_speaker_boundary(monkeypatch):
+    monkeypatch.setattr("core.dialogue_segmentation.is_lexically_joined_span", lambda *a, **k: False)
     words = _word_df("甲乙丙丁")
     words.loc[2:, "speaker"] = "S02"
     sentences = pd.DataFrame({"Source": ["甲乙丙丁"]})

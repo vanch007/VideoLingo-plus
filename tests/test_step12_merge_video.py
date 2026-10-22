@@ -6,7 +6,33 @@ from pydub.generators import Sine
 from core import step12_merge_dub_to_vid
 
 
+def test_merge_checks_locked_tasks_and_preflight_before_rendering(monkeypatch, tmp_path):
+    import pandas as pd
+    from core import atomic_dubbing, utterance_plan
+
+    tasks = pd.DataFrame([{'unit_id': 'L1', 'text': 'Go.'}])
+    plan = {'units': [{'unit_id': 'L1', 'source': '走。', 'target': 'Go.'}]}
+    validated = []
+    identities = []
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(utterance_plan, 'plan_active', lambda: True)
+    monkeypatch.setattr(utterance_plan, 'load_plan', lambda: plan)
+    monkeypatch.setattr(utterance_plan, 'validate_tasks',
+                        lambda frame, actual, **options: validated.append((frame, actual, options)))
+    monkeypatch.setattr(atomic_dubbing, 'verify_preflight_identity', lambda frame: identities.append(frame))
+    monkeypatch.setattr(step12_merge_dub_to_vid.pd, 'read_excel', lambda _: tasks)
+    monkeypatch.setattr(step12_merge_dub_to_vid, 'SOURCE_VIDEO', str(tmp_path / 'source.mp4'))
+
+    with pytest.raises(FileNotFoundError, match='Canonical source video is missing'):
+        step12_merge_dub_to_vid.merge_video_audio()
+
+    assert validated[0][0] is tasks and validated[0][1] is plan
+    assert validated[0][2] == {'generated': True}
+    assert identities[0].to_dict('records') == [{'LineID': 'L1', 'Source': '走。', 'Translation': 'Go.'}]
+
+
 def test_merge_video_requires_canonical_source_instead_of_derivative(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
     source = tmp_path / "source.mp4"
     (tmp_path / "AI字幕.mp4").write_bytes(b"already subtitled")
     monkeypatch.setattr(step12_merge_dub_to_vid, "SOURCE_VIDEO", str(source))

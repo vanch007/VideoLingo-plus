@@ -8,6 +8,7 @@ from core.step3_2_splitbymeaning import split_sentence
 from core.ask_gpt import ask_gpt
 from core.prompts_storage import get_align_prompt
 from core.config_utils import load_key, get_joiner
+from core.llm_provider import get_llm_max_workers, get_translation_strategy
 from core.translation_state import record_llm_stage
 from rich.panel import Panel
 from rich.console import Console
@@ -113,7 +114,7 @@ def split_align_subs(src_lines: List[str], tr_lines: List[str]) -> Tuple[List[st
         return i, src_parts, tr_parts, tr_remerged
 
     results_map = {}
-    with concurrent.futures.ThreadPoolExecutor(max_workers=load_key("max_workers")) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=get_llm_max_workers()) as executor:
         for i, src_parts, tr_parts, tr_remerged in executor.map(process, to_split):
             results_map[i] = (src_parts, tr_parts, tr_remerged)
 
@@ -130,8 +131,49 @@ def split_align_subs(src_lines: List[str], tr_lines: List[str]) -> Tuple[List[st
 
 def split_for_sub_main():
     console.print("[bold green]🚀 Processing subtitles...[/bold green]")
-
     df = pd.read_excel(INPUT_FILE)
+    if (load_key("quality_mode", "high_sync") == "fast") and bool(load_key("fast_mode.enabled", False)):
+        df.to_excel(OUTPUT_SPLIT_FILE, index=False)
+        df.to_excel(OUTPUT_REMERGED_FILE, index=False)
+        record_llm_stage("split_subtitle")
+        console.print("[green]⚡ Fast Mode: Preserved dialogue boundaries for fast dubbing timeline.[/green]")
+        return
+    from pathlib import Path
+    from core.utterance_plan import plan_active, load_plan
+    if plan_active() and "LineID" in df.columns and Path("output/log/translation_speech_preflight.json").is_file():
+        from core.atomic_dubbing import verify_preflight_identity
+        from core.plan_subtitles import align_target_words, attach_source_words, layout_plan
+        from core.bilingual_alignment import ensure_bilingual_alignment, display_limits
+        import json
+        verify_preflight_identity(df)
+        plan = load_plan()
+        aligned = align_target_words(plan)
+        by_id = {item["unit_id"]: item["words"] for item in aligned["units"]}
+        for unit in plan["units"]:
+            unit["target_words"] = by_id[unit["unit_id"]]
+        # Semantic partitions and both final renderers must use one limit.
+        # Reading the raw configured cap here previously produced a different
+        # alignment fingerprint when the renderer applied its language cap.
+        chars, source_chars = display_limits()
+        paired = ensure_bilingual_alignment(plan, chars=chars, source_chars=source_chars)
+        attach_source_words(plan)
+        display, report = layout_plan(plan, chars=chars, source_chars=source_chars,
+                                      bilingual_alignment=paired, dubbed=False)
+        display.to_excel(OUTPUT_SPLIT_FILE, index=False)
+        df.to_excel(OUTPUT_REMERGED_FILE, index=False)
+        with open("output/log/subtitle_layout.json", "w", encoding="utf-8") as handle:
+            json.dump(report, handle, ensure_ascii=False, indent=2)
+        record_llm_stage("split_subtitle", artifacts=[OUTPUT_SPLIT_FILE, OUTPUT_REMERGED_FILE,
+                                                       'output/log/bilingual_alignment.json'])
+        return
+    if load_key("translation.preserve_cues", False) and get_translation_strategy() == "localized":
+        # Translation has already passed semantic review. Keep source boundaries,
+        # speaker IDs and accepted wording; the renderer handles visual wrapping.
+        df.to_excel(OUTPUT_SPLIT_FILE, index=False)
+        df.to_excel(OUTPUT_REMERGED_FILE, index=False)
+        record_llm_stage("split_subtitle")
+        console.print("[green]✅ Preserved reviewed dialogue and original cue boundaries for local translation.[/green]")
+        return
     original_src = df['Source'].tolist()
     original_trans = df['Translation'].tolist()
     src = original_src.copy()

@@ -9,6 +9,7 @@ import subprocess
 
 import numpy as np
 import cv2
+import pandas as pd
 from rich import print as rprint
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -181,6 +182,12 @@ def _collect_speech_mask_windows(input_excel: str, source_duration_ms: int) -> l
             for s_ms, e_ms in v_spans:
                 s_sec = s_ms / 1000.0
                 e_sec = e_ms / 1000.0
+                # Check if this vocal span overlaps actual spoken dialogue words
+                in_dialogue = any(
+                    max(s_sec, d_s) < min(e_sec, d_e)
+                    for d_s, d_e in dialogue_spans
+                ) if dialogue_spans else True
+
                 # Check if this vocal span is close to or overlaps any dialogue chunk
                 near_dialogue = any(
                     max(s_sec, d_s - 0.2) <= min(e_sec, d_e + 0.2)
@@ -351,16 +358,16 @@ def validate_merged_video(video_path: str, source_video_path: str | None = None,
             f"Audio stream is shifted!"
         )
 
-    # For stream duration within output: allow up to 1 audio encoding packet / video frame
-    diff_stream = abs(v_dur - a_dur)
-    stream_internal_tol = max(eff_tolerance, 0.065)
-    if diff_stream > stream_internal_tol:
+    # Every exported picture frame needs an audio-track clock. A source with
+    # a short audio track cannot serve as permission to omit the output tail;
+    # source silence must be represented as silence in the final audio track.
+    if v_dur - a_dur > eff_tolerance:
         raise RuntimeError(
-            f"Merged file {video_path} audio stream duration ({a_dur:.3f}s) deviates from "
-            f"video stream duration ({v_dur:.3f}s) by {diff_stream:.3f}s (tolerance: {stream_internal_tol:.3f}s). "
-            f"Audio tail is truncated or out of sync!"
+            f"Merged file {video_path} is missing {v_dur - a_dur:.3f}s of audio track at the video tail. "
+            "Refusing an uncovered audio tail even when the source also ends early."
         )
 
+    source_stream_delta = 0.0
     if source_video_path:
        if not os.path.isfile(source_video_path):
            raise RuntimeError(f"Source video file {source_video_path} not found for validation.")
@@ -380,6 +387,9 @@ def validate_merged_video(video_path: str, source_video_path: str | None = None,
                src_a_stream = next((s for s in src_info.get("streams", []) if s.get("codec_type") == "audio"), None)
                src_v_dur = float(src_v_stream.get("duration") or src_fmt_dur) if src_v_stream else src_fmt_dur
                src_a_dur = float(src_a_stream.get("duration") or src_fmt_dur) if src_a_stream else src_fmt_dur
+               if not all(math.isfinite(value) and value > 0 for value in (src_v_dur, src_a_dur)):
+                   raise ValueError('Source media has no valid duration baseline')
+               source_stream_delta = src_a_dur - src_v_dur
 
                if src_v_dur > 0:
                    diff_v = abs(v_dur - src_v_dur)
@@ -396,7 +406,19 @@ def validate_merged_video(video_path: str, source_video_path: str | None = None,
                            f"by {diff_a:.3f}s (tolerance: {eff_tolerance:.3f}s)!"
                        )
            except (KeyError, ValueError, TypeError) as exc:
-               rprint(f"[yellow]⚠️ Could not parse source video duration: {exc}[/yellow]")
+               raise RuntimeError(f"Cannot verify source media duration: {exc}") from exc
+
+    # Independent tracks may have different tails in the source itself. Keep
+    # each original track duration (checked above) and reject any NEW relative
+    # drift; forcing equal tails would require cutting source audio or extending
+    # the original picture. Without a source baseline, require matching tails.
+    diff_stream = abs((a_dur - v_dur) - source_stream_delta)
+    if diff_stream > eff_tolerance:
+        raise RuntimeError(
+            f"Merged file {video_path} introduced {diff_stream:.3f}s of audio/video tail drift "
+            f"against the source track durations (tolerance: {eff_tolerance:.3f}s). "
+            f"Audio tail is truncated or out of sync!"
+        )
 
     return info
 
@@ -428,12 +450,27 @@ def _align_wav_duration_to_video(wav_path: str, video_path: str):
         pass
 
 def merge_video_audio():
-    """Merge video and audio with subtitle burning (two-pass for FFmpeg 8.x compatibility)."""
+    from core.utterance_plan import plan_active, load_plan, validate_tasks
+    is_fast = (load_key("quality_mode", "high_sync") == "fast") and bool(load_key("fast_mode.enabled", False))
+    if plan_active() and not is_fast:
+        from core.atomic_dubbing import verify_preflight_identity
+        plan = load_plan()
+        validate_tasks(pd.read_excel(INPUT_EXCEL), plan, generated=True)
+        verify_preflight_identity(pd.DataFrame([{"LineID": u["unit_id"], "Source": u["source"],
+                                                 "Translation": u["target"]} for u in plan["units"]]))
     if not os.path.isfile(SOURCE_VIDEO):
         raise FileNotFoundError(
             f"Canonical source video is missing: {SOURCE_VIDEO}. Refusing to use an "
             "already-subtitled or previously dubbed derivative as merge input."
         )
+    if is_fast:
+        from core.fast_video_merge import merge_fast_dubbing_video
+        merge_fast_dubbing_video()
+        return
+    """Merge video and audio with subtitle burning (two-pass for FFmpeg 8.x compatibility)."""
+    if plan_active() and load_key('burn_subtitles', False):
+        from core.bilingual_alignment import verify_bilingual_display
+        verify_bilingual_display(plan, dubbed=True)
     VIDEO_FILE = SOURCE_VIDEO
     background_wav = "output/audio/background.wav"
     background_file = background_wav if os.path.isfile(background_wav) else BACKGROUND_AUDIO_FILE
@@ -501,24 +538,34 @@ def merge_video_audio():
             f"ShadowColour={SRC_SHADOW_COLOR},BorderStyle=1,"
             f"MarginL={margin_lr},MarginR={margin_lr},MarginV={src_margin_v}"
         )
+        # Single-line cinema style: elegant white text, clear black outline, comfortable bottom margin
+        dub_font_size = max(trans_size, 14)
+        dub_margin_v = max(margin_v, 16)
         dub_style = (
-            f"FontSize=11,FontName={TRANS_FONT_NAME},"
-            f"PrimaryColour=&H00FFFF&,OutlineColour=&H000000&,OutlineWidth=1.2,"
+            f"FontSize={dub_font_size},FontName={TRANS_FONT_NAME},"
+            f"PrimaryColour=&H00FFFFFF&,OutlineColour=&H000000&,OutlineWidth=1.5,"
             f"ShadowColour=&H80000000&,Alignment=2,BorderStyle=1,"
-            f"MarginL=15,MarginR=15,MarginV=4"
+            f"MarginL=25,MarginR=25,MarginV={dub_margin_v}"
         )
 
         # Use absolute paths to avoid escaping issues
-        abs_src_srt = os.path.abspath(SRC_SRT).replace("'", "'\\''")
-        abs_dub_srt = os.path.abspath(DUB_SUB_FILE).replace("'", "'\\''")
+        abs_src_srt = os.path.abspath(SRC_SRT).replace("'", "'\''")
+        abs_dub_srt = os.path.abspath(DUB_SUB_FILE).replace("'", "'\''")
+        dub_bi_file = "output/dub_bilingual.srt"
+        abs_bi_srt = os.path.abspath(dub_bi_file).replace("'", "'\''")
 
         filters = [
             f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease",
             f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2"
         ]
-        if bool(load_key("burn_source_subtitles", True)):
-            filters.append(f"subtitles='{abs_src_srt}':force_style='{src_style}'")
-        filters.append(f"subtitles='{abs_dub_srt}':force_style='{dub_style}'")
+        burn_bilingual = bool(load_key("burn_bilingual_subtitles", False)) and os.path.isfile(dub_bi_file)
+        if burn_bilingual:
+            rprint("[cyan]�=�� Burning synchronized dubbing bilingual subtitles...[/cyan]")
+            filters.append(f"subtitles='{abs_bi_srt}':force_style='{dub_style}'")
+        else:
+            if bool(load_key("burn_source_subtitles", False)) and os.path.isfile(SRC_SRT):
+                filters.append(f"subtitles='{abs_src_srt}':force_style='{src_style}'")
+            filters.append(f"subtitles='{abs_dub_srt}':force_style='{dub_style}'")
         vf = ",".join(filters)
 
         temp_subbed = 'output/_temp_subbed.mp4'
@@ -569,7 +616,7 @@ def merge_video_audio():
                 f"[0:a]aformat=channel_layouts=stereo,aresample=48000[orig_ctx];"
                 f"[1:a]volume={background_volume},aformat=channel_layouts=stereo,aresample=48000[dub_bg];"
                 f"[orig_ctx][dub_bg]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[full_bg];"
-                f"[2:a]aformat=channel_layouts=stereo,aresample=48000,apad[dub];"
+                f"[2:a]volume={float(load_key('audio_mix.speech_gain_db', 2.5))}dB,equalizer=f=3200:t=q:w=1.2:g=2.5,equalizer=f=250:t=q:w=1.0:g=-1.5,aformat=channel_layouts=stereo,aresample=48000,apad[dub];"
                 f"[dub]asplit[dub_sc][dub_mix];"
                 f"[full_bg][dub_sc]sidechaincompress=threshold={ducking_threshold}:ratio={ducking_ratio}:attack=20:release=250[ducked_bg];"
                 f"[ducked_bg][dub_mix]amix=inputs=2:duration=first:dropout_transition=0:normalize=0,alimiter=limit=0.75:attack=5:release=50:asc=true:level=false:latency=true[a]"
@@ -579,7 +626,7 @@ def merge_video_audio():
                 f"[0:a]aformat=channel_layouts=stereo,aresample=48000[orig_ctx];"
                 f"[1:a]volume={background_volume},aformat=channel_layouts=stereo,aresample=48000[dub_bg];"
                 f"[orig_ctx][dub_bg]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[full_bg];"
-                f"[2:a]aformat=channel_layouts=stereo,aresample=48000,apad[dub];"
+                f"[2:a]volume={float(load_key('audio_mix.speech_gain_db', 2.5))}dB,equalizer=f=3200:t=q:w=1.2:g=2.5,equalizer=f=250:t=q:w=1.0:g=-1.5,aformat=channel_layouts=stereo,aresample=48000,apad[dub];"
                 f"[full_bg][dub]amix=inputs=2:duration=first:dropout_transition=0:normalize=0,alimiter=limit=0.75:attack=5:release=50:asc=true:level=false:latency=true[a]"
             )
     else:

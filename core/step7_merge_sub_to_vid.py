@@ -6,6 +6,8 @@ from rich import print as rprint
 import cv2
 import numpy as np
 import platform
+import json
+from pathlib import Path
 
 SRC_FONT_SIZE = 15
 TRANS_FONT_SIZE = 17
@@ -43,6 +45,11 @@ def check_gpu_available():
         return False
 
 def merge_subtitles_to_video():
+    from core.utterance_plan import plan_active, load_plan
+    is_fast = (load_key("quality_mode", "high_sync") == "fast") and bool(load_key("fast_mode.enabled", False))
+    if plan_active() and not is_fast and load_key('burn_subtitles', False):
+        from core.bilingual_alignment import verify_bilingual_display
+        verify_bilingual_display(load_plan(), dubbed=False)
     video_file = find_video_files()
     os.makedirs(os.path.dirname(OUTPUT_VIDEO), exist_ok=True)
 
@@ -125,6 +132,11 @@ def merge_subtitles_to_video():
     if bool(load_key("burn_source_subtitles", True)):
         filters.append(f"subtitles='{abs_src_srt}':force_style='{src_style}'")
     filters.append(f"subtitles='{abs_trans_srt}':force_style='{dub_style}'")
+    from core.subtitle_quality import subtitle_quality_report
+    quality = subtitle_quality_report()
+    Path("output/log/subtitle_quality.json").write_text(json.dumps(quality, ensure_ascii=False, indent=2), encoding="utf-8")
+    if not quality["accepted"]:
+        filters.append("drawtext=text='DRAFT - NEEDS REVIEW':fontsize=14:fontcolor=yellow:box=1:boxcolor=black@0.65:x=10:y=10")
     vf_str = ",".join(filters)
 
     from core.step12_merge_dub_to_vid import get_ffmpeg_binary

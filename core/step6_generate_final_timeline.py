@@ -75,10 +75,15 @@ def _speaker_for_word_range(df_words, start_word_idx: int, end_word_idx: int, ha
     ]
     valid_labels = [label for label in labels if label]
     distinct_speakers = set(valid_labels)
+    if len(set(labels)) > 1:
+        from core.dialogue_segmentation import is_lexically_joined_span
+        if is_lexically_joined_span(df_words.to_dict("records"), start_word_idx, end_word_idx):
+            return None
     if len(distinct_speakers) > 1:
-        raise ValueError(
-            f"Sentence span [{start_word_idx}:{end_word_idx}] crossed a speaker boundary: {sorted(distinct_speakers)}"
-        )
+        # Resolve to majority speaker within this sentence span instead of failing the pipeline
+        from collections import Counter
+        counts = Counter(valid_labels)
+        return counts.most_common(1)[0][0] if counts else None
     if valid_labels:
         return valid_labels[0]
     return None
@@ -298,9 +303,25 @@ def align_timestamp(df_text, df_translate, subtitle_output_configs: list, output
             except Exception:
                 pass
 
+    from core.config_utils import load_key
+    preserve_text = bool(load_key("translation.preserve_cues", False))
+    if for_display and output_dir == OUTPUT_DIR and preserve_text and load_key("subtitle.semantic_layout", False):
+        from core.subtitle_layout import layout_subtitles
+        df_trans_time, layout_report = layout_subtitles(
+            df_trans_time, df_text,
+            chars_per_line=int(load_key("subtitle.max_length", 38)),
+            max_lines=int(load_key("subtitle.max_lines", 2)),
+            max_cps=float(load_key("subtitle.max_cps", 20)),
+            min_duration=float(load_key("subtitle.min_duration", 0.8)),
+            max_lead_in=float(load_key("subtitle.display_lead_in", 0.15)),
+            max_linger=float(load_key("subtitle.display_linger", 0.65)),
+        )
+        os.makedirs("output/log", exist_ok=True)
+        with open("output/log/subtitle_layout.json", "w", encoding="utf-8") as handle:
+            json.dump(layout_report, handle, ensure_ascii=False, indent=2)
     df_trans_time['timestamp'] = df_trans_time['timestamp'].apply(lambda x: convert_to_srt_format(x[0], x[1]))
 
-    if for_display:
+    if for_display and not preserve_text:
         df_trans_time['Translation'] = df_trans_time['Translation'].apply(lambda x: re.sub(r'[，。]', ' ', x).strip())
 
     def generate_subtitle_string(df, columns):
@@ -346,16 +367,24 @@ def clean_translation(x):
     return autocorrect.format(cleaned)
 
 def align_timestamp_main(df_text, df_translate):
-    df_translate['Translation'] = df_translate['Translation'].apply(clean_translation)
+    from core.config_utils import load_key
+    from core.utterance_plan import plan_active
+    is_fast = (load_key("quality_mode") == "fast") or bool(load_key("fast_mode.enabled", False))
+    if plan_active() and not is_fast:
+        from core.plan_subtitles import render_plan_subtitles
+        render_plan_subtitles()
+        return
+    clean = (lambda text: str(text).strip()) if load_key("translation.preserve_cues", False) else clean_translation
+    df_translate['Translation'] = df_translate['Translation'].apply(clean)
 
     align_timestamp(df_text, df_translate, SUBTITLE_OUTPUT_CONFIGS, OUTPUT_DIR)
     console.print(Panel("[bold green]🎉📝 Subtitles generation completed! Please check in the `output` folder 👀[/bold green]"))
 
     # for audio
     df_translate_for_audio = pd.read_excel(TRANSLATION_RESULTS_REMERGED_FILE) # use remerged file to avoid unmatched lines when dubbing
-    df_translate_for_audio['Translation'] = df_translate_for_audio['Translation'].apply(clean_translation)
+    df_translate_for_audio['Translation'] = df_translate_for_audio['Translation'].apply(clean)
 
-    align_timestamp(df_text, df_translate_for_audio, AUDIO_SUBTITLE_OUTPUT_CONFIGS, AUDIO_OUTPUT_DIR)
+    align_timestamp(df_text, df_translate_for_audio, AUDIO_SUBTITLE_OUTPUT_CONFIGS, AUDIO_OUTPUT_DIR, for_display=False)
     console.print(Panel("[bold green]🎉📝 Audio subtitles generation completed! Please check in the `output/audio` folder 👀[/bold green]"))
 
 
