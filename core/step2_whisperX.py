@@ -1,4 +1,6 @@
 import os,sys
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["OMP_NUM_THREADS"] = "1"
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from rich import print as rprint
@@ -15,6 +17,29 @@ import json
 WHISPER_FILE = "output/audio/for_whisper.mp3"
 ENHANCED_VOCAL_PATH = "output/audio/enhanced_vocals.mp3"
 ASR_FINGERPRINT_PATH = "output/log/asr_fingerprint.json"
+ASR_PROCESSING_VERSION = 2
+
+def source_fingerprint():
+    from core.pipeline.artifact_manifest import hash_path
+    video = find_video_files()
+    settings = dict(load_key("whisper"))
+    settings.pop("detected_language", None)
+    return {
+        "processing_version": ASR_PROCESSING_VERSION,
+        "source_sha256": hash_path(video),
+        "runtime": load_key("whisper.runtime"),
+        "model": load_key("whisper.model"),
+        "audio_source": load_key("whisper.audio_source", "original"),
+        "stable_ts_mlx": load_key("whisper.stable_ts_mlx", True),
+        "language": load_key("whisper.language"),
+        "whisper_settings": settings,
+        "diarization_settings": load_key("speaker_diarization", {}),
+        "demucs": load_key("demucs", False),
+        "demucs_model": load_key("demucs_model", "htdemucs"),
+        "qwen3_source": load_key("qwen3_source", {}),
+        "source_asr": load_key("source_asr", {}),
+        "source_review_sha256": hash_path(load_key("source_asr.review_file", "")) if load_key("source_asr.review_file", "") else None,
+    }
 
 def prepare_audio_and_vocals():
     """Prepare audio files and vocals - this is needed for both transcription and embedded subtitle workflows"""
@@ -27,15 +52,35 @@ def prepare_audio_and_vocals():
         demucs_model = load_key("demucs_model", "htdemucs")
         demucs_main(demucs_model)
 
-    choose_audio = enhance_vocals() if load_key("demucs") else RAW_AUDIO_FILE
-
-    # step3 Compress audio for whisper
-    whisper_audio = compress_audio(choose_audio, WHISPER_FILE)
+    audio_source = load_key("whisper.audio_source", "original")
+    if audio_source == "original":
+        whisper_audio = "output/audio/raw_master.wav"
+        if not os.path.isfile(whisper_audio):
+            raise RuntimeError("Original lossless audio is missing")
+    elif audio_source == "vocals":
+        choose_audio = enhance_vocals() if load_key("demucs") else RAW_AUDIO_FILE
+        whisper_audio = compress_audio(choose_audio, WHISPER_FILE)
+    else:
+        raise ValueError("whisper.audio_source must be original or vocals")
 
     # 确保输出目录存在
     os.makedirs('output/log', exist_ok=True)
 
     return whisper_audio
+
+
+def transcribe_recovery_audio(ts, preferred_audio, start, end):
+    from core.pipeline.artifact_manifest import hash_path
+    candidates = list(dict.fromkeys(["output/audio/raw_master.wav", preferred_audio, "output/audio/vocal.wav"]))
+    result = {"segments": []}
+    for audio in candidates:
+        if not os.path.isfile(audio):
+            continue
+        result = ts(audio, start, end)
+        result["recovery_audio"] = {"path": audio, "sha256": hash_path(audio)}
+        if any(s.get("words") for s in result.get("segments", [])):
+            return result
+    return result
 
 def prepare_audio_only():
     """Prepare only audio files without vocal separation - for embedded subtitle workflow"""
@@ -72,12 +117,7 @@ def enhance_vocals(vocals_ratio=2.50):
         return VOCAL_AUDIO_FILE  # Fallback to original vocals if enhancement fails
 
 def transcribe():
-    current_fp = {
-        "runtime": load_key("whisper.runtime"),
-        "model": load_key("whisper.model"),
-        "stable_ts_mlx": load_key("whisper.stable_ts_mlx", True),
-        "language": load_key("whisper.language"),
-    }
+    current_fp = source_fingerprint()
 
     if os.path.exists(CLEANED_CHUNKS_EXCEL_PATH):
         cached_fp = None
@@ -95,25 +135,10 @@ def transcribe():
             prepare_audio_and_vocals()
             return
         else:
-            cached_model = cached_fp.get("model") if cached_fp else "unknown/legacy"
-            rprint(f"[yellow]🔄 Whisper model or settings changed ({cached_model} -> {current_fp.get('model')}). Invalidating old transcript cache...[/yellow]")
-            for downstream in [
-                CLEANED_CHUNKS_EXCEL_PATH,
-                "output/log/sentence_splitbynlp.txt",
-                "output/log/sentence_splitbymeaning.txt",
-                "output/log/terminology.json",
-                "output/log/translation_results.xlsx",
-                "output/log/translation_results_for_subtitles.xlsx",
-                "output/log/translation_results_remerged.xlsx",
-                "output/audio/trans_subs_for_audio.srt",
-                "output/audio/final_timeline.xlsx",
-                "output/audio/tts_tasks.xlsx",
-            ]:
-                if os.path.exists(downstream):
-                    try:
-                        os.remove(downstream)
-                    except Exception:
-                        pass
+            raise RuntimeError(
+                "ASR source/settings fingerprint changed or is missing. "
+                "Use a fresh run directory; existing transcripts and deliveries were not altered."
+            )
 
     # Prepare audio files (this is also needed for embedded subtitle workflow)
     whisper_audio = prepare_audio_and_vocals()
@@ -126,9 +151,25 @@ def transcribe():
             f"Choose one of: {', '.join(MAIN_ASR_RUNTIMES)}"
         )
 
-    segments = split_audio(whisper_audio)
+    # Whisper already windows the decoder internally. External 25s hard cuts
+    # lose clause/name context and force recognition to start mid-utterance.
+    chunk_seconds = int(load_key("whisper.chunk_seconds", 0))
+    if chunk_seconds > 0:
+        segments = split_audio(whisper_audio, target_len=chunk_seconds)
+    else:
+        from core.all_whisper_methods.audio_preprocess import get_audio_duration
+        segments = [(0.0, get_audio_duration(whisper_audio))]
     all_results = []
-    if runtime == "local":
+    if runtime == "local-aligned":
+        from core.all_whisper_methods.local_aligned import transcribe_audio as ts
+        whisper_audio = "output/audio/raw_master.wav"
+        segments = split_audio(whisper_audio, target_len=int(load_key("source_asr.chunk_seconds", 180)))
+    elif runtime == "qwen3-aligned":
+        from core.all_whisper_methods.qwen3_aligned import transcribe_audio as ts
+        # Recognition uses original audio; Demucs remains available for dubbing.
+        whisper_audio = "output/audio/raw_master.wav"
+        segments = split_audio(whisper_audio)
+    elif runtime == "local":
         from core.all_whisper_methods.whisperX_local import transcribe_audio as ts
         rprint("[cyan]🎤 Transcribing audio with local WhisperX model...[/cyan]")
     elif runtime == "stable-ts":
@@ -146,10 +187,17 @@ def transcribe():
     else:
         raise ValueError(f"Unknown whisper runtime: {runtime}. Supported: 'local', 'stable-ts'")
 
+    raw_results = []
+    from copy import deepcopy
     for i, (start, end) in enumerate(segments):
         rprint(f"[cyan]📊 Processing segment {i+1}/{len(segments)}: {start:.2f}s to {end:.2f}s[/cyan]")
         result = ts(whisper_audio, start, end)
-        sanitize_word_timestamps(result)
+        raw_results.append(deepcopy(result))
+        # Write recognition before normalization, including when timing fails.
+        with open("output/log/asr_raw_results.json", "w", encoding="utf-8") as handle:
+            json.dump(raw_results, handle, ensure_ascii=False, indent=2)
+        if runtime not in {"qwen3-aligned", "local-aligned"}:
+            sanitize_word_timestamps(result)
         validate_word_timestamps(result, backend=runtime, allow_empty=True)
         all_results.append(result)
 
@@ -157,20 +205,26 @@ def transcribe():
         if runtime == "stable-ts":
             rprint(f"[green]✅ Completed segment {i+1}/{len(segments)} ({(i+1)/len(segments)*100:.1f}%)[/green]")
 
+    with open("output/log/asr_raw_results.json", "w", encoding="utf-8") as handle:
+        json.dump(raw_results, handle, ensure_ascii=False, indent=2)
+    with open("output/log/asr_timing_review.json", "w", encoding="utf-8") as handle:
+        json.dump([r.get("word_timestamp_sanitizer", {}) for r in all_results], handle, ensure_ascii=False, indent=2)
+
     # step6 Combine results
-    combined_result = {'segments': []}
+    combined_result = {'segments': [], "timing_source": (
+        "qwen3_forced_alignment_80ms" if runtime in {"qwen3-aligned", "local-aligned"} else "native_asr")}
     for result in all_results:
         combined_result['segments'].extend(result['segments'])
     validate_word_timestamps(combined_result, backend=runtime)
 
     # Keep native word timings from stable-ts/WhisperX and add only MOSS speaker IDs.
     def _robust_transcribe_range(start: float, end: float):
-        vocal_wav = "output/audio/vocal.wav"
-        if os.path.exists(vocal_wav):
-            rec_vocal = ts(vocal_wav, start, end)
-            if any(bool(s.get("words")) for s in rec_vocal.get("segments", [])):
-                return rec_vocal
-        return ts(whisper_audio, start, end)
+        if runtime in {"qwen3-aligned", "local-aligned"}:
+            try:
+                return ts(whisper_audio, start, end)
+            except Exception:
+                return {"segments": []}
+        return transcribe_recovery_audio(ts, whisper_audio, start, end)
 
     diarization_audio = "output/audio/vocal.wav" if os.path.exists("output/audio/vocal.wav") else whisper_audio
     diarization = apply_speaker_diarization(
@@ -187,8 +241,23 @@ def transcribe():
         )
 
     # step7 Process df
+    with open("output/log/asr_final_results.json", "w", encoding="utf-8") as handle:
+        json.dump(combined_result, handle, ensure_ascii=False, indent=2)
     df = process_transcription(combined_result)
     save_results(df)
+    reference_file = load_key("source_asr.reference_checks_file", "")
+    if reference_file:
+        from pathlib import Path
+        from core.source_accuracy import evaluate_source_checkpoints
+        from core.pipeline.artifact_manifest import hash_path
+        reference = json.loads(Path(reference_file).read_text(encoding="utf-8"))
+        assessment = evaluate_source_checkpoints(combined_result, reference)
+        assessment.update(transcript_sha256=hash_path(CLEANED_CHUNKS_EXCEL_PATH),
+                          original_audio_sha256=hash_path("output/audio/raw_master.wav"),
+                          reference_file=str(reference_file), reference_sha256=hash_path(reference_file))
+        Path("output/log/source_reference_assessment.json").write_text(json.dumps(assessment, ensure_ascii=False, indent=2))
+        if assessment["status"] == "fail" and load_key("source_asr.reference_required", True):
+            raise RuntimeError("Source ASR failed external reference checks; translation blocked. Inspect source_reference_assessment.json")
     os.makedirs(os.path.dirname(ASR_FINGERPRINT_PATH), exist_ok=True)
     with open(ASR_FINGERPRINT_PATH, "w", encoding="utf-8") as f:
         json.dump(current_fp, f, ensure_ascii=False, indent=2)

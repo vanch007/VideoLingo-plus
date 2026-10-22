@@ -137,14 +137,6 @@ def process_transcription(result: Dict) -> pd.DataFrame:
 
         if 'words' in segment and segment['words']:
             for word in segment['words']:
-                # Check word length
-                if len(word["word"]) > 20:
-                    print(f"⚠️ Warning: Detected word longer than 20 characters, skipping: {word['word']}")
-                    continue
-
-                # ! For French, we need to convert guillemets to empty strings
-                word["word"] = word["word"].replace('»', '').replace('«', '').strip()
-
                 # Use word-level speaker if available, otherwise fallback to segment speaker
                 current_speaker = word.get('speaker', segment_speaker)
 
@@ -181,6 +173,9 @@ def process_transcription(result: Dict) -> pd.DataFrame:
                     }
 
                     all_words.append(word_dict)
+                for key in ("recognition_segment_id", "recognition_text", "recognition_start", "recognition_end"):
+                    if key in word:
+                        all_words[-1][key] = word[key]
         elif 'text' in segment:
             word_dict = {
                 'text': segment['text'].strip(),
@@ -195,27 +190,42 @@ def process_transcription(result: Dict) -> pd.DataFrame:
 def save_results(df: pd.DataFrame):
     os.makedirs('output/log', exist_ok=True)
 
-    # Remove rows where 'text' is empty
+    # Remove rows where 'text' is empty or only isolated punctuation
+    from core.source_verification import normalize_transcript
     initial_rows = len(df)
-    df = df[df['text'].str.len() > 0]
+    df = df[df['text'].astype(str).apply(lambda x: len(normalize_transcript(x.strip().strip('"'))) > 0)]
     removed_rows = initial_rows - len(df)
     if removed_rows > 0:
-        print(f"ℹ️ Removed {removed_rows} row(s) with empty text.")
+        print(f"ℹ️ Removed {removed_rows} row(s) with empty or punctuation-only text.")
 
     # Normalize spaces in text
     df['text'] = df['text'].apply(lambda x: ' '.join(x.split()))
 
-    # Check for and remove words longer than 20 characters
-    long_words = df[df['text'].str.len() > 20]
-    if not long_words.empty:
-        print(f"⚠️ Warning: Detected {len(long_words)} word(s) longer than 20 characters. These will be removed.")
-        df = df[df['text'].str.len() <= 20]
+    # Token length is not evidence of hallucination. Aligned CJK phrases,
+    # URLs and technical names must survive ASR export intact.
 
     df['text'] = df['text'].apply(lambda x: f'"{x}"')
 
     # Ensure speaker column exists if not present
     if 'speaker' not in df.columns:
         df['speaker'] = None
+
+    # Ensure word timestamps are strictly monotonic and non-overlapping
+    if "start" in df.columns and "end" in df.columns:
+        df["start"] = df["start"].astype(float)
+        df["end"] = df["end"].astype(float)
+        for i in range(1, len(df)):
+            prev_end = df.iat[i - 1, df.columns.get_loc("end")]
+            curr_start = df.iat[i, df.columns.get_loc("start")]
+            if curr_start < prev_end - 0.001:
+                prev_start = df.iat[i - 1, df.columns.get_loc("start")]
+                curr_end = df.iat[i, df.columns.get_loc("end")]
+                mid = round((prev_end + curr_start) / 2.0, 4)
+                if prev_end - curr_start <= .25 and mid > prev_start + 0.01 and mid < curr_end - 0.01:
+                    df.iat[i - 1, df.columns.get_loc("end")] = mid
+                    df.iat[i, df.columns.get_loc("start")] = mid
+                else:
+                    raise ValueError("Source word timing cannot be normalized without inventing speech; realignment required")
 
     df.to_excel(CLEANED_CHUNKS_EXCEL_PATH, index=False)
     print(f"📊 Excel file saved to {CLEANED_CHUNKS_EXCEL_PATH}")

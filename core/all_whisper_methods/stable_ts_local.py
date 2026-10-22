@@ -1,4 +1,6 @@
 import os, sys
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["OMP_NUM_THREADS"] = "1"
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import warnings
 warnings.filterwarnings("ignore")
@@ -38,6 +40,12 @@ MLX_MODELS = {
     "large-v3-turbo": "mlx-community/whisper-large-v3-turbo",
     "turbo": "mlx-community/whisper-large-v3-turbo"
 }
+
+def adjust_nonempty_gaps(result):
+    # stable-ts adjust_gaps indexes segments[-1] on a silent short probe.
+    # An empty recognition remains empty for coverage checking and recovery.
+    return result.adjust_gaps(duration_threshold=0.75, one_section=False) if result.segments else result
+
 
 def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
     """
@@ -83,14 +91,6 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         # Extract audio segment using ffmpeg
         ffmpeg_cmd = f'ffmpeg -y -i "{audio_file}" -ss {start} -t {end-start} -vn -ar 16000 -ac 1 "{temp_audio_path}"'
         subprocess.run(ffmpeg_cmd, shell=True, check=True, capture_output=True)
-
-        try:
-            # Load audio segment with librosa
-            audio_segment, sample_rate = librosa.load(temp_audio_path, sr=16000)
-        finally:
-            # Clean up temp file
-            if os.path.exists(temp_audio_path):
-                os.unlink(temp_audio_path)
 
         model_name = WHISPER_MODEL
 
@@ -172,8 +172,11 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
         if WHISPER_LANGUAGE != 'auto':
             transcribe_options['language'] = WHISPER_LANGUAGE
 
-        # For non-MLX, use the high-level `transcribe_stable` function which handles refine/regroup internally.
         if not using_mlx_whisper:
+            audio_segment, sample_rate = librosa.load(temp_audio_path, sr=16000)
+            if os.path.exists(temp_audio_path):
+                try: os.unlink(temp_audio_path)
+                except Exception: pass
             rprint("[green]Transcribing with `transcribe_stable` for improved accuracy...[/green]")
             transcribe_options["regroup"] = True
             result = model.transcribe(audio_segment, **transcribe_options)
@@ -184,56 +187,62 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> Dict:
 
             # Gap adjustment for optimal segment boundaries
             rprint("[cyan]Adjusting gaps for better segment boundaries...[/cyan]")
-            result = result.adjust_gaps(duration_threshold=0.75, one_section=False)
+            result = adjust_nonempty_gaps(result)
         else:
-            # MLX backend does not support `transcribe_stable`, use the basic `transcribe`.
-            result = model.transcribe(audio_segment, **transcribe_options)
-            # Preserve native word timings. The former manual sentence split
-            # replaced them with segment estimates and broke Step 6 alignment.
-            rprint("[cyan]Adjusting gaps for better segment boundaries...[/cyan]")
-            result = result.adjust_gaps(duration_threshold=0.75, one_section=False)
-
-
-        # Free GPU resources
-        del model
-        if device == "cuda":
-            torch.cuda.empty_cache()
-
-        # Save language
-        save_language(result.language)
-        if result.language == 'zh' and WHISPER_LANGUAGE != 'zh':
-            raise ValueError("Please specify the transcription language as zh and try again!")
-
-        # Convert stable-ts result to WhisperX compatible format
-        whisperx_result = {
-            'segments': [],
-            'language': result.language
-        }
-
-        # Process segments
-        for segment in result.segments:
-            whisperx_segment = {
-                'start': segment.start + start,
-                'end': segment.end + start,
-                'text': ' '.join(segment.text.split()),
-                'words': []
+            # Subprocess-isolated MLX Whisper runner: completely eliminates libomp/PyTorch C++ SIGSEGV conflicts on macOS
+            import json
+            from pathlib import Path
+            
+            worker_script = str(Path(__file__).resolve().parent.parent.parent / "scripts" / "mlx_whisper_isolated_worker.py")
+            with tempfile.TemporaryDirectory(prefix="mlx_whisper_") as tmp_dir:
+                tmp_json = str(Path(tmp_dir) / "result.json")
+                cmd = [
+                    sys.executable, worker_script,
+                    "--audio", temp_audio_path,
+                    "--model", mlx_model_name,
+                    "--output", tmp_json
+                ]
+                if WHISPER_LANGUAGE and WHISPER_LANGUAGE != 'auto':
+                    cmd.extend(["--language", WHISPER_LANGUAGE])
+                    
+                rprint(f"[cyan]🚀 Isolated MLX Whisper transcribing ({mlx_model_name})...[/cyan]")
+                proc = subprocess.run(cmd, capture_output=True, text=True)
+                if proc.returncode != 0:
+                    raise RuntimeError(f"MLX Whisper isolated worker failed: {proc.stderr[-1000:]}")
+                    
+                raw_mlx = json.loads(Path(tmp_json).read_text(encoding="utf-8"))
+                
+            detected_lang = raw_mlx.get("language", WHISPER_LANGUAGE if WHISPER_LANGUAGE != "auto" else "en")
+            save_language(detected_lang)
+            
+            whisperx_result = {
+                'segments': [],
+                'language': detected_lang
             }
-
-            # Process words if available
-            if hasattr(segment, 'words') and segment.words:
-                for word in segment.words:
-                    whisperx_word = {
-                        'start': word.start + start,
-                        'end': word.end + start,
-                        'word': word.word.strip()
-                    }
-                    whisperx_segment['words'].append(whisperx_word)
-
-            whisperx_result['segments'].append(whisperx_segment)
-
-
-
-        return normalize_asr_result(whisperx_result, "stable-ts-mlx" if using_mlx_whisper else "stable-ts")
+            for seg in raw_mlx.get('segments', []):
+                whisperx_segment = {
+                    'start': float(seg['start']) + start,
+                    'end': float(seg['end']) + start,
+                    'text': ' '.join(str(seg['text']).split()),
+                    'words': []
+                }
+                for word in seg.get('words', []):
+                    w_text = str(word['word']).strip()
+                    # Filter out isolated punctuations that normalize to empty text and break utterance planning
+                    from core.source_verification import normalize_transcript
+                    if not normalize_transcript(w_text):
+                        continue
+                    whisperx_segment['words'].append({
+                        'start': float(word['start']) + start,
+                        'end': float(word['end']) + start,
+                        'word': w_text
+                    })
+                whisperx_result['segments'].append(whisperx_segment)
+                
+            if os.path.exists(temp_audio_path):
+                try: os.unlink(temp_audio_path)
+                except Exception: pass
+            return normalize_asr_result(whisperx_result, "stable-ts-mlx")
 
     except Exception as e:
         rprint(f"[red]stable-ts processing error:[/red] {e}")

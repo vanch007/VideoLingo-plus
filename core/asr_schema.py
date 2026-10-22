@@ -1,12 +1,20 @@
 import math
+import re
 from typing import Any
 
 
-MAIN_ASR_RUNTIMES = ("local", "stable-ts")
+MAIN_ASR_RUNTIMES = ("local", "stable-ts", "qwen3-aligned", "local-aligned")
 
 
 class WordTimestampContractError(ValueError):
     """Raised when source ASR cannot safely feed subtitle alignment."""
+
+
+def _join_collapsed_tokens(tokens: list[str], language: str) -> str:
+    cjk = language.split("-")[0] in {"zh", "ja", "ko", "yue"} or any(
+        re.search(r"[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]", token) for token in tokens)
+    text = ("" if cjk else " ").join(tokens)
+    return re.sub(r"\s+([.,!?;:。，！？；：])", r"\1", text)
 
 
 def sanitize_word_timestamps(
@@ -16,22 +24,19 @@ def sanitize_word_timestamps(
     repeated_token_limit: int = 3,
     repeated_token_max_gap: float = 0.15,
 ) -> dict[str, Any]:
-    """Remove zero-duration words and repeated decoder-loop artifacts."""
+    """Preserve recognized speech while coalescing collapsed timing tokens.
+
+    Short/zero timestamps do not prove silence, and repetition does not prove
+    a decoder loop. Keep the text; repetitions are review evidence only.
+    """
     original_words = [
         word
         for segment in result.get("segments", [])
         for word in (segment.get("words") or [])
     ]
-    positive_words: list[dict[str, Any]] = []
-    for word in original_words:
-        try:
-            duration = float(word["end"]) - float(word["start"])
-        except (KeyError, TypeError, ValueError):
-            continue
-        if duration >= min_duration_seconds:
-            positive_words.append(word)
-
-    remove_ids: set[int] = set()
+    validate_word_timestamps(result, backend="timing-normalization", allow_empty=True)
+    positive_words = original_words
+    repetition_ids: set[int] = set()
     index = 0
     while index < len(positive_words):
         token = str(
@@ -54,10 +59,10 @@ def sanitize_word_timestamps(
                 break
             end_index += 1
         if end_index - index >= repeated_token_limit:
-            remove_ids.update(id(word) for word in positive_words[index:end_index])
+            repetition_ids.update(id(word) for word in positive_words[index:end_index])
         index = end_index
 
-    # Detect repeated n-gram phrase loops (e.g. repeated hallucinations >= 3 times)
+    # Flag repeated phrases without deleting possibly intentional dialogue.
     tokens = [str(w.get("word", w.get("text", ""))).strip() for w in positive_words]
     for n in range(2, 6):
         i = 0
@@ -93,35 +98,61 @@ def sanitize_word_timestamps(
                 cursor += n
             if rep_count >= 3:
                 for w in positive_words[i + n : cursor]:
-                    remove_ids.add(id(w))
+                    repetition_ids.add(id(w))
                 i = cursor
             else:
                 i += 1
 
     cleaned_segments: list[dict[str, Any]] = []
+    coalesced = []
     for segment in result.get("segments", []):
-        words = [
-            word
-            for word in (segment.get("words") or [])
-            if id(word) not in remove_ids
-            and float(word.get("end", 0.0)) - float(word.get("start", 0.0))
-            >= min_duration_seconds
-        ]
-        if not words:
+        source_words = segment.get("words") or []
+        if not source_words:
             continue
+        words, pending = [], []
+        for item in source_words:
+            word = dict(item)
+            if float(word["end"]) - float(word["start"]) < min_duration_seconds:
+                pending.append(word)
+                continue
+            if pending:
+                labels = {w.get("speaker") for w in [*pending, word] if w.get("speaker")}
+                if len(labels) > 1:
+                    raise WordTimestampContractError("Collapsed words cross a speaker boundary; realignment required")
+                prefix = _join_collapsed_tokens([w["word"] for w in pending], result.get("language", "auto"))
+                coalesced.append({"text": prefix, "into": word["word"], "side": "prefix",
+                                  "start": pending[0]["start"], "end": pending[-1]["end"]})
+                word["word"] = _join_collapsed_tokens([prefix, word["word"]], result.get("language", "auto"))
+                word["start"] = min(float(pending[0]["start"]), float(word["start"]))
+                pending = []
+            words.append(word)
+        if pending:
+            if not words:
+                raise WordTimestampContractError(
+                    f"No usable timing for recognized text {segment.get('text')!r}; realignment required")
+            labels = {w.get("speaker") for w in [words[-1], *pending] if w.get("speaker")}
+            if len(labels) > 1:
+                raise WordTimestampContractError("Collapsed words cross a speaker boundary; realignment required")
+            suffix = _join_collapsed_tokens([w["word"] for w in pending], result.get("language", "auto"))
+            coalesced.append({"text": suffix, "into": words[-1]["word"], "side": "suffix",
+                              "start": pending[0]["start"], "end": pending[-1]["end"]})
+            words[-1]["word"] = _join_collapsed_tokens([words[-1]["word"], suffix], result.get("language", "auto"))
+            words[-1]["end"] = max(float(words[-1]["end"]), float(pending[-1]["end"]))
         updated = dict(segment)
         updated["words"] = words
         updated["start"] = float(words[0]["start"])
         updated["end"] = float(words[-1]["end"])
-        updated["text"] = "".join(
-            str(word.get("word", word.get("text", ""))) for word in words
-        )
+        # Preserve the recognizer's punctuation and sentence text separately.
+        updated["text"] = segment.get("text") or "".join(word["word"] for word in words)
         cleaned_segments.append(updated)
     result["segments"] = cleaned_segments
     result["word_timestamp_sanitizer"] = {
         "input_words": len(original_words),
         "output_words": sum(len(segment["words"]) for segment in cleaned_segments),
-        "removed_repeated_tokens": len(remove_ids),
+        "removed_repeated_tokens": 0,
+        "suspected_repetition_words": len(repetition_ids),
+        "coalesced_short_words": coalesced,
+        "policy": "text_preserved; repetitions_flagged; collapsed_native_spans_coalesced",
     }
     return result
 
@@ -139,6 +170,7 @@ def validate_word_timestamps(
 
     word_count = 0
     previous_start = -1.0
+    previous_word = None
     for segment_index, segment in enumerate(segments):
         text = str(segment.get("text", "")).strip()
         words = segment.get("words")
@@ -160,20 +192,12 @@ def validate_word_timestamps(
                 )
             start = float(start)
             end = float(end)
-            if end < start:
-                end = start + 0.05
-                word["end"] = end
-            if start < previous_start:
-                start = previous_start
-                word["start"] = start
-                if end < start:
-                    end = start + 0.05
-                    word["end"] = end
-            if not math.isfinite(start) or not math.isfinite(end) or start < 0 or end < start:
+            if not math.isfinite(start) or not math.isfinite(end) or start < 0 or end < start or start < previous_start:
                 raise WordTimestampContractError(
                     f"{backend}: invalid timestamp for {token!r}: {start}..{end}"
                 )
             previous_start = start
+            previous_word = word
             word_count += 1
 
     if not allow_empty and word_count == 0:
@@ -208,6 +232,9 @@ def normalize_asr_result(result: dict[str, Any], backend: str) -> dict[str, Any]
                 normalized_word["speaker"] = word.get("speaker")
             if word.get("confidence") is not None:
                 normalized_word["confidence"] = word.get("confidence")
+            for key in ("recognition_segment_id", "recognition_text", "recognition_start", "recognition_end"):
+                if key in word:
+                    normalized_word[key] = word[key]
             normalized_words.append(normalized_word)
         segment["words"] = normalized_words
 
