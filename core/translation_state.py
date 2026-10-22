@@ -8,7 +8,8 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from core.llm_provider import get_llm_provider_config
+from core.llm_provider import get_llm_provider_config, get_translation_strategy
+from core.config_utils import load_key
 
 
 MANIFEST_PATH = Path("output/log/llm_artifacts_manifest.json")
@@ -21,18 +22,18 @@ TRANSLATION_STAGES: dict[str, dict[str, list[str]]] = {
     },
     "summarize": {
         "artifacts": ["output/log/terminology.json", "output/log/sentence_splitbymeaning.txt"],
-        "logs": ["summary", "stt_correction_batch_*"],
+        "logs": ["summary", "dialogue_roles_b*", "stt_correction_batch_*"],
     },
     "translate": {
         "artifacts": ["output/log/translation_results.xlsx"],
-        "logs": ["translate_faithfulness", "translate_expressiveness"],
+        "logs": ["translate_faithfulness", "translate_expressiveness", "translate_localized", "translate_localized_factual", "translate_source_copy_repair", "translate_duration_feedback", "translate_duration_alternatives", "translate_speech_source_terms", "translate_homura_candidates", "duration_candidate_semantics", "translate_unit_context_guard", "translation_semantic_review_*"],
     },
     "split_subtitle": {
         "artifacts": [
             "output/log/translation_results_for_subtitles.xlsx",
             "output/log/translation_results_remerged.xlsx",
         ],
-        "logs": ["align_subs", "sentence_splitbymeaning"],
+        "logs": ["align_subs", "bilingual_locked_pairs", "bilingual_native_anchors", "bilingual_pair_review", "sentence_splitbymeaning"],
     },
 }
 
@@ -58,6 +59,10 @@ TRANSLATION_DERIVED_PATHS = [
     "output/log/terminology.json",
     "output/log/translation_speaker_context.json",
     "output/log/translation_workflow_metrics.json",
+    "output/log/translation_candidate.xlsx",
+    "output/log/dialogue_role_review.json",
+    "output/log/dialogue_units.json",
+    "output/log/speaker_profiles.json",
     "output/log/sentence_splitbymeaning.txt",
     "output/final_timeline.xlsx",
     "output/src_trans.srt",
@@ -82,7 +87,7 @@ TRANSLATION_DERIVED_PATHS = [
     "output/audio/segs",
 ]
 
-TRANSLATION_WORKFLOW_VERSION = "speaker-aware-dialogue-v2"
+TRANSLATION_WORKFLOW_VERSION = "speaker-aware-localized-v3"
 
 
 def _now_iso() -> str:
@@ -93,14 +98,28 @@ def _provider_dict() -> dict[str, Any]:
     provider = get_llm_provider_config()
     data = asdict(provider)
     data.pop("api_key", None)
+    data["translation_strategy"] = get_translation_strategy(provider)
+    data["preserve_cues"] = bool(load_key("translation.preserve_cues", False))
+    data["utterance_plan"] = bool(load_key("translation.utterance_plan", False))
+    data["speech_budget"] = load_key("translation.speech_budget", {}) or {}
+    routes = {"role":load_key("translation_context.role_provider",""),
+              "duration_editor":load_key("translation.speech_budget.candidate_provider",""),
+              "duration_semantics":load_key("translation.speech_budget.semantic_candidate_provider","")}
+    data["auxiliary_providers"] = {}
+    for purpose,name in routes.items():
+        if name:
+            auxiliary=asdict(get_llm_provider_config(name));auxiliary.pop("api_key",None)
+            data["auxiliary_providers"][purpose]=auxiliary
     data["fingerprint"] = _provider_fingerprint(data)
     return data
 
 
 def _provider_fingerprint(provider: dict[str, Any]) -> str:
     return "|".join(
-        str(provider.get(key, ""))
-        for key in ("name", "provider_type", "base_url", "model", "supports_json_object")
+        json.dumps(provider.get(key, ""), sort_keys=True)
+        for key in ("name", "provider_type", "base_url", "model", "supports_json_object",
+                    "temperature", "max_tokens", "chat_template_kwargs", "translation_strategy", "preserve_cues",
+                    "utterance_plan", "speech_budget", "auxiliary_providers", "model_path", "model_revision")
     )
 
 
@@ -220,9 +239,13 @@ def build_translation_status() -> dict[str, Any]:
 
         log_models = {model for model, count in log_state["models"].items() if count and model}
         current_model = current_provider["model"]
-        if log_models and current_model not in log_models:
+        allowed_models={current_model}
+        purposes={"role"} if stage=="summarize" else {"duration_editor","duration_semantics"} if stage=="translate" else set()
+        allowed_models.update(config["model"] for purpose,config in current_provider.get("auxiliary_providers",{}).items()
+                              if purpose in purposes)
+        if log_models and not log_models & allowed_models:
             reasons.append("log_model_mismatch")
-        elif log_models - {current_model}:
+        elif log_models - allowed_models:
             warnings.append("log_contains_other_models")
 
         if log_state["bad_files"]:

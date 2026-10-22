@@ -30,7 +30,7 @@ def _write_speaker_translation(path: str = "output/log/translation_results.xlsx"
 
 def test_translation_status_flags_old_log_model(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda: _fake_provider())
+    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda *_: _fake_provider())
 
     Path("output/log").mkdir(parents=True)
     Path("output/gpt_log").mkdir(parents=True)
@@ -49,7 +49,7 @@ def test_translation_status_flags_old_log_model(tmp_path, monkeypatch):
 
 def test_record_llm_stage_writes_current_provider_manifest(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda: _fake_provider())
+    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda *_: _fake_provider())
 
     Path("output/log").mkdir(parents=True)
     Path("output/gpt_log").mkdir(parents=True)
@@ -81,7 +81,7 @@ def test_archive_plan_is_dry_run_until_applied(tmp_path, monkeypatch):
 
 def test_adopt_current_writes_manifest_when_logs_match(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda: _fake_provider())
+    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda *_: _fake_provider())
 
     Path("output/log").mkdir(parents=True)
     Path("output/gpt_log").mkdir(parents=True)
@@ -101,7 +101,7 @@ def test_adopt_current_writes_manifest_when_logs_match(tmp_path, monkeypatch):
 
 def test_guard_blocks_stale_translation_for_dependent_steps(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda: _fake_provider())
+    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda *_: _fake_provider())
 
     Path("output/log").mkdir(parents=True)
     Path("output/gpt_log").mkdir(parents=True)
@@ -120,7 +120,7 @@ def test_guard_blocks_stale_translation_for_dependent_steps(tmp_path, monkeypatc
 
 def test_guard_ignores_non_translation_steps(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda: _fake_provider())
+    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda *_: _fake_provider())
 
     guard = translation_state.guard_translation_artifacts_for_steps(["download", "import_video"])
 
@@ -130,7 +130,7 @@ def test_guard_ignores_non_translation_steps(tmp_path, monkeypatch):
 
 def test_status_rejects_legacy_translation_without_speaker_columns(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda: _fake_provider())
+    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda *_: _fake_provider())
     Path("output/log").mkdir(parents=True)
     pd.DataFrame({"Source": ["Hello"], "Translation": ["你好"]}).to_excel(
         "output/log/translation_results.xlsx", index=False
@@ -143,7 +143,7 @@ def test_status_rejects_legacy_translation_without_speaker_columns(tmp_path, mon
 
 def test_status_rejects_summary_without_speaker_profiles(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda: _fake_provider())
+    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda *_: _fake_provider())
     Path("output/log").mkdir(parents=True)
     Path("output/log/terminology.json").write_text(
         json.dumps({"topic": "dialogue", "terms": []}), encoding="utf-8"

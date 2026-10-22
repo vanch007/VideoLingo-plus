@@ -136,7 +136,8 @@ def test_prompts_use_speaker_roles_but_forbid_speaker_ids_in_output():
     )
 
     assert "speaker_profiles" in summary
-    assert "S01" in summary and "S02" in summary
+    assert "S01" not in summary and "S02" not in summary
+    assert "C01" in summary
     assert "never invent names, gender, or biography" in summary
     assert "Never output speaker IDs" in shared
     assert "pronouns" in shared and "honorifics" in shared

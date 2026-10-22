@@ -54,6 +54,9 @@ def load_speaker_aware_rows(
         "start": [float(item[0]) for item in timestamps],
         "end": [float(item[1]) for item in timestamps],
     })
+    from core.utterance_plan import plan_enabled, planned_rows
+    if plan_enabled() and sentences_path == DEFAULT_SENTENCES_PATH and words_path == DEFAULT_WORDS_PATH:
+        rows = planned_rows(rows, words)
     labels = rows["speaker"].tolist()
     known = [label for label in labels if label]
     required = bool(load_key("translation_context.require_speakers", load_key("speaker_diarization.required", True)))
@@ -91,7 +94,10 @@ def format_dialogue(rows: pd.DataFrame, *, include_line_ids: bool = True) -> str
     for _, row in rows.iterrows():
         line_id = f"[{row['line_id']}]" if include_line_ids else ""
         speaker = normalize_speaker(row.get("speaker")) or "UNKNOWN"
-        formatted.append(f"{line_id}[{speaker}] {row['text']}")
+        if "character_id" in row:
+            formatted.append(f"{line_id}[character={row['character_id']}] {row['text']}")
+        else:
+            formatted.append(f"{line_id}[{speaker}] {row['text']}")
     return "\n".join(formatted)
 
 
@@ -145,8 +151,98 @@ def surrounding_context(rows: pd.DataFrame, batch: dict[str, Any]) -> tuple[str 
 
 
 def speaker_profiles_context(terminology: dict[str, Any]) -> str:
+    # These are hypotheses grounded in dialogue, never instructions that can
+    # override a line's explicit pronouns, actions, profanity or address terms.
+    units = []
+    for unit in terminology.get("dialogue_units", []):
+        if "character_id" not in unit:
+            units.append(unit)
+            continue
+        keys = ("line_id", "source_text", "character_id", "confidence", "identity_verified",
+                "addressed_to", "relays_character", "action_agent", "action_patient",
+                "pronoun_referents", "relations_status", "decision", "evidence", "relay_link")
+        units.append({key: unit[key] for key in keys if key in unit})
     payload = {
         "topic": terminology.get("topic", ""),
-        "speaker_profiles": terminology.get("speaker_profiles", []),
+        "speaker_profiles": [
+            {key: value for key, value in profile.items() if key != "translation_guidance"}
+            for profile in (terminology.get("speaker_profiles", []) if not terminology.get("characters") else [])
+        ],
+        "dialogue_units": units,
+        "characters": terminology.get("characters", []),
+        "source_uncertainties": terminology.get("source_uncertainties", []),
+        "parent_dialogue": terminology.get("parent_dialogue", []),
+        "context_policy": (
+            "Character C IDs are per-line dialogue inferences used for translation. "
+            "Acoustic S IDs are fallible voice clusters, NOT fixed character identities. "
+            "Treat the line's character assignment as a hypothesis even when it differs from the acoustic majority. "
+            "Unresolved action/relay relations stay unknown and cannot supply an omitted actor. "
+            "A relayer is not necessarily the actor of the promise they repeat. "
+            "Profiles and dialogue annotations are inferred, not verified identity. "
+            "The current line overrides general style advice. Preserve uncertainty; "
+            "never invent a name, forbid pronouns, or remove address terms based on a profile."
+        ),
     }
     return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
+def ground_dialogue_context(summary: dict, rows: pd.DataFrame) -> dict:
+    """Discard unsupported identity claims and bind annotations to exact lines."""
+    summary = dict(summary)
+    by_id = {str(row["line_id"]): row for _, row in rows.iterrows()}
+    speakers = {str(row["speaker"]) for row in by_id.values() if row.get("speaker")}
+    profiles = []
+    for profile in summary.get("speaker_profiles", []):
+        sid = str(profile.get("speaker_id", ""))
+        if sid not in speakers:
+            continue
+        profile = dict(profile)
+        spoken = [str(row["text"]) for row in by_id.values() if str(row["speaker"]) == sid]
+        evidence = [
+            str(quote).strip().strip("'\"“”‘’")
+            for quote in profile.get("evidence", []) if isinstance(quote, str)
+        ]
+        evidence = [quote for quote in evidence if quote and any(quote in text for text in spoken)]
+        profile.pop("translation_guidance", None)
+        if not evidence:
+            profile = {"speaker_id": sid, "role": "unknown", "relationship": "unknown",
+                       "speaking_style": "unknown"}
+        profile["evidence"] = evidence
+        profile["evidence_status"] = "dialogue_inferred" if evidence else "unknown"
+        profile["identity_verified"] = False
+        profile["relationships"] = [
+            rel for rel in profile.get("relationships", [])
+            if isinstance(rel, dict) and rel.get("to_speaker") in speakers
+        ]
+        profiles.append(profile)
+    existing = {p["speaker_id"] for p in profiles}
+    profiles.extend({"speaker_id": sid, "role": "unknown", "evidence_status": "unknown",
+                     "identity_verified": False, "evidence": []} for sid in sorted(speakers - existing))
+    annotations = {}
+    for unit in summary.get("dialogue_units", []):
+        if not isinstance(unit, dict):
+            continue
+        lid = str(unit.get("line_id", ""))
+        row = by_id.get(lid)
+        if row is None or str(unit.get("speaker_id", "")) != str(row["speaker"]):
+            continue
+        quote = str(unit.get("source_quote", "")).strip()
+        if not quote or quote not in str(row["text"]):
+            continue
+        annotation = dict(unit)
+        if annotation.get("addressed_to") not in speakers | {"all", "unknown"}:
+            annotation["addressed_to"] = "unknown"
+        if annotation.get("relays_speaker") not in speakers:
+            annotation["relays_speaker"] = "unknown"
+        annotation["evidence_status"] = "dialogue_inferred"
+        annotations[lid] = annotation
+    units = []
+    for lid, row in by_id.items():
+        units.append(annotations.get(lid, {
+            "line_id": lid, "speaker_id": row["speaker"] or "unknown",
+            "addressed_to": "unknown", "relays_speaker": "unknown",
+            "speech_act": "unknown", "core_proposition": str(row["text"]),
+            "source_quote": str(row["text"]), "evidence_status": "unknown",
+        }))
+    summary.update(speaker_profiles=profiles, dialogue_units=units)
+    return summary

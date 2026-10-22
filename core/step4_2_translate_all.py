@@ -12,6 +12,7 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from core.config_utils import load_key
+from core.llm_provider import get_llm_max_workers, get_translation_strategy
 from core.step4_1_summarize import search_things_to_note_in_prompt
 from core.timing_utils import time_it
 from core.translate_once import translate_lines
@@ -59,14 +60,31 @@ def translate_chunk(batch, all_rows, terminology, index):
     source_text = batch["source_text"]
     things_to_note_prompt = search_things_to_note_in_prompt(source_text)
     previous_content_prompt, after_content_prompt = surrounding_context(all_rows, batch)
+    focused_ids = set(batch["rows"]["line_id"])
+    batch_context = dict(terminology)
+    batch_context["dialogue_units"] = [
+        unit for unit in terminology.get("dialogue_units", [])
+        if unit.get("line_id") in focused_ids
+    ]
+    batch_context["source_uncertainties"] = [
+        group for group in terminology.get("source_uncertainties", [])
+        if set(group["line_ids"]) & focused_ids
+    ]
+    budgets = None
+    if "unit_id" in batch["rows"]:
+        from core.speech_budget import budget_for
+        budgets = [budget_for(row) for row in batch["rows"].to_dict("records")]
+        batch_context["parent_dialogue"] = list(dict.fromkeys(batch["rows"]["parent_source"]))
     translation, echoed_source = translate_lines(
         source_text,
         previous_content_prompt,
         after_content_prompt,
         things_to_note_prompt,
-        speaker_profiles_context(terminology),
+        speaker_profiles_context(batch_context),
         index,
         speaker_context_prompt=batch["speaker_context"],
+        glossary=[term for term in terminology.get("terms", []) if str(term.get("src", "")).lower() in source_text.lower()],
+        speech_budgets=budgets,
     )
     expected_lines = source_text.splitlines()
     echoed_lines = echoed_source.splitlines()
@@ -93,12 +111,22 @@ def assemble_translation_results(results, batches, rows):
         raise RuntimeError(
             f"Translated row count {len(translated_lines)} does not match source row count {len(rows)}"
         )
-    return pd.DataFrame({
+    output = pd.DataFrame({
         "LineID": rows["line_id"],
         "Speaker": rows["speaker"],
         "Source": rows["text"],
         "Translation": translated_lines,
     })
+    for column, field in (("Character", "character_id"), ("AddressedTo", "addressed_to"),
+                          ("RelaysCharacter", "relays_character"), ("ActionAgent", "action_agent"),
+                          ("ActionPatient", "action_patient"), ("RoleConfidence", "confidence")):
+        if field in rows:
+            output[column] = rows[field].values
+    for column, field in (("UnitID", "unit_id"), ("ParentLineID", "parent_line_id"),
+                          ("Start", "start"), ("End", "end"), ("SourceEnd", "source_end")):
+        if field in rows:
+            output[column] = rows[field].values
+    return output
 
 
 def apply_translation_exact_replacements(output: pd.DataFrame) -> tuple[pd.DataFrame, int]:
@@ -137,12 +165,14 @@ def translate_all():
     rows, metrics = load_speaker_aware_rows()
     chunk_size = int(load_key("translation_context.batch_max_chars", 2000))
     max_lines = int(load_key("translation_context.batch_max_lines", 10))
-    batches = split_speaker_aware_batches(rows, chunk_size=chunk_size, max_lines=max_lines)
 
     with open(TERMINOLOGY_FILE, "r", encoding="utf-8") as file:
         terminology = json.load(file)
     if "topic" not in terminology:
         raise RuntimeError("terminology.json is missing topic; rerun speaker-aware summary")
+    from core.dialogue_roles import attach_dialogue_roles
+    rows = attach_dialogue_roles(rows, terminology)
+    batches = split_speaker_aware_batches(rows, chunk_size=chunk_size, max_lines=max_lines)
     profile_ids = {
         str(item.get("speaker_id", "")).strip()
         for item in terminology.get("speaker_profiles", [])
@@ -154,19 +184,40 @@ def translate_all():
             f"Speaker profiles are missing for {sorted(missing_profiles)}; rerun Step 4 summary."
         )
 
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        transient=True,
-    ) as progress:
-        task = progress.add_task("[cyan]Translating speaker-aware chunks...", total=len(batches))
-        with concurrent.futures.ThreadPoolExecutor(max_workers=load_key("max_workers")) as executor:
-            futures = [
-                executor.submit(translate_chunk, batch, rows, terminology, index)
-                for index, batch in enumerate(batches)
-            ]
-            results = [future.result() for future in concurrent.futures.as_completed(futures)]
-            progress.update(task, advance=len(batches))
+    from core.atomic_dubbing import resume_translation_lines
+    resumed_lines = resume_translation_lines(rows)
+    if resumed_lines is not None:
+        results, cursor = [], 0
+        for index, batch in enumerate(batches):
+            size = len(batch['rows'])
+            results.append((index, resumed_lines[cursor:cursor + size]))
+            cursor += size
+        print(f"Resuming {len(resumed_lines)} source-bound translation drafts; "
+              "primary requests skipped, current gates remain required", flush=True)
+    else:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
+        ) as progress:
+            task = progress.add_task("[cyan]Translating speaker-aware chunks...", total=len(batches))
+            with concurrent.futures.ThreadPoolExecutor(max_workers=get_llm_max_workers()) as executor:
+                futures = [
+                    executor.submit(translate_chunk, batch, rows, terminology, index)
+                    for index, batch in enumerate(batches)
+                ]
+                results = []
+                try:
+                    for future in concurrent.futures.as_completed(futures):
+                        results.append(future.result())
+                        progress.update(task, advance=1)
+                        print(f"Translation batches {len(results)}/{len(batches)}", flush=True)
+                except Exception:
+                    # A failed gate cannot publish this batch. Cancel queued work
+                    # instead of silently spending minutes finishing every request.
+                    for future in futures:
+                        future.cancel()
+                    raise
 
     # Deterministic O(B) collection by immutable batch index. Do not fuzzy-match
     # repeated dialogue against every batch after the requests complete.
@@ -177,27 +228,69 @@ def translate_all():
             f"[green]✅ Applied {exact_replacements} verified exact translation replacement(s).[/green]"
         )
 
-    # Independent semantic review and bounded local repair
-    output, review_report = review_and_repair_translation(output, terminology, max_repair_rounds=int(load_key("translation.max_repair_rounds", 5)))
-    if review_report.get("status") == "failed":
-        review_err = review_report.get("error") or "Semantic review detected unresolvable critical issues"
-        console.print(f"[bold red]❌ Translation review failed: {review_err}[/bold red]")
-        if load_key("translation.strict_review_gate", True):
-            raise ValueError(f"Translation review gate failed: {review_err}")
+    output.to_excel("output/log/translation_candidate.xlsx", index=False)
     target_lang = str(load_key("target_language", "en"))
-    for _, row in output.iterrows():
-        t_val = str(row.get("Translation", "") or "")
-        if not is_valid_target_language(t_val, target_lang):
-            raise ValueError(
-                f"Translation line {row.get('LineID')} has invalid target language content: {t_val}"
-            )
+    is_fast_mode = (load_key("quality_mode") == "fast") or bool(load_key("fast_mode.enabled", False))
 
+    if is_fast_mode:
+        console.print("[cyan]⚡ Fast Mode: Skipping preflight TTS synthesis and heavy semantic audit.[/cyan]")
+        for idx, row in output.iterrows():
+            t_val = str(row.get("Translation", "") or "").strip()
+            from core.fast_text import validate_fast_text
+            validate_fast_text(str(row.get("Source", "")), t_val, target_lang, terminology.get("terms", []))
+        review_report = {"status": "not_run", "mode": "fast", "basic_checks": "pass", "note": "Deep semantic audit not run"}
+        if "UnitID" in output:
+            from core.utterance_plan import bind_translation
+            bind_translation(output)
+        # Release idle oMLX models after translation to free unified memory for TTS
+        try:
+            from core.providers.omlx_memory import release_omlx_for_tts
+            release_omlx_for_tts('indextts2')
+        except Exception as exc:
+            console.print(f"[yellow]⚠️ Failed to release oMLX memory: {exc}[/yellow]")
+    else:
+        if "UnitID" in output:
+            from core.atomic_dubbing import translation_speech_preflight
+            from core.speech_budget import guard_translation_context
+            output = guard_translation_context(output, rows, terminology)
+            output = translation_speech_preflight(output, terminology)
+
+        # Publication verifies the same exact-source semantic receipts. Only new
+        # wording/context needs new inference; acceptance is never speech-only.
+        output, review_report = review_and_repair_translation(
+            output, terminology,
+            max_repair_rounds=int(load_key("translation.max_repair_rounds", 3)),
+            audit_only=get_translation_strategy() == "localized" and load_key("translation.review_mode", "audit_only") == "audit_only",
+        )
+        # Keep a reviewable candidate even if the strict publication gate fails.
+        # This file is not a downstream checkpoint or an accepted translation.
+        output.to_excel("output/log/translation_candidate.xlsx", index=False)
+        if review_report.get("status") != "pass":
+            review_err = review_report.get("error") or "Semantic review detected unresolvable critical issues"
+            raise ValueError(f"Translation review gate failed: {review_err}")
+        for _, row in output.iterrows():
+            t_val = str(row.get("Translation", "") or "")
+            if not is_valid_target_language(t_val, target_lang):
+                raise ValueError(
+                    f"Translation line {row.get('LineID')} has invalid target language content: {t_val}"
+                )
+
+        if "UnitID" in output:
+            from core.utterance_plan import bind_translation
+            # No wording change is allowed after the measured preflight. If a
+            # mutating review mode is selected it must preflight the new text too.
+            from core.atomic_dubbing import verify_preflight_identity
+            verify_preflight_identity(output)
+            bind_translation(output)
     output.to_excel(TRANSLATION_RESULTS_FILE, index=False)
     baseline_comparisons = len(batches) * len(batches)
     optimized_comparisons = len(batches)
     workflow_metrics = {
         **asdict(metrics),
+        "translation_strategy": get_translation_strategy(),
+        "llm_max_workers": get_llm_max_workers(),
         "batch_count": len(batches),
+        "primary_draft_reused": resumed_lines is not None,
         "speaker_context_input_coverage_before": 0.0,
         "speaker_context_input_coverage_after": metrics.coverage,
         "result_assignment_before": "fuzzy_all_pairs_O(B^2)",
@@ -218,6 +311,8 @@ def translate_all():
             TRANSLATION_RESULTS_FILE,
             "output/log/translation_speaker_context.json",
             "output/log/translation_review.json",
+            "output/log/translation_duration_candidate_provenance.json",
+            "output/log/duration_candidate_semantic_audit.json",
             WORKFLOW_REPORT_FILE,
         ],
     )

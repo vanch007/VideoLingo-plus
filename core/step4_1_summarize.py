@@ -17,6 +17,19 @@ SENTENCE_TXT_PATH = 'output/log/sentence_splitbymeaning.txt'
 CUSTOM_TERMS_PATH = 'custom_terms.xlsx'
 CLEANED_CHUNKS_PATH = 'output/log/cleaned_chunks.xlsx'
 
+
+def normalize_summary_response(data):
+    """Repair only the observed unambiguous two-container JSON wrapper.
+
+    Index can emit the topic/terms object followed by an unnamed character
+    array. No missing character, field or evidence is invented here.
+    """
+    if (isinstance(data, list) and len(data) == 2 and isinstance(data[0], dict)
+            and set(data[0]) == {'topic', 'terms'} and isinstance(data[1], list)
+            and data[1] and all(isinstance(c, dict) and 'character_id' in c for c in data[1])):
+        return {**data[0], 'characters': data[1]}
+    return data
+
 def resolve_source_anomalies(anomalies: list[dict[str, Any]], speaker_rows: pd.DataFrame | None = None, sentences_path: str = SENTENCE_TXT_PATH) -> list[dict[str, Any]]:
     """Flag detected script anomalies without destructive regex stripping of valid mixed-language content."""
     resolved_anomalies = []
@@ -195,6 +208,8 @@ def get_summary():
     but disabled for other languages to prevent timestamp matching issues.
     """
     speaker_rows, speaker_metrics = load_speaker_aware_rows()
+    from core.source_verification import verify_source_rows
+    source_verification = verify_source_rows(speaker_rows)
     src_content, line_count = combine_chunks(speaker_rows)
     speaker_ids = speaker_metrics.speakers
     console.print(
@@ -207,7 +222,7 @@ def get_summary():
     detected_language = load_key("whisper.detected_language") if whisper_language == 'auto' else whisper_language
 
     # Only enable STT correction for Chinese
-    skip_stt_correction = load_key('skip_stt_correction', False) or (detected_language not in ['zh', 'zh-CN', 'zh-TW'])
+    skip_stt_correction = load_key('skip_stt_correction', False) or (detected_language not in ['zh', 'zh-CN', 'zh-TW']) or (load_key('quality_mode') == 'fast') or load_key('fast_mode.enabled', False)
 
     if skip_stt_correction:
         console.print(f"[yellow]⏭️ STT纠错已禁用（源语言: {detected_language}，仅中文启用纠错）[/yellow]")
@@ -243,6 +258,11 @@ def get_summary():
     from core.prompts_storage import get_summary_prompt, get_stt_correction_prompt
 
     summary_prompt = get_summary_prompt(src_content, custom_terms_json, speaker_ids=speaker_ids)
+    summary_prompt += "\nAcoustic source uncertainties (do not invent a resolution):\n" + json.dumps(
+        [{"line_ids": group["line_ids"], "source": group["source"], "alternative": group.get("witness", "")}
+         for group in source_verification.get("groups", []) if group["status"] != "pass"],
+        ensure_ascii=False,
+    )
     console.print("[cyan]📝 Step 1: Summarizing topic and extracting terminology...[/cyan]")
 
     def valid_summary(response_data):
@@ -251,22 +271,15 @@ def get_summary():
             return {"status": "error", "message": "Missing 'terms' key"}
         if 'topic' not in response_data:
             return {"status": "error", "message": "Missing 'topic' key"}
-        if 'speaker_profiles' not in response_data or not isinstance(response_data['speaker_profiles'], list):
-            return {"status": "error", "message": "Missing 'speaker_profiles' list"}
-        returned_speakers = {
-            str(item.get('speaker_id', '')).strip()
-            for item in response_data['speaker_profiles']
-            if isinstance(item, dict)
-        }
-        missing_speakers = set(speaker_ids) - returned_speakers
-        if missing_speakers:
-            return {"status": "error", "message": f"Missing speaker profiles: {sorted(missing_speakers)}"}
+        if not isinstance(response_data.get('characters'), list):
+            return {"status": "error", "message": "Missing dialogue characters list"}
         for term in response_data['terms']:
             if not all(key in term for key in required_keys):
                 return {"status": "error", "message": "Invalid term format"}
         return {"status": "success", "message": "Summary completed"}
 
-    summary = ask_gpt(summary_prompt, response_json=True, valid_def=valid_summary, log_title='summary')
+    summary = ask_gpt(summary_prompt, response_json=True, valid_def=valid_summary, log_title='summary',
+                      response_normalizer=normalize_summary_response)
 
     topic = summary.get('topic', '')
     terms = summary.get('terms', [])
@@ -380,13 +393,23 @@ def get_summary():
 
     # 保存术语和主题
     if 'terms' in summary and len(custom_terms) > 0:
-        summary['terms'].extend(custom_terms_json['terms'])
+        # Explicit case vocabulary overrides an inferred spelling once.
+        terms_by_source = {term['src']: term for term in summary['terms']}
+        terms_by_source.update({term['src']: term for term in custom_terms_json['terms']})
+        summary['terms'] = list(terms_by_source.values())
 
     # 保存源异常并解析修复
     anomalies = detect_source_anomalies(CLEANED_CHUNKS_PATH, speaker_rows)
     anomalies = resolve_source_anomalies(anomalies, speaker_rows, SENTENCE_TXT_PATH)
     with open('output/log/source_anomalies.json', 'w', encoding='utf-8') as f:
         json.dump(anomalies, f, ensure_ascii=False, indent=2)
+
+    # Reconcile every line against dialogue meaning, independently of acoustic
+    # cluster IDs. Run after optional STT correction so assignments bind to the
+    # exact source text that translation will consume.
+    from core.dialogue_roles import reconcile_dialogue_roles
+    speaker_rows, speaker_metrics = load_speaker_aware_rows()
+    summary = reconcile_dialogue_roles(summary, speaker_rows, source_verification)
 
     # 保存场景与内容理解
     # 保存对话单元与意图
@@ -413,9 +436,17 @@ def get_summary():
     with open('output/log/content_context.json', 'w', encoding='utf-8') as f:
         json.dump(content_context, f, ensure_ascii=False, indent=2)
 
+    # 确保所有 speaker 都有基础画像
+    speaker_profiles = summary.get('speaker_profiles', [])
+    existing_spks = {str(item.get('speaker_id', '')).strip() for item in speaker_profiles if isinstance(item, dict)}
+    for spk in speaker_metrics.speakers:
+        if spk and spk not in existing_spks:
+            speaker_profiles.append({'speaker_id': spk, 'name': spk, 'description': f'Speaker {spk}'})
+    summary['speaker_profiles'] = speaker_profiles
+
     # 保存角色画像与关系
     with open('output/log/speaker_profiles.json', 'w', encoding='utf-8') as f:
-        json.dump(summary.get('speaker_profiles', []), f, ensure_ascii=False, indent=2)
+        json.dump(speaker_profiles, f, ensure_ascii=False, indent=2)
     with open('output/log/dialogue_units.json', 'w', encoding='utf-8') as f:
         json.dump(dialogue_units, f, ensure_ascii=False, indent=2)
 
@@ -441,6 +472,11 @@ def get_summary():
             'speaker_count': speaker_metrics.speaker_count,
             'speaker_transitions': speaker_metrics.speaker_transitions,
         },
+        'source_verification_status': source_verification["status"],
+        'source_uncertainties': summary.get('source_uncertainties', []),
+        'characters': summary.get('characters', []),
+        'role_context_signature': summary.get('role_context_signature'),
+        'role_reconciliation_status': summary.get('role_reconciliation_status'),
     }
 
     with open(TERMINOLOGY_JSON_PATH, 'w', encoding='utf-8') as f:
@@ -457,6 +493,8 @@ def get_summary():
             "output/log/content_context.json",
             "output/log/speaker_profiles.json",
             "output/log/dialogue_units.json",
+            "output/log/dialogue_role_review.json",
+            "output/log/source_verification.json",
             "output/log/translation_decisions.json",
         ],
     )

@@ -8,6 +8,8 @@ from rich.console import Console
 from rich.table import Table
 from rich import box
 from core.config_utils import load_key
+from core.llm_provider import get_translation_strategy
+from core.local_translation import translate_localized, validate_translation_rows
 
 console = Console()
 
@@ -24,7 +26,7 @@ def valid_translate_result(result: dict, required_keys: list, required_sub_keys:
     return {"status": "success", "message": "Translation completed"}
 
 @time_it()
-def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_to_note_prompt, summary_prompt, index = 0, speaker_context_prompt=None):
+def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_to_note_prompt, summary_prompt, index = 0, speaker_context_prompt=None, glossary=None, speech_budgets=None):
     shared_prompt = generate_shared_prompt(
         previous_content_prompt,
         after_cotent_prompt,
@@ -32,15 +34,17 @@ def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_
         things_to_note_prompt,
         speaker_context_prompt,
     )
+    if get_translation_strategy() == "localized":
+        return translate_localized(lines, shared_prompt, glossary, speech_budgets=speech_budgets)
 
     # Retry translation if the length of the original text and the translated text are not the same, or if the specified key is missing
     def retry_translation(prompt, step_name):
         def valid_faith(response_data):
-            return valid_translate_result(response_data, ['1'], ['direct'])
+            return validate_translation_rows(response_data, lines.splitlines(), 'direct')
         
         def valid_express(response_data):
             # Check structure only - duration check removed as dubbing stage can handle text modification
-            return valid_translate_result(response_data, ['1'], ['free'])
+            return validate_translation_rows(response_data, lines.splitlines(), 'free')
 
         for retry in range(3):
             if step_name == 'faithfulness':
@@ -49,7 +53,7 @@ def translate_lines(lines, previous_content_prompt, after_cotent_prompt, things_
                 result = ask_gpt(prompt+retry* " ", response_json=True, valid_def=valid_express, log_title=f'translate_{step_name}')
 
             if len(lines.split('\n')) == len(result):
-                return result
+                return {str(i): result[str(i)] for i in range(1, len(result) + 1)}
             if retry != 2:
                 console.print(f'[yellow]⚠️ {step_name.capitalize()} translation of block {index} failed, Retry...[/yellow]')
         raise ValueError(f'[red]❌ {step_name.capitalize()} translation of block {index} failed after 3 retries. Please check `output/gpt_log/error.json` for more details.[/red]')

@@ -6,6 +6,13 @@ import pytest
 from core import translation_review
 
 
+@pytest.fixture(autouse=True)
+def english_review_fixtures(monkeypatch):
+    original = translation_review.load_key
+    monkeypatch.setattr(translation_review, 'load_key', lambda key, default=None:
+                        'en' if key == 'target_language' else original(key, default))
+
+
 def test_clean_suggested_fix():
     assert translation_review.clean_suggested_fix("Assuming the missing character, the translation should be: 'Surprise'.") == "Surprise"
     assert translation_review.clean_suggested_fix('Translation: "What is this?"') == "What is this?"
@@ -111,7 +118,7 @@ def test_review_fails_on_unknown_line_id(tmp_path: Path, monkeypatch):
         df, terminology={}, report_path=report_path
     )
     assert report["status"] == "failed"
-    assert "unresolvable critical issue" in report["error"]
+    assert "outside focused lines" in report["error"]
 
 
 def test_review_fails_on_empty_fix_critical(tmp_path: Path, monkeypatch):
@@ -288,3 +295,47 @@ def test_final_audit_clean_pass_without_issues(tmp_path: Path, monkeypatch):
     assert report["status"] == "pass"
     assert report["error"] is None
     assert result.iloc[0]["Translation"] == "Do not open the door."
+
+
+def test_final_review_context_binds_current_sources_without_historical_asr_alternatives(monkeypatch):
+    prompts = []
+    monkeypatch.setattr(translation_review, 'ask_gpt', lambda prompt, **kw: prompts.append(prompt) or {'issues': []})
+    rows = [{'line_id': 'L1.01', 'source': '医生来了。', 'translation': 'The doctor is here.',
+             'character': 'C02', 'action_agent': 'C02'}]
+    terms = {'source_uncertainties': [{'line_ids': ['L1.01'], 'alternative': 'UNTRUSTED_OLD_ASR'}],
+             'parent_dialogue': [{'source_text': 'UNTRUSTED_OLD_PARENT'}],
+             'terms': [{'src': '医生', 'tgt': 'doctor'}, {'src': '船长', 'tgt': 'UNRELATED_GLOSSARY'}]}
+    result = translation_review.review_in_batches(rows, '', 'dialogue', terms, 'review', audit_only=True)
+    assert not result['issues'] and len(prompts) == 1
+    prompt = prompts[0]
+    assert '医生来了。' in prompt and 'C02' in prompt and 'doctor' in prompt
+    assert 'UNTRUSTED_OLD_ASR' not in prompt and 'UNTRUSTED_OLD_PARENT' not in prompt
+
+
+def test_source_unit_review_checks_each_current_row_and_never_excuses_a_missing_fact(tmp_path, monkeypatch):
+    from core import duration_candidate_audit
+    monkeypatch.chdir(tmp_path)
+    calls = []
+    monkeypatch.setattr(translation_review, 'load_key', lambda key, default=None: 'en' if key == 'target_language' else default)
+    monkeypatch.setattr(duration_candidate_audit, 'audit_duration_candidate',
+        lambda source, anchor, target, context: calls.append((source, target, json.loads(context))) or {'equivalent': True, 'issues': []})
+    frame = pd.DataFrame([
+        {'LineID': 'L1', 'Source': '不用登记，就是成功。', 'Translation': 'Success.'},
+        {'LineID': 'L2', 'Source': '你好。', 'Translation': 'Hello.'}])
+    result, report = translation_review.review_source_units(frame, {}, tmp_path/'review.json')
+    pd.testing.assert_frame_equal(result, frame)
+    assert report['status'] == 'needs_review' and report['issues'][0]['line_id'] == 'L1'
+    assert len(report['source_unit_checks']) == 2 and len(calls) == 1
+    assert calls[0][2]['surrounding_source'] == ['不用登记，就是成功。']
+
+
+def test_source_unit_review_cannot_pass_an_unavailable_semantic_service(tmp_path, monkeypatch):
+    from core import duration_candidate_audit
+    monkeypatch.chdir(tmp_path)
+    def unavailable(*args):
+        raise TimeoutError('review unavailable')
+    monkeypatch.setattr(duration_candidate_audit, 'audit_duration_candidate', unavailable)
+    frame = pd.DataFrame([{'LineID': 'L1', 'Source': '你好。', 'Translation': 'Hello.'}])
+    _, report = translation_review.review_source_units(frame, {}, tmp_path/'review.json')
+    assert report['status'] == 'needs_review' and report['accepted'] is False
+    assert 'review unavailable' in report['issues'][0]['problem']

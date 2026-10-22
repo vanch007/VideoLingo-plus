@@ -15,6 +15,17 @@ def split_by_spacy():
     
     nlp = init_nlp()
     split_by_mark(nlp)
+    # The recognizer has already supplied coherent timed dialogue units.
+    # Comma splitting separates a promise from its actor/recipient; display
+    # wrapping belongs after complete-unit translation instead.
+    from core.dialogue_segmentation import BOUNDARY_REPORT
+    import json
+    from pathlib import Path
+    report = json.loads(BOUNDARY_REPORT.read_text(encoding="utf-8"))
+    if report.get("policy", "").startswith("recognition_phrases_and_punctuation_preserved"):
+        Path('output/log/sentence_splitbynlp.txt').write_text(
+            Path('output/log/sentence_by_mark.txt').read_text(encoding="utf-8"), encoding="utf-8")
+        return
     split_by_comma_main(nlp)
     split_sentences_main(nlp)
     split_long_by_root_main(nlp)

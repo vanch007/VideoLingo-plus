@@ -7,6 +7,7 @@ from difflib import SequenceMatcher
 import math
 from core.spacy_utils.load_nlp_model import init_nlp
 from core.config_utils import load_key, get_joiner
+from core.llm_provider import get_llm_max_workers
 from core.translation_state import record_llm_stage
 from rich.console import Console
 from rich.table import Table
@@ -197,6 +198,33 @@ def split_sentences_by_meaning():
     with open('output/log/sentence_splitbynlp.txt', 'r', encoding='utf-8') as f:
         sentences = [line.strip() for line in f.readlines()]
 
+    from core.config_utils import load_key
+    if load_key('quality_mode') == 'fast' or load_key('fast_mode.enabled', False):
+        import json
+        from pathlib import Path
+        Path(output_txt).write_text(os.linesep.join(sentences), encoding='utf-8')
+        Path('output/log/source_segmentation.json').write_text(json.dumps({
+            'status': 'pass', 'strategy': 'fast_mode_preserve_sentences',
+            'units': len(sentences), 'llm_rewording': False,
+            'reason': 'Fast mode preserves source recognized sentence boundaries without LLM splitting.'
+        }, indent=2), encoding='utf-8')
+        record_llm_stage('split_meaning', artifacts=[output_txt, 'output/log/source_segmentation.json'])
+        console.print(f"[green]⚡ Fast Mode: Preserved {len(sentences)} sentence boundaries without LLM split.[/green]")
+        return
+
+    import json
+    from pathlib import Path
+    boundary = Path('output/log/lexical_boundary_review.json')
+    if boundary.is_file() and json.loads(boundary.read_text()).get('policy', '').startswith('recognition_phrases_and_punctuation_preserved'):
+        Path(output_txt).write_text(os.linesep.join(sentences), encoding='utf-8')
+        Path('output/log/source_segmentation.json').write_text(json.dumps({
+            'status': 'pass', 'strategy': 'preserve_recognized_dialogue_units',
+            'units': len(sentences), 'llm_rewording': False,
+            'reason': 'Keep actor, recipient, payment and actions together; display segmentation follows translation.'
+        }, indent=2), encoding='utf-8')
+        record_llm_stage('split_meaning', artifacts=[output_txt, 'output/log/source_segmentation.json'])
+        return
+
     nlp = init_nlp()
     
     # 使用配置文件中的 max_split_length
@@ -205,7 +233,7 @@ def split_sentences_by_meaning():
 
     # 🔄 process sentences multiple times to ensure all are split
     for retry_attempt in range(3):
-        sentences = parallel_split_sentences(sentences, max_length=max_length, max_workers=load_key("max_workers"), nlp=nlp, retry_attempt=retry_attempt)
+        sentences = parallel_split_sentences(sentences, max_length=max_length, max_workers=get_llm_max_workers(), nlp=nlp, retry_attempt=retry_attempt)
 
     # 比较分割前后的句子
     with open('output/log/sentence_splitbynlp.txt', 'r', encoding='utf-8') as f:
@@ -223,7 +251,7 @@ def split_sentences_by_meaning():
 
     # 💾 保存 TXT 格式
     with open(output_txt, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(sentences))
+        f.write(os.linesep.join(sentences))
     console.print(f'[green]✅ 保存到 {output_txt}[/green]')
     record_llm_stage("split_meaning")
     

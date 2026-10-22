@@ -1,0 +1,59 @@
+[
+  {
+    "id": "zh_en_facts", "source": "zh", "target": "en",
+    "topic": "Two business partners negotiate payment and delivery. S01 reports a third person's promise.",
+    "lines": [
+      ["S01", "他答应两天后给你五千美元，不是今天。"],
+      ["S02", "你付款，我才发货；不付款就不发。"],
+      ["S01", "别把退款当成折扣，这两个不是一回事。"],
+      ["S02", "行。那就一言为定。"]
+    ],
+    "terms": [{"src": "退款", "tgt": "refund", "note": "Return of payment, not a discount"}],
+    "checks": [{"row": 0, "patterns": ["(?i)he", "(?i)two days|2 days", "5,?000|five thousand", "(?i)not today"]}, {"row": 1, "patterns": ["(?i)pay", "(?i)ship|deliver", "(?i)no|not|n't"]}, {"row": 2, "patterns": ["(?i)refund", "(?i)discount"]}]
+  },
+  {
+    "id": "zh_vi_address", "source": "zh", "target": "vi",
+    "topic": "S01 is a younger adult visiting an older man S02, addressed as chú; later S01 addresses older male peer S03 as anh. Do not infer S01's gender.",
+    "lines": [
+      ["S01", "叔叔，爸妈让我给您送点茶来。"],
+      ["S02", "替我谢谢他们。路上累不累？"],
+      ["S01", "哥，上周多亏你帮我改论文，不然我就过不了答辩了。"],
+      ["S03", "别客气，你自己也下了不少功夫。"]
+    ],
+    "terms": [{"src": "叔叔", "tgt": "chú", "note": "Older man S02"}, {"src": "哥", "tgt": "anh", "note": "Older male peer S03, not S02"}],
+    "checks": [{"row": 0, "patterns": ["(?i)chú"]}, {"row": 2, "patterns": ["(?i)anh", "(?i)luận", "(?i)bảo vệ"]}]
+  },
+  {
+    "id": "zh_en_technical", "source": "zh", "target": "en",
+    "topic": "An engineer explains validation settings; preserve literal placeholders and quantities.",
+    "lines": [
+      ["S01", "把阈值设为0.05，温度保持在20到25摄氏度之间。"],
+      ["S01", "失败率从2%降到了1%，是下降了1个百分点，不是1%。"],
+      ["S01", "请保留占位符{order_id}，不要替换成真实订单号。"]
+    ],
+    "terms": [{"src": "阈值", "tgt": "threshold", "note": "Technical parameter"}],
+    "checks": [{"row": 0, "patterns": ["0\\.05", "20", "25", "(?i)celsius|°C"]}, {"row": 1, "patterns": ["(?i)percentage[ -]point", "(?i)not"]}, {"row": 2, "patterns": ["\\{order_id\\}"]}]
+  },
+  {
+    "id": "en_zh_idioms", "source": "en", "target": "zh",
+    "topic": "Two friends discuss an audition and a loan application.",
+    "lines": [
+      ["S01", "Break a leg at your audition tomorrow!"],
+      ["S02", "Thanks. I won't count my chickens before they hatch."],
+      ["S01", "The bank didn't reject the loan; they asked for two more documents."]
+    ],
+    "terms": [],
+    "checks": [{"row": 0, "patterns": ["明天", "试镜|试演|面试"]}, {"row": 2, "patterns": ["银行", "没有|没|并未|并不", "两|二|2", "文件|材料|资料"]}]
+  },
+  {
+    "id": "zh_vi_commerce", "source": "zh", "target": "vi",
+    "topic": "A livestream host explains a sale without medical promises or currency conversion.",
+    "lines": [
+      ["S01", "今天这套199元，买一套送一瓶，不是送一整套。"],
+      ["S01", "敏感肌先做局部测试，不舒服就停用。"],
+      ["S01", "七天内未拆封可以退，运费由我们承担。"]
+    ],
+    "terms": [{"src": "敏感肌", "tgt": "da nhạy cảm", "note": "Sensitive skin"}, {"src": "元", "tgt": "nhân dân tệ", "note": "Chinese yuan; no conversion to VND"}],
+    "checks": [{"row": 0, "patterns": ["199", "(?i)tệ", "(?i)chai", "(?i)không"]}, {"row": 1, "patterns": ["(?i)da nhạy cảm", "(?i)ngừng|ngưng|dừng"]}, {"row": 2, "patterns": ["7|bảy", "(?i)chưa", "(?i)phí"]}]
+  }
+]
