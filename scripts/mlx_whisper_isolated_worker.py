@@ -29,6 +29,10 @@ def main():
         path_or_hf_repo=model_path,
         word_timestamps=True,
         language=lang,
+        condition_on_previous_text=False,
+        compression_ratio_threshold=2.4,
+        no_speech_threshold=0.6,
+        logprob_threshold=-1.0,
         verbose=False
     )
 
