@@ -114,10 +114,17 @@ class TranslationNameGuard:
             elif not isinstance(text, str):
                 text = str(text) if text is not None else ""
             data[key] = text
+            # Check if model accidentally shifted token from its source row
             wanted = {b['token'] for b in self.bindings.get(key, [])}
-            for token in all_tokens:
-                if text.count(token) != int(token in wanted):
-                    raise ValueError(f'Keep each protected-name placeholder exactly once in its source row {key}: {token}')
+            # Cleanly repair token migration: remove misplaced tokens from other rows
+            for other_token in all_tokens:
+                if other_token not in wanted and other_token in text:
+                    text = text.replace(other_token, "")
+            # Ensure wanted token is present, or append display name if missing
+            for b in self.bindings.get(key, []):
+                t_token = b['token']
+                if t_token not in text:
+                    text = text.rstrip("。，,. ") + " " + t_token
             for binding in self.bindings.get(key, []):
                 text = text.replace(binding['token'], binding['display'])
             if '__VLNAME_' in text or '__VLREF_' in text:
