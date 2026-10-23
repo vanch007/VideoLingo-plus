@@ -101,8 +101,19 @@ class TranslationNameGuard:
         restored = dict(data)
         all_tokens = {b['token'] for row in self.bindings.values() for b in row}
         for key, text in data.items():
-            if not isinstance(text, str):
-                raise ValueError(f'Protected-name row {key} must be text')
+            if isinstance(text, list):
+                tokens = []
+                for item in text:
+                    if isinstance(item, dict) and "token" in item:
+                        tokens.append(str(item["token"]))
+                    elif isinstance(item, str):
+                        tokens.append(item)
+                    else:
+                        tokens.append(str(item))
+                text = " ".join(tokens)
+            elif not isinstance(text, str):
+                text = str(text) if text is not None else ""
+            data[key] = text
             wanted = {b['token'] for b in self.bindings.get(key, [])}
             for token in all_tokens:
                 if text.count(token) != int(token in wanted):
