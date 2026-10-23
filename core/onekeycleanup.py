@@ -27,36 +27,48 @@ def cleanup(history_dir="history"):
 
     # Get video file name to create a unique history folder
     try:
-        # Prefer saved video_title.json or original imported title over generic 'source'
         import glob, json
         video_name = None
+        # 1. First priority: video_title.json
         title_meta_path = "output/video_title.json"
         if os.path.exists(title_meta_path):
             try:
                 with open(title_meta_path, "r", encoding="utf-8") as f:
                     meta = json.load(f)
-                    if meta.get("title"):
-                        video_name = meta["title"]
+                    if meta.get("title") and meta["title"].strip() and meta["title"].strip().lower() != "source":
+                        video_name = meta["title"].strip()
             except Exception:
                 pass
+
+        # 2. Second priority: cover image file name (*.jpg, *.png, *.webp)
+        if not video_name:
+            covers = [f for f in os.listdir("output") if f.lower().endswith(('.jpg', '.png', '.webp'))
+                      and not f.startswith(('AI', 'dub', 'frame', 'preview', '封面', 'gemini', 'test'))]
+            if covers:
+                c_name = os.path.splitext(covers[0])[0].strip()
+                if c_name and c_name.lower() != "source":
+                    video_name = c_name
+
+        # 3. Third priority: named video file in output
         if not video_name:
             allowed = load_key("allowed_video_formats", ["mp4", "mkv", "webm", "avi", "mov"])
             v_files = [f for f in glob.glob("output/*") if os.path.splitext(f)[1][1:].lower() in allowed]
-            named_files = [f for f in v_files if os.path.splitext(os.path.basename(f))[0] != "source"
+            named_files = [f for f in v_files if os.path.splitext(os.path.basename(f))[0].lower() != "source"
                            and not os.path.basename(f).startswith(("AI", "output", "_", "dub", "preview"))]
             if named_files:
-                video_file = named_files[0]
-            else:
-                video_file = find_video_files()
-            video_name = os.path.splitext(os.path.basename(video_file))[0]
+                video_name = os.path.splitext(os.path.basename(named_files[0]))[0].strip()
+
+        # 4. Strict safeguard: NEVER allow "source" or empty name to overwrite history root
+        if not video_name or video_name.lower() in ("source", "unknown", ""):
+            import time
+            video_name = f"video_{time.strftime('%Y%m%d_%H%M%S')}"
+
         video_name = sanitize_filename(video_name)
         print(f"🔍 Using video name for history folder: {video_name}")
     except Exception as e:
-        print(f"⚠️ Error finding video file: {str(e)}")
-        print("⚠️ Using 'unknown' as video name")
-        video_name = "unknown"
-
-    # Define history paths
+        import time
+        video_name = f"video_{time.strftime('%Y%m%d_%H%M%S')}"
+        print(f"⚠️ Error finding video file: {str(e)}, falling back to {video_name}")
     video_history_dir = os.path.join(history_dir, video_name)
     log_dir = os.path.join(video_history_dir, "log")
     gpt_log_dir = os.path.join(video_history_dir, "gpt_log")
