@@ -27,17 +27,28 @@ def cleanup(history_dir="history"):
 
     # Get video file name to create a unique history folder
     try:
-        # Prefer the original downloaded or imported title over generic 'source'
-        import glob
-        allowed = load_key("allowed_video_formats", ["mp4", "mkv", "webm", "avi", "mov"])
-        v_files = [f for f in glob.glob("output/*") if os.path.splitext(f)[1][1:].lower() in allowed]
-        named_files = [f for f in v_files if os.path.splitext(os.path.basename(f))[0] != "source"
-                       and not os.path.basename(f).startswith(("AI", "output", "_", "dub", "preview"))]
-        if named_files:
-            video_file = named_files[0]
-        else:
-            video_file = find_video_files()
-        video_name = os.path.splitext(os.path.basename(video_file))[0]
+        # Prefer saved video_title.json or original imported title over generic 'source'
+        import glob, json
+        video_name = None
+        title_meta_path = "output/video_title.json"
+        if os.path.exists(title_meta_path):
+            try:
+                with open(title_meta_path, "r", encoding="utf-8") as f:
+                    meta = json.load(f)
+                    if meta.get("title"):
+                        video_name = meta["title"]
+            except Exception:
+                pass
+        if not video_name:
+            allowed = load_key("allowed_video_formats", ["mp4", "mkv", "webm", "avi", "mov"])
+            v_files = [f for f in glob.glob("output/*") if os.path.splitext(f)[1][1:].lower() in allowed]
+            named_files = [f for f in v_files if os.path.splitext(os.path.basename(f))[0] != "source"
+                           and not os.path.basename(f).startswith(("AI", "output", "_", "dub", "preview"))]
+            if named_files:
+                video_file = named_files[0]
+            else:
+                video_file = find_video_files()
+            video_name = os.path.splitext(os.path.basename(video_file))[0]
         video_name = sanitize_filename(video_name)
         print(f"🔍 Using video name for history folder: {video_name}")
     except Exception as e:

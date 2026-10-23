@@ -339,12 +339,28 @@ def ensure_canonical_source_video(save_path="output") -> str:
     if len(named_files) != 1:
         raise ValueError('Ambiguous source video; canonical import requires exactly one original')
     src_file = named_files[0]
-    print(f"🎬 Creating canonical {canonical_target} from {src_file}...")
-    remux_cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "warning", "-i", src_file, "-map", "0", "-c", "copy", canonical_target]
-    res = subprocess.run(remux_cmd)
-    if res.returncode != 0 or not os.path.isfile(canonical_target) or os.path.getsize(canonical_target) == 0:
-        trans_cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "warning", "-i", src_file, "-c:v", "libx264", "-preset", "veryfast", "-c:a", "aac", canonical_target]
-        subprocess.run(trans_cmd, check=True)
+    orig_name = os.path.splitext(os.path.basename(src_file))[0]
+    title_meta_path = os.path.join(save_path, "video_title.json")
+    try:
+        with open(title_meta_path, "w", encoding="utf-8") as f:
+            json.dump({"title": orig_name}, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+    if src_file.lower().endswith(".mp4"):
+        print(f"🎬 Moving {src_file} -> {canonical_target} (keep single video copy)...")
+        shutil.move(src_file, canonical_target)
+    else:
+        print(f"🎬 Transcoding {src_file} -> {canonical_target} and removing original...")
+        remux_cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "warning", "-i", src_file, "-map", "0", "-c", "copy", canonical_target]
+        res = subprocess.run(remux_cmd)
+        if res.returncode != 0 or not os.path.isfile(canonical_target) or os.path.getsize(canonical_target) == 0:
+            trans_cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "warning", "-i", src_file, "-c:v", "libx264", "-preset", "veryfast", "-c:a", "aac", canonical_target]
+            subprocess.run(trans_cmd, check=True)
+        try:
+            os.remove(src_file)
+        except OSError:
+            pass
     print(f"✅ Canonical source video created: {canonical_target}")
     return canonical_target
 
