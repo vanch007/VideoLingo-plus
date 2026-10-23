@@ -81,7 +81,7 @@ class TranslationNameGuard:
                            f'其中保护专名已占 {fixed} 个；标记之外的其余译文合计尽量压到约 {remaining} 个汉语读音单元。'
                            '保持完整源意，使用最短自然口语结构；不得缩写、删掉或重复专名。'
                            '这是候选搜索建议，不能代替语义与完整录音的实测验收。')
-        return prompt + ('\n【不可改写的专名标记】源文中的 __VLNAME_...__ 标记各自代表一次专名出现。'
+        return prompt + ('\n【不可改写的专名标记及要求：必须完整翻译整句台词全部语言内容，绝对不能只输出专名标记，必须翻译周围动词和宾语！】源文中的 __VLNAME_...__ 标记各自代表一次专名出现。'
             '只翻译标记周围的语言；每个标记必须原样保留一次，留在对应的原文行和对应含义的位置。'
             '不要将标记翻译、合并、跨行移动，或改写成术语表中的专名。'
             '上下文中的 __VLREF_...__ 只用于理解同一专名的指代与用途，不是输出文本。'
@@ -122,6 +122,12 @@ class TranslationNameGuard:
                 text = text.replace(binding['token'], binding['display'])
             if '__VLNAME_' in text or '__VLREF_' in text:
                 raise ValueError(f'Unrecognized or altered name placeholder at row {key}')
+            # Guard against LLM outputting ONLY the name while dropping the rest of the sentence
+            if self.bindings.get(key) and len(self.lines[int(key)-1].split()) >= 4:
+                # If source sentence has >= 4 words, translation must have more content than just the name display
+                name_display = " ".join(b['display'] for b in self.bindings[key])
+                if text.strip() == name_display.strip():
+                    raise ValueError(f'Row {key} contains only the protected name. Must translate the full sentence!')
             restored[key] = text
         return restored
 
