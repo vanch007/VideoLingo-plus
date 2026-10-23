@@ -113,7 +113,7 @@ def merge_fast_dubbing_video():
     for e in extensions:
         span=e['orig_end']-e['orig_start']
         expr+=f"+min(max(T-{e['orig_start']:.9f},0),{span:.9f})*{e['extend_by']/span:.12f}/TB"
-    vf=f"setpts='{expr}',tpad=stop_mode=clone:stop_duration=1,fps={fps:.12f},trim=end_frame={frames},setpts=PTS-STARTPTS"
+    vf=f"setpts='{expr}',fps={fps:.12f},tpad=stop_mode=clone:stop_duration=5,trim=end_frame={frames},setpts=PTS-STARTPTS"
     if load_key('burn_subtitles',True):
         target_sub = 'output/dub.srt'
         if not Path(target_sub).is_file(): raise FileNotFoundError(f'Target subtitle missing: {target_sub}')
