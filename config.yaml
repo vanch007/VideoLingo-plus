@@ -72,8 +72,7 @@ llm:
       purpose: speech_duration
       base_url: http://127.0.0.1:8000/v1
       model: Index-Homura-9B-8bit
-      model_path: 
-        /Users/vanch/.cache/lm-studio/models/IndexTeam/Index-Homura-9B-8bit
+      model_path: /Users/vanch/.cache/lm-studio/models/IndexTeam/Index-Homura-9B-8bit
       model_revision: 3f269ba26d87015c1a537ad42df6d586d3ab03dc/affine8-gs64-bf16
       api_key_env: OMLX_API_KEY
       default_api_key: ''
@@ -114,8 +113,7 @@ moss_asr:
   root: /Users/vanch/mlx-MOSS-Transcribe-Diarize
   python: /Users/vanch/.codex/envs/bluestone-mlx-audio/bin/python
   pythonpath: /Users/vanch/mlx-MOSS-Transcribe-Diarize
-  model: 
-    /Users/vanch/mlx-MOSS-Transcribe-Diarize/pretrained/mlx-moss-transcribe-diarize-8bit
+  model: /Users/vanch/mlx-MOSS-Transcribe-Diarize/pretrained/mlx-moss-transcribe-diarize-8bit
   model_repo: vanch007/mlx-MOSS-Transcribe-Diarize-8bit
   output_root: output/log/moss_asr
   max_new_tokens: 2048
@@ -124,7 +122,7 @@ moss_asr:
 speaker_diarization:
   enabled: true
   backend: nemotron-mlx
-  shadow_backend:
+  shadow_backend: null
   required: false
   min_word_coverage: 0.95
   max_gap_seconds: 0.35
@@ -183,7 +181,7 @@ max_split_length: 20
 reflect_translate: true
 translation_exact_replacements: {}
 enable_custom_terms: false
-custom_terms_path:
+custom_terms_path: null
 pause_before_translate: false
 tts_method: mlx_router
 quality_mode: fast
@@ -284,7 +282,7 @@ mlx_tts:
       timeout_seconds: 600
       batch_timeout_seconds: 7200
       model: /Users/vanch/mlx-indextts2/models/mlx-IndexTTS-2.5-8bit
-      diffusion_steps: 10
+      diffusion_steps: 8
     omnivoice:
       enabled: true
       root: /Users/vanch/mlx-omnivoice
@@ -372,8 +370,7 @@ mlx_tts:
       - mlx_moss_tts_local.cli
       pythonpath:
       - /Users/vanch/mlx-MOSS-TTS-Local-Transformer-v1.5/src
-      model: 
-        /Users/vanch/mlx-MOSS-TTS-Local-Transformer-v1.5/models/MOSS-TTS-Local-Transformer-v1.5
+      model: /Users/vanch/mlx-MOSS-TTS-Local-Transformer-v1.5/models/MOSS-TTS-Local-Transformer-v1.5
       required_files:
       - models/MOSS-TTS-Local-Transformer-v1.5/model.safetensors
       max_tokens: 2048
@@ -481,16 +478,15 @@ qwen3_source:
   python: /Users/vanch/.codex/envs/nemotron-diarization/bin/python
 source_asr:
   recognizer: moss
-  model: 
-    /Users/vanch/mlx-MOSS-Transcribe-Diarize/pretrained/mlx-moss-transcribe-diarize-8bit
+  model: /Users/vanch/mlx-MOSS-Transcribe-Diarize/pretrained/mlx-moss-transcribe-diarize-8bit
   python: /Users/vanch/.codex/envs/bluestone-mlx-audio/bin/python
   aligner: mlx-community/Qwen3-ForcedAligner-0.6B-8bit
   chunk_seconds: 180
   max_tokens: 8192
   timeout_seconds: 1800
   hotwords: []
-  review_file:
-  reference_checks_file:
+  review_file: null
+  reference_checks_file: null
   reference_required: true
 translation:
   utterance_plan: true

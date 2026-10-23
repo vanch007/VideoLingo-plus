@@ -410,6 +410,7 @@ class IndexTTS2Backend(CliBackend):
                 cmd += ["--seed", str(cfg["seed"])]
             if cfg.get("diffusion_steps") is not None:
                 cmd += ["--diffusion-steps", str(cfg["diffusion_steps"])]
+            cmd += ["--dynamic-max-tokens"]
             if not _as_bool(cfg.get("denoise_ref", True), True):
                 cmd += ["--no-denoise-ref"]
             if not _as_bool(
