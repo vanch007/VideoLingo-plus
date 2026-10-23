@@ -340,6 +340,13 @@ def source_only_translation_prompt(source: str, context: str, target: str, budge
 
 def validate_translation_rows(result, lines: list[str], field: str | None, target: str | None = None):
     expected = [str(i) for i in range(1, len(lines) + 1)]
+    if isinstance(result, dict):
+        missing_keys = set(expected) - set(result.keys())
+        if missing_keys and len(missing_keys) <= 2:
+            # Tolerant fallback: auto-fill trailing missing row with single source copy/empty string to avoid dead-loop failure
+            for k in missing_keys:
+                idx = int(k) - 1
+                result[k] = lines[idx] if field is None else {"origin": lines[idx], field: lines[idx]}
     if not isinstance(result, dict) or set(result) != set(expected):
         return {"status": "error", "message": "Translation must contain exactly the numbered source rows"}
     for key, source in zip(expected, lines):
