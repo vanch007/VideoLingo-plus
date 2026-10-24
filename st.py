@@ -180,7 +180,9 @@ def text_processing_section():
             download_subtitle_zip_button(text=t("Download All Srt Files"))
 
             if st.button(t("Archive to 'history'"), key="cleanup_in_text_processing"):
-                cleanup()
+                import importlib, core.onekeycleanup
+                importlib.reload(core.onekeycleanup)
+                core.onekeycleanup.cleanup()
                 st.rerun()
             return True
 
@@ -464,7 +466,9 @@ def audio_processing_section():
                 delete_dubbing_files()
                 st.rerun()
             if st.button(t("归档到'history'文件夹"), key="cleanup_in_audio_processing"):
-                cleanup()
+                import importlib, core.onekeycleanup
+                importlib.reload(core.onekeycleanup)
+                core.onekeycleanup.cleanup()
                 st.rerun()
 
 def process_audio(timing_placeholder):
