@@ -202,16 +202,20 @@ class CliBackend:
 
 
 def resolve_indextts_config(cfg: dict, language: str) -> dict:
-    """Keep explicit profiles; use the validated Chinese profile in auto mode."""
+    """Keep explicit profiles and models; in auto mode use the validated profile of the language.
+
+    Model directories are resolved under the configured ``root`` (never a fixed home path).
+    """
     resolved = dict(cfg)
     lang_prefix = str(language).lower().split('-')[0]
+    models = Path(str(cfg.get('root') or '/Users/vanch/mlx-indextts2')).expanduser() / 'models'
     if lang_prefix == 'vi':
         resolved['profile'] = 'vietnamese'
-        resolved['model'] = '/Users/vanch/mlx-indextts2/models/mlx-indexTTS2-vietnamese-8bit'
-    elif (str(cfg.get('profile', 'auto')) == 'auto'
+        resolved['model'] = str(models / 'mlx-indexTTS2-vietnamese-8bit')
+    elif (str(cfg.get('profile', 'auto')) == 'auto' and not cfg.get('model')
             and lang_prefix in {'zh', 'en', 'ja', 'es', 'ar'}):
         resolved['profile'] = 'v25'
-        resolved['model'] = '/Users/vanch/mlx-indextts2/models/mlx-IndexTTS-2.5-8bit'
+        resolved['model'] = str(models / 'mlx-IndexTTS-2.5-8bit')
     return resolved
 
 

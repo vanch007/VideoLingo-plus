@@ -130,17 +130,28 @@ class TranslationNameGuard:
             for other_token in all_tokens:
                 if other_token not in wanted and other_token in text:
                     text = text.replace(other_token, "")
-            # Ensure wanted token is present, or append display name if missing
+            # A placeholder belongs once to its row: keep the first occurrence, drop repeats.
+            for b in self.bindings.get(key, []):
+                first = text.find(b['token'])
+                if first >= 0:
+                    head = first + len(b['token'])
+                    text = text[:head] + text[head:].replace(b['token'], "")
+            # A wanted placeholder that is missing is appended, unless the model already wrote that
+            # name itself (appending then would print the name twice).
             for b in self.bindings.get(key, []):
                 t_token = b['token']
-                if t_token not in text:
+                if t_token not in text and b['display'] not in text:
+                    if b['display'].casefold() in text.casefold():
+                        raise ValueError(f"Keep the source spelling of protected name {b['display']!r} in row {key}")
                     text = text.rstrip("。，,. ") + " " + t_token
             for binding in self.bindings.get(key, []):
                 text = text.replace(binding['token'], binding['display'])
-            # If model echoed __VLREF_...__ reference, map it back to its display name rather than failing
+            # An echoed __VLREF_...__ reference is mapped back to its display name only when that name
+            # belongs to this row; a reference to another row's name is dropped, not inserted here.
+            row_displays = {b['display'] for b in self.bindings.get(key, [])}
             for display, ref in self.prompt_references.items():
                 if ref in text:
-                    text = text.replace(ref, display)
+                    text = text.replace(ref, display if display in row_displays else "")
             # Remove any lingering unmapped VLNAME or VLREF
             text = re.sub(r'__VLNAME_[a-zA-Z0-9_]+__', '', text)
             text = re.sub(r'__VLREF_[a-zA-Z0-9_]+__', '', text)
@@ -150,7 +161,7 @@ class TranslationNameGuard:
                 name_display = " ".join(b['display'] for b in self.bindings[key])
                 if text.strip() == name_display.strip():
                     raise ValueError(f'Row {key} contains only the protected name. Must translate the full sentence!')
-            restored[key] = text
+            restored[key] = text.strip()
         return restored
 
     def validate(self, data, validator):

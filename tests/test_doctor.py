@@ -42,10 +42,11 @@ def test_forced_router_backend_remains_required(monkeypatch):
     assert not checks["mlx-tts:higgs"].ok
 
 
-def test_automatic_chinese_and_emotion_routes_both_checked(monkeypatch):
+def test_automatic_chinese_and_emotion_routes_are_checked(monkeypatch):
     _tts_config(monkeypatch, tts_method="mlx_router", target_language="zh")
     required = {c.name for c in doctor._check_mlx_tts() if c.required}
-    assert required == {"mlx-tts:omnivoice", "mlx-tts:indextts2"}
+    # Chinese and emotion-reference rows both route to IndexTTS 2.x, so it is the only required backend.
+    assert required == {"mlx-tts:indextts2"}
 
 
 def test_selected_disabled_backend_fails(monkeypatch):

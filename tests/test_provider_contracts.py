@@ -104,14 +104,14 @@ def test_provider_verify_reports_deprecated_routes(monkeypatch):
     assert any(provider == "gemini_3_pro" and "eligible" in message for provider, message in findings)
 
 
-def test_mlx_router_routes_vietnamese_to_indextts2():
+def test_mlx_router_routes_vietnamese_to_the_configured_backend():
     req = TTSRequest(
         text="Xin chào, bạn có khỏe không?",
         output_path="output/audio/segs/test.wav",
         target_language="vi",
     )
     assert looks_vietnamese(req.text)
-    assert MlxTTSRouter().select_backend(req) == "indextts2"
+    assert MlxTTSRouter().select_backend(req) == load_key("mlx_tts.router.vietnamese_backend", "omnivoice")
 
 
 def test_indextts2_uses_native_duration_fit_for_subtitle_slots(monkeypatch, tmp_path):
@@ -291,16 +291,17 @@ def test_mlx_router_ignores_excel_nan_backend_values():
         target_language="vi",
         metadata={"backend": float("nan")},
     )
-    assert MlxTTSRouter().select_backend(req) == "indextts2"
+    # An Excel NaN is "no forced backend": routing falls through to the configured Vietnamese backend.
+    assert MlxTTSRouter().select_backend(req) == load_key("mlx_tts.router.vietnamese_backend", "omnivoice")
 
 
-def test_mlx_router_routes_chinese_to_omnivoice_by_default():
+def test_mlx_router_routes_chinese_to_indextts2_by_default():
     req = TTSRequest(
         text="你好，今天我们继续讲这个产品。",
         output_path="output/audio/segs/test.wav",
         target_language="zh",
     )
-    assert MlxTTSRouter().select_backend(req) == "omnivoice"
+    assert MlxTTSRouter().select_backend(req) == "indextts2"
 
 
 def test_mlx_router_never_auto_selects_qwen_for_clean_reference(monkeypatch):

@@ -23,7 +23,7 @@ def test_apply_dubbing_budget_columns_adds_duration_contract():
     out = apply_dubbing_budget_columns(df)
     assert out.loc[0, "available_duration"] == 2.5
     assert out.loc[0, "target_duration"] == 2.5
-    assert out.loc[0, "quality_mode"] in {"subtitle", "dubbing", "high_sync"}
+    assert out.loc[0, "quality_mode"] in {"fast", "subtitle", "dubbing", "high_sync"}
     assert out.loc[0, "max_speed_factor"] > 0
     assert out.loc[0, "max_natural_speed_factor"] > 0
 

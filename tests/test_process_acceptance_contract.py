@@ -93,11 +93,15 @@ def test_translation_name_placeholders_bind_each_occurrence_and_source_spelling(
     target, original = lt.translate_localized('\n'.join(lines), 'Glossary: HyperFrames; Epidemic Sound')
     assert target == '\n'.join(decoded.values()) and original == '\n'.join(lines)
     assert '__VLNAME_' not in target
-    assert names.validate({'1': first + first, '2': a + b}, lambda _: {'status': 'success'})['status'] == 'error'
-    assert names.validate({'1': a, '2': first + b}, lambda _: {'status': 'success'})['status'] == 'error'
-    assert names.validate({'1': first, '2': a + b + '__VLNAME_forged__'}, lambda _: {'status': 'success'})['status'] == 'error'
-    assert names.validate({'1': first, '2': a}, lambda _: {'status': 'success'})['status'] == 'error'
-    assert names.validate({'1': first + '__VLREF_1__', '2': a + b}, lambda _: {'status': 'success'})['status'] == 'error'
+    ok = lambda text: {'status': 'success', 'restored': text}
+    # Placeholder drift is repaired, never published as drift: every row ends with exactly its own names.
+    assert names.validate({'1': first + first, '2': a + b}, ok)['restored']['1'] == 'Hyperframes'
+    assert names.validate({'1': a, '2': first + b}, ok)['restored'] == {
+        '1': 'Hyperframes', '2': 'Epidemic sounds Epidemic sounds'}
+    assert names.validate({'1': first, '2': a + b + '__VLNAME_forged__'}, ok)['restored']['2'] == 'Epidemic soundsEpidemic sounds'
+    assert names.validate({'1': first, '2': a}, ok)['restored']['2'] == 'Epidemic sounds Epidemic sounds'
+    # An echoed reference to another row's name is dropped instead of inserted into this row.
+    assert names.validate({'1': first + '__VLREF_1__', '2': a + b}, ok)['restored']['1'] == 'Hyperframes'
     assert names.validate({'1': first + '删除文件。', '2': a + b},
                           lambda _: {'status': 'error', 'message': 'semantic mismatch'})['status'] == 'error'
 
@@ -118,8 +122,8 @@ def test_name_guard_masks_context_and_rejected_drafts_without_changing_restorati
     assert token in prompt
     assert guard.restore({'1': f'为此，我用一个叫{token}的音效库。'}) == {
         '1': '为此，我用一个叫Epidemic Sound的音效库。'}
-    assert guard.validate({'1': '我用了Epidemic Sound音乐库。'},
-                          lambda _: {'status': 'success'})['status'] == 'error'
+    # A draft that already spells the name is accepted as is; the placeholder is not appended again.
+    assert guard.validate({'1': '我用了Epidemic Sound音乐库。'}, lambda text: text)['1'] == '我用了Epidemic Sound音乐库。'
 
 
 def test_prompt_reference_aliases_cannot_merge_distinct_source_occurrences():
@@ -129,7 +133,7 @@ def test_prompt_reference_aliases_cannot_merge_distinct_source_occurrences():
     prompt = guard.prompt('Both Epidemic Sound and Epidemic Sounds are discussed.')
     assert '__VLREF_1__' in prompt and '__VLREF_2__' in prompt
     assert guard.restore({'1': a+'和'+b}) == {'1': 'Epidemic Sound和Epidemic Sounds'}
-    assert guard.validate({'1': a+a}, lambda _: {'status': 'success'})['status'] == 'error'
+    assert guard.validate({'1': a+a}, lambda text: text)['1'] == 'Epidemic Sound Epidemic Sounds'
 
 
 def test_registered_source_names_do_not_license_untranslated_component_words():
@@ -325,22 +329,26 @@ def test_native_pinyin_annotations_preserve_spoken_surface_and_tones():
     assert '<费|FEI4>' in synthesis_text(req)
 
 
-def test_chinese_profile_is_shared_without_changing_explicit_or_other_languages():
+def test_auto_profile_uses_the_validated_model_without_changing_explicit_choices(tmp_path):
     from core.providers.mlx_tts import resolve_indextts_config
-    cfg = {'profile':'auto','chinese_profile':'standard'}
-    assert resolve_indextts_config(cfg,'zh')['profile'] == 'standard'
-    assert resolve_indextts_config(cfg,'en')['profile'] == 'auto'
-    assert resolve_indextts_config({**cfg,'profile':'v25'},'zh')['profile'] == 'v25'
-    assert resolve_indextts_config({**cfg,'model':'chosen-model'},'zh')['profile'] == 'auto'
+    cfg = {'profile': 'auto', 'root': str(tmp_path)}
+    zh = resolve_indextts_config(cfg, 'zh')
+    assert zh['profile'] == 'v25' and zh['model'] == str(tmp_path / 'models/mlx-IndexTTS-2.5-8bit')
+    assert resolve_indextts_config(cfg, 'en')['profile'] == 'v25'
+    assert resolve_indextts_config(cfg, 'ko')['profile'] == 'auto'          # not a validated language
+    assert resolve_indextts_config({**cfg, 'profile': 'standard'}, 'zh')['profile'] == 'standard'
+    assert resolve_indextts_config({**cfg, 'model': 'chosen-model'}, 'zh')['model'] == 'chosen-model'
+    vi = resolve_indextts_config({**cfg, 'profile': 'v25'}, 'vi')
+    assert vi['profile'] == 'vietnamese' and vi['model'].startswith(str(tmp_path))
 
 
 def test_selected_chinese_checkpoint_is_required_by_environment_check(tmp_path, monkeypatch):
     from core.providers.mlx_tts import IndexTTS2Backend
     from core import runtime_context
     monkeypatch.setattr(runtime_context,'effective_target_language',lambda *_:'zh')
-    backend = IndexTTS2Backend({'root':str(tmp_path),'profile':'auto','chinese_profile':'standard'})
+    backend = IndexTTS2Backend({'root':str(tmp_path),'profile':'auto'})
     assert not backend.health().ok
-    model = tmp_path/'models/mlx-indexTTS2-standard-8bit'
+    model = tmp_path/'models/mlx-IndexTTS-2.5-8bit'
     model.mkdir(parents=True)
     for n in ('config.json','config.yaml','gpt.safetensors','s2mel.safetensors','bigvgan.safetensors'):
         (model/n).write_bytes(b'presence-only-health-fixture')
