@@ -108,7 +108,9 @@ whisper:
   model: large-v3
   language: en
   detected_language: en
-  runtime: stable-ts
+  # local-aligned = MOSS recognition + Qwen3 forced alignment (best in our zh tests: fewer wrong words, no
+  # silence hallucination); stable-ts / local are the Whisper fallbacks
+  runtime: local-aligned
   chunk_seconds: 0
   stable_ts_mlx: true
   stable_ts_dq: false
