@@ -129,6 +129,57 @@ def test_pipeline_cannot_mark_manifest_failure_as_completed(tmp_path, monkeypatc
     assert json.loads(Path('output/pipeline_state.json').read_text())['completed_steps'] == []
 
 
+def test_code_stale_text_checkpoint_is_archived_then_really_executed(tmp_path, monkeypatch):
+    from core.pipeline import runner
+    from core.pipeline.artifact_manifest import build_artifact_manifest, write_artifact_manifest
+    monkeypatch.chdir(tmp_path)
+    code = Path('summary-code.py')
+    code.write_text('old policy')
+    checkpoint = Path('output/log/terminology.json')
+    checkpoint.parent.mkdir(parents=True)
+    checkpoint.write_text('old terminology')
+    manifest = build_artifact_manifest(artifact=str(checkpoint), step='summarize',
+        run_context={'run_id': 'old'}, code_paths=[str(code)])
+    write_artifact_manifest(manifest)
+    code.write_text('current policy')
+    calls = []
+    def execute():
+        assert not checkpoint.exists(), 'The legacy exists shortcut must not supply current acceptance'
+        assert (Path('output/history/code_stale_checkpoints/new/summarize') / checkpoint.name).read_text() == 'old terminology'
+        calls.append('executed')
+        checkpoint.write_text('current terminology')
+    monkeypatch.setattr(runner, '_record_step_manifest', lambda *_: None)
+    run = run_pipeline(PipelineRun('new', 'cinematic', 'en', 'zh', []),
+        [PipelineStep('summarize', 'Summarize', action=execute)])
+    assert calls == ['executed'] and run.completed_steps == ['summarize']
+    assert checkpoint.read_text() == 'current terminology'
+
+
+@pytest.mark.parametrize('change', ['input', 'artifact', 'config', 'dependency'])
+def test_code_stale_recovery_cannot_hide_changed_data_or_settings(tmp_path, monkeypatch, change):
+    from core.pipeline import runner
+    from core.pipeline.artifact_manifest import build_artifact_manifest, write_artifact_manifest, hash_path
+    monkeypatch.chdir(tmp_path)
+    files = {key: Path(key+'.txt') for key in ('input', 'config', 'dependency', 'code')}
+    for path in files.values(): path.write_text('original')
+    checkpoint = Path('output/log/terminology.json')
+    checkpoint.parent.mkdir(parents=True)
+    checkpoint.write_text('original')
+    manifest = build_artifact_manifest(artifact=str(checkpoint), step='summarize',
+        run_context={'input': str(files['input'])}, code_paths=[str(files['code'])],
+        quality={'config_path': str(files['config']), 'config_hash': hash_path(files['config'])})
+    manifest['dependencies'] = {str(files['dependency']): hash_path(files['dependency'])}
+    write_artifact_manifest(manifest)
+    files['code'].write_text('new policy')
+    (checkpoint if change == 'artifact' else files[change]).write_text('changed')
+    with pytest.raises(RuntimeError, match='Stale summarize checkpoint'):
+        run_pipeline(PipelineRun('new', 'cinematic', 'en', 'zh', []),
+            [PipelineStep('summarize', 'Summarize', action=lambda: pytest.fail('Must not execute'))])
+    assert checkpoint.exists() and not Path('output/history').exists()
+    state = json.loads(Path('output/pipeline_state.json').read_text())
+    assert state['run_id'] == 'new' and state['status'] == 'failed' and state['failed_step'] == 'summarize'
+
+
 def test_code_stale_text_checkpoint_is_archived_for_a_real_rerun(tmp_path, monkeypatch):
     from core.pipeline import runner
     from core.pipeline.artifact_manifest import build_artifact_manifest, write_artifact_manifest
@@ -205,3 +256,30 @@ def test_download_retries_without_cookies_when_browser_store_is_missing(monkeypa
     monkeypatch.setenv("VIDEOLINGO_YTDLP_COOKIES_FROM_BROWSER", "chrome")
     step1_ytdlp.download_video_ytdlp("https://www.youtube.com/watch?v=abc", save_path=str(tmp_path))
     assert calls == [True, False]
+
+
+def test_resume_clears_only_the_partial_artifact_of_the_interrupted_step(tmp_path, monkeypatch):
+    from core.pipeline import runner
+    monkeypatch.chdir(tmp_path)
+    artifact = Path('output/log/cleaned_chunks.xlsx')
+    artifact.parent.mkdir(parents=True)
+    artifact.write_bytes(b'partial')
+    Path('output/pipeline_state.json').write_text(json.dumps(
+        {'run_id': 'old', 'status': 'failed', 'failed_step': 'transcribe', 'steps': ['transcribe'], 'completed_steps': []}))
+    seen = []
+    monkeypatch.setattr(runner, '_record_step_manifest', lambda *_: None)
+    run = run_pipeline(PipelineRun('new', 'cinematic', 'en', 'zh', []),
+                       [PipelineStep('transcribe', 'ASR', action=lambda: seen.append('ran'))])
+    assert seen == ['ran'] and run.completed_steps == ['transcribe']
+    assert not artifact.exists()  # the unproven partial output was cleared, not reused
+
+
+def test_resume_refuses_an_unproven_checkpoint_when_no_run_was_interrupted_there(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    artifact = Path('output/log/cleaned_chunks.xlsx')
+    artifact.parent.mkdir(parents=True)
+    artifact.write_bytes(b'left over from another video')
+    with pytest.raises(RuntimeError, match='Stale transcribe checkpoint'):
+        run_pipeline(PipelineRun('new', 'cinematic', 'en', 'zh', []),
+                     [PipelineStep('transcribe', 'ASR', action=lambda: pytest.fail('must not run'))])
+    assert artifact.read_bytes() == b'left over from another video'

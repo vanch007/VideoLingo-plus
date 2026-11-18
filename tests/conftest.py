@@ -30,6 +30,7 @@ TEST_CONFIG_OVERRIDES = {
     "fast_mode.enabled": False,
     # Thresholds of the repair/rescue classification tests (the live config tunes the speed cap higher).
     "dubbing_quality.max_speed_factor": 1.08,
+    "translation.speech_budget.max_speed_factor": 1.08,
 }
 
 
@@ -51,3 +52,17 @@ def hermetic_config(monkeypatch, tmp_path_factory):
     with open(path, "w", encoding="utf-8") as handle:
         config_utils.yaml.dump(data, handle)
     monkeypatch.setattr(config_utils, "CONFIG_PATH", str(path))
+
+
+@pytest.fixture(autouse=True)
+def ignore_live_workspace_state(monkeypatch):
+    """A test running in the repository root must not see the pipeline state of a real run left in
+    output/ (it would override the languages the test configures). Tests that chdir into their own
+    directory keep their own output/pipeline_state.json."""
+    from core import runtime_context
+    original = runtime_context._pipeline_state
+
+    def state():
+        return {} if Path.cwd().resolve() == ROOT else original()
+
+    monkeypatch.setattr(runtime_context, "_pipeline_state", state)

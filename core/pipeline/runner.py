@@ -261,23 +261,27 @@ def run_pipeline(run: PipelineRun, steps: list[PipelineStep], *, resume: bool = 
         if key in {"transcribe", "split_spacy", "split_meaning", "summarize", "translate", "split_subtitle"} and checkpoint and Path(checkpoint).exists():
             if resume and _recover_code_stale_text_checkpoint(key, checkpoint, run):
                 continue
-            # When resuming, if a step checkpoint exists and has a valid sidecar or was completed, keep it.
-            # Only clean up the failed/unfinished step's partial artifact so it can rerun cleanly.
+            # Resuming: the partial artifact of the step the previous run was interrupted in (or that
+            # failed) may be cleared so it reruns cleanly. Any other existing checkpoint without a valid
+            # manifest is unproven (another input, configuration or code): it is never reused or restamped.
             if resume:
-                try:
-                    c_path = Path(checkpoint)
-                    from core.pipeline.artifact_manifest import manifest_path_for
-                    sidecar = manifest_path_for(c_path)
-                    # If this step is already completed or has valid manifest, do not unlink!
-                    if sidecar.exists():
+                previous = load_state_or_none() or {}
+                interrupted = (previous.get('failed_step') == key
+                               or (previous.get('status') in {'failed', 'interrupted', 'paused'}
+                                   and key not in (previous.get('completed_steps') or [])
+                                   and key in (previous.get('steps') or [])))
+                if interrupted:
+                    try:
+                        from core.pipeline.artifact_manifest import manifest_path_for
+                        c_path = Path(checkpoint)
+                        sidecar = manifest_path_for(c_path)
+                        if c_path.is_file():
+                            c_path.unlink()
+                        if sidecar.exists():
+                            sidecar.unlink()
                         continue
-                    if c_path.is_file():
-                        c_path.unlink()
-                    if sidecar.exists():
-                        sidecar.unlink()
-                    continue
-                except Exception:
-                    pass
+                    except Exception:
+                        pass
             run.status = 'failed'
             run.quality_status = 'fail'
             run.failed_step = key

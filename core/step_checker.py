@@ -124,6 +124,17 @@ def is_step_completed(step_name: str) -> bool:
         if not _file_exists(checkpoint):
             return False
 
+    # A checkpoint is complete only with a valid manifest: a bare file may be left over from another
+    # input, another configuration or older code. Code-only staleness is recovered by the runner.
+    try:
+        from core.pipeline.artifact_manifest import inspect_artifact_manifest, manifest_path_for
+        if not manifest_path_for(checkpoint).exists():
+            return False
+        if not inspect_artifact_manifest(checkpoint).ok:
+            return False
+    except Exception:
+        return False
+
     validator = STEP_VALIDATORS.get(step_name)
     if validator:
         return validator()
