@@ -73,10 +73,18 @@ def store(kind: str, key: str, files: dict[str, str], meta: dict | None = None) 
         if entry.exists():
             shutil.rmtree(entry)
         tmp.rename(entry)
+        prune_from_config(keep=entry)
         return entry
     except Exception:
         shutil.rmtree(tmp, ignore_errors=True)
         return None
+
+
+def _touch(entry: Path) -> None:
+    try:
+        os.utime(entry / MANIFEST)  # recency for LRU pruning
+    except OSError:
+        pass
 
 
 def lookup(kind: str, key: str, names: list[str] | None = None) -> dict | None:
@@ -93,6 +101,7 @@ def lookup(kind: str, key: str, names: list[str] | None = None) -> dict | None:
         for name, digest in files.items():
             if not (entry / name).is_file() or file_sha256(entry / name) != digest:
                 return None
+        _touch(entry)
         return {"dir": entry, "meta": data.get("meta", {}), "files": {n: entry / n for n in files}}
     except (OSError, ValueError, KeyError):
         return None
@@ -112,6 +121,57 @@ def stats() -> dict:
             size = sum(f.stat().st_size for e in entries for f in e.rglob("*") if f.is_file())
             out["kinds"][kind.name] = {"entries": len(entries), "bytes": size}
     return out
+
+
+def _entries() -> list[tuple[float, int, Path]]:
+    """(last_used, bytes, dir) of every finished entry; unfinished temporaries are included as stale."""
+    root, out = cache_root(), []
+    if not root.is_dir():
+        return out
+    for kind in (p for p in root.iterdir() if p.is_dir()):
+        for e in (p for p in kind.iterdir() if p.is_dir()):
+            files = [f for f in e.rglob("*") if f.is_file()]
+            size = sum(f.stat().st_size for f in files)
+            manifest = e / MANIFEST
+            if e.name.startswith("."):  # interrupted store
+                used = 0.0
+            else:
+                used = manifest.stat().st_mtime if manifest.is_file() else 0.0
+            out.append((used, size, e))
+    return out
+
+
+def prune(max_bytes: int | None = None, max_age_days: float | None = None, keep: Path | None = None) -> dict:
+    """Delete least-recently-used entries until the cache fits ``max_bytes`` and nothing is older
+    than ``max_age_days``. ``keep`` (the entry just stored) is never removed. Returns what was freed."""
+    import time
+    entries = sorted(_entries(), key=lambda t: t[0])
+    total = sum(e[1] for e in entries)
+    freed = removed = 0
+    now = time.time()
+    for used, size, path in entries:
+        stale = max_age_days is not None and now - used > max_age_days * 86400
+        over = max_bytes is not None and total > max_bytes
+        if keep is not None and path == keep:
+            continue
+        if stale or over or path.name.startswith("."):
+            shutil.rmtree(path, ignore_errors=True)
+            total -= size
+            freed += size
+            removed += 1
+    return {"removed": removed, "freed_bytes": freed, "remaining_bytes": total}
+
+
+def prune_from_config(keep: Path | None = None) -> None:
+    """Apply asset_cache_max_gb / asset_cache_max_age_days from config.yaml (0 or missing = unlimited)."""
+    try:
+        from core.config_utils import load_key
+        gb = float(load_key("asset_cache_max_gb", 20) or 0)
+        days = float(load_key("asset_cache_max_age_days", 90) or 0)
+    except Exception:
+        return
+    if gb > 0 or days > 0:
+        prune(int(gb * 1024 ** 3) if gb > 0 else None, days or None, keep)
 
 
 def purge(kind: str | None = None) -> None:

@@ -33,11 +33,19 @@ def has_cjk(text: str) -> bool:
     return bool(CJK_RE.search(text))
 
 
+# Measured against libass/PingFang: the plain model ran 2-5% narrower than real renders.
+LATIN_CALIBRATION = 1.04
+
+
 def char_width(ch: str) -> float:
     if ch in "\n\r":
         return 0.0
     if unicodedata.east_asian_width(ch) in ("W", "F"):
         return 1.0
+    return _latin_width(ch) * LATIN_CALIBRATION
+
+
+def _latin_width(ch: str) -> float:
     if ch == " ":
         return 0.3
     if ch in _NARROW:

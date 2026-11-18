@@ -25,6 +25,8 @@ def _cmd_cache(args: argparse.Namespace) -> int:
 
     if args.purge:
         asset_cache.purge(None if args.purge == "all" else args.purge)
+    if getattr(args, "prune", None) is not None:
+        print(json.dumps(asset_cache.prune(int(args.prune * 1024 ** 3)), indent=2))
     print(json.dumps(asset_cache.stats(), ensure_ascii=False, indent=2))
     return 0
 
@@ -366,6 +368,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     cache = sub.add_parser("cache", help="Show or purge the cross-task cache of stems and recognized chunks")
     cache.add_argument("--purge", nargs="?", const="all", metavar="KIND", help="Delete 'demucs', 'asr_chunk' or everything (no task may be running)")
+    cache.add_argument("--prune", type=float, metavar="GB", help="Delete least-recently-used entries until the cache is at most GB")
     cache.set_defaults(func=_cmd_cache)
 
     status = sub.add_parser("status", help="Show pipeline state, artifact checkpoints, and pending steps")

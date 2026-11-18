@@ -86,12 +86,40 @@ def _rows(text: str, cap: int) -> list[str]:
     return out
 
 
+MAX_ROWS = 3  # rows of one source or translation cue on screen at once
+
+
+def paginate(cues, cap_for, max_rows: int = MAX_ROWS):
+    """[(start, end, rows)]: a cue with more than ``max_rows`` rows is shown as consecutive pages,
+    its time shared by text length. Nothing is dropped; every row appears on exactly one page."""
+    out = []
+    for a, b, text in cues:
+        rows = _rows(text, cap_for(text))
+        if len(rows) <= max_rows:
+            out.append((a, b, rows))
+            continue
+        pages_n = -(-len(rows) // max_rows)
+        base, extra = divmod(len(rows), pages_n)
+        pages, pos = [], 0
+        for i in range(pages_n):
+            size = base + (1 if i < extra else 0)
+            pages.append(rows[pos:pos + size])
+            pos += size
+        weights = [sum(len(r) for r in pg) or 1 for pg in pages]
+        t, total = a, sum(weights)
+        for i, (pg, w) in enumerate(zip(pages, weights)):
+            end = b if i == len(pages) - 1 else t + (b - a) * w / total
+            out.append((t, end, pg))
+            t = end
+    return out
+
+
 def _escape(row: str) -> str:
     return row.replace("\\", "").replace("{", "(").replace("}", ")")
 
 
 def build_ass(width: int, height: int, src_cues, trans_cues, src: TrackStyle | None, trans: TrackStyle,
-              caps: tuple[int, int]) -> str:
+              caps: tuple[int, int], max_rows: int = MAX_ROWS) -> str:
     """ASS script. ``src`` None = translation only. caps = (cjk_cap, latin_cap) characters per row."""
     play_y = 288
     play_x = max(1, round(play_y * width / max(height, 1)))
@@ -113,15 +141,14 @@ def build_ass(width: int, height: int, src_cues, trans_cues, src: TrackStyle | N
         lines.append(style_line("Src", src))
     lines += ["", "[Events]", "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"]
 
-    trans_rows = [(a, b, _rows(t, cap_for(t))) for a, b, t in trans_cues]
+    trans_rows = paginate(trans_cues, cap_for, max_rows)
     for a, b, rows in trans_rows:
         lines.append(f"Dialogue: 1,{_time(a)},{_time(b)},Trans,,0,0,{trans.margin_v},,"
                      + "\\N".join(_escape(r) for r in rows))
 
     if src is not None:
         gap = ROW_GAP
-        for a, b, text in src_cues:
-            rows = _rows(text, cap_for(text))
+        for a, b, rows in paginate(src_cues, cap_for, max_rows):
             # Cut the source cue where the translation changes: the stack height is constant per piece.
             marks = sorted({a, b, *[t for s, e, _ in trans_rows for t in (s, e) if a < t < b]})
             for left, right in zip(marks, marks[1:]):

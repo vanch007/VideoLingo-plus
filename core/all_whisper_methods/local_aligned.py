@@ -75,12 +75,25 @@ def bind_recognition_words(raw_words, segments, start, language):
     return words
 
 
+def _weights_identity(model) -> str | None:
+    """Size+mtime of every weight file of a local model dir, so replacing weights in place changes
+    the cache key. Hub ids (not a directory) are identified by their name."""
+    if not model:
+        return None
+    path = Path(str(model)).expanduser()
+    if not path.is_dir():
+        return str(model)
+    return "|".join(f"{f.name}:{f.stat().st_size}:{int(f.stat().st_mtime)}"
+                    for f in sorted(path.glob("*.safetensors")))
+
+
 def _global_key(fingerprint, start, end, cfg):
     """Cross-task cache key for one chunk, or None when human review shaped the result."""
     if cfg.get("review_file"):
         return None
     from core import asset_cache
-    return asset_cache.make_key(kind="asr_chunk", fingerprint=fingerprint, start=round(start, 3), end=round(end, 3))
+    return asset_cache.make_key(kind="asr_chunk", fingerprint=fingerprint, start=round(start, 3), end=round(end, 3),
+                                models=[_weights_identity(cfg.get("model")), _weights_identity(cfg.get("aligner"))])
 
 
 def _global_get(key):

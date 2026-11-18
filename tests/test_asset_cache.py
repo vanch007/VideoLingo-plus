@@ -85,3 +85,37 @@ def test_chunked_separation_matches_whole_file_and_length(tmp_path):
     assert np.abs(v - 0.5 * ref).max() < 3e-4                  # seams invisible (16-bit rounding only)
     assert np.abs(b - 0.25 * ref).max() < 3e-4
     assert vp == pytest.approx(0.5 * 0.4, abs=0.01)
+
+
+def test_prune_removes_least_recently_used_and_keeps_new_entry(tmp_path, monkeypatch):
+    import os, time
+    from core import asset_cache
+    monkeypatch.setenv("VIDEOLINGO_CACHE_DIR", str(tmp_path / "c"))
+    monkeypatch.setattr(asset_cache, "prune_from_config", lambda keep=None: None)
+    src = tmp_path / "f.bin"; src.write_bytes(b"x" * 1000)
+    entries = [asset_cache.store("demucs", f"k{i}", {"f.bin": str(src)}) for i in range(3)]
+    now = time.time()
+    for i, e in enumerate(entries):          # k0 oldest, k2 newest
+        os.utime(e / asset_cache.MANIFEST, (now - 1000 + i, now - 1000 + i))
+    asset_cache.lookup("demucs", "k0", ["f.bin"])  # a hit makes k0 the most recent
+    result = asset_cache.prune(max_bytes=2700)
+    assert result["removed"] == 1
+    assert asset_cache.lookup("demucs", "k1") is None
+    assert asset_cache.lookup("demucs", "k0") and asset_cache.lookup("demucs", "k2")
+    asset_cache.prune(max_bytes=0, keep=entries[2])
+    assert asset_cache.lookup("demucs", "k2")
+
+
+def test_prune_drops_interrupted_temporaries_and_old_entries(tmp_path, monkeypatch):
+    import os, time
+    from core import asset_cache
+    monkeypatch.setenv("VIDEOLINGO_CACHE_DIR", str(tmp_path / "c"))
+    monkeypatch.setattr(asset_cache, "prune_from_config", lambda keep=None: None)
+    src = tmp_path / "f.bin"; src.write_bytes(b"x")
+    old = asset_cache.store("asr_chunk", "old", {"f.bin": str(src)})
+    os.utime(old / asset_cache.MANIFEST, (time.time() - 200 * 86400,) * 2)
+    asset_cache.store("asr_chunk", "new", {"f.bin": str(src)})
+    (tmp_path / "c" / "asr_chunk" / ".half.abc").mkdir()
+    asset_cache.prune(max_age_days=90)
+    assert asset_cache.lookup("asr_chunk", "old") is None and asset_cache.lookup("asr_chunk", "new")
+    assert not (tmp_path / "c" / "asr_chunk" / ".half.abc").exists()

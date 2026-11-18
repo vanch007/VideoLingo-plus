@@ -90,6 +90,8 @@ demucs: true
 demucs_model: htdemucs
 # Separate files longer than 1.5x this many seconds in chunks (bounded memory); 0 = whole file at once
 demucs_chunk_seconds: 0
+asset_cache_max_gb: 20        # LRU cap of ~/.cache/videolingo-plus (0 = unlimited)
+asset_cache_max_age_days: 90  # entries unused this long are removed (0 = never)
 background_volume: 1.0
 audio_mix:
   preserve_original_non_speech: false

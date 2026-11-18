@@ -70,3 +70,14 @@ def test_rendered_tracks_never_overlap(tmp_path):
     assert src_rows.size and src_rows.max() < trans_rows.min()      # the source ends above the first translation row
     inside = masks["both"][trans_rows.min():trans_rows.max() + 1]
     assert (inside == masks["trans"][trans_rows.min():trans_rows.max() + 1]).all()   # nothing intrudes on the translation
+
+
+def test_long_cue_is_paginated_in_time_without_losing_text():
+    from core.subtitle_ass import paginate
+    from core.subtitle_measure import break_lines
+    text = " ".join(f"word{i}" for i in range(80))
+    pages = paginate([(10.0, 20.0, text)], lambda t: 24, max_rows=3)
+    assert len(pages) > 1 and all(len(rows) <= 3 for _, _, rows in pages)
+    assert pages[0][0] == 10.0 and pages[-1][1] == 20.0
+    assert all(pages[i][1] == pages[i + 1][0] for i in range(len(pages) - 1))
+    assert [r for _, _, rows in pages for r in rows] == break_lines(text, 24, lenient=True)
