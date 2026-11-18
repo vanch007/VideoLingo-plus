@@ -59,3 +59,9 @@ def test_lenient_split_keeps_every_character_of_a_url():
     assert all(text_width(r) <= 24 * LATIN_EM + 1e-6 for r in rows)
     with pytest.raises(ValueError, match="Unbreakable"):
         break_lines(url, 24)
+
+
+def test_last_row_is_not_an_orphan():
+    rows = break_lines("中毕了五回大姨灭亲杀人灭口杀人灭口你就是马匪的", 22)
+    assert len(rows) == 2 and min(len(r) for r in rows) >= 10
+    assert "".join(rows) == "中毕了五回大姨灭亲杀人灭口杀人灭口你就是马匪的"

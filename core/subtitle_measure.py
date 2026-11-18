@@ -227,8 +227,9 @@ def break_lines(text: str, cap_chars: int, lenient: bool = False) -> list[str]:
                 if w > capacity or n > cap_chars:
                     continue
                 slack = capacity - w
-                # Squared slack balances rows; the last row may be short for free.
-                cost = best[r - 1][i] + (0.0 if (r == rows and j == count) else slack * slack)
+                # Squared slack balances every row, the last one included, so no row is left with a
+                # single orphan glyph ("…马匪" / "的"). A lone short row costs nothing: rows == 1.
+                cost = best[r - 1][i] + slack * slack
                 if cost < best[r][j]:
                     best[r][j], back[r][j] = cost, i
     lines, j = [], count

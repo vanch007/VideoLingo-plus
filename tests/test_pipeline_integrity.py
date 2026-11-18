@@ -183,3 +183,41 @@ def test_code_stale_recovery_cannot_hide_changed_data_or_settings(tmp_path, monk
     assert checkpoint.exists() and not Path('output/history').exists()
     state = json.loads(Path('output/pipeline_state.json').read_text())
     assert state['run_id'] == 'new' and state['status'] == 'failed' and state['failed_step'] == 'summarize'
+
+
+def test_display_alignment_not_expected_when_cues_are_preserved(monkeypatch):
+    from core import bilingual_alignment as ba
+    values = {"translation.preserve_cues": True}
+    monkeypatch.setattr("core.config_utils.load_key", lambda key, default=None: values.get(key, default))
+    monkeypatch.setattr("core.llm_provider.get_translation_strategy", lambda config=None: "localized")
+    assert ba.display_alignment_expected() is False
+    monkeypatch.setattr("core.llm_provider.get_translation_strategy", lambda config=None: "literal")
+    assert ba.display_alignment_expected() is True
+
+
+def test_download_retries_without_cookies_when_browser_store_is_missing(monkeypatch, tmp_path):
+    import yt_dlp
+    from core import step1_ytdlp
+
+    calls = []
+
+    class FakeYDL:
+        def __init__(self, opts):
+            self.opts = opts
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def download(self, urls):
+            calls.append("cookiesfrombrowser" in self.opts)
+            if "cookiesfrombrowser" in self.opts:
+                raise yt_dlp.utils.DownloadError('ERROR: could not find chrome cookies database in "/nowhere"')
+
+    monkeypatch.setattr(yt_dlp, "YoutubeDL", FakeYDL)
+    monkeypatch.setattr(step1_ytdlp, "ensure_canonical_source_video", lambda save_path="output": None)
+    monkeypatch.setenv("VIDEOLINGO_YTDLP_COOKIES_FROM_BROWSER", "chrome")
+    step1_ytdlp.download_video_ytdlp("https://www.youtube.com/watch?v=abc", save_path=str(tmp_path))
+    assert calls == [True, False]

@@ -267,7 +267,19 @@ def download_video_ytdlp(url, save_path='output', resolution='1080', cutoff_time
         ytdlp_succeeded = True
     except Exception as e:
         message = str(e)
-        if ("Sign in to confirm" in message or "not a bot" in message or "Sign in" in message):
+        if 'cookiesfrombrowser' in ydl_opts and "cookies" in message.lower() and (
+                "could not find" in message or "Failed to decrypt" in message or "Extracting cookies" in message):
+            # A configured browser without a usable cookie store must not block public media.
+            print(f"⚠️ Browser cookies unavailable ({message.splitlines()[0][:120]}); retrying without cookies...")
+            ydl_opts_plain = {k: v for k, v in ydl_opts.items() if k != 'cookiesfrombrowser'}
+            try:
+                with YoutubeDL(ydl_opts_plain) as ydl_plain:
+                    ydl_plain.download([clean_url])
+                ytdlp_succeeded = True
+                message = ""
+            except Exception as plain_err:
+                e, message = plain_err, str(plain_err)
+        if message and ("Sign in to confirm" in message or "not a bot" in message or "Sign in" in message):
             print("⚠️ YouTube anti-bot triggered; scanning all local Chrome profiles for valid cookies...")
             import glob
             base_dir = os.path.expanduser("~/Library/Application Support/Google/Chrome")

@@ -486,8 +486,9 @@ def merge_video_audio():
         return
     """Merge video and audio with subtitle burning (two-pass for FFmpeg 8.x compatibility)."""
     if plan_active() and load_key('burn_subtitles', False):
-        from core.bilingual_alignment import verify_bilingual_display
-        verify_bilingual_display(plan, dubbed=True)
+        from core.bilingual_alignment import display_alignment_expected, verify_bilingual_display
+        if display_alignment_expected():
+            verify_bilingual_display(plan, dubbed=True)
     VIDEO_FILE = SOURCE_VIDEO
     background_wav = "output/audio/background.wav"
     background_file = background_wav if os.path.isfile(background_wav) else BACKGROUND_AUDIO_FILE

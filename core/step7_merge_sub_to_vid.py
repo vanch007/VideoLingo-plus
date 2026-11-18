@@ -48,8 +48,9 @@ def merge_subtitles_to_video():
     from core.utterance_plan import plan_active, load_plan
     is_fast = (load_key("quality_mode", "high_sync") == "fast") and bool(load_key("fast_mode.enabled", False))
     if plan_active() and not is_fast and load_key('burn_subtitles', False):
-        from core.bilingual_alignment import verify_bilingual_display
-        verify_bilingual_display(load_plan(), dubbed=False)
+        from core.bilingual_alignment import display_alignment_expected, verify_bilingual_display
+        if display_alignment_expected():
+            verify_bilingual_display(load_plan(), dubbed=False)
     video_file = find_video_files()
     os.makedirs(os.path.dirname(OUTPUT_VIDEO), exist_ok=True)
 

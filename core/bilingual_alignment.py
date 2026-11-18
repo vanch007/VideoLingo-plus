@@ -852,6 +852,14 @@ def target_clock_signature(plan):
     return signature([{k: u[k] for k in ('unit_id', 'start', 'end', 'target_words')} for u in plan['units']])
 
 
+def display_alignment_expected() -> bool:
+    """False when the reviewed cue boundaries are kept as they are (translation.preserve_cues with a
+    localized strategy): split_subtitle then never builds a bilingual alignment, so nothing exists to verify."""
+    from core.config_utils import load_key
+    from core.llm_provider import get_translation_strategy
+    return not (load_key("translation.preserve_cues", False) and get_translation_strategy() == "localized")
+
+
 def verify_bilingual_display(plan, *, dubbed=True):
     """A prior geometric split or altered SRT cannot be exported as aligned."""
     terminology_path = Path('output/log/terminology.json')
