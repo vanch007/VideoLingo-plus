@@ -215,8 +215,13 @@ def _replace_range_with_recovery(
     for word, _ in merged_words:
         if word.get("recognition_segment_id"):
             by_rec_id.setdefault(str(word["recognition_segment_id"]), []).append(word)
+    from core.text_join import join_tokens
     for rec_id, r_words in by_rec_id.items():
-        actual_text = "".join(str(w.get("word", "")) for w in r_words)
+        actual_text = join_tokens(str(w.get("word", "")) for w in r_words)
+        recognized = str(r_words[0].get("recognition_text") or "")
+        if recognized and all(str(w.get("recognition_text") or "") == recognized for w in r_words) \
+                and _normalized_text(recognized) == _normalized_text(actual_text):
+            continue  # the phrase is intact: keep the recognizer's own spacing and punctuation
         for w in r_words:
             w["recognition_text"] = actual_text
 

@@ -41,7 +41,8 @@ def recognized_phrase_groups(rows):
         texts = [str(row["text"]).strip().strip('"') for row in rows[left:right]]
         if not source_text or normalize_transcript("".join(texts)) != normalize_transcript(source_text):
             # Fallback to aligned words as source text if recovery splits phrase across segments
-            source_text = "".join(texts)
+            from core.text_join import join_tokens
+            source_text = join_tokens(texts)
         labels = {normalize_speaker(row.get("speaker")) for row in rows[left:right]}
         groups.append({"words": texts, "source_text": source_text,
                        "speaker": next(iter(labels)) if len(labels) == 1 else None,
