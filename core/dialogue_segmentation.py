@@ -12,15 +12,18 @@ from core.providers.speaker_diarization import group_word_rows_by_speaker, norma
 BOUNDARY_REPORT = Path("output/log/lexical_boundary_review.json")
 
 
-def word_source_signature(rows):
+def word_source_signature(rows, *, phrase_text=True):
+    """Hash of the measured words (text, timing, speaker) and their phrase ids; phrase_text adds the
+    recognizer's phrase text (spacing and punctuation), which may legitimately change on resume."""
     rows = list(rows)
     canonical = [{"text": str(row["text"]).strip().strip('"'),
                   "start": float(row["start"]), "end": float(row["end"]),
                   "speaker": normalize_speaker(row.get("speaker"))} for row in rows]
     for source, row in zip(rows, canonical):
         if source.get("recognition_segment_id"):
-            row.update(recognition_segment_id=str(source["recognition_segment_id"]),
-                       recognition_text=str(source.get("recognition_text") or ""))
+            row["recognition_segment_id"] = str(source["recognition_segment_id"])
+            if phrase_text:
+                row["recognition_text"] = str(source.get("recognition_text") or "")
     return hashlib.sha256(json.dumps(canonical, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
 
 
@@ -70,6 +73,7 @@ def group_dialogue_words(rows, nlp, joiner):
     if recognized is not None:
         groups, joined = recognized
         return groups, {"status": "needs_review" if joined else "pass", "source_signature": word_source_signature(rows),
+                        "word_signature": word_source_signature(rows, phrase_text=False),
                         "joined_boundaries": joined, "word_count": len(rows),
                         "policy": "recognition_phrases_and_punctuation_preserved; acoustic_words_timing_and_labels_unchanged"}
     groups = group_word_rows_by_speaker(rows)
@@ -128,6 +132,7 @@ def group_dialogue_words(rows, nlp, joiner):
             groups.append({"words": texts[left:right], "speaker": next(iter(labels)) if len(labels) == 1 else None,
                            "acoustic_speakers": sorted(label for label in labels if label)})
     report = {"status": "needs_review" if joined else "pass", "source_signature": word_source_signature(rows),
+              "word_signature": word_source_signature(rows, phrase_text=False),
               "joined_boundaries": joined, "word_count": len(rows),
               "policy": "lexical_text_join_only; acoustic_words_timing_and_labels_unchanged"}
     return groups, report
@@ -140,7 +145,10 @@ def is_lexically_joined_span(rows, start, end, report_path=BOUNDARY_REPORT):
         return False
     report = json.loads(path.read_text(encoding="utf-8"))
     if report.get("source_signature") != word_source_signature(rows):
-        # On resume, refresh signature if structure matches
+        # On resume only the recognizer's phrase text may differ (re-recognition, spacing, punctuation):
+        # the measured words must be exactly the ones the joins were recorded for.
+        if "word_signature" in report and report["word_signature"] != word_source_signature(rows, phrase_text=False):
+            raise ValueError("Lexical boundary review source changed; rebuild the review")
         report["source_signature"] = word_source_signature(rows)
         try:
             path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

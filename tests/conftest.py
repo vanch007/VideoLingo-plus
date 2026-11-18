@@ -28,6 +28,8 @@ def isolated_asset_cache(monkeypatch, tmp_path_factory):
 TEST_CONFIG_OVERRIDES = {
     "quality_mode": "high_sync",
     "fast_mode.enabled": False,
+    # Thresholds of the repair/rescue classification tests (the live config tunes the speed cap higher).
+    "dubbing_quality.max_speed_factor": 1.08,
 }
 
 

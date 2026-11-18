@@ -99,9 +99,11 @@ def test_recognition_phrases_and_punctuation_survive_identical_acoustic_labels()
              "recognition_text": "什么？"}]
     groups, _ = group_dialogue_words(rows, SimpleNamespace(), "")
     assert [g["source_text"] for g in groups] == ["这是惊喜！", "什么？"]
+    # A phrase whose words no longer spell it (partial recovery) falls back to the measured words
+    # instead of publishing text the audio alignment does not support.
     rows[0]["text"] += "什"
-    with pytest.raises(ValueError, match="differ from"):
-        group_dialogue_words(rows, SimpleNamespace(), "")
+    groups, _ = group_dialogue_words(rows, SimpleNamespace(), "")
+    assert [g["source_text"] for g in groups] == ["这是惊喜什", "什么？"]
 
 
 def test_recognized_source_units_bypass_comma_and_llm_splitting(tmp_path, monkeypatch):

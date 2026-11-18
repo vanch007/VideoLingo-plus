@@ -174,6 +174,9 @@ def test_existing_translation_requires_speaker_columns_and_profiles(tmp_path, mo
     monkeypatch.setattr(step4_2_translate_all, "TRANSLATION_RESULTS_FILE", str(result_path))
     monkeypatch.setattr(step4_2_translate_all, "TERMINOLOGY_FILE", str(terminology_path))
     terminology_path.write_text(json.dumps({"speaker_profiles": [{"speaker_id": "S01"}]}))
+    # The saved translation must also cover exactly the current speaker-aware source rows.
+    monkeypatch.setattr(step4_2_translate_all, "load_speaker_aware_rows",
+                        lambda: (pd.DataFrame({"Source": ["Hello"]}), None))
     pd.DataFrame({"Source": ["Hello"], "Translation": ["你好"]}).to_excel(result_path, index=False)
 
     assert step4_2_translate_all.existing_translation_is_speaker_aware() is False
@@ -187,6 +190,9 @@ def test_existing_translation_requires_speaker_columns_and_profiles(tmp_path, mo
         }
     ).to_excel(result_path, index=False)
     assert step4_2_translate_all.existing_translation_is_speaker_aware() is True
+    monkeypatch.setattr(step4_2_translate_all, "load_speaker_aware_rows",
+                        lambda: (pd.DataFrame({"Source": ["Hello", "More"]}), None))
+    assert step4_2_translate_all.existing_translation_is_speaker_aware() is False  # row count drifted
 
 
 def test_stt_correction_rejects_character_count_drift():

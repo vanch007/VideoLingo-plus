@@ -157,14 +157,19 @@ def test_chinese_homura_name_identity_and_semantics_still_gate_candidates(tmp_pa
         assert '__VLNAME_' not in candidate and 'Epidemic sounds' in candidate
         return {'equivalent': alteration != 'wrong_meaning', 'issues': ['different action']}
     args = ('And for Epidemic sounds, it is the same.', current, data, '', provider())
-    if alteration == 'none':
-        assert ht.propose_homura_translation(*args, target_language='zh',
-            validate_text=lambda _: {'status': 'success'}, audit_candidate=audit) == 'Epidemic sounds也一样。'
-    else:
+    if alteration == 'wrong_meaning':
         with pytest.raises(ht.NoSafeHomuraCandidate):
             ht.propose_homura_translation(*args, target_language='zh',
                 validate_text=lambda _: {'status': 'success'}, audit_candidate=audit)
-    assert bool(audited) == (alteration in {'none', 'wrong_meaning'})
+    else:
+        result = ht.propose_homura_translation(*args, target_language='zh',
+            validate_text=lambda _: {'status': 'success'}, audit_candidate=audit)
+        # Placeholder drift (missing or repeated) is repaired by the name guard, never published as drift:
+        # the protected name appears exactly once, and the repaired text still goes through the audit.
+        assert result.count('Epidemic sounds') == 1 and '也一样' in result
+        if alteration == 'none':
+            assert result == 'Epidemic sounds也一样。'
+    assert audited
 
 
 def test_source_changed_homura_candidate_is_rejected_before_semantic_or_audio_acceptance(tmp_path,monkeypatch):

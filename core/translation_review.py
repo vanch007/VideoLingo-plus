@@ -104,8 +104,13 @@ def is_valid_target_language(text: str, target_lang: str) -> bool:
         cjk_han = len(re.findall(r"[㐀-鿿]", text_clean))
         if foreign > 4 or (cjk_han > 0 and foreign > cjk_han * 0.3):
             return False
-        has_digits_or_latin = bool(re.search(r"[0-9a-zA-Z]", text_clean))
-        return bool(re.search(r"[㐀-鿿]", text_clean)) or has_digits_or_latin
+        if re.search(r"[㐀-鿿]", text_clean):
+            return True
+        # No Chinese at all: only a display name or a number may stand alone. An untranslated clause
+        # ("cost me money.") is not a Chinese rendering.
+        words = re.findall(r"[A-Za-z0-9]+(?:['’.\-][A-Za-z0-9]+)*", text_clean)
+        name_like = bool(words) and len(words) <= 6 and all(w[0].isupper() or w[0].isdigit() for w in words)
+        return name_like
     elif lang.startswith("vi"):
         # Allow parenthetical source terms or proper nouns, but require predominantly Latin/Vietnamese characters
         clean_no_paren = re.sub(r"\([^)]*\)", "", text_clean)

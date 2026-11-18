@@ -47,7 +47,8 @@ def test_ledger_reuse_identity_audio_and_persistent_retry_budget(tmp_path):
     assert not ledger.reusable('u',{**identity,'model':'changed'})
     sf.write(p,np.zeros(24000),24000)
     assert not ledger.reusable('u',identity)
-    ledger.reserve('u',identity);ledger.reserve('u',identity)
+    from core.fast_audio_cache import MAX_ATTEMPTS
+    for _ in range(MAX_ATTEMPTS): ledger.reserve('u',identity)
     with pytest.raises(RuntimeError,match='exhausted'): AudioLedger(ledger.path).reserve('u',identity)
 
 
@@ -92,9 +93,9 @@ def test_web_fast_profile_and_resume_are_explicit(tmp_path,monkeypatch):
     monkeypatch.setattr(job,'prepare_workspace',lambda p:w)
     monkeypatch.setattr(job,'JOB_FILE',tmp_path/'job.json')
     monkeypatch.setattr(job.subprocess,'Popen',lambda *a,**kw:SimpleNamespace(pid=99))
-    cmd=job.start_pipeline_job('test.mp4',profile='fast')['command']
+    cmd=job.start_pipeline_job('test.mp4',profile='fast',workspace=w)['command']
     assert cmd[cmd.index('--profile')+1]=='fast'
-    atomic_json(w/'output/pipeline_state.json',{'profile':'fast','source':'en','target':'zh'})
+    atomic_json(w/'output/pipeline_state.json',{'profile':'fast','source':'en','target':'zh','status':'failed'})
     cmd=job.start_pipeline_job('test.mp4',workspace=w)['command']
     assert cmd[cmd.index('--profile')+1]=='fast'
     with pytest.raises(ValueError,match='cannot change'):

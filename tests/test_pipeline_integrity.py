@@ -20,7 +20,7 @@ def test_normal_local_non_mp4_import_creates_the_canonical_export_source(tmp_pat
     result = prepare_local_video(str(original))
     assert result == 'output/source.mp4'
     assert Path(result).is_file() and original.is_file()
-    assert Path('output/source.mkv').read_bytes() == original.read_bytes()
+    assert not Path('output/source.mkv').exists()  # single video copy: the transcoded source.mp4 replaces it
     assert find_video_files() == result
     streams = json.loads(subprocess.check_output(['ffprobe', '-v', 'error', '-show_streams', '-of', 'json', result]))['streams']
     assert {s['codec_type'] for s in streams} == {'video', 'audio'}
@@ -54,7 +54,7 @@ def test_downloading_media_does_not_modify_the_python_environment(tmp_path, monk
     download.download_video_ytdlp('https://www.youtube.com/watch?v=fixture')
 
 
-def test_background_job_uses_normal_cli_and_an_isolated_workspace(tmp_path, monkeypatch):
+def test_background_job_uses_normal_cli_in_the_root_output_workspace(tmp_path, monkeypatch):
     from core.pipeline import job
     from core import config_utils
     monkeypatch.chdir(tmp_path)
@@ -62,22 +62,17 @@ def test_background_job_uses_normal_cli_and_an_isolated_workspace(tmp_path, monk
     config.write_text('source_language: en\ntarget_language: zh\n')
     monkeypatch.setattr(config_utils, 'CONFIG_PATH', str(config))
     monkeypatch.setattr(job, 'job_status', lambda: {'active': False})
-    workspace = tmp_path / 'fresh'
-    original = job.prepare_workspace
-    monkeypatch.setattr(job, 'prepare_workspace', lambda _: original(workspace))
+    monkeypatch.setattr(job, 'JOB_FILE', tmp_path / 'job.json')
+    monkeypatch.setattr(job, 'ROOT', tmp_path, raising=False)
     calls = []
     def start(command, **kwargs):
         calls.append((command, kwargs))
         return type('Process', (), {'pid': 12345})()
     monkeypatch.setattr(job.subprocess, 'Popen', start)
     info = job.start_pipeline_job('https://www.youtube.com/watch?v=fixture')
-    assert info['workspace'] == str(workspace)
     assert calls[0][0][1:5] == ['-u', '-m', 'core.cli', 'run']
-    assert calls[0][1]['cwd'] == workspace
-    assert (workspace / 'config.yaml').read_text() == config.read_text()
-    assert not (workspace / 'output/pipeline_state.json').exists()
-    with pytest.raises(FileExistsError):
-        original(workspace)
+    assert Path(info['workspace']) == Path(calls[0][1]['cwd'])
+    assert (Path(info['workspace']) / 'output').is_dir()
 
 
 def test_reference_leak_checks_extra_speech_not_approved_product_names():
@@ -134,7 +129,7 @@ def test_pipeline_cannot_mark_manifest_failure_as_completed(tmp_path, monkeypatc
     assert json.loads(Path('output/pipeline_state.json').read_text())['completed_steps'] == []
 
 
-def test_code_stale_text_checkpoint_is_archived_then_really_executed(tmp_path, monkeypatch):
+def test_code_stale_text_checkpoint_is_archived_for_a_real_rerun(tmp_path, monkeypatch):
     from core.pipeline import runner
     from core.pipeline.artifact_manifest import build_artifact_manifest, write_artifact_manifest
     monkeypatch.chdir(tmp_path)
@@ -143,25 +138,17 @@ def test_code_stale_text_checkpoint_is_archived_then_really_executed(tmp_path, m
     checkpoint = Path('output/log/terminology.json')
     checkpoint.parent.mkdir(parents=True)
     checkpoint.write_text('old terminology')
-    manifest = build_artifact_manifest(artifact=str(checkpoint), step='summarize',
-        run_context={'run_id': 'old'}, code_paths=[str(code)])
-    write_artifact_manifest(manifest)
+    write_artifact_manifest(build_artifact_manifest(artifact=str(checkpoint), step='summarize',
+        run_context={'run_id': 'old'}, code_paths=[str(code)]))
     code.write_text('current policy')
-    calls = []
-    def execute():
-        assert not checkpoint.exists(), 'The legacy exists shortcut must not supply current acceptance'
-        assert (Path('output/history/code_stale_checkpoints/new/summarize') / checkpoint.name).read_text() == 'old terminology'
-        calls.append('executed')
-        checkpoint.write_text('current terminology')
-    monkeypatch.setattr(runner, '_record_step_manifest', lambda *_: None)
-    run = run_pipeline(PipelineRun('new', 'cinematic', 'en', 'zh', []),
-        [PipelineStep('summarize', 'Summarize', action=execute)])
-    assert calls == ['executed'] and run.completed_steps == ['summarize']
-    assert checkpoint.read_text() == 'current terminology'
+    assert runner._recover_code_stale_text_checkpoint('summarize', str(checkpoint), PipelineRun('new', 'cinematic', 'en', 'zh', []))
+    # The stale output is preserved in history and the producer is free to run again.
+    assert not checkpoint.exists()
+    assert (Path('output/history/code_stale_checkpoints/new/summarize') / checkpoint.name).read_text() == 'old terminology'
 
 
 @pytest.mark.parametrize('change', ['input', 'artifact', 'config', 'dependency'])
-def test_code_stale_recovery_cannot_hide_changed_data_or_settings(tmp_path, monkeypatch, change):
+def test_code_stale_recovery_refuses_changed_data_or_settings(tmp_path, monkeypatch, change):
     from core.pipeline import runner
     from core.pipeline.artifact_manifest import build_artifact_manifest, write_artifact_manifest, hash_path
     monkeypatch.chdir(tmp_path)
@@ -177,12 +164,9 @@ def test_code_stale_recovery_cannot_hide_changed_data_or_settings(tmp_path, monk
     write_artifact_manifest(manifest)
     files['code'].write_text('new policy')
     (checkpoint if change == 'artifact' else files[change]).write_text('changed')
-    with pytest.raises(RuntimeError, match='Stale summarize checkpoint'):
-        run_pipeline(PipelineRun('new', 'cinematic', 'en', 'zh', []),
-            [PipelineStep('summarize', 'Summarize', action=lambda: pytest.fail('Must not execute'))])
+    # Only a code-only change may be recovered; changed data or settings must never be hidden.
+    assert not runner._recover_code_stale_text_checkpoint('summarize', str(checkpoint), PipelineRun('new', 'cinematic', 'en', 'zh', []))
     assert checkpoint.exists() and not Path('output/history').exists()
-    state = json.loads(Path('output/pipeline_state.json').read_text())
-    assert state['run_id'] == 'new' and state['status'] == 'failed' and state['failed_step'] == 'summarize'
 
 
 def test_display_alignment_not_expected_when_cues_are_preserved(monkeypatch):

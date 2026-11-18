@@ -54,11 +54,14 @@ def test_timeline_rejects_distant_repeated_match_when_similarity_is_not_strong()
     assert timestamps[2][0] < 12.0
 
 
-def test_timeline_rejects_sentence_crossing_speaker_boundary(monkeypatch):
+def test_sentence_crossing_speaker_boundary_resolves_to_the_majority_speaker(monkeypatch):
+    # A sentence spanning two acoustic labels no longer fails the pipeline; it takes the majority label
+    # (a lexically joined span would carry no speaker at all).
     monkeypatch.setattr("core.dialogue_segmentation.is_lexically_joined_span", lambda *a, **k: False)
     words = _word_df("甲乙丙丁")
-    words.loc[2:, "speaker"] = "S02"
+    words.loc[1:, "speaker"] = "S02"
     sentences = pd.DataFrame({"Source": ["甲乙丙丁"]})
 
-    with pytest.raises(ValueError, match="crossed a speaker boundary"):
-        get_sentence_timestamps(words, sentences)
+    timestamps = get_sentence_timestamps(words, sentences)
+
+    assert len(timestamps) == 1 and timestamps[0][2] == "S02"

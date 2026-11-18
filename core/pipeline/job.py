@@ -85,12 +85,14 @@ def start_pipeline_job(input_value, *, profile=None, subtitle_only=False, no_sub
         run_id = time.strftime('%Y%m%d-%H%M%S') + '-' + uuid.uuid4().hex[:6]
         if not str(input_value).startswith(('http://', 'https://')):
             input_value = str(Path(input_value).resolve())
-        # Run directly in root / output workspace as requested
-        workspace = root.resolve()
+        # Run directly in the root / output workspace unless the caller names another one.
+        workspace = Path(workspace).resolve() if workspace else root.resolve()
         (workspace / 'output').mkdir(parents=True, exist_ok=True)
         w_state = workspace / 'output/pipeline_state.json'
         state = json.loads(w_state.read_text()) if w_state.is_file() else {}
         is_resume = workspace is not None and w_state.is_file() and state.get('status') in {'failed', 'interrupted', 'paused'}
+        if is_resume and profile and state.get("profile") and profile != state["profile"]:
+            raise ValueError(f"A resumable run cannot change its profile ({state['profile']} -> {profile}); start a fresh workspace")
         active_profile = profile or state.get("profile") or {"fast": "fast", "high_sync": "cinematic", "subtitle": "subtitle"}.get(
             load_key("quality_mode", "fast"), "fast")
         

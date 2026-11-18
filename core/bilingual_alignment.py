@@ -766,6 +766,9 @@ def translate_source_partition(source, target_language, context, budget):
             return status
         words = lambda text: re.findall(r"\w+(?:['’]\w+)*", text, re.UNICODE)
         for key, original in zip(map(str, range(1, len(sources) + 1)), sources):
+            no_han = not re.search(r'[\u3400-\u9fff]', data[key])
+            if key in name_fragments and no_han and words(data[key]) != words(original):
+                return {'status': 'error', 'message': f'Row {key} is a source proper name; keep its exact spelling'}
             if not is_valid_target_language(data[key], target_language):
                 if key not in name_fragments or words(data[key]) != words(original):
                     return {'status': 'error', 'message': f'Invalid target-language fragment at row {key}; only an exact source proper name may remain verbatim'}

@@ -179,9 +179,12 @@ def test_long_dialogue_cuts_clauses_at_measured_words():
     assert all(u["split_basis"] in {"clause", "sentence", "parent"} for u in plan["units"])
 
 
-def test_long_unpunctuated_text_requires_review_instead_of_character_slicing():
-    with pytest.raises(ValueError, match="no punctuation/pause"):
-        source_plan("我愿意等你三天然后再出城剿匪", step=.5, max_seconds=5.5)
+def test_long_unpunctuated_text_is_cut_only_at_measured_word_boundaries():
+    plan = source_plan("我愿意等你三天然后再出城剿匪", step=.5, max_seconds=5.5)
+    assert len(plan["units"]) == 2
+    assert max(u["source_duration"] for u in plan["units"]) <= 5.5
+    assert "".join(u["source"] for u in plan["units"]) == plan["parents"][0]["source"]  # nothing sliced away
+    assert {u["split_basis"] for u in plan["units"]} == {"parent"}
 
 
 def test_complete_sentence_keeps_its_shared_budget_before_display_splitting():

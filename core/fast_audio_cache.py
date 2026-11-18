@@ -67,6 +67,9 @@ def request_identity(request, model):
                 reference_text=request.ref_text, native_fit=False)
 
 
+MAX_ATTEMPTS = 5  # synthesis attempts per unit and identity before the ledger refuses another
+
+
 class AudioLedger:
     def __init__(self, path='output/log/fast_audio_cache.json'):
         self.path = Path(path)
@@ -87,6 +90,6 @@ class AudioLedger:
 
     def reserve(self, key, identity):
         token = digest([key, identity]); count = self.data['attempts'].get(token, 0)
-        if count >= 5: raise RuntimeError(f'Fast synthesis attempts exhausted: {key}')
+        if count >= MAX_ATTEMPTS: raise RuntimeError(f'Fast synthesis attempts exhausted: {key}')
         self.data['attempts'][token] = count + 1
         self.save()

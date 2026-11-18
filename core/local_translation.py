@@ -141,6 +141,10 @@ class TranslationNameGuard:
             for b in self.bindings.get(key, []):
                 t_token = b['token']
                 if t_token not in text and b['display'] not in text:
+                    row_names = ''.join(re.sub(r'\W+', '', x['display']) for x in self.bindings.get(key, []))
+                    if re.sub(r'\W+', '', self.lines[int(key) - 1]).casefold() == row_names.casefold():
+                        # The row IS the protected name and the model replaced it: nothing to repair around.
+                        raise ValueError(f"Row {key} must keep its protected name {b['display']!r}")
                     if b['display'].casefold() in text.casefold():
                         raise ValueError(f"Keep the source spelling of protected name {b['display']!r} in row {key}")
                     text = text.rstrip("。，,. ") + " " + t_token
