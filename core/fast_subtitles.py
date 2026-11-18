@@ -8,6 +8,8 @@ import re
 import pandas as pd
 from rich import print as rprint
 
+from core.subtitle_layout import compute_subtitle_line_limits, probe_video_dimensions
+from core.subtitle_measure import atoms, break_lines, has_cjk
 from core.timing_utils import seconds_to_srt_time
 
 
@@ -34,29 +36,15 @@ def _split_text_by_punctuation(text: str, is_cjk: bool = True) -> list[str]:
 
 
 def _tokens(text: str) -> list[str]:
-    # Spaces travel with the next complete Latin word. CJK never tears Latin names.
-    return re.findall(r"\s*(?:[A-Za-z0-9]+(?:[’'._-][A-Za-z0-9]+)*|[^\s])", text.strip())
+    # Unbreakable display atoms (see core/subtitle_measure): whole Latin words, names that
+    # travel together inside CJK text, phrase-level CJK units, punctuation attached.
+    return atoms(text)
 
 
 def _lines(text: str, cap: int) -> list[str]:
-    lines, current = [], ""
-    for token in _tokens(text):
-        token_s = token.strip()
-        if len(token_s) > cap:
-            # Wrap excessively long unbreakable word chunks instead of hard failing
-            if current.strip():
-                lines.append(current.strip())
-                current = ""
-            for sub in [token_s[i:i+cap] for i in range(0, len(token_s), cap)]:
-                lines.append(sub)
-            continue
-        if current and len((current + token).strip()) > cap:
-            lines.append(current.strip())
-            current = ""
-        current += token
-    if current.strip():
-        lines.append(current.strip())
-    return lines
+    # Width-aware, balanced rows within `cap` characters; an unbreakable token raises
+    # ValueError instead of being cut or torn.
+    return break_lines(text, cap)
 
 
 def _wrap_lines(text: str, max_chars: int = 22, max_lines: int = 2, is_cjk: bool = True) -> str:
@@ -80,7 +68,9 @@ def _refine(parts: list[str], count: int, cap: int) -> list[str]:
     while len(parts) < count:
         candidates = [(len(_tokens(p)), i) for i, p in enumerate(parts) if len(_tokens(p)) > 1]
         if not candidates:
-            char_candidates = [(len(p.strip()), i) for i, p in enumerate(parts) if len(p.strip()) > 1]
+            # Only CJK text may be cut between glyphs; a Latin word or name is never torn.
+            char_candidates = [(len(p.strip()), i) for i, p in enumerate(parts)
+                               if len(p.strip()) > 1 and has_cjk(p)]
             if not char_candidates:
                 while len(parts) < count:
                     parts.append('')
@@ -98,7 +88,19 @@ def _refine(parts: list[str], count: int, cap: int) -> list[str]:
     return parts
 
 
-def build_cues(tts_results: list[dict]) -> list[dict]:
+def _resolve_line_caps(
+    *, width: int | None = None, height: int | None = None, is_portrait: bool | None = None
+) -> tuple[int, int]:
+    if width is not None and height is not None:
+        return compute_subtitle_line_limits(width, height)
+    if is_portrait is True:
+        return 14, 24
+    dims = probe_video_dimensions()
+    return compute_subtitle_line_limits(*(dims or (None, None)))
+
+
+def build_cues(tts_results: list[dict], *, width: int | None = None, height: int | None = None, is_portrait: bool | None = None) -> list[dict]:
+    cjk_cap, latin_cap = _resolve_line_caps(width=width, height=height, is_portrait=is_portrait)
     cues = []
     for row in tts_results:
         source, target = str(row.get("origin", "")).strip(), str(row.get("text", "")).strip()
@@ -109,7 +111,7 @@ def build_cues(tts_results: list[dict]) -> list[dict]:
             raise ValueError("Invalid subtitle clock")
         src_cjk = bool(re.search(r"[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]", source))
         tgt_cjk = bool(re.search(r"[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]", target))
-        src_cap, tgt_cap = (22 if src_cjk else 42), (22 if tgt_cjk else 42)
+        src_cap, tgt_cap = (cjk_cap if src_cjk else latin_cap), (cjk_cap if tgt_cjk else latin_cap)
         aa, bb = _display_parts(source, src_cap), _display_parts(target, tgt_cap)
         count = max(len(aa), len(bb))
         aa, bb = _refine(aa, count, src_cap), _refine(bb, count, tgt_cap)
@@ -129,15 +131,17 @@ def build_cues(tts_results: list[dict]) -> list[dict]:
     return cues
 
 
-def build_fast_subtitles(tts_results: list[dict], cum_extension: float = 0.0) -> None:
+def build_fast_subtitles(tts_results: list[dict], cum_extension: float = 0.0, *, width: int | None = None, height: int | None = None, is_portrait: bool | None = None) -> None:
     out_dir = Path("output")
     audio_dir = out_dir / "audio"
     audio_dir.mkdir(parents=True, exist_ok=True)
-    cues = build_cues(tts_results)
+    cjk_cap, latin_cap = _resolve_line_caps(width=width, height=height, is_portrait=is_portrait)
+    cues = build_cues(tts_results, width=width, height=height, is_portrait=is_portrait)
     import json
     (out_dir / "log").mkdir(exist_ok=True)
     (out_dir / "log/fast_subtitle_coverage.json").write_text(json.dumps({
         "policy": "fast-v2", "status": "pass", "units": len(tts_results), "cues": cues,
+        "layout_limits": [cjk_cap, latin_cap],
         "basis": "exact_ordered_text_coverage_and_display_bounds",
     }, ensure_ascii=False, indent=2))
 

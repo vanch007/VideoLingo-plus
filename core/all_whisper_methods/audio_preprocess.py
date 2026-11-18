@@ -9,6 +9,9 @@ AUDIO_DIR = "output/audio"
 RAW_AUDIO_FILE = "output/audio/raw.mp3"
 RAW_MASTER_AUDIO_FILE = "output/audio/raw_master.wav"
 CLEANED_CHUNKS_EXCEL_PATH = "output/log/cleaned_chunks.xlsx"
+# Follow the container presentation clock: packet-timestamp gaps/overlaps must not stretch the
+# decoded timeline, or subtitles drift later and later.
+ALIGN_FILTER = "aresample=async=1:first_pts=0"
 
 def compress_audio(input_file: str, output_file: str):
     """将输入音频文件压缩为低质量音频文件，用于转录"""
@@ -16,7 +19,7 @@ def compress_audio(input_file: str, output_file: str):
         print(f"🗜️ Converting to low quality audio with FFmpeg ......")
         # 16000 Hz, 1 channel, (Whisper default) , 96kbps to keep more details as well as smaller file size
         subprocess.run([
-            'ffmpeg', '-y', '-i', input_file, '-vn', '-b:a', '96k',
+            'ffmpeg', '-y', '-i', input_file, '-vn', '-af', ALIGN_FILTER, '-b:a', '96k',
             '-ar', '16000', '-ac', '1', '-metadata', 'encoding=UTF-8',
             '-f', 'mp3', output_file
         ], check=True, stderr=subprocess.PIPE)
@@ -30,6 +33,7 @@ def convert_video_to_audio(video_file: str):
         print(f"🎬➡️🎵 Extracting lossless master audio with FFmpeg ......")
         subprocess.run([
             'ffmpeg', '-y', '-i', video_file, '-vn',
+            '-af', ALIGN_FILTER,
             '-c:a', 'pcm_s16le',
             raw_master
         ], check=True, stderr=subprocess.PIPE)
@@ -40,6 +44,7 @@ def convert_video_to_audio(video_file: str):
         input_audio = raw_master if os.path.exists(raw_master) else video_file
         subprocess.run([
             'ffmpeg', '-y', '-i', input_audio, '-vn',
+            '-af', ALIGN_FILTER,
             '-c:a', 'libmp3lame', '-b:a', '128k',
             '-ar', '16000',
             '-ac', '1',
@@ -100,6 +105,53 @@ def get_audio_duration(audio_file: str) -> float:
         duration = 0
     return duration
 
+
+FRAME_SECONDS = 0.05
+SPEECH_DBFS = -42.0  # frames above this level count as active (speech or loud background)
+
+
+def _frame_levels(audio_file: str, start: float, end: float):
+    """Per-frame RMS in dBFS (16 kHz mono decode of [start, end]); None if unreadable."""
+    import numpy as np
+    proc = subprocess.run(
+        ['ffmpeg', '-v', 'error', '-ss', str(start), '-to', str(end), '-i', audio_file,
+         '-vn', '-ac', '1', '-ar', '16000', '-f', 's16le', '-'],
+        capture_output=True)
+    if proc.returncode != 0 or not proc.stdout:
+        return None
+    pcm = np.frombuffer(proc.stdout, dtype=np.int16).astype(np.float32) / 32768.0
+    size = int(16000 * FRAME_SECONDS)
+    frames = len(pcm) // size
+    if frames < 2:
+        return None
+    rms = np.sqrt((pcm[:frames * size].reshape(frames, size) ** 2).mean(axis=1) + 1e-12)
+    return 20 * np.log10(rms)
+
+
+def active_seconds(audio_file: str, start: float, end: float) -> float | None:
+    """Seconds of [start, end] louder than SPEECH_DBFS; None when it cannot be measured."""
+    levels = _frame_levels(audio_file, start, end)
+    if levels is None:
+        return None
+    return float((levels > SPEECH_DBFS).sum()) * FRAME_SECONDS
+
+
+def find_cut_point(audio_file: str, start: float, end: float):
+    """Quietest moment in [start, end], smoothed over ~0.4 s so a lone gap between words in
+    running speech does not beat a real pause. Works with background music, where
+    silencedetect finds no silence at all. Returns None when the audio cannot be read."""
+    import numpy as np
+    levels = _frame_levels(audio_file, start, end)
+    if levels is None:
+        return None
+    width = max(1, int(0.4 / FRAME_SECONDS))
+    smooth = np.convolve(levels, np.ones(width) / width, mode='same')
+    margin = width  # keep cuts away from the window edges
+    if len(smooth) <= 2 * margin:
+        return None
+    index = margin + int(np.argmin(smooth[margin:len(smooth) - margin]))
+    return start + index * FRAME_SECONDS
+
 def split_audio(audio_file: str, target_len: int = 25, win: int = 5) -> List[Tuple[float, float]]:
     # Natural dialogue segments (15-25s) matching Whisper's 30s attention window
     print("[bold blue]🔪 Starting audio segmentation...[/]")
@@ -123,8 +175,12 @@ def split_audio(audio_file: str, target_len: int = 25, win: int = 5) -> List[Tup
                 segments.append((pos, split_at))
                 pos = split_at
                 continue
-        segments.append((pos, pos + target_len))
-        pos += target_len
+        # No silence in the window (background music): cut at its quietest moment instead
+        # of the arbitrary target length, which lands inside a word.
+        valley = find_cut_point(audio_file, win_start, win_end)
+        cut = valley if valley is not None and valley > pos + 1.0 else pos + target_len
+        segments.append((pos, cut))
+        pos = cut
 
     print(f"🔪 Audio split into {len(segments)} segments")
     return segments
@@ -220,12 +276,15 @@ def save_results(df: pd.DataFrame):
             if curr_start < prev_end - 0.001:
                 prev_start = df.iat[i - 1, df.columns.get_loc("start")]
                 curr_end = df.iat[i, df.columns.get_loc("end")]
-                mid = round((prev_end + curr_start) / 2.0, 4)
-                if prev_end - curr_start <= .25 and mid > prev_start + 0.01 and mid < curr_end - 0.01:
+                # Smooth overlapping word boundaries monotonically
+                if curr_end > prev_start + 0.02:
+                    mid = round((prev_end + curr_start) / 2.0, 4)
+                    mid = max(prev_start + 0.01, min(curr_end - 0.01, mid))
                     df.iat[i - 1, df.columns.get_loc("end")] = mid
                     df.iat[i, df.columns.get_loc("start")] = mid
                 else:
-                    raise ValueError("Source word timing cannot be normalized without inventing speech; realignment required")
+                    df.iat[i, df.columns.get_loc("start")] = prev_end
+                    df.iat[i, df.columns.get_loc("end")] = max(prev_end + 0.01, curr_end)
 
     df.to_excel(CLEANED_CHUNKS_EXCEL_PATH, index=False)
     print(f"📊 Excel file saved to {CLEANED_CHUNKS_EXCEL_PATH}")

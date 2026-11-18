@@ -88,6 +88,8 @@ source_language: en
 target_language: zh
 demucs: true
 demucs_model: htdemucs
+# Separate files longer than 1.5x this many seconds in chunks (bounded memory); 0 = whole file at once
+demucs_chunk_seconds: 0
 background_volume: 1.0
 audio_mix:
   preserve_original_non_speech: false
@@ -162,10 +164,12 @@ translation_context:
   batch_max_chars: 2000
   role_batch_max_lines: 10
 burn_subtitles: true
+# Burned-in subtitle renderer: 'ass' stacks the source above the translation rows actually shown; 'srt' is the legacy two-filter path
+subtitle_engine: ass
 burn_source_subtitles: true
 burn_bilingual_subtitles: false
 ytb_resolution: '1080'
-cookies_from_browser: chrome
+cookies_from_browser:
 subtitle:
   max_length: 42
   semantic_layout: true
@@ -185,7 +189,11 @@ translation_exact_replacements: {}
 enable_custom_terms: false
 custom_terms_path:
 pause_before_translate: false
-tts_method: mlx_router
+# Pause after the translation so Translation in output/log/translation_results.xlsx can be edited, then resume
+pause_after_translate: false
+# Translation style in your own words, e.g. 'colloquial, short sentences'; empty = none
+translation_style: ''
+tts_method: mlx_indextts2
 quality_mode: fast
 fast_mode:
   enabled: true

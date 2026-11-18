@@ -76,18 +76,19 @@ def merge_subtitles_to_video():
     TARGET_HEIGHT = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
     video.release()
     rprint(f"[bold green]Video resolution: {TARGET_WIDTH}x{TARGET_HEIGHT}[/bold green]")
-    # Adaptive subtitle sizing based on video orientation and LibASS default PlayResY=288
-    is_portrait = TARGET_HEIGHT > TARGET_WIDTH
+    from core.subtitle_layout import compute_subtitle_burn_style
+    layout_style = compute_subtitle_burn_style(TARGET_WIDTH, TARGET_HEIGHT)
+    is_portrait = bool(layout_style["is_portrait"])
     aspect_ratio = TARGET_WIDTH / TARGET_HEIGHT
 
     if is_portrait:
-        # Target 22 Chinese chars and 18 Vietnamese chars per line to fit narrow screens
-        chars_per_line_src = 22
-        chars_per_line_trans = 18
-        bottom_margin_percent = 0.10  # 10% from bottom
-        wrap_lines = 2.5  # Expect up to 2.5 lines of translation
+        src_size = int(layout_style["src_font_size"])
+        trans_size = int(layout_style["font_size"])
+        margin_v = int(layout_style["margin_v"])
+        margin_lr = int(layout_style["margin_lr"])
+        wrap_lines = 2.2
         src_outline = 1
-        trans_outline = 2
+        trans_outline = 1
         rprint("[cyan]📱 Portrait mode: Applying exact aspect-ratio font scaling[/cyan]")
     else:
         # Target standard chars per line for landscape
@@ -97,16 +98,13 @@ def merge_subtitles_to_video():
         wrap_lines = 1.5
         src_outline = SRC_OUTLINE_WIDTH
         trans_outline = TRANS_OUTLINE_WIDTH
+        src_size = int(aspect_ratio * (288 / max(chars_per_line_src, 1)))
+        trans_size = int(aspect_ratio * (288 / max(chars_per_line_trans, 1)))
+        margin_v = int(bottom_margin_percent * 288)
+        margin_lr = 20
         rprint("[cyan]🖥️ Landscape mode: Applying exact aspect-ratio font scaling[/cyan]")
 
-    # Libass defaults to PlayResY=288, PlayResX=384 for standard SRT styling
-    # Formula: FontSize = (TARGET_WIDTH / TARGET_HEIGHT) * (288 / chars_per_line)
-    src_size = int(aspect_ratio * (288 / max(chars_per_line_src, 1)))
-    trans_size = int(aspect_ratio * (288 / max(chars_per_line_trans, 1)))
-
-    margin_v = int(bottom_margin_percent * 288)
-    src_margin_v = margin_v + int(trans_size * wrap_lines) + 5
-    margin_lr = 20 # 20/384 ≈ 5% horizontal margin to force wrapping
+    src_margin_v = margin_v + int(trans_size * wrap_lines) + 6
 
     src_style = (
         f"FontSize={src_size},FontName={FONT_NAME},"
@@ -129,9 +127,19 @@ def merge_subtitles_to_video():
         f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease",
         f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2"
     ]
-    if bool(load_key("burn_source_subtitles", True)):
-        filters.append(f"subtitles='{abs_src_srt}':force_style='{src_style}'")
-    filters.append(f"subtitles='{abs_trans_srt}':force_style='{dub_style}'")
+    if str(load_key("subtitle_engine", "ass")) == "ass":
+        # One ASS script: the source row is stacked above the translation rows actually shown.
+        from core.subtitle_ass import TrackStyle, burn_filter
+        burn_src = bool(load_key("burn_source_subtitles", True))
+        filters.append(burn_filter(
+            TARGET_WIDTH, TARGET_HEIGHT, SRC_SRT if burn_src else None, TRANS_SRT,
+            TrackStyle(FONT_NAME, src_size, SRC_FONT_COLOR, SRC_OUTLINE_COLOR, src_outline, 0, SRC_SHADOW_COLOR, 1, margin_v, margin_lr) if burn_src else None,
+            TrackStyle(TRANS_FONT_NAME, trans_size, TRANS_FONT_COLOR, TRANS_OUTLINE_COLOR, trans_outline, 0, TRANS_BACK_COLOR, 1, margin_v, margin_lr),
+            "output/_subtitle_burn.ass"))
+    else:
+        if bool(load_key("burn_source_subtitles", True)):
+            filters.append(f"subtitles='{abs_src_srt}':force_style='{src_style}'")
+        filters.append(f"subtitles='{abs_trans_srt}':force_style='{dub_style}'")
     from core.subtitle_quality import subtitle_quality_report
     quality = subtitle_quality_report()
     Path("output/log/subtitle_quality.json").write_text(json.dumps(quality, ensure_ascii=False, indent=2), encoding="utf-8")

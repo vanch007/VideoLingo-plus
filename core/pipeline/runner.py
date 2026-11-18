@@ -261,14 +261,18 @@ def run_pipeline(run: PipelineRun, steps: list[PipelineStep], *, resume: bool = 
         if key in {"transcribe", "split_spacy", "split_meaning", "summarize", "translate", "split_subtitle"} and checkpoint and Path(checkpoint).exists():
             if resume and _recover_code_stale_text_checkpoint(key, checkpoint, run):
                 continue
-            # When resuming an unfinished step, clean up the stale partial artifact from the failed step so it can rerun cleanly
+            # When resuming, if a step checkpoint exists and has a valid sidecar or was completed, keep it.
+            # Only clean up the failed/unfinished step's partial artifact so it can rerun cleanly.
             if resume:
                 try:
                     c_path = Path(checkpoint)
-                    if c_path.is_file():
-                        c_path.unlink()
                     from core.pipeline.artifact_manifest import manifest_path_for
                     sidecar = manifest_path_for(c_path)
+                    # If this step is already completed or has valid manifest, do not unlink!
+                    if sidecar.exists():
+                        continue
+                    if c_path.is_file():
+                        c_path.unlink()
                     if sidecar.exists():
                         sidecar.unlink()
                     continue
@@ -281,6 +285,19 @@ def run_pipeline(run: PipelineRun, steps: list[PipelineStep], *, resume: bool = 
             save_state(run)
             raise RuntimeError(run.error)
 
+    try:
+        from core.pipeline.checkpoint import consume_pause
+        reviewed = consume_pause()
+    except ValueError as exc:
+        run.status = "paused"
+        run.error = str(exc)
+        save_state(run)
+        raise
+    if reviewed:
+        run.events.append({'step': 'translate', 'event': 'manual_translation_review', 'time': time.time(), **reviewed})
+        if reviewed["edited_rows"]:
+            _record_step_manifest("translate", run)  # the edited file is the artifact later stages use
+    run.error = None
     run.status = "running"
     save_state(run)
 
@@ -304,6 +321,15 @@ def run_pipeline(run: PipelineRun, steps: list[PipelineStep], *, resume: bool = 
             run.completed_steps.append(step.key)
             run.events.append({'step': step.key, 'event': 'completed', 'time': time.time()})
             save_state(run)
+            from core.pipeline.checkpoint import pause_requested, write_pause
+            if pause_requested(step.key, steps.index(step) + 1 < len(steps)):
+                run.error = write_pause()
+                run.status = "paused"
+                run.current_step = None
+                run.quality_status = "not_evaluated"
+                run.quality_gate_passed = False
+                save_state(run)
+                return run
         except KeyboardInterrupt:
             run.status = 'interrupted'
             run.quality_status = 'not_evaluated'

@@ -19,6 +19,16 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     return print_report()
 
 
+def _cmd_cache(args: argparse.Namespace) -> int:
+    import json
+    from core import asset_cache
+
+    if args.purge:
+        asset_cache.purge(None if args.purge == "all" else args.purge)
+    print(json.dumps(asset_cache.stats(), ensure_ascii=False, indent=2))
+    return 0
+
+
 def _cmd_models(args: argparse.Namespace) -> int:
     from core.providers.provider_governance import list_provider_records
     from core.providers.moss_asr import moss_asr_health
@@ -143,6 +153,12 @@ def _cmd_repair(args: argparse.Namespace) -> int:
         payload["rebuilt_output"] = False
     payload["over_duration_report_path"] = write_over_duration_report()
     print(json.dumps(payload, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_batch(args: argparse.Namespace) -> int:
+    from batch.utils.batch_processor import process_batch
+    process_batch(profile=args.profile, task_sheet=args.sheet)
     return 0
 
 
@@ -348,6 +364,10 @@ def build_parser() -> argparse.ArgumentParser:
     doctor = sub.add_parser("doctor", help="Run environment and service checks")
     doctor.set_defaults(func=_cmd_doctor)
 
+    cache = sub.add_parser("cache", help="Show or purge the cross-task cache of stems and recognized chunks")
+    cache.add_argument("--purge", nargs="?", const="all", metavar="KIND", help="Delete 'demucs', 'asr_chunk' or everything (no task may be running)")
+    cache.set_defaults(func=_cmd_cache)
+
     status = sub.add_parser("status", help="Show pipeline state, artifact checkpoints, and pending steps")
     status.add_argument("--include-dubbing-eval", action="store_true", help="Include current dubbing quality summary")
     status.add_argument("--include-manifests", action="store_true", help="Include non-mutating artifact sidecar manifest audit")
@@ -457,6 +477,11 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark.add_argument("--output", default=None, help="Optional JSON file to write the benchmark plan")
     benchmark.add_argument("--fail-on-missing", action="store_true", help="Exit 2 when dataset/providers are missing")
     benchmark.set_defaults(func=_cmd_benchmark)
+
+    batch = sub.add_parser("batch", help="Run batch processing on tasks_setting.xlsx")
+    batch.add_argument("--profile", choices=["fast", "cinematic", "subtitle", "subtitle_only"], default="fast", help="Execution profile (default: fast)")
+    batch.add_argument("--sheet", default="batch/tasks_setting.xlsx", help="Path to batch tasks excel sheet")
+    batch.set_defaults(func=_cmd_batch)
     return parser
 
 

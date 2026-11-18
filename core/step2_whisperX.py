@@ -105,7 +105,7 @@ def enhance_vocals(vocals_ratio=2.50):
     try:
         print(f"[cyan]🎙️ Enhancing vocals with volume ratio: {vocals_ratio}[/cyan]")
         ffmpeg_cmd = (
-            f'ffmpeg -y -i "{VOCAL_AUDIO_FILE}" '
+            f'ffmpeg -y -i "{_vocal_source()}" '
             f'-filter:a "volume={vocals_ratio}" '
             f'"{ENHANCED_VOCAL_PATH}"'
         )
@@ -115,6 +115,52 @@ def enhance_vocals(vocals_ratio=2.50):
     except subprocess.CalledProcessError as e:
         print(f"[red]Error enhancing vocals: {str(e)}[/red]")
         return VOCAL_AUDIO_FILE  # Fallback to original vocals if enhancement fails
+
+def _vocal_source() -> str:
+    """Prefer the Demucs WAV: its MP3 twin carries encoder priming (~25 ms late)."""
+    wav = os.path.join(os.path.dirname(VOCAL_AUDIO_FILE), "vocal.wav")
+    return wav if os.path.isfile(wav) else VOCAL_AUDIO_FILE
+
+GUARD_MIN_WINDOW_SECONDS = 60.0
+
+
+def _result_text(result: dict) -> str:
+    return "".join(str(seg.get("text", "")) for seg in (result or {}).get("segments", []))
+
+
+def guarded_transcribe(ts, audio: str, start: float, end: float, report: list, depth: int = 0) -> list:
+    """Recognize [start, end]; a looping, sparse or wrong-script chunk is recognized again in
+    smaller windows. A window that stays suspicious at the minimum size is kept (never dropped)
+    and recorded as needs_review in ``report``."""
+    from core.providers.asr_guards import assess
+    from core.runtime_context import effective_source_language
+    from core.all_whisper_methods.audio_preprocess import active_seconds, find_cut_point
+
+    result = ts(audio, start, end)
+    seconds = end - start
+    try:
+        language = effective_source_language("auto")
+    except Exception:
+        language = "auto"
+    text = _result_text(result)
+    speech = active_seconds(audio, start, end) if seconds >= 20 else None
+    reasons = assess(text, seconds, language, speech)
+    if not reasons:
+        return [result]
+    event = {"start": start, "end": end, "reasons": reasons, "depth": depth, "final": False}
+    if seconds / 2 < GUARD_MIN_WINDOW_SECONDS or depth >= 4:
+        event["final"] = True
+        report.append(event)
+        rprint(f"[yellow]⚠️ ASR chunk {start:.1f}-{end:.1f}s suspicious ({', '.join(reasons)}); kept, needs review[/yellow]")
+        return [result]
+    mid = (start + end) / 2
+    cut = find_cut_point(audio, max(start, mid - 15), min(end, mid + 15)) or mid
+    event["retry_at"] = cut
+    report.append(event)
+    rprint(f"[yellow]⚠️ ASR chunk {start:.1f}-{end:.1f}s suspicious ({', '.join(reasons)}); retrying in two windows[/yellow]")
+    return (guarded_transcribe(ts, audio, start, cut, report, depth + 1)
+            + guarded_transcribe(ts, audio, cut, end, report, depth + 1))
+
 
 def transcribe():
     current_fp = source_fingerprint()
@@ -128,7 +174,15 @@ def transcribe():
             except Exception:
                 cached_fp = None
 
-        if cached_fp == current_fp:
+        # If resume from valid checkpoint, allow matching on runtime & model & language
+        fp_match = (cached_fp == current_fp)
+        if not fp_match and cached_fp and isinstance(cached_fp, dict):
+            # Same core ASR configuration and source length
+            keys_to_match = ["model", "runtime", "language", "stable_ts_mlx"]
+            if all(cached_fp.get(k) == current_fp.get(k) for k in keys_to_match):
+                fp_match = True
+
+        if fp_match:
             import pandas as pd
             validate_cached_speaker_rows(pd.read_excel(CLEANED_CHUNKS_EXCEL_PATH).to_dict("records"))
             rprint("[yellow]⚠️ Transcription results matching current model already exist, skipping transcription step.[/yellow]")
@@ -189,21 +243,26 @@ def transcribe():
 
     raw_results = []
     from copy import deepcopy
+    guard_report = []
     for i, (start, end) in enumerate(segments):
         rprint(f"[cyan]📊 Processing segment {i+1}/{len(segments)}: {start:.2f}s to {end:.2f}s[/cyan]")
-        result = ts(whisper_audio, start, end)
-        raw_results.append(deepcopy(result))
-        # Write recognition before normalization, including when timing fails.
-        with open("output/log/asr_raw_results.json", "w", encoding="utf-8") as handle:
-            json.dump(raw_results, handle, ensure_ascii=False, indent=2)
-        if runtime not in {"qwen3-aligned", "local-aligned"}:
-            sanitize_word_timestamps(result)
-        validate_word_timestamps(result, backend=runtime, allow_empty=True)
-        all_results.append(result)
+        for result in guarded_transcribe(ts, whisper_audio, start, end, guard_report):
+            raw_results.append(deepcopy(result))
+            # Write recognition before normalization, including when timing fails.
+            with open("output/log/asr_raw_results.json", "w", encoding="utf-8") as handle:
+                json.dump(raw_results, handle, ensure_ascii=False, indent=2)
+            if runtime not in {"qwen3-aligned", "local-aligned"}:
+                sanitize_word_timestamps(result)
+            validate_word_timestamps(result, backend=runtime, allow_empty=True)
+            all_results.append(result)
 
         # 如果使用 stable-ts，显示当前处理进度
         if runtime == "stable-ts":
             rprint(f"[green]✅ Completed segment {i+1}/{len(segments)} ({(i+1)/len(segments)*100:.1f}%)[/green]")
+
+    with open("output/log/asr_guard_report.json", "w", encoding="utf-8") as handle:
+        json.dump({"status": "needs_review" if any(g["final"] for g in guard_report) else "pass",
+                   "events": guard_report}, handle, ensure_ascii=False, indent=2)
 
     with open("output/log/asr_raw_results.json", "w", encoding="utf-8") as handle:
         json.dump(raw_results, handle, ensure_ascii=False, indent=2)

@@ -68,23 +68,40 @@ TRANS_OUTLINE_WIDTH = 1
 TRANS_BACK_COLOR = '&H33000000'
 # --- End of Styles ---
 
+TRUE_PEAK_CEILING_DBTP = -1.0
+
+
+def loudness_gain_db(integrated_lufs, true_peak_dbtp, target_lufs: float,
+                     ceiling_dbtp: float = TRUE_PEAK_CEILING_DBTP) -> float:
+    """Fixed gain toward target_lufs; the true-peak ceiling wins over the loudness target.
+
+    Unmeasurable (silent / too short) input gets zero gain.
+    """
+    if integrated_lufs is None or true_peak_dbtp is None:
+        return 0.0
+    gain = target_lufs - integrated_lufs
+    return min(gain, ceiling_dbtp - true_peak_dbtp)
+
+
 def normalize_audio_volume(audio_path: str, output_path: str, target_db: float = -20.0):
+    """Two-pass loudness: gated measurement, then one fixed gain (no dynamic compression).
+
+    loudnorm's single-pass mode compresses sentence-to-sentence dynamics, and a whole-file
+    dBFS average is diluted by silence; a fixed gain avoids both. FFmpeg failure raises.
+    """
     target_lufs = float(load_key("dubbing_quality.loudness_target_lufs", -18.0))
+    measured = measure_final_audio_loudness(audio_path)
+    gain = loudness_gain_db(measured["integrated_lufs"], measured["true_peak_dBTP"], target_lufs)
     cmd = [
         get_ffmpeg_binary(), "-y", "-i", audio_path,
-        "-af", f"loudnorm=I={target_lufs}:TP=-1.0:LRA=11",
+        "-af", f"volume={gain:.3f}dB",
         "-c:a", "pcm_s16le", "-ar", "48000", output_path
     ]
     res = subprocess.run(cmd, capture_output=True, text=True)
-    if res.returncode == 0 and os.path.exists(output_path) and os.path.getsize(output_path) > 0:
-        rprint(f"[green]✅ Audio normalized with ffmpeg loudnorm to {target_lufs:.1f} LUFS[/green]")
-        return output_path
-
-    audio = AudioSegment.from_file(audio_path)
-    change_in_dBFS = target_lufs - audio.dBFS
-    normalized_audio = audio.apply_gain(change_in_dBFS)
-    normalized_audio.export(output_path, format="wav")
-    rprint(f"[green]✅ Audio normalized from {audio.dBFS:.1f}dB to {target_lufs:.1f}dB (dBFS fallback)[/green]")
+    if res.returncode != 0 or not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+        raise RuntimeError(f"Dub loudness normalization failed: {res.stderr[-800:]}")
+    rprint(f"[green]✅ Dub loudness {measured['integrated_lufs']} LUFS / {measured['true_peak_dBTP']} dBTP "
+           f"-> fixed gain {gain:+.2f} dB (target {target_lufs:.1f} LUFS, ceiling {TRUE_PEAK_CEILING_DBTP} dBTP)[/green]")
     return output_path
 
 
@@ -500,18 +517,20 @@ def merge_video_audio():
     if burn_subs:
         rprint("[bold green]Pass 1: Burning bilingual subtitles into video...[/bold green]")
 
-        # Adaptive subtitle sizing based on video orientation and LibASS default PlayResY=288
-        is_portrait = TARGET_HEIGHT > TARGET_WIDTH
+        from core.subtitle_layout import compute_subtitle_burn_style
+        layout_style = compute_subtitle_burn_style(TARGET_WIDTH, TARGET_HEIGHT)
+        is_portrait = bool(layout_style["is_portrait"])
         aspect_ratio = TARGET_WIDTH / TARGET_HEIGHT
 
         if is_portrait:
-            # Target 22 Chinese chars and 18 Vietnamese chars per line to fit narrow screens
-            chars_per_line_src = 22
-            chars_per_line_trans = 18
-            bottom_margin_percent = 0.10  # 10% from bottom
-            wrap_lines = 2.5  # Expect up to 2.5 lines of translation
+            src_size = int(layout_style["src_font_size"])
+            trans_size = int(layout_style["font_size"])
+            margin_v = int(layout_style["margin_v"])
+            margin_lr = int(layout_style["margin_lr"])
+            wrap_lines = 2.2
             src_outline = 1
-            trans_outline = 2
+            dub_font_size = trans_size
+            dub_margin_v = margin_v
             rprint("[cyan]📱 Portrait mode: Applying exact aspect-ratio font scaling[/cyan]")
         else:
             # Target standard chars per line for landscape
@@ -520,17 +539,15 @@ def merge_video_audio():
             bottom_margin_percent = 0.08
             wrap_lines = 1.5
             src_outline = SRC_OUTLINE_WIDTH
-            trans_outline = TRANS_OUTLINE_WIDTH
+            src_size = int(aspect_ratio * (288 / max(chars_per_line_src, 1)))
+            trans_size = int(aspect_ratio * (288 / max(chars_per_line_trans, 1)))
+            margin_v = int(bottom_margin_percent * 288)
+            margin_lr = 20
+            dub_font_size = max(trans_size, 14)
+            dub_margin_v = max(margin_v, 16)
             rprint("[cyan]🖥️ Landscape mode: Applying exact aspect-ratio font scaling[/cyan]")
 
-        # Libass defaults to PlayResY=288, PlayResX=384 for standard SRT styling
-        # Formula: FontSize = (TARGET_WIDTH / TARGET_HEIGHT) * (288 / chars_per_line)
-        src_size = int(aspect_ratio * (288 / max(chars_per_line_src, 1)))
-        trans_size = int(aspect_ratio * (288 / max(chars_per_line_trans, 1)))
-
-        margin_v = int(bottom_margin_percent * 288)
-        src_margin_v = margin_v + int(trans_size * wrap_lines) + 5
-        margin_lr = 20 # 20/384 ≈ 5% horizontal margin to force wrapping
+        src_margin_v = dub_margin_v + int(dub_font_size * wrap_lines) + 6
 
         src_style = (
             f"FontSize={src_size},FontName={SRC_FONT_NAME},"
@@ -539,13 +556,11 @@ def merge_video_audio():
             f"MarginL={margin_lr},MarginR={margin_lr},MarginV={src_margin_v}"
         )
         # Single-line cinema style: elegant white text, clear black outline, comfortable bottom margin
-        dub_font_size = max(trans_size, 14)
-        dub_margin_v = max(margin_v, 16)
         dub_style = (
             f"FontSize={dub_font_size},FontName={TRANS_FONT_NAME},"
             f"PrimaryColour=&H00FFFFFF&,OutlineColour=&H000000&,OutlineWidth=1.5,"
             f"ShadowColour=&H80000000&,Alignment=2,BorderStyle=1,"
-            f"MarginL=25,MarginR=25,MarginV={dub_margin_v}"
+            f"MarginL={margin_lr},MarginR={margin_lr},MarginV={dub_margin_v}"
         )
 
         # Use absolute paths to avoid escaping issues
@@ -562,6 +577,15 @@ def merge_video_audio():
         if burn_bilingual:
             rprint("[cyan]�=�� Burning synchronized dubbing bilingual subtitles...[/cyan]")
             filters.append(f"subtitles='{abs_bi_srt}':force_style='{dub_style}'")
+        elif str(load_key("subtitle_engine", "ass")) == "ass":
+            # One ASS script: the source row is stacked above the translation rows actually shown.
+            from core.subtitle_ass import TrackStyle, burn_filter
+            burn_src = bool(load_key("burn_source_subtitles", False)) and os.path.isfile(SRC_SRT)
+            filters.append(burn_filter(
+                TARGET_WIDTH, TARGET_HEIGHT, SRC_SRT if burn_src else None, DUB_SUB_FILE,
+                TrackStyle(SRC_FONT_NAME, src_size, SRC_FONT_COLOR, SRC_OUTLINE_COLOR, src_outline, 0, SRC_SHADOW_COLOR, 1, src_margin_v, margin_lr) if burn_src else None,
+                TrackStyle(TRANS_FONT_NAME, dub_font_size, "&H00FFFFFF", "&H000000", 1.5, 0, "&H80000000", 1, dub_margin_v, margin_lr),
+                "output/_dub_subtitle_burn.ass"))
         else:
             if bool(load_key("burn_source_subtitles", False)) and os.path.isfile(SRC_SRT):
                 filters.append(f"subtitles='{abs_src_srt}':force_style='{src_style}'")

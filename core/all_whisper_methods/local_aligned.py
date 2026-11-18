@@ -75,6 +75,33 @@ def bind_recognition_words(raw_words, segments, start, language):
     return words
 
 
+def _global_key(fingerprint, start, end, cfg):
+    """Cross-task cache key for one chunk, or None when human review shaped the result."""
+    if cfg.get("review_file"):
+        return None
+    from core import asset_cache
+    return asset_cache.make_key(kind="asr_chunk", fingerprint=fingerprint, start=round(start, 3), end=round(end, 3))
+
+
+def _global_get(key):
+    if not key:
+        return None
+    from core import asset_cache
+    hit = asset_cache.lookup("asr_chunk", key, ["receipt.json"])
+    if not hit:
+        return None
+    try:
+        return json.loads(hit["files"]["receipt.json"].read_text())
+    except (OSError, ValueError):
+        return None
+
+
+def _global_put(key, receipt_path):
+    if key and Path(receipt_path).is_file():
+        from core import asset_cache
+        asset_cache.store("asr_chunk", key, {"receipt.json": str(receipt_path)})
+
+
 def transcribe_audio(audio_file: str, start: float, end: float) -> dict:
     from core.runtime_context import effective_source_language
     language = effective_source_language("zh")
@@ -107,6 +134,12 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> dict:
         saved = json.loads(receipt.read_text())
         if saved.get("fingerprint") == fingerprint:
             return saved["result"]
+    global_key = _global_key(fingerprint, start, end, cfg)
+    cached = _global_get(global_key)
+    if cached and cached.get("fingerprint") == fingerprint:
+        receipt.write_text(json.dumps(cached, ensure_ascii=False, indent=2))
+        print(f"♻️ ASR chunk {start:.1f}-{end:.1f}s restored from the cross-task cache")
+        return cached["result"]
     hotwords = Path(str(prefix) + ".hotwords.json")
     hotwords.write_text(json.dumps(cfg.get("hotwords", []), ensure_ascii=False))
     cmd = [str(cfg["python"]), str(project / "scripts/recognize_source_audio.py"),
@@ -135,6 +168,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> dict:
                   "word_timestamp_contract": "acoustic-forced-alignment-80ms",
                   "word_timestamp_count": 0}
         receipt.write_text(json.dumps({"result": result, "fingerprint": fingerprint}, ensure_ascii=False, indent=2))
+        _global_put(global_key, receipt)
         return result
     align_command = [str(cfg["python"]), str(project / "scripts/align_source_audio.py"),
                 "--audio", str(clip.resolve()), "--text-file", str(transcript.resolve()),
@@ -179,4 +213,5 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> dict:
     validate_word_timestamps(data, backend="local-aligned")
     receipt.write_text(json.dumps({"fingerprint": fingerprint, "recognition": raw,
                                   "alignment": alignment_receipt, "result": data}, ensure_ascii=False, indent=2))
+    _global_put(global_key, receipt)
     return data

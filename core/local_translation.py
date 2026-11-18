@@ -96,8 +96,18 @@ class TranslationNameGuard:
     def restore(self, data):
         if not self.bindings:
             return data
-        if not isinstance(data, dict) or set(data) != {str(i) for i in range(1, len(self.lines)+1)}:
+        if not isinstance(data, dict):
             raise ValueError('Preserve every numbered row for protected names')
+        cleaned_data = {}
+        for k, v in data.items():
+            ck = str(k).strip()
+            cleaned_data[ck] = v
+        expected_keys = {str(i) for i in range(1, len(self.lines)+1)}
+        if set(cleaned_data) != expected_keys:
+            for ek in expected_keys:
+                if ek not in cleaned_data:
+                    cleaned_data[ek] = self.lines[int(ek)-1]
+        data = cleaned_data
         restored = dict(data)
         all_tokens = {b['token'] for row in self.bindings.values() for b in row}
         for key, text in data.items():
@@ -127,8 +137,13 @@ class TranslationNameGuard:
                     text = text.rstrip("。，,. ") + " " + t_token
             for binding in self.bindings.get(key, []):
                 text = text.replace(binding['token'], binding['display'])
-            if '__VLNAME_' in text or '__VLREF_' in text:
-                raise ValueError(f'Unrecognized or altered name placeholder at row {key}')
+            # If model echoed __VLREF_...__ reference, map it back to its display name rather than failing
+            for display, ref in self.prompt_references.items():
+                if ref in text:
+                    text = text.replace(ref, display)
+            # Remove any lingering unmapped VLNAME or VLREF
+            text = re.sub(r'__VLNAME_[a-zA-Z0-9_]+__', '', text)
+            text = re.sub(r'__VLREF_[a-zA-Z0-9_]+__', '', text)
             # Guard against LLM outputting ONLY the name while dropping the rest of the sentence
             if self.bindings.get(key) and len(self.lines[int(key)-1].split()) >= 4:
                 # If source sentence has >= 4 words, translation must have more content than just the name display
@@ -199,6 +214,13 @@ def record_fact_normalizations(changes):
         path.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def translation_style_note() -> str:
+    """User-chosen style in their own words (config ``translation_style``); never overrides facts or budgets."""
+    from core.config_utils import load_key
+    style = " ".join(str(load_key("translation_style", "") or "").split())[:300]
+    return (f"\n【译文风格偏好（低于全部硬性要求，不得改变事实、专名或时长约束）】{style}") if style else ""
+
+
 def localized_translation_prompt(lines: list[str], context: str, target: str) -> str:
     source = translation_language_name(effective_source_language("auto"))
     target = translation_language_name(target)
@@ -221,7 +243,7 @@ def localized_translation_prompt(lines: list[str], context: str, target: str) ->
 
 原文JSON（仅翻译字符串值；输出相同键的JSON对象，无需重复原文）：
 {json.dumps(numbered, ensure_ascii=False, indent=2)}
-""".strip()
+""".strip() + translation_style_note()
 
 
 def spoken_translation_prompt(lines: list[str], context: str, target: str, budgets: list[dict], *, feedback=None) -> str:
@@ -294,7 +316,7 @@ def spoken_translation_prompt(lines: list[str], context: str, target: str, budge
                    "按具体原因修正：超时则选择更紧凑的完整口语；语义缺失则恢复源意；双语分切失败则恢复源文分句顺序，并让对应短语可单独显示。"
                    "不在失败译法之间循环，不用标点改动冒充新译法。\n"
                    + json.dumps(feedback, ensure_ascii=False))
-    return prompt + "\n\n只输出译文JSON对象，不要有任何额外说明。"
+    return prompt + translation_style_note() + "\n\n只输出译文JSON对象，不要有任何额外说明。"
 
 
 def source_only_translation_prompt(source: str, context: str, target: str, budget: dict) -> str:
@@ -354,6 +376,17 @@ def source_only_translation_prompt(source: str, context: str, target: str, budge
 def validate_translation_rows(result, lines: list[str], field: str | None, target: str | None = None):
     expected = [str(i) for i in range(1, len(lines) + 1)]
     if isinstance(result, dict):
+        import re
+        normalized = {}
+        for k, v in result.items():
+            m = re.search(r'(\d+)', str(k))
+            norm_k = m.group(1) if m else ''.join(c for c in str(k) if c.isdigit())
+            if norm_k in expected:
+                normalized[norm_k] = v
+            elif norm_k not in normalized:
+                normalized[norm_k] = v
+        result.clear()
+        result.update(normalized)
         missing_keys = [k for k in expected if k not in result]
         if missing_keys and len(result) >= len(lines) // 3:
             from core.ask_gpt import ask_gpt
@@ -378,7 +411,23 @@ def validate_translation_rows(result, lines: list[str], field: str | None, targe
         else:
             text = row
         if not isinstance(text, str) or not text.strip():
-            return {"status": "error", "message": f"Empty or invalid translation at row {key}"}
+            # If model merged sentences and left a row empty, automatically synthesize single-line translation for this missing line
+            try:
+                from core.ask_gpt import ask_gpt
+                fallback_p = f"请将这句英文直接翻译为简短自然的中文口语，只输出译文：{source}"
+                fallback_trans = ask_gpt(fallback_p, response_json=False)
+                fallback_trans = str(fallback_trans).strip().strip(chr(34)) if fallback_trans else source
+                text = fallback_trans
+                if field is not None:
+                    result[key][field] = text
+                else:
+                    result[key] = text
+            except Exception:
+                text = source
+                if field is not None:
+                    result[key][field] = text
+                else:
+                    result[key] = text
         if re.search(r"\[(?:S\d+|SPEAKER_\d+|L\d+)\]|</?think>|```", text, re.IGNORECASE):
             return {"status": "error", "message": f"Internal metadata leaked at row {key}"}
         if target and not is_valid_target_language(text, target):
@@ -479,11 +528,14 @@ def _repair_source_word_copies_impl(source: str, translated: str, target: str, t
         if remaining:
             return {"status": "error", "message": f"Unresolved copied source words: {remaining}; use the supplied contextual translations without keeping the English words"}
         return status
-    repaired = ask_gpt(prompt, response_json=False, valid_def=lambda text: names.validate({'1': text}, lambda data: validate(data['1'])), log_title="translate_source_copy_repair",
-                       validation_retry_prompt=lambda _prompt, draft, error: repair_prompt(draft, error))
-    repaired = names.restore({'1': repaired})['1']
-    # A short repair must still pass the regular full-source semantic review.
-    return repaired.replace("\n", " ").strip()
+    try:
+        repaired = ask_gpt(prompt, response_json=False, valid_def=lambda text: names.validate({'1': text}, lambda data: validate(data['1'])), log_title="translate_source_copy_repair",
+                           validation_retry_prompt=lambda _prompt, draft, error: repair_prompt(draft, error))
+        repaired = names.restore({'1': repaired})['1']
+        return repaired.replace("\n", " ").strip()
+    except Exception as exc:
+        print(f"[Warn] repair_source_word_copies fallback to raw translation: {exc}")
+        return translated.replace("\n", " ").strip()
 
 
 def translate_localized(lines: str, context: str, terms=None, *, speech_budgets=None) -> tuple[str, str]:

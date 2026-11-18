@@ -90,7 +90,7 @@ def start_pipeline_job(input_value, *, profile=None, subtitle_only=False, no_sub
         (workspace / 'output').mkdir(parents=True, exist_ok=True)
         w_state = workspace / 'output/pipeline_state.json'
         state = json.loads(w_state.read_text()) if w_state.is_file() else {}
-        is_resume = workspace is not None and w_state.is_file() and state.get('status') in {'failed', 'interrupted'}
+        is_resume = workspace is not None and w_state.is_file() and state.get('status') in {'failed', 'interrupted', 'paused'}
         active_profile = profile or state.get("profile") or {"fast": "fast", "high_sync": "cinematic", "subtitle": "subtitle"}.get(
             load_key("quality_mode", "fast"), "fast")
         
