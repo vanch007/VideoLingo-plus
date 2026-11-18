@@ -79,3 +79,12 @@ def test_guarded_transcribe_retries_in_halves_and_flags_final(monkeypatch):
     report = []
     out = s2.guarded_transcribe(always_bad, "x", 0.0, 100.0, report)
     assert len(out) == 1 and report[-1]["final"] is True  # kept, flagged, never dropped
+
+
+def test_language_aliases_and_auto():
+    from core.providers.asr_guards import normalize_language
+    zh = "我们今天来聊一聊如何在本地运行大模型" * 12
+    for lang in ("zh", "zh-CN", "Chinese", "中文", "auto", ""):
+        assert script_mismatch(zh, lang) is None
+    assert normalize_language("ja_JP") == "ja"
+    assert script_mismatch("hello world " * 20, "zh-CN") == "wrong_script"

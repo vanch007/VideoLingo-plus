@@ -82,7 +82,7 @@ def _rows(text: str, cap: int) -> list[str]:
     """Rows of one cue: authored line breaks are kept, a line over the row cap is broken."""
     out: list[str] = []
     for line in text.split("\n"):
-        out.extend(break_lines(line, cap) or [""])
+        out.extend(break_lines(line, cap, lenient=True) or [""])
     return out
 
 

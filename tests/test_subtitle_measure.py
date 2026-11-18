@@ -1,6 +1,6 @@
 import re
 import pytest
-from core.subtitle_measure import atoms, break_lines, text_width, char_width
+from core.subtitle_measure import atoms, break_lines, text_width, char_width, LATIN_EM
 from core.fast_subtitles import build_cues
 
 norm = lambda s: re.sub(r"\s+", "", s)
@@ -43,3 +43,19 @@ def test_cues_keep_a_name_in_one_cue_and_conserve_text():
         assert norm("".join(c["src"] for c in cues)) == norm(rows[0]["origin"])
         for name in ("Epidemic Sounds", "FFmpeg"):
             assert any(name in c["tgt"].replace("\n", " ") for c in cues)
+
+
+def test_accented_words_are_never_split():
+    from core.subtitle_measure import atoms
+    assert atoms("Je suis allé au café près de la gare") == ["Je", " suis", " allé", " au", " café", " près", " de", " la", " gare"]
+    rows = break_lines("Je suis allé au café près de la gare avec mon ami José", 12)
+    assert all(not r.startswith(("s ", "é")) for r in rows) and " ".join(rows).split() == "Je suis allé au café près de la gare avec mon ami José".split()
+
+
+def test_lenient_split_keeps_every_character_of_a_url():
+    url = "Visit https://www.example.com/very/long/path/to/resource now"
+    rows = break_lines(url, 24, lenient=True)
+    assert "".join(rows).replace(" ", "") == url.replace(" ", "")
+    assert all(text_width(r) <= 24 * LATIN_EM + 1e-6 for r in rows)
+    with pytest.raises(ValueError, match="Unbreakable"):
+        break_lines(url, 24)

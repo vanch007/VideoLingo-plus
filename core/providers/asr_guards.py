@@ -77,10 +77,24 @@ def script_counts(text: str) -> dict[str, int]:
 
 
 _EXPECTED = {"zh": {"Han"}, "yue": {"Han"}, "ja": {"Han", "Kana"}, "ko": {"Hangul"}}
+_ALIASES = {"chinese": "zh", "mandarin": "zh", "中文": "zh", "汉语": "zh", "普通话": "zh", "cantonese": "yue",
+            "粤语": "yue", "japanese": "ja", "日本語": "ja", "日语": "ja", "korean": "ko", "한국어": "ko", "韩语": "ko"}
+
+
+def normalize_language(language: str | None) -> str:
+    """'zh-CN' / 'Chinese' / '中文' -> 'zh'; unknown or empty -> 'auto'."""
+    raw = str(language or "").strip().lower().replace("_", "-")
+    if raw in _ALIASES:
+        return _ALIASES[raw]
+    base = raw.split("-")[0]
+    return _ALIASES.get(base, base) or "auto"
 
 
 def script_mismatch(text: str, language: str) -> str | None:
     """A reason when the letters of ``text`` do not belong to ``language``; None when fine."""
+    language = normalize_language(language)
+    if language == "auto":
+        return None  # language unknown: the script cannot be judged
     counts = script_counts(text)
     total = sum(counts.values())
     if total < SCRIPT_MIN_LETTERS:

@@ -24,7 +24,9 @@ _OPENERS = set("（([{「『《〈【“‘")
 _CLOSERS = set("，。？！；：、）)]}」』》〉】”’,.?!;:%…—")
 _NARROW = set("iljtfIr.,;:'’!|()[]\" -")
 _WIDE_LATIN = set("mwMW@")
-_WORD = re.compile(r"[A-Za-z0-9]+(?:[’'._\-/][A-Za-z0-9]+)*")
+# Letters/digits of any alphabet (é, ä, ñ, ß ...) but never CJK, which is broken per phrase.
+_L = r"(?:(?![㐀-鿿぀-ヿ가-힯豈-﫿])[^\W_])"
+_WORD = re.compile(rf"{_L}+(?:[’'._\-/]{_L}+)*")
 
 
 def has_cjk(text: str) -> bool:
@@ -117,7 +119,7 @@ def atoms(text: str) -> list[str]:
         elif merged and merged[-1].strip() and merged[-1].strip()[-1] in _OPENERS:
             merged[-1] += unit
         elif (mixed and merged and unit[:1].isspace() and _WORD.fullmatch(core)
-              and re.fullmatch(r"\s*[A-Za-z0-9][A-Za-z0-9’'._\-/ ]*", merged[-1])):
+              and re.fullmatch(rf"\s*{_L}(?:{_L}|[’'._\-/ ])*", merged[-1])):
             merged[-1] += unit  # "Claude" + " Code": a name travels together
         else:
             merged.append(unit)
@@ -128,16 +130,40 @@ def _break_atom(atom: str, capacity: float, cap_chars: int) -> list[str]:
     raise ValueError(f"Unbreakable subtitle token wider than one row: {atom.strip()!r}")
 
 
+def _hard_split(atom: str, capacity: float, cap_chars: int) -> list[str]:
+    """Last resort for a URL / compound word wider than a row: cut after separators, then by glyph."""
+    pieces: list[str] = []
+    for part in re.findall(r"[^/._\-?&=]*[/._\-?&=]?", atom.strip()):
+        if not part:
+            continue
+        cur = ""
+        for ch in part:
+            if cur and (text_width(cur + ch) > capacity or len(cur + ch) > cap_chars):
+                pieces.append(cur)
+                cur = ""
+            cur += ch
+        if cur:
+            pieces.append(cur)
+    packed: list[str] = []
+    for piece in pieces:  # re-join neighbours that still fit one row
+        if packed and text_width(packed[-1] + piece) <= capacity and len(packed[-1] + piece) <= cap_chars:
+            packed[-1] += piece
+        else:
+            packed.append(piece)
+    return [(" " if i == 0 and atom[:1].isspace() else "") + p for i, p in enumerate(packed)]
+
+
 def line_capacity(text: str, cap_chars: int) -> float:
     """Row capacity in em for a text whose length cap is cap_chars (CJK glyphs or Latin chars)."""
     return float(cap_chars) if has_cjk(text) else cap_chars * LATIN_EM
 
 
-def break_lines(text: str, cap_chars: int) -> list[str]:
+def break_lines(text: str, cap_chars: int, lenient: bool = False) -> list[str]:
     """Break text into the fewest rows within cap_chars and the row width, balanced.
 
     A row never exceeds cap_chars characters nor the em capacity. A single atom that cannot
-    fit a row raises ValueError('Unbreakable ...') instead of being cut.
+    fit a row raises ValueError('Unbreakable ...') instead of being cut, unless ``lenient`` (render
+    time only): then it is split after separators / by glyph so the burn never fails on a URL.
     """
     items = atoms(text)
     if not items:
@@ -150,6 +176,14 @@ def break_lines(text: str, cap_chars: int) -> list[str]:
             expanded.extend(re.findall(r"\s*\S+", a))
         else:
             expanded.append(a)
+    if lenient:
+        fitted: list[str] = []
+        for a in expanded:
+            if text_width(a.strip()) > capacity or len(a.strip()) > cap_chars:
+                fitted.extend(_hard_split(a, capacity, cap_chars))
+            else:
+                fitted.append(a)
+        expanded = fitted
     items = expanded
     widths = [text_width(a.strip()) for a in items]
     lens = [len(a.strip()) for a in items]
