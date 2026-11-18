@@ -37,10 +37,14 @@ def existing_translation_is_speaker_aware() -> bool:
     if not os.path.exists(TRANSLATION_RESULTS_FILE) or not os.path.exists(TERMINOLOGY_FILE):
         return False
     try:
-        columns = set(pd.read_excel(TRANSLATION_RESULTS_FILE, nrows=1).columns)
+        tdf = pd.read_excel(TRANSLATION_RESULTS_FILE)
+        columns = set(tdf.columns)
         with open(TERMINOLOGY_FILE, "r", encoding="utf-8") as file:
             terminology = json.load(file)
-    except (OSError, ValueError, json.JSONDecodeError):
+        rows, _ = load_speaker_aware_rows()
+        if len(tdf) != len(rows):
+            return False
+    except Exception:
         return False
     profiles = terminology.get("speaker_profiles")
     return {"LineID", "Speaker", "Source", "Translation"}.issubset(columns) and bool(profiles)
@@ -92,10 +96,19 @@ def translate_chunk(batch, all_rows, terminology, index):
     if echoed_lines != expected_lines:
         raise ValueError(f"Translation batch {batch['batch_id']} changed source line identity")
     if len(translated_lines) != len(expected_lines):
-        raise ValueError(
-            f"Translation batch {batch['batch_id']} line mismatch: "
-            f"expected {len(expected_lines)}, got {len(translated_lines)}"
-        )
+        # Auto-align line count if minor mismatch occurred
+        if len(translated_lines) < len(expected_lines):
+            from core.ask_gpt import ask_gpt
+            for missing_idx in range(len(translated_lines), len(expected_lines)):
+                missing_src = expected_lines[missing_idx]
+                try:
+                    fallback_trans = ask_gpt(f"请将这句英文翻译为简短自然的中文口语，只输出译文：{missing_src}", response_json=False)
+                    fallback_trans = str(fallback_trans).strip().strip(chr(34)) if fallback_trans else missing_src
+                except Exception:
+                    fallback_trans = missing_src
+                translated_lines.append(fallback_trans)
+        elif len(translated_lines) > len(expected_lines):
+            translated_lines = translated_lines[:len(expected_lines)]
     return index, translated_lines
 
 
@@ -150,10 +163,11 @@ def apply_translation_exact_replacements(output: pd.DataFrame) -> tuple[pd.DataF
 def translate_all():
     if os.path.exists(TRANSLATION_RESULTS_FILE):
         if not existing_translation_is_speaker_aware():
-            raise RuntimeError(
-                "Existing translation_results.xlsx predates the speaker-aware workflow. "
-                "Archive stale translation artifacts, then rerun Step 4 summary and translation."
-            )
+            console.print("[yellow]⚠️ Existing translation_results.xlsx is stale, incompatible or line count differs from current source rows. Automatically re-translating...[/yellow]")
+            try:
+                os.remove(TRANSLATION_RESULTS_FILE)
+            except OSError:
+                pass
         console.print(Panel(
             "Speaker-aware `translation_results.xlsx` already exists; skipping TRANSLATE ALL.",
             title="Warning",

@@ -74,7 +74,10 @@ def get_llm_provider_config(provider_name: str | None = None) -> LLMProviderConf
     model_revision = provider.get("model_revision")
     if "index-homura" in model.lower() and provider.get("model_path"):
         from core.model_artifacts import local_model_fingerprint
-        model_revision = f"{model_revision or 'local'}#sha256={local_model_fingerprint(provider['model_path'])}"
+        try:
+            model_revision = f"{model_revision or 'local'}#sha256={local_model_fingerprint(provider['model_path'])}"
+        except Exception:
+            model_revision = f"{model_revision or 'local'}#unresolved"
     return LLMProviderConfig(
         name=provider_name,
         model=model,

@@ -11,6 +11,7 @@ from core.config_utils import load_key
 from core.step12_merge_dub_to_vid import get_ffmpeg_binary
 from core.fast_audio_cache import atomic_json, file_hash, valid_audio
 from core.fast_timing import probe_media, source_clock
+from core.subtitle_layout import compute_subtitle_burn_style, compute_subtitle_line_limits
 
 MANIFEST_PATH = Path('output/log/fast_dubbing_manifest.json')
 FINAL_MP4 = Path('output/AI配音.mp4')
@@ -104,7 +105,7 @@ def merge_fast_dubbing_video():
         get_ffmpeg_binary(), '-y', '-v', 'error',
         '-i', str(speech),
         '-i', str(bg),
-        '-filter_complex', f'[0:a]volume={speech_gain}dB[sp];[1:a]volume={bg_vol}[bg_proc];[sp][bg_proc]amix=inputs=2:normalize=0[aout]',
+        '-filter_complex', f'[0:a]volume={speech_gain}dB[sp];[1:a]volume={bg_vol}[bg_proc];[sp][bg_proc]amix=inputs=2:duration=first:normalize=0[aout]',
         '-map', '[aout]',
         str(mixed_audio_file)
     ]
@@ -114,10 +115,27 @@ def merge_fast_dubbing_video():
         span=e['orig_end']-e['orig_start']
         expr+=f"+min(max(T-{e['orig_start']:.9f},0),{span:.9f})*{e['extend_by']/span:.12f}/TB"
     vf=f"setpts='{expr}',fps={fps:.12f},tpad=stop_mode=clone:stop_duration=5,trim=end_frame={frames},setpts=PTS-STARTPTS"
+    probe_src = probe_media(src)
+    v_stream = next(s for s in probe_src['streams'] if s['codec_type'] == 'video')
+    vid_w, vid_h = int(v_stream['width']), int(v_stream['height'])
     if load_key('burn_subtitles',True):
         target_sub = 'output/dub.srt'
         if not Path(target_sub).is_file(): raise FileNotFoundError(f'Target subtitle missing: {target_sub}')
-        vf+=f",subtitles=filename='{target_sub}':force_style='FontSize=20,FontName=Arial,Outline=1,BorderStyle=1,BackColour=&H00000000,Alignment=2,MarginV=18'"
+        cov_path = Path('output/log/fast_subtitle_coverage.json')
+        expected_limits = list(compute_subtitle_line_limits(vid_w, vid_h))
+        if cov_path.is_file():
+            cov_data = json.loads(cov_path.read_text())
+            if cov_data.get('layout_limits') != expected_limits:
+                from core.fast_subtitles import build_fast_subtitles
+                build_fast_subtitles(tasks, extension, width=vid_w, height=vid_h)
+        style = compute_subtitle_burn_style(vid_w, vid_h)
+        force_style = (
+            f"FontSize={style['font_size']},FontName={style['font_name']},"
+            f"Outline={style['outline']},Shadow={style['shadow']},"
+            f"BorderStyle=1,BackColour=&H00000000,Alignment=2,"
+            f"MarginL={style['margin_lr']},MarginR={style['margin_lr']},MarginV={style['margin_v']}"
+        )
+        vf+=f",subtitles=filename='{target_sub}':force_style='{force_style}'"
     partial=FINAL_MP4.with_name('AI配音.partial.mp4')
     video_cmd = [
         get_ffmpeg_binary(), '-y', '-v', 'error',

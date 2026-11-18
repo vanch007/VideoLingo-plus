@@ -401,6 +401,7 @@ def get_summary():
     # 保存源异常并解析修复
     anomalies = detect_source_anomalies(CLEANED_CHUNKS_PATH, speaker_rows)
     anomalies = resolve_source_anomalies(anomalies, speaker_rows, SENTENCE_TXT_PATH)
+    os.makedirs('output/log', exist_ok=True)
     with open('output/log/source_anomalies.json', 'w', encoding='utf-8') as f:
         json.dump(anomalies, f, ensure_ascii=False, indent=2)
 

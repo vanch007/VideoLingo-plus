@@ -30,6 +30,24 @@ def _load_project_env(path: Path | None = None) -> None:
 
 
 _load_project_env()
+# Auto-detect local proxy for huggingface / youtube / external networks
+def _auto_setup_proxy():
+    if not (os.environ.get('all_proxy') or os.environ.get('https_proxy') or os.environ.get('http_proxy')):
+        import socket
+        for p in (7897, 7890, 10808, 1087):
+            try:
+                s = socket.socket(); s.settimeout(0.08)
+                if s.connect_ex(('127.0.0.1', p)) == 0:
+                    proxy = f'http://127.0.0.1:{p}'
+                    os.environ['http_proxy'] = proxy
+                    os.environ['https_proxy'] = proxy
+                    os.environ['all_proxy'] = proxy
+                    s.close(); break
+                s.close()
+            except Exception: pass
+
+_auto_setup_proxy()
+
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 

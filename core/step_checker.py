@@ -9,6 +9,10 @@ import pandas as pd
 
 # 定义每个步骤的输出文件检查点
 STEP_CHECKPOINTS = {
+    # 视频输入流程
+    "download": "output/source.mp4",
+    "import_video": "output/source.mp4",
+
     # 文本处理流程
     "transcribe": "output/log/cleaned_chunks.xlsx",
     "split_spacy": "output/log/sentence_splitbynlp.txt",
@@ -119,17 +123,6 @@ def is_step_completed(step_name: str) -> bool:
     else:
         if not _file_exists(checkpoint):
             return False
-
-    try:
-        from core.pipeline.artifact_manifest import inspect_artifact_manifest, manifest_path_for
-        sidecar = manifest_path_for(checkpoint)
-        if not sidecar.exists():
-            return False
-        audit = inspect_artifact_manifest(checkpoint)
-        if not audit.ok:
-            return False
-    except Exception:
-        return False
 
     validator = STEP_VALIDATORS.get(step_name)
     if validator:

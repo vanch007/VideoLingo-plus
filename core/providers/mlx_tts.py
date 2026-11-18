@@ -465,7 +465,8 @@ class IndexTTS2Backend(CliBackend):
                             try: proc.wait(timeout=5)
                             except subprocess.TimeoutExpired: proc.kill(); proc.wait()
                     if code != 0 or len(published) != len(requests):
-                        raise RuntimeError(f'IndexTTS partial batch: {len(published)}/{len(requests)}, exit={code}')
+                        tail = log_path.read_text(encoding='utf-8', errors='ignore')[-1000:] if log_path.exists() else ''
+                        raise RuntimeError(f'IndexTTS partial batch: {len(published)}/{len(requests)}, exit={code}, log={tail}')
                 return [TTSResult(output_path=r.output_path, backend=self.name,
                                  duration=get_audio_duration(r.output_path),
                                  metadata={"mode": "model_resident_batch"}) for r in requests]

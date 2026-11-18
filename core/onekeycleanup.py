@@ -43,7 +43,7 @@ def cleanup(history_dir="history"):
         # 2. Second priority: cover image file name (*.jpg, *.png, *.webp)
         if not video_name:
             covers = [f for f in os.listdir("output") if f.lower().endswith(('.jpg', '.png', '.webp'))
-                      and not f.startswith(('AI', 'dub', 'frame', 'preview', '封面', 'gemini', 'test'))]
+                      and not f.startswith(('AI配音', 'AI字幕', 'AI_', 'dub', 'frame', 'preview', '封面', 'gemini', 'test'))]
             if covers:
                 c_name = os.path.splitext(covers[0])[0].strip()
                 if c_name and c_name.lower() != "source":
@@ -54,7 +54,7 @@ def cleanup(history_dir="history"):
             allowed = load_key("allowed_video_formats", ["mp4", "mkv", "webm", "avi", "mov"])
             v_files = [f for f in glob.glob("output/*") if os.path.splitext(f)[1][1:].lower() in allowed]
             named_files = [f for f in v_files if os.path.splitext(os.path.basename(f))[0].lower() != "source"
-                           and not os.path.basename(f).startswith(("AI", "output", "_", "dub", "preview"))]
+                           and not os.path.basename(f).startswith(("AI配音", "AI字幕", "AI_", "output", "_", "dub", "preview"))]
             if named_files:
                 video_name = os.path.splitext(os.path.basename(named_files[0]))[0].strip()
 

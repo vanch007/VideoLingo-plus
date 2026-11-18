@@ -3,8 +3,116 @@ from __future__ import annotations
 
 import math
 import re
+import platform
+import subprocess
+from pathlib import Path
 
 import pandas as pd
+
+
+def probe_video_dimensions(video_path: str | Path | None = None) -> tuple[int, int] | None:
+    """Return (width, height) for the active source video, or None if unavailable."""
+    candidates = [Path(video_path)] if video_path is not None else [
+        Path("output/source_canonical.mp4"),
+        Path("output/source.mp4"),
+    ]
+    for candidate in candidates:
+        if not candidate.is_file():
+            continue
+        try:
+            out = subprocess.check_output(
+                [
+                    "ffprobe",
+                    "-v",
+                    "error",
+                    "-select_streams",
+                    "v:0",
+                    "-show_entries",
+                    "stream=width,height",
+                    "-of",
+                    "csv=s=x:p=0",
+                    str(candidate),
+                ],
+                text=True,
+                stderr=subprocess.DEVNULL,
+            ).strip()
+            if "x" in out:
+                w_str, h_str = out.splitlines()[0].split("x", 1)
+                w, h = int(w_str), int(h_str)
+                if w > 0 and h > 0:
+                    return w, h
+        except Exception:
+            pass
+        try:
+            import cv2
+            cap = cv2.VideoCapture(str(candidate))
+            w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            cap.release()
+            if w > 0 and h > 0:
+                return w, h
+        except Exception:
+            pass
+    return None
+
+
+def compute_subtitle_line_limits(width: int | None, height: int | None) -> tuple[int, int]:
+    """Return (cjk_max_chars, latin_max_chars) fitted to video orientation and aspect ratio."""
+    if not width or not height or width <= 0 or height <= 0 or height <= width:
+        return 22, 42
+    aspect = width / height
+    cjk_cap = max(10, min(18, round(24 * aspect)))
+    latin_cap = max(18, min(36, round(42 * aspect)))
+    return int(cjk_cap), int(latin_cap)
+
+
+def compute_subtitle_burn_style(
+    width: int | None,
+    height: int | None,
+    *,
+    platform_system: str | None = None,
+) -> dict[str, int | str | bool]:
+    """Compute libass force_style parameters (PlayResY=288 baseline) for landscape or portrait."""
+    sys_name = platform_system or platform.system()
+    if sys_name == "Darwin":
+        font_name = "PingFang SC"
+    elif sys_name == "Linux":
+        font_name = "NotoSansCJK-Regular"
+    else:
+        font_name = "Arial"
+
+    is_portrait = bool(width and height and width > 0 and height > 0 and height > width)
+    cjk_cap, latin_cap = compute_subtitle_line_limits(width, height)
+    if not is_portrait:
+        return {
+            "is_portrait": False,
+            "font_size": 20,
+            "src_font_size": 14,
+            "font_name": font_name,
+            "margin_v": 18,
+            "margin_lr": 20,
+            "outline": 1,
+            "shadow": 0,
+            "cjk_max_chars": cjk_cap,
+            "latin_max_chars": latin_cap,
+        }
+
+    aspect = width / height
+    # Fit cjk_cap CJK characters inside ~72-76% of frame width with comfortable side margins.
+    font_size = max(10, min(16, round(288 * aspect / max(cjk_cap, 1))))
+    src_font_size = max(9, min(14, round(font_size * 0.85)))
+    return {
+        "is_portrait": True,
+        "font_size": int(font_size),
+        "src_font_size": int(src_font_size),
+        "font_name": font_name,
+        "margin_v": 26,
+        "margin_lr": 24,
+        "outline": 1,
+        "shadow": 1,
+        "cjk_max_chars": cjk_cap,
+        "latin_max_chars": latin_cap,
+    }
 
 
 def split_display_text(text: str, max_chars: int) -> list[str]:

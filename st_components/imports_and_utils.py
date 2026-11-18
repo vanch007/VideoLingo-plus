@@ -85,12 +85,12 @@ give_star_button = """
 
 button_style = """
 <style>
-/* Increase sidebar width for better display */
-[data-testid="stSidebar"] {
+/* Only increase sidebar width when it is actively EXPANDED */
+section[data-testid="stSidebar"]:not([aria-expanded="false"]) {
     min-width: 350px;
     max-width: 400px;
 }
-[data-testid="stSidebar"] > div:first-child {
+section[data-testid="stSidebar"]:not([aria-expanded="false"]) > div:first-child {
     width: 350px;
 }
 

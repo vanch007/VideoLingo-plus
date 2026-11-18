@@ -306,10 +306,12 @@ def align_timestamp(df_text, df_translate, subtitle_output_configs: list, output
     from core.config_utils import load_key
     preserve_text = bool(load_key("translation.preserve_cues", False))
     if for_display and output_dir == OUTPUT_DIR and preserve_text and load_key("subtitle.semantic_layout", False):
-        from core.subtitle_layout import layout_subtitles
+        from core.subtitle_layout import compute_subtitle_line_limits, layout_subtitles, probe_video_dimensions
+        cjk_cap, latin_cap = compute_subtitle_line_limits(*(probe_video_dimensions() or (None, None)))
+        configured_cap = int(load_key("subtitle.max_length", 38))
         df_trans_time, layout_report = layout_subtitles(
             df_trans_time, df_text,
-            chars_per_line=int(load_key("subtitle.max_length", 38)),
+            chars_per_line=min(configured_cap, latin_cap) if latin_cap < 42 else configured_cap,
             max_lines=int(load_key("subtitle.max_lines", 2)),
             max_cps=float(load_key("subtitle.max_cps", 20)),
             min_duration=float(load_key("subtitle.min_duration", 0.8)),

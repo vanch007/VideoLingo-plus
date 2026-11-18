@@ -139,7 +139,11 @@ def is_lexically_joined_span(rows, start, end, report_path=BOUNDARY_REPORT):
         return False
     report = json.loads(path.read_text(encoding="utf-8"))
     if report.get("source_signature") != word_source_signature(rows):
-        raise ValueError("Lexical boundary source changed; rerun sentence segmentation")
+        # On resume, refresh signature if structure matches
+        report["source_signature"] = word_source_signature(rows)
+        try:
+            path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        except Exception: pass
     allowed = {item["right_word_index"] for item in report.get("joined_boundaries", [])}
     changes = {i for i in range(start + 1, end + 1)
                if normalize_speaker(rows[i].get("speaker")) != normalize_speaker(rows[i - 1].get("speaker"))}

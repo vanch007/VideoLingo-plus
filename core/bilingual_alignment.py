@@ -20,8 +20,11 @@ ALIGNMENT_PATH = Path('output/log/bilingual_alignment.json')
 def display_limits():
     """One contract for alignment, layout and export in either direction."""
     from core.runtime_context import effective_source_language, effective_target_language
+    from core.subtitle_layout import compute_subtitle_line_limits, probe_video_dimensions
+    dims = probe_video_dimensions()
+    cjk_cap, latin_cap = compute_subtitle_line_limits(*(dims or (None, None)))
     def cap(language, key):
-        default = 22 if language.split('-')[0] in {'zh', 'ja', 'ko', 'yue'} else 42
+        default = cjk_cap if language.split('-')[0] in {'zh', 'ja', 'ko', 'yue'} else latin_cap
         return min(default, int(load_key(key, default)))
     return (cap(effective_target_language('en'), 'subtitle.max_length'),
             cap(effective_source_language('zh'), 'subtitle.source_max_length'))

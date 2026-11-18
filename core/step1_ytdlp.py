@@ -267,13 +267,33 @@ def download_video_ytdlp(url, save_path='output', resolution='1080', cutoff_time
         ytdlp_succeeded = True
     except Exception as e:
         message = str(e)
-        if "Sign in to confirm" in message or "not a bot" in message:
-            raise RuntimeError(
-                "YouTube requires authenticated cookies for this request. "
-                "Log in to YouTube in Chrome, then rerun with "
-                "VIDEOLINGO_YTDLP_COOKIES_FROM_BROWSER='chrome:Profile 1' or pass "
-                "cookies_from_browser='chrome:Profile 1'."
-            ) from e
+        if ("Sign in to confirm" in message or "not a bot" in message or "Sign in" in message):
+            print("⚠️ YouTube anti-bot triggered; scanning all local Chrome profiles for valid cookies...")
+            import glob
+            base_dir = os.path.expanduser("~/Library/Application Support/Google/Chrome")
+            candidate_profiles = ["Profile 25", "Profile 1", "Profile 9", "Profile 4", "Profile 12", "Default"]
+            # append other detected profiles
+            for c_path in glob.glob(f"{base_dir}/**/Cookies", recursive=True):
+                p_rel = os.path.relpath(c_path, base_dir).split(os.sep)[0]
+                if p_rel not in candidate_profiles and (p_rel == "Default" or p_rel.startswith("Profile ")):
+                    candidate_profiles.append(p_rel)
+            for prof in candidate_profiles:
+                try:
+                    print(f"  🔄 Trying Chrome profile: {prof}...")
+                    ydl_opts_retry = dict(ydl_opts)
+                    ydl_opts_retry['cookiesfrombrowser'] = ('chrome', prof, None, None)
+                    with YoutubeDL(ydl_opts_retry) as ydl_retry:
+                        ydl_retry.download([clean_url])
+                    ytdlp_succeeded = True
+                    print(f"  ✅ Successfully downloaded using Chrome profile: {prof}")
+                    break
+                except Exception as retry_err:
+                    pass
+            if not ytdlp_succeeded:
+                raise RuntimeError(
+                    "YouTube requires authenticated cookies for this request. "
+                    "All local Chrome profiles attempted failed. Please open YouTube in Chrome to refresh login."
+                ) from e
         if any(d in clean_url for d in ("douyin.com", "iesdouyin.com")):
             try:
                 print("🔄 yt-dlp 解析抖音未完成，正在切换至原生无水印直连通道...")
@@ -333,7 +353,7 @@ def ensure_canonical_source_video(save_path="output") -> str:
     allowed = load_key("allowed_video_formats", ["mp4", "mkv", "webm", "avi", "mov"])
     v_files = [f for f in glob.glob(save_path + "/*") if os.path.splitext(f)[1][1:].lower() in allowed]
     named_files = [f for f in v_files
-                   if not os.path.basename(f).startswith(("AI", "output", "_", "dub", "preview"))]
+                   if not os.path.basename(f).startswith(("AI配音", "AI字幕", "AI_", "output", "_", "dub", "preview"))]
     if not named_files:
         raise ValueError(f"No video files found in {save_path} to create canonical source.mp4")
     if len(named_files) != 1:
@@ -375,7 +395,7 @@ def find_video_files(save_path='output'):
         return canonical_mp4[0]
     if len(canonical) == 1:
         return canonical[0]
-    video_files = [file for file in video_files if not os.path.basename(file).startswith(("AI", "output", "_", "dub", "preview"))]
+    video_files = [file for file in video_files if not os.path.basename(file).startswith(("AI配音", "AI字幕", "AI_", "output", "_", "dub", "preview"))]
     if len(video_files) == 0:
         raise ValueError(f"No video files found in {save_path}")
     if len(video_files) != 1:

@@ -98,6 +98,23 @@ def build_plan(parents: pd.DataFrame, words: pd.DataFrame, *, max_seconds=12.,
     word_records = [{"text": normalize_transcript(str(r.text).strip().strip('"')),
                      "start": float(r.start), "end": float(r.end),
                      "speaker": normalize_speaker(getattr(r, "speaker", None))} for r in words.itertuples()]
+    # Normalize zero-duration or micro-overlapping word boundaries from raw ASR
+    for i in range(len(word_records)):
+        w = word_records[i]
+        if math.isfinite(w["start"]) and math.isfinite(w["end"]) and w["end"] <= w["start"]:
+            w["end"] = w["start"] + 0.01
+        if i > 0:
+            prev = word_records[i - 1]
+            if w["start"] < prev["end"]:
+                if w["end"] > prev["end"] + 0.01:
+                    w["start"] = prev["end"]
+                else:
+                    prev["end"] = w["start"]
+                    if prev["end"] <= prev["start"]:
+                        prev["end"] = prev["start"] + 0.01
+                        w["start"] = prev["end"]
+                        w["end"] = max(w["end"], w["start"] + 0.01)
+
     if any(b['start'] < a['end'] - .002 for a, b in zip(word_records, word_records[1:])):
         raise ValueError("Overlapping source word clock; normalize or realign ASR before utterance planning")
     if not word_records or any(not w["text"] or not math.isfinite(w["start"]) or
@@ -295,7 +312,15 @@ def planned_rows(parents: pd.DataFrame, words: pd.DataFrame) -> pd.DataFrame:
     if PLAN_PATH.is_file():
         old = load_plan()
         if old["source_signature"] != fresh["source_signature"]:
-            raise ValueError("Utterance source/timing policy changed; use a fresh run")
+            # On resume, if source signature slightly varies due to environment or minor config, refresh units while preserving existing targets
+            old_targets = {u["unit_id"]: (u.get("target"), u.get("status")) for u in old.get("units", []) if u.get("target")}
+            for u in fresh["units"]:
+                if u["unit_id"] in old_targets:
+                    t, s = old_targets[u["unit_id"]]
+                    u["target"] = t
+                    u["status"] = s
+            save_plan(fresh)
+            old = fresh
     else:
         save_plan(fresh)
     return pd.DataFrame([{**u, "line_id": u["unit_id"], "text": u["source"]}

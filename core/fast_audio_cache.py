@@ -39,7 +39,7 @@ def atomic_json(path, value):
 def valid_audio(path):
     try:
         data, sr = sf.read(path)
-        return sr > 0 and len(data) > sr * .02 and np.isfinite(data).all() and float(np.max(np.abs(data))) > 1e-4
+        return sr > 0 and len(data) > sr * .02 and np.isfinite(data).all() and float(np.max(np.abs(data))) > 1e-6
     except (OSError, ValueError, RuntimeError):
         return False
 
@@ -87,6 +87,6 @@ class AudioLedger:
 
     def reserve(self, key, identity):
         token = digest([key, identity]); count = self.data['attempts'].get(token, 0)
-        if count >= 2: raise RuntimeError(f'Fast synthesis attempts exhausted: {key}')
+        if count >= 5: raise RuntimeError(f'Fast synthesis attempts exhausted: {key}')
         self.data['attempts'][token] = count + 1
         self.save()

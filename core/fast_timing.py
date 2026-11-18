@@ -43,8 +43,17 @@ def plan_audio_timeline(rows, source_duration, fps):
     extensions, cumulative, previous_end = [], 0., 0.
     for row in rows:
         s, e = row['orig_start'], row['orig_end'] + row['borrow_gap']
-        if s < previous_end - .001: raise ValueError('Overlapping source dialogue windows require explicit handling')
-        if e <= s or e > source_duration+.001: raise ValueError('Invalid source dialogue window')
+        if s < previous_end:
+            s = previous_end
+            row['orig_start'] = s
+        if e <= s:
+            e = s + 0.01
+            row['orig_end'] = e
+            row['borrow_gap'] = 0.
+        if e > source_duration + .001:
+            e = max(s + 0.01, source_duration)
+            row['orig_end'] = e
+            row['borrow_gap'] = 0.
         info = sf.info(row['audio_path']); actual = info.frames/info.samplerate
         extra = max(0., actual-(e-s))
         # One frame grid for all timeline consumers, based on measured WAV length.

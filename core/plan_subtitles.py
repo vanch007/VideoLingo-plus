@@ -199,7 +199,9 @@ def _format_srt_text(val: str, *, limit=None, max_lines=2) -> str:
     if not val:
         return ""
     if limit is None:
-        limit = 22 if re.search(r"[\u3400-\u9fff\u3040-\u30ff]", val) else 42
+        from core.subtitle_layout import compute_subtitle_line_limits, probe_video_dimensions
+        cjk_cap, latin_cap = compute_subtitle_line_limits(*(probe_video_dimensions() or (None, None)))
+        limit = cjk_cap if re.search(r"[\u3400-\u9fff\u3040-\u30ff]", val) else latin_cap
     parts = split_display_text(val, limit)
     if (max_lines is not None and len(parts) > max_lines) or any(len(p) > limit for p in parts):
         raise ValueError("Subtitle needs timed segmentation before export; text cannot be truncated")

@@ -199,6 +199,23 @@ def gen_audio_task_main():
     if plan_active():
         if (load_key("quality_mode") == "fast") or bool(load_key("fast_mode.enabled", False)):
             plan = load_plan()
+            # If resume or fast-mode translation didn't bind unit status, bind from translation_results.xlsx
+            unready = any(not u.get("target") or u.get("status") not in {"translated", "synthesized"} for u in plan["units"])
+            if unready:
+                from core.constants import TRANSLATION_RESULTS_FILE
+                import pandas as pd
+                if Path(TRANSLATION_RESULTS_FILE).is_file():
+                    tdf = pd.read_excel(TRANSLATION_RESULTS_FILE)
+                    by_line = {str(r.get("LineID", "")): str(r.get("Translation", "")) for _, r in tdf.iterrows()}
+                    by_unit = {str(r.get("UnitID", "")): str(r.get("Translation", "")) for _, r in tdf.iterrows()}
+                    for u in plan["units"]:
+                        uid = str(u.get("unit_id", ""))
+                        trans = by_unit.get(uid) or by_line.get(uid) or by_line.get(uid.split('.')[0])
+                        if not trans and "parent_line_id" in u:
+                            trans = by_line.get(str(u["parent_line_id"]))
+                        if trans:
+                            u["target"] = trans
+                            u["status"] = "translated"
             tasks = tasks_from_plan(plan)
             path = Path("output/audio/tts_tasks.xlsx")
             path.parent.mkdir(parents=True, exist_ok=True)

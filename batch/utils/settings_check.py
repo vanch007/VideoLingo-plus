@@ -28,16 +28,16 @@ def check_settings():
             title="[bold red]Warning: Files in input folder not mentioned in Excel sheet",
             expand=False
         ))
-        all_passed = False
+        # Notice only: non-selected files in input folder do not fail the check
 
     for index, row in df.iterrows():
         video_file = row['Video File']
         source_language = row['Source Language']
         dubbing = row['Dubbing']
 
-        if video_file.startswith('http'):
+        if str(video_file).startswith('http'):
             url_tasks += 1
-        elif os.path.isfile(os.path.join(INPUT_FOLDER, video_file)):
+        elif os.path.isfile(os.path.join(INPUT_FOLDER, str(video_file))):
             local_video_tasks += 1
         else:
             console.print(Panel(f"Invalid video file or URL 「{video_file}」", title=f"[bold red]Error in row {index + 2}", expand=False))
@@ -56,3 +56,4 @@ def check_settings():
 
 if __name__ == "__main__":  
     check_settings()
+

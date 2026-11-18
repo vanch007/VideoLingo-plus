@@ -265,8 +265,11 @@ def create_srt_subtitle():
 
             f.write(f"{i}\n")
             f.write(f"{start_str} --> {end_str}\n")
-            import textwrap
-            wrapped = textwrap.fill(line, width=50, break_long_words=False) if len(line) > 50 else line
+            from core.subtitle_layout import compute_subtitle_line_limits, probe_video_dimensions, split_display_text
+            cjk_cap, latin_cap = compute_subtitle_line_limits(*(probe_video_dimensions() or (None, None)))
+            is_cjk = bool(re.search(r"[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]", str(line)))
+            cap = cjk_cap if is_cjk else latin_cap
+            wrapped = "\n".join(split_display_text(str(line), cap))
             f.write(f"{wrapped}\n\n")
 
     rprint(f"[bold green]✅ Dub subtitle file created: {DUB_SUB_FILE}[/bold green]")
@@ -287,9 +290,12 @@ def create_orig_srt_subtitle():
             start_str = f"{int(start_time//3600):02d}:{int((start_time%3600)//60):02d}:{int(start_time%60):02d},{int((start_time*1000)%1000):03d}"
             end_str = f"{int(end_time//3600):02d}:{int((end_time%3600)//60):02d}:{int(end_time%60):02d},{int((end_time*1000)%1000):03d}"
             time_header = f"{start_str} --> {end_str}\n"
-            import textwrap
-            wrapped_orig = textwrap.fill(orig_line, width=22, break_long_words=False) if len(orig_line) > 22 else orig_line
-            wrapped_trans = textwrap.fill(str(trans_line), width=38, break_long_words=False) if len(str(trans_line)) > 38 else str(trans_line)
+            from core.subtitle_layout import compute_subtitle_line_limits, probe_video_dimensions, split_display_text
+            cjk_cap, latin_cap = compute_subtitle_line_limits(*(probe_video_dimensions() or (None, None)))
+            orig_cjk = bool(re.search(r"[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]", str(orig_line)))
+            trans_cjk = bool(re.search(r"[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]", str(trans_line)))
+            wrapped_orig = "\n".join(split_display_text(str(orig_line), cjk_cap if orig_cjk else latin_cap))
+            wrapped_trans = "\n".join(split_display_text(str(trans_line), cjk_cap if trans_cjk else latin_cap))
             f_orig.write(f"{idx}\n{time_header}{wrapped_orig}\n\n")
             f_bi.write(f"{idx}\n{time_header}{wrapped_orig}\n{wrapped_trans}\n\n")
 

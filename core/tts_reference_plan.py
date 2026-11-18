@@ -5,6 +5,8 @@ inputs; they deliberately do not claim perceptual voice/emotion quality.
 """
 from __future__ import annotations
 
+import shutil
+
 from core.tts_pronunciation import synthesis_text
 
 import hashlib
@@ -88,6 +90,16 @@ def _source_emotion_clip(row, tasks, root, *, materialize=True):
             handle.seek(round(start * sr))
             samples = handle.read(round(end * sr) - round(start * sr), dtype="float32", always_2d=True)
         if not len(samples) or float(np.max(np.abs(samples))) < 1e-5:
+            # Fallback to main speaker reference if this row vocal slice is empty/silent
+            fallback_ref = root / "refers" / f"{int(row['number'])}.wav"
+            if not fallback_ref.is_file():
+                # Try finding any existing reference in refers
+                existing_refers = sorted(list((root / "refers").glob("*.wav")))
+                if existing_refers:
+                    fallback_ref = existing_refers[0]
+            if fallback_ref.is_file():
+                shutil.copy2(fallback_ref, destination)
+                return str(destination.resolve()), spec
             raise ValueError(f"Empty/silent emotion reference for row {row['number']}")
         min_samples = int(0.2 * sr)
         if len(samples) < min_samples:
@@ -237,7 +249,6 @@ def reference_plan_is_current(tasks):
 
 def write_conditioning_receipt(request, backend: str | None = None):
     """A receipt exists only after successful synthesis, adjacent to its WAV."""
-    import shutil
     path = Path(request.output_path).resolve()
     plan = request.metadata.get("reference_plan")
     effective_backend = backend if backend is not None else request.metadata.get("backend")
