@@ -132,6 +132,66 @@ def split_display_text(text: str, max_chars: int) -> list[str]:
     return pieces
 
 
+_SENTENCE_END = set(".?!。？！…")
+_CLAUSE_END = set(",;:，；：、—")
+_WORD_CHAR = re.compile(r"[\w\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]")
+
+
+def balanced_pages(text: str, chars_per_line: int, max_lines: int) -> list[str]:
+    """Split a long cue into the fewest pages that fit, with balanced lengths, cutting preferably after a
+    sentence, then after a clause, then between words. Fixed two-line paging left orphans such as a final
+    page holding only "name."."""
+    text = str(text).strip()
+    lines = split_display_text(text, chars_per_line)
+    if len(lines) <= max_lines:
+        return [text]
+    pages_needed = -(-len(lines) // max_lines)
+    cjk = bool(re.search(r"[\u3400-\u9fff]", text)) and " " not in text
+    cuts = [i for i in range(1, len(text)) if (cjk and _WORD_CHAR.match(text[i])) or (not cjk and text[i] == " ")]
+    def penalty(i):
+        before = text[:i].rstrip()[-1:]
+        return 0.0 if before in _SENTENCE_END else (0.35 if before in _CLAUSE_END else 1.0)
+    def fits(a, b):
+        part = text[a:b].strip()
+        return bool(_WORD_CHAR.search(part)) and len(split_display_text(part, chars_per_line)) <= max_lines
+    points = [0] + cuts + [len(text)]
+    ideal = len(text) / pages_needed
+    best = {(0, 0): (0.0, None)}
+    for k in range(1, pages_needed + 1):
+        for j_index, j in enumerate(points[1:], 1):
+            if (k < pages_needed) == (j == len(text)):
+                continue
+            for i in points[:j_index]:
+                prev = best.get((k - 1, i))
+                if prev is None or not fits(i, j):
+                    continue
+                cost = prev[0] + ((j - i - ideal) / max(ideal, 1)) ** 2 + (penalty(j) if j < len(text) else 0)
+                if (k, j) not in best or cost < best[(k, j)][0]:
+                    best[(k, j)] = (cost, i)
+    if (pages_needed, len(text)) not in best:
+        return ["\n".join(lines[i:i + max_lines]) for i in range(0, len(lines), max_lines)]
+    bounds, j = [len(text)], len(text)
+    for k in range(pages_needed, 0, -1):
+        j = best[(k, j)][1]
+        bounds.append(j)
+    bounds.reverse()
+    return ["\n".join(split_display_text(text[a:b].strip(), chars_per_line)) for a, b in zip(bounds, bounds[1:])]
+
+
+def snap_source_cut(source: str, pos: int, low: int) -> int:
+    """Move a proportional source cut to the nearest punctuation or word boundary so that both sides keep
+    real words (never a cue holding only "。")."""
+    candidates = []
+    for p in range(low + 1, len(source)):
+        if not (_WORD_CHAR.search(source[low:p]) and _WORD_CHAR.search(source[p:])):
+            continue
+        if " " in source and source[p - 1] != " " and source[p] != " ":
+            continue  # Latin source: only between words
+        bonus = 0 if source[p - 1] in _SENTENCE_END | _CLAUSE_END else 1.5
+        candidates.append((abs(p - pos) + bonus, p))
+    return min(candidates)[1] if candidates else pos
+
+
 def fit_display_windows(frame: pd.DataFrame, words: pd.DataFrame, *, max_cps: float,
                         min_duration: float, max_lead_in: float, max_linger: float):
     """Borrow only observed gaps; keep speech and semantic/TTS timings intact."""
@@ -186,9 +246,7 @@ def layout_subtitles(frame: pd.DataFrame, words: pd.DataFrame, *,
         max_lead_in=max_lead_in, max_linger=max_linger)
     for position, (index, row) in enumerate(frame.iterrows()):
         text = str(row["Translation"])
-        visual_lines = split_display_text(text, chars_per_line)
-        pieces = ["\n".join(visual_lines[i:i + max_lines])
-                  for i in range(0, len(visual_lines), max_lines)]
+        pieces = balanced_pages(text, chars_per_line, max_lines)
         start, end = display_windows[position]
         # Never manufacture micro-cues just to satisfy a visual length limit.
         if end - start < min_duration * len(pieces):
@@ -214,10 +272,7 @@ def layout_subtitles(frame: pd.DataFrame, words: pd.DataFrame, *,
         for part in pieces[:-1]:
             cursor += len(part)
             pos = round(len(source) * cursor / max(total, 1))
-            if " " in source:
-                spaces = [m.end() for m in re.finditer(r"\s+", source) if m.end() > source_cuts[-1]]
-                pos = min(spaces, key=lambda p: abs(p - pos)) if spaces else len(source)
-            source_cuts.append(pos)
+            source_cuts.append(snap_source_cut(source, pos, source_cuts[-1]))
         source_cuts.append(len(source))
         for part_index, part in enumerate(pieces):
             record = row.to_dict()

@@ -283,3 +283,18 @@ def test_resume_refuses_an_unproven_checkpoint_when_no_run_was_interrupted_there
         run_pipeline(PipelineRun('new', 'cinematic', 'en', 'zh', []),
                      [PipelineStep('transcribe', 'ASR', action=lambda: pytest.fail('must not run'))])
     assert artifact.read_bytes() == b'left over from another video'
+
+
+def test_a_step_rerun_upstream_rechecks_downstream_checkpoints(tmp_path, monkeypatch):
+    from core.pipeline import runner
+    import core.step_checker as checker
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(runner, 'pending_steps', lambda keys: ['timeline'])
+    monkeypatch.setattr(runner, '_record_step_manifest', lambda *_: None)
+    # After timeline ran, merge_subtitle's manifest no longer matches its inputs; render_extra still does.
+    monkeypatch.setattr(checker, 'is_step_completed', lambda key: key != 'merge_subtitle')
+    ran = []
+    steps = [PipelineStep(k, k, action=lambda k=k: ran.append(k)) for k in ('translate', 'timeline', 'merge_subtitle', 'render_extra')]
+    run = run_pipeline(PipelineRun('r', 'subtitle', 'zh', 'en', []), steps)
+    assert ran == ['timeline', 'merge_subtitle']
+    assert run.completed_steps == ['translate', 'timeline', 'merge_subtitle', 'render_extra']

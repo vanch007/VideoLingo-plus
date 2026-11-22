@@ -306,8 +306,15 @@ def run_pipeline(run: PipelineRun, steps: list[PipelineStep], *, resume: bool = 
     run.status = "running"
     save_state(run)
 
+    ran_upstream = False
     for step in steps:
-        if step.key not in todo:
+        skip = step.key not in todo
+        if skip and ran_upstream:
+            # The pending list was computed before anything ran. A step that has run since may have
+            # rewritten this step's inputs (timeline -> trans.srt -> merge_subtitle): recheck its manifest.
+            from core.step_checker import is_step_completed
+            skip = is_step_completed(step.key)
+        if skip:
             run.completed_steps.append(step.key)
             # Retain original provenance for skipped steps; do not restamp
             save_state(run)
@@ -323,6 +330,7 @@ def run_pipeline(run: PipelineRun, steps: list[PipelineStep], *, resume: bool = 
             else:
                 raise ValueError(f"Pipeline step has no action or module: {step.key}")
             _record_step_manifest(step.key, run)
+            ran_upstream = True
             run.completed_steps.append(step.key)
             run.events.append({'step': step.key, 'event': 'completed', 'time': time.time()})
             save_state(run)
