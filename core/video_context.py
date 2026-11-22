@@ -25,13 +25,16 @@ from core.config_utils import load_key
 CONTEXT_PATH = Path("output/log/video_context.json")
 SOURCE_VIDEO = Path("output/source.mp4")
 WORKER = Path(__file__).resolve().parents[1] / "scripts/video_context_worker.py"
-POLICY_VERSION = 2  # bump when prompts or filtering change (invalidates the cache)
+POLICY_VERSION = 3  # bump when prompts or filtering change (invalidates the cache)
 
 DEFAULTS = {
     "enabled": True,
     "python": "/Users/vanch/mlx-wemm-video/.venv/bin/python",
     "root": "/Users/vanch/mlx-wemm-video",
-    "model": "/Volumes/1T ssd/WeMM-Video/WeMM-Video-35BA3B-MLX-8bit",
+    # First existing path wins. The 6-bit copy on the internal disk loads in seconds and answered the same
+    # screen terms and subtitle questions as the 8-bit one, about 4x faster end to end.
+    "model": ["~/.cache/lm-studio/models/vanch007/WeMM-Video-35BA3B-mlx-6bit",
+              "/Volumes/1T ssd/WeMM-Video/WeMM-Video-35BA3B-MLX-8bit"],
     "timeout_seconds": 900,
     "max_frames": 96,
     "av_max_seconds": 180,
@@ -67,6 +70,13 @@ def setting(key: str):
     return DEFAULTS[key] if value is None else value
 
 
+def model_path() -> Path:
+    """Configured model path, or the first existing candidate of a list (the last one when none exists)."""
+    value = setting("model")
+    candidates = [Path(str(v)).expanduser() for v in (value if isinstance(value, (list, tuple)) else [value])]
+    return next((c for c in candidates if c.exists()), candidates[-1])
+
+
 def enabled() -> bool:
     value = setting("enabled")
     return value is True or str(value).lower() in {"1", "true", "yes", "on"}
@@ -100,9 +110,13 @@ def parse_json_reply(text: str):
 
 
 def filter_terms(items, limit: int = 30) -> list[str]:
-    """Keep name-like terms: a hotword list is a recognition hint, so sentences and common words are noise."""
+    """Keep name-like terms seen on screen: a hotword list is a recognition hint, so sentences and common words
+    are noise, and a term the vision model only heard may repeat the recognizer's own mistake (it answered
+    '王老爷' where the film says 黄老爷)."""
     kept, seen = [], set()
     for item in items or []:
+        if isinstance(item, dict) and str(item.get("source") or "screen").lower() not in {"screen", "both"}:
+            continue
         term = str(item.get("text") if isinstance(item, dict) else item or "").strip().strip("\"'“”‘’.,;:!?，。；：！？")
         key = term.casefold()
         if not term or key in seen or key in _STOP_TERMS:
@@ -226,7 +240,7 @@ def run() -> dict:
     from core.runtime_context import effective_source_language
     if not enabled():
         return _write({"version": POLICY_VERSION, "status": "skipped", "reason": "disabled"})
-    python, root, model = Path(str(setting("python"))), Path(str(setting("root"))), Path(str(setting("model")))
+    python, root, model = Path(str(setting("python"))), Path(str(setting("root"))), model_path()
     missing = [str(p) for p in (python, root, model) if not p.exists()]
     if missing or not SOURCE_VIDEO.is_file():
         return _write({"version": POLICY_VERSION, "status": "skipped",

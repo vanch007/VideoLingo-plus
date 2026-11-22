@@ -40,6 +40,9 @@ def test_screen_terms_keep_names_and_drop_sentences_and_chrome():
     assert terms == ["Soul Cinema", "Supermarket", "Seedream 5.0 pro", "Seedream"]
     assert vc.filter_terms(["张麻子", "黄四郎", "你就是麻匪的头子，张麻子！", "好"]) == ["张麻子", "黄四郎"]
     assert len(vc.filter_terms([f"Name{i}" for i in range(50)], limit=30)) == 30
+    # Only screen terms: a name the vision model merely heard can repeat the recognizer's error.
+    assert vc.filter_terms([{"text": "王老爷", "source": "speech"}, {"text": "土豆网", "source": "screen"},
+                            {"text": "张麻子", "source": "both"}]) == ["土豆网", "张麻子"]
     # Recorded noise from the end-to-end run: phrases and quantities would distort the transcript.
     assert vc.filter_terms(["Let's say Seedream", "2.5", "0.125", "20 times", "40.25 credits", "Seedream 5.0 pro",
                             "The Platform", "School court"]) == ["Seedream 5.0 pro", "School court"]
@@ -86,6 +89,16 @@ def test_character_hints_are_marked_as_unreliable_data(enabled):
     write_context(summary="雨夜对峙", characters=[{"name": "张麻子", "gender": "male", "appearance": "黑袍"}], terms=["张麻子"])
     hint = vc.character_hints()
     assert "may be wrong" in hint and "张麻子" in hint and "cannot tell who speaks" in hint
+
+
+def test_model_path_takes_the_first_existing_candidate(enabled, tmp_path):
+    (tmp_path / "eight").mkdir()
+    enabled["model"] = [str(tmp_path / "six"), str(tmp_path / "eight")]
+    assert vc.model_path() == tmp_path / "eight"
+    (tmp_path / "six").mkdir()
+    assert vc.model_path() == tmp_path / "six"
+    enabled["model"] = "~/x"
+    assert vc.model_path() == Path("~/x").expanduser()
 
 
 def test_missing_model_is_skipped_not_failed(enabled):
