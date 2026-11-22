@@ -12,6 +12,7 @@ STEP_CHECKPOINTS = {
     # 视频输入流程
     "download": "output/source.mp4",
     "import_video": "output/source.mp4",
+    "video_context": "output/log/video_context.json",
 
     # 文本处理流程
     "transcribe": "output/log/cleaned_chunks.xlsx",

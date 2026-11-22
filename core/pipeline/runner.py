@@ -98,6 +98,7 @@ def load_state_or_none() -> dict | None:
 
 STEP_CODE_MAP = {
     "import_video": ["core/step1_ytdlp.py", "core/pipeline/runner.py"],
+    "video_context": ["core/video_context.py", "scripts/video_context_worker.py"],
     "transcribe": ["core/step2_whisperX.py", "core/asr_schema.py", "core/source_accuracy.py", "core/all_whisper_methods/stable_ts_local.py", "core/all_whisper_methods/qwen3_aligned.py", "core/all_whisper_methods/local_aligned.py", "scripts/recognize_source_audio.py", "scripts/align_source_audio.py", "core/all_whisper_methods/audio_preprocess.py", "core/all_whisper_methods/demucs_vl.py", "core/providers/speaker_diarization.py", "core/providers/source_coverage.py"],
     "split_spacy": ["core/step3_1_spacy_split.py", "core/spacy_utils/split_by_mark.py", "core/dialogue_segmentation.py"],
     "split_meaning": ["core/step3_2_splitbymeaning.py"],
@@ -173,15 +174,15 @@ def _record_step_manifest(step_key: str, run: PipelineRun) -> None:
                 quality={"config_path": str(Path(CONFIG_PATH).resolve()), "config_hash": hash_path(CONFIG_PATH)},
             )
             dependencies = {
-                "transcribe": ["output/source.mp4"],
+                "transcribe": ["output/source.mp4", "output/log/video_context.json"],
                 "split_spacy": ["output/log/cleaned_chunks.xlsx"],
                 "split_meaning": ["output/log/sentence_splitbynlp.txt"],
-                "summarize": ["output/log/sentence_splitbymeaning.txt", "output/log/cleaned_chunks.xlsx", "output/log/lexical_boundary_review.json"],
+                "summarize": ["output/log/sentence_splitbymeaning.txt", "output/log/cleaned_chunks.xlsx", "output/log/lexical_boundary_review.json", "output/log/video_context.json"],
                 "translate": ["output/log/terminology.json", "output/log/sentence_splitbymeaning.txt", "output/log/source_verification.json",
                               "output/log/translation_speech_preflight.json", "output/log/translation_duration_candidate_provenance.json"],
                 "split_subtitle": ["output/log/translation_results.xlsx", "output/log/translation_review.json", "output/log/translation_fact_normalizations.json"],
                 "timeline": ["output/log/translation_results_for_subtitles.xlsx", "output/log/translation_results_remerged.xlsx"],
-                "merge_subtitle": ["output/source.mp4", "output/trans.srt", "output/src.srt", "output/log/subtitle_quality.json"],
+                "merge_subtitle": ["output/source.mp4", "output/trans.srt", "output/src.srt", "output/log/subtitle_quality.json", "output/log/video_context.json"],
             }.get(step_key, [])
             if step_key in ('split_subtitle', 'timeline', 'merge_subtitle', 'merge_audio', 'merge_video'):
                 dependencies.append('output/log/bilingual_alignment.json')
@@ -516,6 +517,11 @@ def build_steps_for_input(
         )
         steps.append(PipelineStep("transcribe", "Transcribe", "core.step2_whisperX"))
 
+    if suffix != ".srt":
+        from core.video_context import enabled as video_context_enabled
+        if video_context_enabled():
+            steps.insert(len(steps) - 1, PipelineStep("video_context", "Visual context (screen terms, hard subtitles, people)",
+                                                      "core.video_context"))
     steps.extend(TEXT_STEPS)
     if subtitles and not (profile == "fast" and dubbing):
         steps.extend(SUBTITLE_STEPS)

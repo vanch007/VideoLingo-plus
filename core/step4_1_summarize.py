@@ -258,6 +258,8 @@ def get_summary():
     from core.prompts_storage import get_summary_prompt, get_stt_correction_prompt
 
     summary_prompt = get_summary_prompt(src_content, custom_terms_json, speaker_ids=speaker_ids)
+    from core.video_context import character_hints
+    summary_prompt += character_hints()
     summary_prompt += "\nAcoustic source uncertainties (do not invent a resolution):\n" + json.dumps(
         [{"line_ids": group["line_ids"], "source": group["source"], "alternative": group.get("witness", "")}
          for group in source_verification.get("groups", []) if group["status"] != "pass"],

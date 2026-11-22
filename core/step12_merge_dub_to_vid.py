@@ -581,14 +581,20 @@ def merge_video_audio():
         elif str(load_key("subtitle_engine", "ass")) == "ass":
             # One ASS script: the source row is stacked above the translation rows actually shown.
             from core.subtitle_ass import TrackStyle, burn_filter
-            burn_src = bool(load_key("burn_source_subtitles", False)) and os.path.isfile(SRC_SRT)
+            from core.video_context import source_row_decision
+            from core.runtime_context import effective_source_language
+            burn_src = source_row_decision(bool(load_key("burn_source_subtitles", False)), effective_source_language("auto"))[0] \
+                and os.path.isfile(SRC_SRT)
             filters.append(burn_filter(
                 TARGET_WIDTH, TARGET_HEIGHT, SRC_SRT if burn_src else None, DUB_SUB_FILE,
                 TrackStyle(SRC_FONT_NAME, src_size, SRC_FONT_COLOR, SRC_OUTLINE_COLOR, src_outline, 0, SRC_SHADOW_COLOR, 1, src_margin_v, margin_lr) if burn_src else None,
                 TrackStyle(TRANS_FONT_NAME, dub_font_size, "&H00FFFFFF", "&H000000", 1.5, 0, "&H80000000", 1, dub_margin_v, margin_lr),
                 "output/_dub_subtitle_burn.ass"))
         else:
-            if bool(load_key("burn_source_subtitles", False)) and os.path.isfile(SRC_SRT):
+            from core.video_context import source_row_decision
+            from core.runtime_context import effective_source_language
+            if (source_row_decision(bool(load_key("burn_source_subtitles", False)), effective_source_language("auto"))[0]
+                    and os.path.isfile(SRC_SRT)):
                 filters.append(f"subtitles='{abs_src_srt}':force_style='{src_style}'")
             filters.append(f"subtitles='{abs_dub_srt}':force_style='{dub_style}'")
         vf = ",".join(filters)

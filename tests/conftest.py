@@ -31,6 +31,8 @@ TEST_CONFIG_OVERRIDES = {
     # Thresholds of the repair/rescue classification tests (the live config tunes the speed cap higher).
     "dubbing_quality.max_speed_factor": 1.08,
     "translation.speech_budget.max_speed_factor": 1.08,
+    # The optional vision stage needs a 38 GB model; tests opt in explicitly.
+    "video_context.enabled": False,
 }
 
 
@@ -46,7 +48,7 @@ def hermetic_config(monkeypatch, tmp_path_factory):
         node = data
         *parents, leaf = dotted.split(".")
         for part in parents:
-            node = node[part]
+            node = node.setdefault(part, {})
         node[leaf] = value
     path = tmp_path_factory.mktemp("config") / "config.yaml"
     with open(path, "w", encoding="utf-8") as handle:

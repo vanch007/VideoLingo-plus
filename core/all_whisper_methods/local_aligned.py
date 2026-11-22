@@ -126,6 +126,8 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> dict:
     if end - start > 300:
         raise ValueError("Local alignment requires source chunks of at most 300 seconds")
     cfg = dict(load_key("source_asr", {}) or {})
+    from core.video_context import merged_hotwords
+    cfg["hotwords"] = merged_hotwords(cfg.get("hotwords"))  # + screen terms of this video, if any
     project = Path(__file__).resolve().parents[2]
     output = Path("output/log/local_source_asr")
     output.mkdir(parents=True, exist_ok=True)

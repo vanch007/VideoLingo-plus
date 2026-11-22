@@ -128,17 +128,21 @@ def merge_subtitles_to_video():
         f"scale={TARGET_WIDTH}:{TARGET_HEIGHT}:force_original_aspect_ratio=decrease",
         f"pad={TARGET_WIDTH}:{TARGET_HEIGHT}:(ow-iw)/2:(oh-ih)/2"
     ]
+    from core.video_context import source_row_decision
+    from core.runtime_context import effective_source_language
+    burn_src, burn_reason = source_row_decision(bool(load_key("burn_source_subtitles", True)), effective_source_language("auto"))
+    if not burn_src and burn_reason.startswith("video_has"):
+        print(f"🎞️ Source-language row not burned: {burn_reason}")
     if str(load_key("subtitle_engine", "ass")) == "ass":
         # One ASS script: the source row is stacked above the translation rows actually shown.
         from core.subtitle_ass import TrackStyle, burn_filter
-        burn_src = bool(load_key("burn_source_subtitles", True))
         filters.append(burn_filter(
             TARGET_WIDTH, TARGET_HEIGHT, SRC_SRT if burn_src else None, TRANS_SRT,
             TrackStyle(FONT_NAME, src_size, SRC_FONT_COLOR, SRC_OUTLINE_COLOR, src_outline, 0, SRC_SHADOW_COLOR, 1, margin_v, margin_lr) if burn_src else None,
             TrackStyle(TRANS_FONT_NAME, trans_size, TRANS_FONT_COLOR, TRANS_OUTLINE_COLOR, trans_outline, 0, TRANS_BACK_COLOR, 1, margin_v, margin_lr),
             "output/_subtitle_burn.ass"))
     else:
-        if bool(load_key("burn_source_subtitles", True)):
+        if burn_src:
             filters.append(f"subtitles='{abs_src_srt}':force_style='{src_style}'")
         filters.append(f"subtitles='{abs_trans_srt}':force_style='{dub_style}'")
     from core.subtitle_quality import subtitle_quality_report
