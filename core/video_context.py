@@ -1,7 +1,7 @@
 """Optional visual context from WeMM-Video, gathered before transcription.
 
 What it is used for (and only this):
-  * screen terms  -> extra ASR hotwords for this run (MOSS uses them only when actually spoken)
+  * screen terms  -> a second, targeted ASR pass for a chunk whose transcript almost spells one of them
   * hard subtitles -> skip burning the source-language row when the video already shows it
   * characters     -> optional hints for the summary/terminology prompt (off by default, see DEFAULTS)
 Dialogue text, speaker attribution and timing from the vision model are never used: on the test clips
@@ -183,17 +183,43 @@ def load_context() -> dict:
 
 # ---- consumers -------------------------------------------------------------------------------
 
-def merged_hotwords(configured) -> list[str]:
-    """Configured hotwords first, then this video's screen terms (deduplicated, capped)."""
-    words = [str(w).strip() for w in (configured or []) if str(w).strip()]
-    if setting("hotwords") in (True, "true", "True", 1):
-        words += load_context().get("terms", [])
-    out, seen = [], set()
-    for word in words:
-        if word.casefold() not in seen:
-            seen.add(word.casefold())
-            out.append(word)
-    return out[: max(len(configured or []), int(setting("max_hotwords")))]
+def screen_terms() -> list[str]:
+    """This video's on-screen names, when the stage and its hotword use are enabled."""
+    if setting("hotwords") not in (True, "true", "True", 1):
+        return []
+    return list(load_context().get("terms", []))
+
+
+def near_miss_terms(transcript: str, terms: list[str]) -> list[str]:
+    """Screen terms the transcript almost spells ("Seadream" for Seedream, 王老爷 for 黄老爷).
+
+    Only these are worth a second recognition pass with a hint: an unrelated hotword is not free. On the
+    long film clip three misread watermark words changed MOSS's 无功不受禄 into 武功不受禄 and dropped two 哎.
+    A term already spelled correctly needs no pass either. Latin terms return the matched word, CJK terms
+    of 3+ characters the whole term.
+    """
+    from difflib import SequenceMatcher
+    text = str(transcript or "")
+    words = {w.casefold() for w in re.findall(r"[A-Za-z][A-Za-z0-9'’-]{2,}", text)}
+    out: list[str] = []
+    for term in terms or []:
+        if _CJK.search(term):
+            n = len(term)
+            if n < 3 or term in text:
+                continue
+            for i in range(len(text) - n + 1):
+                window = text[i:i + n]
+                if sum(a != b for a, b in zip(window, term)) == 1 and _CJK.search(window):
+                    out.append(term)
+                    break
+            continue
+        for token in re.findall(r"[A-Za-z][A-Za-z0-9'’-]{3,}", term):
+            key = token.casefold()
+            if key in words:
+                continue  # already recognized as written
+            if any(SequenceMatcher(None, key, w).ratio() >= 0.75 and w[0] == key[0] for w in words):
+                out.append(token)
+    return list(dict.fromkeys(out))
 
 
 def source_row_decision(default: bool, source_language: str) -> tuple[bool, str]:

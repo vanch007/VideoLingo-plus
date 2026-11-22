@@ -59,17 +59,28 @@ def test_build_context_normalizes_languages_and_characters():
         "terms", "subtitles", "characters"]
 
 
-def test_hotwords_merge_configured_first_without_duplicates(enabled):
+def test_screen_terms_follow_the_switches(enabled):
     write_context(terms=["Seedream", "Soul Cinema"])
-    assert vc.merged_hotwords(["seedream", "MOSS"]) == ["seedream", "MOSS", "Soul Cinema"]
+    assert vc.screen_terms() == ["Seedream", "Soul Cinema"]
     enabled["hotwords"] = False
-    assert vc.merged_hotwords(["MOSS"]) == ["MOSS"]
+    assert vc.screen_terms() == []
+
+
+def test_only_near_misses_earn_a_targeted_pass():
+    # Recorded transcripts: the AI short (MOSS without hint) and the long film clip.
+    short = "Now let's try generating the same prompt with, let's say, Seadream. Soul Cinema is literally 20 times cheaper."
+    assert vc.near_miss_terms(short, ["Soul Cinema", "Seedream 5.0 pro"]) == ["Seedream"]
+    film = "一百八十万马上送来哎无功不受禄现在收钱太早大玉添温哎大哥美女我也不能要美女不要钱美元US dollar"
+    assert vc.near_miss_terms(film, ["BANDAI", "NAMCO", "BANDAI NAMCO Entertainment Inc"]) == []
+    assert vc.near_miss_terms("你好王老爷，钻石送上", ["黄老爷", "张麻子", "钻石"]) == ["黄老爷"]
+    assert vc.near_miss_terms("黄老爷来了", ["黄老爷"]) == []          # already right
+    assert vc.near_miss_terms("Seedream wins", ["Seedream 5.0 pro"]) == []
 
 
 def test_disabled_stage_has_no_effect_even_with_an_old_context_file(enabled):
     write_context(terms=["Seedream"], hard_subtitles={"present": True, "language": "en"})
     enabled["enabled"] = False
-    assert vc.merged_hotwords([]) == [] and vc.source_row_decision(True, "en") == (True, "no_matching_burned_in_subtitles")
+    assert vc.screen_terms() == [] and vc.source_row_decision(True, "en") == (True, "no_matching_burned_in_subtitles")
     assert vc.character_hints() == ""
 
 

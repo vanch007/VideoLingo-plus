@@ -126,8 +126,8 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> dict:
     if end - start > 300:
         raise ValueError("Local alignment requires source chunks of at most 300 seconds")
     cfg = dict(load_key("source_asr", {}) or {})
-    from core.video_context import merged_hotwords
-    cfg["hotwords"] = merged_hotwords(cfg.get("hotwords"))  # + screen terms of this video, if any
+    from core.video_context import screen_terms, near_miss_terms
+    screen = screen_terms()  # used only for a targeted second pass, never as blanket hotwords
     project = Path(__file__).resolve().parents[2]
     output = Path("output/log/local_source_asr")
     output.mkdir(parents=True, exist_ok=True)
@@ -138,7 +138,7 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> dict:
     source_hash = hash_path("output/audio/raw_master.wav")
     review_path = Path(str(cfg.get("review_file") or ""))
     fingerprint = {"audio_sha256": hash_path(clip), "source_sha256": source_hash,
-                   "language": language, "config": cfg,
+                   "language": language, "config": cfg, "screen_terms": screen,
                    "review_sha256": hash_path(review_path) if cfg.get("review_file") else None,
                    "worker_sha256": hash_path(project / "scripts/recognize_source_audio.py"),
                    "align_worker_sha256": hash_path(project / "scripts/align_source_audio.py"),
@@ -167,6 +167,19 @@ def transcribe_audio(audio_file: str, start: float, end: float) -> dict:
     if recognized.returncode:
         raise RuntimeError(f"Local source recognition failed: {recognized.stderr[-1800:]}")
     raw = json.loads(recognized.stdout)
+    # A screen term the first pass almost spelled ("Seadream" for Seedream) earns one re-recognition with
+    # that hint alone. Unrelated hints are never sent: they perturb the rest of the transcript.
+    first_text = " ".join(s["text"] for s in raw.get("segments") or []) or str(raw.get("text") or "")
+    targeted = near_miss_terms(first_text, screen)
+    if targeted:
+        hotwords.write_text(json.dumps(list(cfg.get("hotwords", [])) + targeted, ensure_ascii=False))
+        second = subprocess.run(cmd, capture_output=True, text=True, timeout=int(cfg.get("timeout_seconds", 1800)), env=env)
+        if second.returncode == 0:
+            raw = json.loads(second.stdout)
+            print(f"🎞️ ASR chunk {start:.1f}-{end:.1f}s re-recognized with screen terms {targeted}")
+        Path(str(prefix) + ".screen_terms.json").write_text(json.dumps(
+            {"targeted": targeted, "second_pass_ok": second.returncode == 0, "first_pass_text": first_text},
+            ensure_ascii=False, indent=2))
     Path(str(prefix) + ".raw.json").write_text(json.dumps(raw, ensure_ascii=False, indent=2))
     segments, edits = raw["segments"], []
     if cfg.get("review_file"):
