@@ -129,6 +129,10 @@ def search_things_to_note_in_prompt(sentence):
     from core.wordplay import translator_note
     notes += [translator_note(item) for item in things_to_note.get('wordplay', [])
               if item['src'].lower() in sentence.lower()]
+    from core.address_terms import batch_note
+    address = batch_note(sentence.splitlines())
+    if address:
+        notes += address.splitlines()
     if notes:
         return '\n'.join(f'{i}. {text}' for i, text in enumerate(notes, 1))
     else:

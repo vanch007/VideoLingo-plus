@@ -70,9 +70,15 @@ def test_background_job_uses_normal_cli_in_the_root_output_workspace(tmp_path, m
         return type('Process', (), {'pid': 12345})()
     monkeypatch.setattr(job.subprocess, 'Popen', start)
     info = job.start_pipeline_job('https://www.youtube.com/watch?v=fixture')
-    assert calls[0][0][1:5] == ['-u', '-m', 'core.cli', 'run']
-    assert Path(info['workspace']) == Path(calls[0][1]['cwd'])
-    assert (Path(info['workspace']) / 'output').is_dir()
+    try:
+        assert calls[0][0][1:5] == ['-u', '-m', 'core.cli', 'run']
+        assert Path(info['workspace']) == Path(calls[0][1]['cwd'])
+        assert (Path(info['workspace']) / 'output').is_dir()
+    finally:
+        # The default workspace is the repo root, so the job opened a real log there.
+        log = Path(info['log'])
+        if log.is_file() and log.stat().st_size == 0:
+            log.unlink()
 
 
 def test_reference_leak_checks_extra_speech_not_approved_product_names():

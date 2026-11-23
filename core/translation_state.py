@@ -22,11 +22,11 @@ TRANSLATION_STAGES: dict[str, dict[str, list[str]]] = {
     },
     "summarize": {
         "artifacts": ["output/log/terminology.json", "output/log/sentence_splitbymeaning.txt"],
-        "logs": ["summary", "dialogue_roles_b*", "stt_correction_batch_*"],
+        "logs": ["summary", "dialogue_roles_b*", "stt_correction_batch_*", "name_consistency", "wordplay"],
     },
     "translate": {
         "artifacts": ["output/log/translation_results.xlsx"],
-        "logs": ["translate_faithfulness", "translate_expressiveness", "translate_localized", "translate_localized_factual", "translate_source_copy_repair", "translate_duration_feedback", "translate_duration_alternatives", "translate_speech_source_terms", "translate_homura_candidates", "duration_candidate_semantics", "translate_unit_context_guard", "translation_semantic_review_*"],
+        "logs": ["translate_faithfulness", "translate_expressiveness", "translate_localized", "translate_localized_factual", "translate_source_copy_repair", "translate_duration_feedback", "translate_duration_alternatives", "translate_speech_source_terms", "translate_homura_candidates", "duration_candidate_semantics", "translate_unit_context_guard", "translation_semantic_review_*", "address_terms"],
     },
     "split_subtitle": {
         "artifacts": [
