@@ -122,14 +122,15 @@ def search_things_to_note_in_prompt(sentence):
     with open(TERMINOLOGY_JSON_PATH, 'r', encoding='utf-8') as file:
         things_to_note = json.load(file)
     things_to_note_list = [term['src'] for term in things_to_note['terms'] if term['src'].lower() in sentence.lower()]
-    if things_to_note_list:
-        prompt = '\n'.join(
-            f'{i+1}. "{term["src"]}": "{term["tgt"]}",'
-            f' meaning: {term["note"]}'
-            for i, term in enumerate(things_to_note['terms'])
-            if term['src'] in things_to_note_list
-        )
-        return prompt
+    notes = [
+        f'"{term["src"]}": "{term["tgt"]}", meaning: {term["note"]}'
+        for term in things_to_note['terms'] if term['src'] in things_to_note_list
+    ]
+    from core.wordplay import translator_note
+    notes += [translator_note(item) for item in things_to_note.get('wordplay', [])
+              if item['src'].lower() in sentence.lower()]
+    if notes:
+        return '\n'.join(f'{i}. {text}' for i, text in enumerate(notes, 1))
     else:
         return None
 
@@ -253,6 +254,9 @@ def get_summary():
     }
     if len(custom_terms) > 0:
         console.print(f"[cyan]📖 Custom Terms Loaded: {len(custom_terms)} terms[/cyan]")
+    # A glossary row whose note starts with "wordplay:" is a translation instruction, not a term.
+    from core.wordplay import split_glossary_wordplay
+    custom_terms_json['terms'], glossary_wordplay = split_glossary_wordplay(custom_terms_json['terms'])
 
     # ============ Step 1: Summarize topic and extract terms ============
     from core.prompts_storage import get_summary_prompt, get_stt_correction_prompt
@@ -403,6 +407,26 @@ def get_summary():
         if name_report['rejected']:
             console.print(f"[cyan]🔤 Name candidates kept as heard: {len(name_report['rejected'])}[/cyan]")
 
+    # Recurring wordplay: glossary rows always; model detection only when opted in, because the
+    # local model's choice flips with small prompt changes. Not asked of the summary, where it
+    # competed with names for term slots.
+    wordplay = list(glossary_wordplay)
+    if load_key('wordplay.enabled', True):
+        from core.wordplay import find_wordplay, save_wordplay
+        report = {"wordplay": [], "dropped": [], "glossary": glossary_wordplay}
+        if load_key('wordplay.auto_detect', False):
+            with open(SENTENCE_TXT_PATH, 'r', encoding='utf-8') as f:
+                source_lines = [line.strip() for line in f if line.strip()]
+            known = [str(term.get('src', '')) for term in terms + custom_terms_json['terms']]
+            report.update(find_wordplay(source_lines, topic, str(detected_language), str(load_key('target_language')),
+                                        known_terms=known + [item['src'] for item in glossary_wordplay]))
+            wordplay += report['wordplay']
+        save_wordplay(report, 'output/log/wordplay.json')
+        for item in wordplay:
+            console.print(f"[green]🎭 Wordplay: {item['src']} → \"{item['rendering']}\"[/green]")
+    else:
+        wordplay = []
+
     # 保存术语和主题
     if 'terms' in summary and len(custom_terms) > 0:
         # Explicit case vocabulary overrides an inferred spelling once.
@@ -475,6 +499,7 @@ def get_summary():
     save_data = {
         'topic': summary.get('topic', ''),
         'terms': summary.get('terms', []),
+        'wordplay': wordplay,
         'speaker_profiles': summary.get('speaker_profiles', []),
         'scenes': summary.get('scenes', []),
         'dialogue_units': dialogue_units,
@@ -510,6 +535,7 @@ def get_summary():
             "output/log/source_verification.json",
             "output/log/translation_decisions.json",
             "output/log/name_consistency.json",
+            "output/log/wordplay.json",
         ],
     )
 
