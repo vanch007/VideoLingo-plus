@@ -24,6 +24,7 @@ class LLMProviderConfig:
     runtime_python: str | None = None
     model_path: str | None = None
     model_revision: str | None = None
+    key_pool: str | None = None
 
 
 def fix_base_url(base_url: str) -> str:
@@ -92,6 +93,7 @@ def get_llm_provider_config(provider_name: str | None = None) -> LLMProviderConf
         chat_template_kwargs=dict(provider.get("chat_template_kwargs") or {}),
         runtime_python=provider.get("runtime_python"),model_path=provider.get("model_path"),
         model_revision=model_revision,
+        key_pool=provider.get("key_pool"),
     )
 
 
@@ -100,6 +102,9 @@ def create_chat_client(config: LLMProviderConfig | None = None) -> Any:
     if config.provider_type == "mlx_local":
         from core.local_mlx_chat import get_local_mlx_client
         return get_local_mlx_client(config)
+    if config.key_pool:
+        from core.llm_key_pool import KeyPoolClient
+        return KeyPoolClient(config.key_pool, config.base_url, config.timeout_seconds)
     from urllib.parse import urlparse
     local_omlx = config.name.startswith("omlx") and urlparse(config.base_url).hostname in {"127.0.0.1", "localhost", "::1"}
     if not config.api_key and not local_omlx:
@@ -128,6 +133,7 @@ def completion_fingerprint(config: LLMProviderConfig, response_json: bool) -> st
     data = asdict(config)
     data.pop("api_key", None)
     data.pop("timeout_seconds", None)
+    data.pop("key_pool", None)  # which keys answer does not change the answer
     data["response_json"] = response_json
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
