@@ -26,7 +26,7 @@ TRANSLATION_STAGES: dict[str, dict[str, list[str]]] = {
     },
     "translate": {
         "artifacts": ["output/log/translation_results.xlsx"],
-        "logs": ["translate_faithfulness", "translate_expressiveness", "translate_localized", "translate_localized_factual", "translate_source_copy_repair", "translate_duration_feedback", "translate_duration_alternatives", "translate_speech_source_terms", "translate_homura_candidates", "duration_candidate_semantics", "translate_unit_context_guard", "translation_semantic_review_*", "address_terms"],
+        "logs": ["translate_faithfulness", "translate_expressiveness", "translate_localized", "translate_localized_factual", "translate_source_copy_repair", "translate_duration_feedback", "translate_duration_alternatives", "translate_speech_source_terms", "translate_homura_candidates", "duration_candidate_semantics", "translate_unit_context_guard", "translation_semantic_review_*", "constraint_review"],
     },
     "split_subtitle": {
         "artifacts": [
@@ -105,6 +105,8 @@ def _provider_dict() -> dict[str, Any]:
     routes = {"role":load_key("translation_context.role_provider",""),
               "duration_editor":load_key("translation.speech_budget.candidate_provider",""),
               "duration_semantics":load_key("translation.speech_budget.semantic_candidate_provider","")}
+    from core.llm_routes import configured_routes
+    routes.update({f"route_{route}": name for route, name in configured_routes().items()})
     data["auxiliary_providers"] = {}
     for purpose,name in routes.items():
         if name:

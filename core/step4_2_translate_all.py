@@ -242,18 +242,25 @@ def translate_all():
             f"[green]✅ Applied {exact_replacements} verified exact translation replacement(s).[/green]"
         )
 
-    # Mutual address (哥 / 弟) rendered identically loses who is the elder; batches can split the pair.
+    # Names, wordplay and mutual address span batches: check the assembled script against them and
+    # rewrite only the lines that break one. Runs in fast mode too; it touches constrained lines only.
     target_code = str(load_key("target_language", "en"))
-    if not target_code.lower().startswith("zh"):
-        from core.address_terms import repair_exchanges, save_report
+    if not target_code.lower().startswith("zh") and load_key("translation.constraint_review", True):
+        from core import translation_constraints as tc
         from core.wordplay import english_language_name
-        repaired, address_report = repair_exchanges(
-            output["Source"].astype(str).tolist(), output["Translation"].astype(str).tolist(),
-            english_language_name(target_code))
-        save_report(address_report)
-        for item in address_report["repaired"]:
-            console.print(f"[green]👥 Address seniority kept: {item['elder_source']} / {item['younger_source']} → "
-                          f"{item['elder_after']} / {item['younger_after']}[/green]")
+        sources = output["Source"].astype(str).tolist()
+        constraints = tc.build_constraints(sources, target_code, terminology.get("terms", []),
+                                           terminology.get("wordplay", []))
+        repaired, constraint_report = tc.review(sources, output["Translation"].astype(str).tolist(),
+                                                constraints, english_language_name(target_code))
+        constraint_report["items"] = tc.constraint_summary(constraints)
+        tc.save_report(constraint_report)
+        for item in constraint_report["repaired"]:
+            console.print(f"[green]🔗 Constraint kept ({item.get('kind') or ','.join(item['kinds'])}): "
+                          f"{item['source']} → {item['before']} ⇒ {item['after']}[/green]")
+        for item in constraint_report["unresolved"]:
+            console.print(f"[yellow]⚠️ Constraint unresolved: {item['source']} → {item['draft'] if 'draft' in item else item['before']}"
+                          f" ({item['reason']})[/yellow]")
         output["Translation"] = repaired
 
     output.to_excel("output/log/translation_candidate.xlsx", index=False)

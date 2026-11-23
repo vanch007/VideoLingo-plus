@@ -77,7 +77,12 @@ def ask_gpt(
     validation_retry_prompt=None,
     provider_override=None,
 ):
-    provider = provider_override or get_llm_provider_config()
+    if provider_override is None:
+        from core.llm_routes import routed_provider_name
+        routed = routed_provider_name(log_title)
+        provider = get_llm_provider_config(routed) if routed else get_llm_provider_config()
+    else:
+        provider = provider_override
     if timeout_seconds is not None:
         provider = replace(provider, timeout_seconds=float(timeout_seconds))
     request_fingerprint = completion_fingerprint(provider, response_json)
