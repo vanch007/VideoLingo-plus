@@ -152,3 +152,21 @@ def test_status_rejects_summary_without_speaker_profiles(tmp_path, monkeypatch):
     status = translation_state.build_translation_status()
 
     assert "speaker_profiles_missing" in status["stages"]["summarize"]["reasons"]
+
+
+def test_routed_analysis_model_is_not_stale(tmp_path, monkeypatch):
+    """A summary answered by the llm.routes analysis model is current, not stale (it blocked cached reruns)."""
+    monkeypatch.chdir(tmp_path)
+    providers = {None: _fake_provider(), "gemini": _fake_provider("gemini-3.5-flash")}
+    monkeypatch.setattr(translation_state, "get_llm_provider_config", lambda name=None: providers.get(name, _fake_provider()))
+    import core.llm_routes as llm_routes
+    monkeypatch.setattr(llm_routes, "configured_routes", lambda: {"analysis": "gemini"})
+
+    Path("output/log").mkdir(parents=True)
+    Path("output/gpt_log").mkdir(parents=True)
+    Path("output/gpt_log/summary.json").write_text(
+        json.dumps([{"model": "gemini-3.5-flash", "prompt": "p", "response": {"ok": True}}]), encoding="utf-8")
+
+    stage = translation_state.build_translation_status()["stages"]["summarize"]
+    assert "log_model_mismatch" not in stage["reasons"]
+    assert "log_contains_other_models" not in stage["warnings"]

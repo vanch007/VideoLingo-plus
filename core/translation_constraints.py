@@ -70,6 +70,20 @@ def _contains(translation: str, needle: str) -> bool:
     return needle in str(translation).lower()
 
 
+def _alternatives(rendering: str) -> list[str]:
+    """Glossary renderings like "leg (backing)" or "leg / backing" allow either word, not the literal string."""
+    text = str(rendering).strip()
+    inner = re.findall(r"[(（]([^)）]+)[)）]", text)
+    base = re.sub(r"\s*[(（][^)）]*[)）]", "", text).strip()
+    out: list[str] = []
+    for part in [base, *inner]:
+        for piece in re.split(r"\s*(?:/|;|；|,|，|\bor\b)\s*", part):
+            piece = piece.strip(" .\"'“”")
+            if piece and piece.lower() not in {p.lower() for p in out}:
+                out.append(piece)
+    return out or [text]
+
+
 def _head(rendering: str) -> str:
     """The word a rendering must keep: its last word in spaced scripts ("a powerful backer" -> backer)."""
     words = str(rendering).strip().split()
@@ -79,7 +93,8 @@ def _head(rendering: str) -> str:
 def check(constraint: Constraint, translation: str) -> bool | None:
     if constraint.kind == "address":
         return _address_ok(translation, constraint.expect)
-    return _contains(translation, constraint.expect["needle"])
+    needles = constraint.expect.get("needles") or [constraint.expect["needle"]]
+    return any(_contains(translation, needle) for needle in needles)
 
 
 def build_constraints(sources: list[str], target_language: str, terms: list[dict[str, Any]],
@@ -101,10 +116,13 @@ def build_constraints(sources: list[str], target_language: str, terms: list[dict
         src, tgt = str(term.get("src", "")).strip(), str(term.get("tgt", "")).strip()
         if not src or not tgt:
             continue
+        needles = _alternatives(tgt)
+        rule = (f'Glossary: "{src}" is rendered "{needles[0]}".' if len(needles) == 1 else
+                f'Glossary: "{src}" is rendered as one of ' + " / ".join(f'"{n}"' for n in needles)
+                + "; use the one this line means, never several at once.")
         for index, line in enumerate(sources):
             if src in line:
-                out.append(Constraint(index, "term", f'Glossary: "{src}" is rendered "{tgt}".', False,
-                                      {"needle": tgt, "src": src}))
+                out.append(Constraint(index, "term", rule, False, {"needles": needles, "src": src}))
     for item in wordplay:
         src, rendering = str(item.get("src", "")).strip(), str(item.get("rendering", "")).strip()
         if not src or not rendering:

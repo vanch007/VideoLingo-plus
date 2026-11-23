@@ -1,3 +1,5 @@
+import pytest
+
 from core import translation_constraints as tc
 
 TERMS = [{"src": "黄老爷", "tgt": "Master Huang", "note": ""}]
@@ -84,3 +86,19 @@ def test_wordplay_needle_is_the_head_word():
     cons = tc.build_constraints(["有了腿"], "en", [], WORDPLAY)
     assert cons[0].expect["needle"] == "backer" and tc.check(cons[0], "With a backer...") is True
     assert tc.check(cons[0], "With legs...") is False
+
+
+def test_glossary_gloss_in_parentheses_accepts_either_word():
+    """A summary glossary may say "leg (backing)"; requiring that literal string made the reviewer paste it in."""
+    assert tc._alternatives("leg (backing)") == ["leg", "backing"]
+    assert tc._alternatives("Counselor") == ["Counselor"]
+    assert tc._alternatives("leg / backing") == ["leg", "backing"]
+    cons = tc.build_constraints(["你的腿就是我的腿", "什么腿"], "English",
+                                [{"src": "腿", "tgt": "leg (backing)"}], [])
+    assert tc.check(cons[0], "Your backing is my backing.") is True
+    assert tc.check(cons[1], "What leg?") is True
+    assert tc.check(cons[1], "What?") is False
+    assert "never several at once" in cons[0].requirement
+    fixed, report = tc.review(["你的腿就是我的腿"], ["Your backing is my backing."], cons[:1], "English",
+                              ask=lambda *a, **k: pytest.fail("satisfied lines must not reach the reviewer"))
+    assert fixed == ["Your backing is my backing."] and report["satisfied"] == 1

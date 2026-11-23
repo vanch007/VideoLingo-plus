@@ -243,6 +243,9 @@ def build_translation_status() -> dict[str, Any]:
         current_model = current_provider["model"]
         allowed_models={current_model}
         purposes={"role"} if stage=="summarize" else {"duration_editor","duration_semantics"} if stage=="translate" else set()
+        # Log titles routed to another model (llm.routes) are this stage's own calls, not stale ones.
+        from core.llm_routes import route_for
+        purposes.update(f"route_{route}" for route in {route_for(p) for p in stage_config["logs"]} if route)
         allowed_models.update(config["model"] for purpose,config in current_provider.get("auxiliary_providers",{}).items()
                               if purpose in purposes)
         if log_models and not log_models & allowed_models:
