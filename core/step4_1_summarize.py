@@ -393,6 +393,16 @@ def get_summary():
             console.print(f"[red]❌ 批次合并出错：期望 {total_lines} 行，实际 {len(all_corrected_lines)} 行[/red]")
             console.print(f"[yellow]⚠️ 跳过纠错，保留原文[/yellow]")
 
+    # Names: a name heard wrong where it is spoken alone (大玉 for 黛玉) is fixed
+    # only when the LLM confirms it from context. Independent of STT correction.
+    if str(detected_language).lower().startswith('zh') and load_key('name_consistency.enabled', True):
+        from core.name_consistency import run_name_consistency
+        name_report = run_name_consistency(SENTENCE_TXT_PATH, terms + custom_terms_json['terms'], topic)
+        for item in name_report['applied']:
+            console.print(f"[green]🔤 Name fixed: {item['before']} → {item['after']}[/green]")
+        if name_report['rejected']:
+            console.print(f"[cyan]🔤 Name candidates kept as heard: {len(name_report['rejected'])}[/cyan]")
+
     # 保存术语和主题
     if 'terms' in summary and len(custom_terms) > 0:
         # Explicit case vocabulary overrides an inferred spelling once.
@@ -499,6 +509,7 @@ def get_summary():
             "output/log/dialogue_role_review.json",
             "output/log/source_verification.json",
             "output/log/translation_decisions.json",
+            "output/log/name_consistency.json",
         ],
     )
 
